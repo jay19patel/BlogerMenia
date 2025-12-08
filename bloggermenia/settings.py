@@ -83,6 +83,18 @@ SOCIALACCOUNT_LOGIN_ON_GET = True  # Directly redirect to Google without confirm
 SOCIALACCOUNT_AUTO_SIGNUP = True  # Automatically signup new users
 ACCOUNT_EMAIL_VERIFICATION = 'none'  # Skip email verification
 
+from django.contrib.messages import constants as messages
+
+# Message Framework Configuration
+MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
+
+MESSAGE_TAGS = {
+    messages.DEBUG: 'debug',
+    messages.INFO: 'info',
+    messages.SUCCESS: 'success',
+    messages.WARNING: 'warning',
+    messages.ERROR: 'error',
+}
 
 
 MIDDLEWARE = [
