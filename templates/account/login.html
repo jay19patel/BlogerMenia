@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+{% load static %}
+{% load socialaccount %}
+
+{% block title %}Sign In - BlogerMenia{% endblock %}
+
+{% block content %}
+<div class="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+  <div class="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+      <!-- Left Side - Text Content -->
+      <div class="hidden lg:block">
+        <div class="pr-12">
+          <a href="{% url 'home' %}" class="inline-block mb-8">
+            <span class="text-3xl font-bold">
+              <span class="text-purple-600">B</span>loger<span class="text-purple-600">M</span>enia
+            </span>
+          </a>
+
+          <h1 class="text-5xl font-bold text-gray-900 mb-6">
+            Welcome back to your
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600"> creative space</span>
+          </h1>
+
+          <p class="text-xl text-gray-600 mb-12">
+            Continue your journey of sharing stories and connecting with readers around the world.
+          </p>
+
+          <!-- Features -->
+          <div class="space-y-6">
+            <div class="flex items-start gap-4">
+              <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900 mb-1">Write & Publish</h3>
+                <p class="text-gray-600">Share your thoughts and stories with our intuitive editor</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-4">
+              <div class="w-12 h-12 bg-violet-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-6 h-6 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900 mb-1">Grow Your Audience</h3>
+                <p class="text-gray-600">Connect with readers who love your content</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-4">
+              <div class="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900 mb-1">Track Your Growth</h3>
+                <p class="text-gray-600">Understand your readers with powerful analytics</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Side - Login Form -->
+      <div class="w-full">
+        <div class="bg-white rounded-2xl border border-gray-200 p-8 md:p-10 shadow-lg">
+          <!-- Header -->
+          <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+              Welcome Back
+            </h1>
+            <p class="text-gray-600">
+              Sign in to continue to BlogerMenia
+            </p>
+          </div>
+
+          <!-- Form -->
+          <form method="post" action="{% url 'account_login' %}" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Display form errors -->
+            {% if form.non_field_errors %}
+              <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+                {% for error in form.non_field_errors %}
+                  {{ error }}
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            <!-- Email -->
+            <div>
+              <label for="id_login" class="block text-sm font-medium text-gray-700 mb-2">
+                Email Address
+              </label>
+              <div class="relative">
+                <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+                <input
+                  id="id_login"
+                  type="email"
+                  name="login"
+                  required
+                  class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent {% if form.login.errors %}border-red-500{% endif %}"
+                  placeholder="you@example.com"
+                  value="{{ form.login.value|default:'' }}"
+                >
+              </div>
+              {% if form.login.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.login.errors.0 }}</p>
+              {% endif %}
+            </div>
+
+            <!-- Password -->
+            <div>
+              <label for="id_password" class="block text-sm font-medium text-gray-700 mb-2">
+                Password
+              </label>
+              <div class="relative">
+                <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+                <input
+                  id="id_password"
+                  type="password"
+                  name="password"
+                  required
+                  class="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent {% if form.password.errors %}border-red-500{% endif %}"
+                  placeholder="Enter your password"
+                >
+                <button
+                  type="button"
+                  onclick="togglePassword()"
+                  class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <svg id="eye-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                  <svg id="eye-off-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                  </svg>
+                </button>
+              </div>
+              {% if form.password.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.password.errors.0 }}</p>
+              {% endif %}
+            </div>
+
+            <!-- Remember & Forgot -->
+            <div class="flex items-center justify-between">
+              <label class="flex items-center">
+                <input
+                  type="checkbox"
+                  name="remember"
+                  class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-600"
+                >
+                <span class="ml-2 text-sm text-gray-600">Remember me</span>
+              </label>
+              <a href="{% url 'account_reset_password' %}" class="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+                Forgot password?
+              </a>
+            </div>
+
+            <!-- Submit Button -->
+            <button
+              type="submit"
+              class="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition-colors font-semibold"
+            >
+              Sign In
+            </button>
+          </form>
+
+          <!-- Divider -->
+          <div class="relative my-6">
+            <div class="absolute inset-0 flex items-center">
+              <div class="w-full border-t border-gray-300"></div>
+            </div>
+            <div class="relative flex justify-center text-sm">
+              <span class="px-4 bg-white text-gray-500">Or continue with</span>
+            </div>
+          </div>
+
+          <!-- Google Button -->
+          <a
+            href="{% provider_login_url 'google' %}"
+            class="w-full bg-white text-gray-900 py-3 rounded-lg border-2 border-gray-300 hover:border-gray-400 transition-colors font-semibold flex items-center justify-center gap-3"
+          >
+            <svg class="w-5 h-5" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Continue with Google
+          </a>
+
+          <!-- Sign Up Link -->
+          <p class="mt-6 text-center text-sm text-gray-600">
+            Don't have an account?
+            <a href="{% url 'account_signup' %}" class="text-indigo-600 hover:text-indigo-700 font-semibold">
+              Create one now
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function togglePassword() {
+  const passwordInput = document.getElementById('id_password');
+  const eyeIcon = document.getElementById('eye-icon');
+  const eyeOffIcon = document.getElementById('eye-off-icon');
+
+  if (passwordInput.type === 'password') {
+    passwordInput.type = 'text';
+    eyeIcon.classList.add('hidden');
+    eyeOffIcon.classList.remove('hidden');
+  } else {
+    passwordInput.type = 'password';
+    eyeIcon.classList.remove('hidden');
+    eyeOffIcon.classList.add('hidden');
+  }
+}
+</script>
+{% endblock %}
