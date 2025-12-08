@@ -83,10 +83,9 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
-# Allauth settings
-ACCOUNT_AUTHENTICATION_METHOD = 'email'  # Use email for login
-ACCOUNT_EMAIL_REQUIRED = True  # Email is required
-ACCOUNT_USERNAME_REQUIRED = False  # Username is optional
+# Allauth settings (Updated for django-allauth 0.50+)
+ACCOUNT_LOGIN_METHODS = {'email'}  # Use email for login
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']  # Email required, username optional
 ACCOUNT_EMAIL_VERIFICATION = 'none'  # Skip email verification
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 ACCOUNT_SESSION_REMEMBER = True  # Remember user session
@@ -195,7 +194,14 @@ STATICFILES_DIRS = [
     BASE_DIR / "blog" / "static",
 ]
 
+# Media files (User uploads like profile pictures)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Custom User Model
+AUTH_USER_MODEL = 'blog.User'
