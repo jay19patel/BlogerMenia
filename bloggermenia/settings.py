@@ -25,7 +25,12 @@ SECRET_KEY = "django-insecure-lsutp+pr0u0f(p@yw%3nox0f8-+bry=rx*(8^ip)3h7)e8$^ir
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+
+# CSRF settings for development
+CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000']
+CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
+SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
 
 
 # Application definition
@@ -78,10 +83,18 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
-# Allauth settings to skip intermediate pages
+# Allauth settings
+ACCOUNT_AUTHENTICATION_METHOD = 'email'  # Use email for login
+ACCOUNT_EMAIL_REQUIRED = True  # Email is required
+ACCOUNT_USERNAME_REQUIRED = False  # Username is optional
+ACCOUNT_EMAIL_VERIFICATION = 'none'  # Skip email verification
+ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
+ACCOUNT_SESSION_REMEMBER = True  # Remember user session
+
+# Social account settings
 SOCIALACCOUNT_LOGIN_ON_GET = True  # Directly redirect to Google without confirmation
 SOCIALACCOUNT_AUTO_SIGNUP = True  # Automatically signup new users
-ACCOUNT_EMAIL_VERIFICATION = 'none'  # Skip email verification
+SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'
 
 from django.contrib.messages import constants as messages
 

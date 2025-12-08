@@ -92,22 +92,22 @@
 
                 <!-- Chat Preview -->
                 <div class="relative">
-                    <div class="absolute -top-6 -left-6 w-24 h-24 bg-indigo-400/20 rounded-full blur-2xl"></div>
-                    <div class="absolute -bottom-6 -right-6 w-32 h-32 bg-purple-400/20 rounded-full blur-2xl"></div>
+                    <div class="absolute -top-8 -left-8 w-32 h-32 bg-indigo-400/20 rounded-full blur-3xl"></div>
+                    <div class="absolute -bottom-8 -right-8 w-40 h-40 bg-purple-400/20 rounded-full blur-3xl"></div>
 
                     <div class="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 p-1 rounded-3xl shadow-2xl">
-                        <div class="bg-white rounded-3xl p-6">
+                        <div class="bg-white rounded-3xl p-6 lg:p-8">
 
-                            <div class="flex items-center gap-2 mb-4 pb-4 border-b border-gray-200">
+                            <div class="flex items-center gap-2 mb-6 pb-4 border-b border-gray-200">
                                 <div class="w-3 h-3 rounded-full bg-red-500"></div>
                                 <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
                                 <div class="w-3 h-3 rounded-full bg-green-500"></div>
-                                <div class="flex-1 ml-4 bg-gray-100 rounded-lg px-4 py-1">
+                                <div class="flex-1 ml-4 bg-gray-100 rounded-lg px-4 py-2">
                                     <p class="text-xs text-gray-400">blogermenia.com/blog-create-chat</p>
                                 </div>
                             </div>
 
-                            <div id="chatMessages" class="bg-gray-50 rounded-xl p-4 border-2 border-indigo-100 h-64 overflow-y-auto flex flex-col gap-3"></div>
+                            <div id="chatMessages" class="bg-gradient-to-br from-gray-50 to-indigo-50/30 rounded-xl p-5 border-2 border-indigo-100 h-80 lg:h-96 overflow-y-auto flex flex-col gap-3 shadow-inner"></div>
                         </div>
                     </div>
                 </div>
@@ -117,6 +117,136 @@
     </div>
 </section>
 
+
+<!-- Features Section -->
+<section class="py-24">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="mb-14 text-center">
+            <h2 class="text-4xl text-center font-bold text-gray-900 leading-tight mb-6 max-w-max lg:max-w-3xl lg:mx-auto">
+                Built for creators, powered by AI intelligence
+            </h2>
+            <p class="text-base font-normal text-gray-500 lg:max-w-2xl lg:mx-auto mb-8">
+                Transform your thoughts into well-crafted blogs effortlessly. Share knowledge, engage with readers, and build your digital presence.
+            </p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-lg mx-auto md:max-w-2xl lg:max-w-full">
+            <div class="relative w-full md:col-span-2 flex">
+                <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl flex justify-between flex-row flex-wrap flex-1">
+                    <div class="p-5 xl:p-8 w-full md:w-1/2 flex flex-col">
+                        <div class="block">
+                            <svg
+                                width="30"
+                                height="30"
+                                viewBox="0 0 30 30"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M15 12.5V18.75M18.75 2.5L11.25 2.5M15 28.75C8.7868 28.75 3.75 23.7132 3.75 17.5C3.75 11.2868 8.7868 6.25 15 6.25C21.2132 6.25 26.25 11.2868 26.25 17.5C26.25 23.7132 21.2132 28.75 15 28.75Z"
+                                    stroke="white"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold xl:text-2xl text-white py-5 w-full xl:w-64">
+                            Generate blogs instantly with AI assistance.
+                        </h3>
+                        <p class="text-sm font-normal text-gray-300 w-full mb-8 xl:w-64 flex-grow">
+                            Create engaging, well-structured blogs in minutes. No more staring at blank pages or struggling with writer's block.
+                        </p>
+                    </div>
+                    <div class="relative hidden md:w-1/2 md:flex overflow-hidden rounded-r-2xl">
+                        <div class="w-full bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center">
+                            <svg
+                                width="100"
+                                height="100"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M12 2L2 7L12 12L22 7L12 2Z"
+                                    stroke="white"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                                <path
+                                    d="M2 17L12 22L22 17"
+                                    stroke="white"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                                <path
+                                    d="M2 12L12 17L22 12"
+                                    stroke="white"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="relative w-full flex">
+                <div class="bg-indigo-500 rounded-2xl p-5 xl:p-8 w-full flex flex-col">
+                    <div class="block">
+                        <svg
+                            width="30"
+                            height="30"
+                            viewBox="0 0 30 30"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <path
+                                d="M24.6429 11.4286C24.6429 14.3872 20.2457 16.7857 14.8214 16.7857C9.3972 16.7857 5 14.3872 5 11.4286M24.6429 16.7857C24.6429 19.7444 20.2457 22.1429 14.8214 22.1429C9.3972 22.1429 5 19.7444 5 16.7857M24.6429 22.1429C24.6429 25.1015 20.2457 27.5 14.8214 27.5C9.3972 27.5 5 25.1015 5 22.1429M24.6429 6.96429C24.6429 9.42984 20.2457 11.4286 14.8214 11.4286C9.3972 11.4286 5 9.42984 5 6.96429C5 4.49873 9.3972 2.5 14.8214 2.5C20.2457 2.5 24.6429 4.49873 24.6429 6.96429Z"
+                                stroke="white"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+                    </div>
+                    <h3 class="py-5 text-white text-xl font-bold xl:text-2xl">
+                        Share knowledge with your audience
+                    </h3>
+                    <p class="text-sm font-normal text-white mb-8 flex-grow">
+                        Reach and engage with readers worldwide. Build your thought leadership through quality content sharing.
+                    </p>
+                </div>
+            </div>
+            <div class="relative w-full flex">
+                <div class="bg-violet-500 rounded-2xl p-5 xl:p-8 w-full flex flex-col">
+                    <div class="block">
+                        <svg
+                            width="30"
+                            height="30"
+                            viewBox="0 0 30 30"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <path
+                                d="M26.7301 15.661C26.7301 22.1995 21.306 27.5 14.6151 27.5C7.9241 27.5 2.5 22.1995 2.5 15.661C2.5 9.1225 7.9241 3.822 14.6151 3.822M18.1313 10.1507L18.1313 4.85383C18.1313 3.22503 19.6455 2.00299 21.1519 2.70013C23.7608 3.90751 26.6177 6.25557 27.456 10.2563C27.7542 11.6798 26.4931 12.8563 25.0064 12.8368L20.7873 12.7814C19.3147 12.762 18.1313 11.5899 18.1313 10.1507Z"
+                                stroke="white"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+                    </div>
+                    <h3 class="py-5 text-white text-xl font-bold xl:text-2xl">
+                        Discover inspiring content daily
+                    </h3>
+                    <p class="text-sm font-normal text-white mb-8 flex-grow">
+                        Explore trending blogs from creative minds. Learn, get inspired, and stay updated with fresh perspectives across diverse topics.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
 <!-- Testimonials Section -->
 <section id="testimonials" class="py-24">

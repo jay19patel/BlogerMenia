@@ -30,11 +30,11 @@ class HomeView(TemplateView):
     extra_context = {"testimonials": testimonials,"faqs":faqs}
 
 
-    def get(self, request, *args, **kwargs):
-        # Example notifications for different types
-        # You can comment/uncomment these to test different notification types
-        messages.success(request, "Welcome to BlogerMenia! Your AI-powered blogging platform.")
-        # messages.error(request, "This is an error message example.")
-        # messages.warning(request, "This is a warning message example.")
-        # messages.info(request, "This is an info message example.")
-        return super().get(request, *args, **kwargs)
+    # def get(self, request, *args, **kwargs):
+    #     # Example notifications for different types
+    #     # You can comment/uncomment these to test different notification types
+    #     messages.success(request, "Welcome to BlogerMenia! Your AI-powered blogging platform.")
+    #     # messages.error(request, "This is an error message example.")
+    #     # messages.warning(request, "This is a warning message example.")
+    #     # messages.info(request, "This is an info message example.")
+    #     return super().get(request, *args, **kwargs)
