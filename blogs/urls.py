@@ -10,6 +10,8 @@ urlpatterns = [
     path('blogs/create/', blogs.BlogCreateView.as_view(), name='blog-create'),
     path('blogs/<str:username>/', blogs.UserBlogListView.as_view(), name='user-blogs'),
     path('blogs/<str:username>/<slug:slug>/', blogs.BlogDetailView.as_view(), name='blog-detail'),
+    path('blogs/<str:username>/<slug:slug>/edit/', blogs.BlogUpdateView.as_view(), name='blog-update'),
+    path('blogs/<str:username>/<slug:slug>/delete/', blogs.BlogDeleteView.as_view(), name='blog-delete'),
 
     # Profile URLs
     path('profile/', account.ProfileView.as_view(), name='profile'),

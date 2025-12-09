@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Blog - BlogerMenia{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto py-12 px-4">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Edit Blog</h1>
+        <p class="text-gray-600 mt-2">Update your blog post content and settings</p>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        {% csrf_token %}
+        <div class="space-y-6">
+
+            <!-- Title -->
+            <div>
+                <label class="block font-semibold text-gray-700 mb-2">Title</label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.title.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Subtitle -->
+            <div>
+                <label class="block font-semibold text-gray-700 mb-2">Subtitle</label>
+                {{ form.subtitle }}
+                {% if form.subtitle.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.subtitle.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Slug -->
+            <div>
+                <label class="block font-semibold text-gray-700 mb-2">Slug</label>
+                {{ form.slug }}
+                <small class="text-gray-500 mt-1 block">Leave empty to auto-generate from title</small>
+                {% if form.slug.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.slug.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Excerpt -->
+            <div>
+                <label class="block font-semibold text-gray-700 mb-2">Excerpt</label>
+                {{ form.excerpt }}
+                {% if form.excerpt.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.excerpt.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Content -->
+            <div>
+                <label class="block font-semibold text-gray-700 mb-2">Content (JSON format)</label>
+                {{ form.content }}
+                {% if form.content.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.content.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Category -->
+            <div>
+                <label class="block font-semibold text-gray-700 mb-2">Category</label>
+                {{ form.category }}
+                {% if form.category.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.category.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Thumbnail -->
+            <div>
+                <label class="block font-semibold text-gray-700 mb-2">Thumbnail</label>
+                {% if form.instance.thumbnail %}
+                    <div class="mb-3">
+                        <p class="text-sm text-gray-600 mb-2">Current thumbnail:</p>
+                        <img src="{{ form.instance.thumbnail.url }}" alt="Current thumbnail" class="w-48 h-32 object-cover rounded-lg border border-gray-200">
+                    </div>
+                {% endif %}
+                {{ form.thumbnail }}
+                <small class="text-gray-500 mt-1 block">Leave empty to keep current thumbnail</small>
+                {% if form.thumbnail.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.thumbnail.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Published Date -->
+            <div>
+                <label class="block font-semibold text-gray-700 mb-2">Publish Date</label>
+                {{ form.publishedDate }}
+                {% if form.publishedDate.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.publishedDate.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center gap-4 pt-4 border-t border-gray-200">
+                <button type="submit" class="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Update Blog
+                </button>
+                <a href="{% url 'blog-detail' object.author.username object.slug %}" class="inline-flex items-center gap-2 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    Cancel
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

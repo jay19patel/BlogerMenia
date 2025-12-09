@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Delete Blog - BlogerMenia{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto py-12 px-4">
+    <div class="bg-white rounded-xl shadow-lg border border-red-200 overflow-hidden">
+        <!-- Header with Warning -->
+        <div class="bg-red-50 border-b border-red-200 px-6 py-4">
+            <div class="flex items-center gap-3">
+                <div class="flex-shrink-0">
+                    <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Confirm Deletion</h1>
+                    <p class="text-sm text-gray-600 mt-1">This action cannot be undone</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Blog Details -->
+        <div class="px-6 py-6">
+            <div class="mb-6">
+                <p class="text-gray-700 mb-4">
+                    Are you sure you want to delete this blog post? This will permanently remove all content, comments, and associated data.
+                </p>
+
+                <!-- Blog Preview -->
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-4">
+                    <div class="flex gap-4">
+                        {% if object.thumbnail %}
+                        <div class="flex-shrink-0">
+                            <img src="{{ object.thumbnail.url }}" alt="{{ object.title }}" class="w-24 h-24 object-cover rounded-lg">
+                        </div>
+                        {% endif %}
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-bold text-lg text-gray-900 mb-1">{{ object.title }}</h3>
+                            {% if object.subtitle %}
+                                <p class="text-sm text-gray-600 mb-2">{{ object.subtitle }}</p>
+                            {% endif %}
+                            <div class="flex items-center gap-3 text-xs text-gray-500">
+                                {% if object.category %}
+                                    <span class="inline-flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                                        </svg>
+                                        {{ object.category.name }}
+                                    </span>
+                                {% endif %}
+                                <span class="inline-flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    {{ object.publishedDate|date:"M d, Y" }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Confirmation Form -->
+            <form method="POST" class="space-y-4">
+                {% csrf_token %}
+
+                <!-- Warning Message -->
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div class="flex gap-3">
+                        <svg class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div class="text-sm text-red-800">
+                            <p class="font-semibold mb-1">Warning:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>This blog post will be permanently deleted</li>
+                                <li>All views, likes, and statistics will be lost</li>
+                                <li>This action cannot be reversed</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center gap-3 pt-2">
+                    <button type="submit" class="inline-flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        Yes, Delete Permanently
+                    </button>
+                    <a href="{% url 'blog-detail' object.author.username object.slug %}" class="inline-flex items-center gap-2 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

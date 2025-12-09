@@ -2,10 +2,12 @@ from django.views.generic import ListView
 from blogs.models import Blog, Category
 from django.db.models import Q
 from django.contrib.auth import get_user_model
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse_lazy
-from django.views.generic import CreateView, DetailView
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.urls import reverse_lazy, reverse
+from django.views.generic import CreateView, DetailView, UpdateView, DeleteView
 from blogs.forms import BlogCreateForm
+from django.shortcuts import redirect
+from django.contrib import messages
 
 # -------------------------
 # Global Blog List View
@@ -198,3 +200,73 @@ class BlogDetailView(DetailView):
             author__username=username,
             slug=slug
         )
+
+
+# -------------------------
+# Blog Update View
+# -------------------------
+class BlogUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Blog
+    form_class = BlogCreateForm
+    template_name = "blog_update.html"
+
+    def get_object(self, queryset=None):
+        username = self.kwargs.get('username')
+        slug = self.kwargs.get('slug')
+
+        return Blog.objects.get(
+            author__username=username,
+            slug=slug
+        )
+
+    def test_func(self):
+        """Check if the current user is the author of the blog"""
+        blog = self.get_object()
+        return self.request.user == blog.author
+
+    def handle_no_permission(self):
+        """Redirect if user doesn't have permission"""
+        messages.error(self.request, "You don't have permission to edit this blog.")
+        return redirect('user-blogs', username=self.kwargs.get('username'))
+
+    def get_success_url(self):
+        """Redirect to the blog detail page after successful update"""
+        messages.success(self.request, "Blog updated successfully!")
+        return reverse('blog-detail', kwargs={
+            'username': self.object.author.username,
+            'slug': self.object.slug
+        })
+
+
+# -------------------------
+# Blog Delete View
+# -------------------------
+class BlogDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Blog
+    template_name = "blog_confirm_delete.html"
+
+    def get_object(self, queryset=None):
+        username = self.kwargs.get('username')
+        slug = self.kwargs.get('slug')
+
+        return Blog.objects.get(
+            author__username=username,
+            slug=slug
+        )
+
+    def test_func(self):
+        """Check if the current user is the author of the blog"""
+        blog = self.get_object()
+        return self.request.user == blog.author
+
+    def handle_no_permission(self):
+        """Redirect if user doesn't have permission"""
+        messages.error(self.request, "You don't have permission to delete this blog.")
+        return redirect('user-blogs', username=self.kwargs.get('username'))
+
+    def get_success_url(self):
+        """Redirect to user's blog list after successful deletion"""
+        messages.success(self.request, "Blog deleted successfully!")
+        return reverse('user-blogs', kwargs={
+            'username': self.request.user.username
+        })
