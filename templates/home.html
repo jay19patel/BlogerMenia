@@ -415,15 +415,7 @@ let msgIndex = 0;
 function typeText(role, text, callback) {
     let i = 0;
     const wrapper = document.createElement('div');
-    wrapper.className = `chat-message flex gap-2 ${role === 'user' ? 'justify-end' : 'justify-start'} items-end`;
-
-    // Add avatar for assistant
-    if (role === 'assistant') {
-        const avatar = document.createElement('div');
-        avatar.className = 'w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0';
-        avatar.textContent = 'AI';
-        wrapper.appendChild(avatar);
-    }
+    wrapper.className = `chat-message flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
 
     const bubble = document.createElement('div');
     bubble.className = `px-4 py-3 rounded-2xl max-w-[75%] text-sm shadow-sm ${
@@ -433,15 +425,6 @@ function typeText(role, text, callback) {
     }`;
 
     wrapper.appendChild(bubble);
-
-    // Add avatar for user
-    if (role === 'user') {
-        const avatar = document.createElement('div');
-        avatar.className = 'w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0';
-        avatar.textContent = 'JP';
-        wrapper.appendChild(avatar);
-    }
-
     chatBox.appendChild(wrapper);
 
     function tick() {
@@ -449,20 +432,7 @@ function typeText(role, text, callback) {
         i++;
         chatBox.scrollTop = chatBox.scrollHeight;
         if (i <= text.length) setTimeout(tick, 15);
-        else {
-            // Add timestamp
-            const timestamp = document.createElement('div');
-            timestamp.className = `text-xs text-gray-400 mt-1 px-2 ${role === 'user' ? 'text-right' : 'text-left'}`;
-            const now = new Date();
-            timestamp.textContent = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-
-            const timeWrapper = document.createElement('div');
-            timeWrapper.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
-            timeWrapper.appendChild(timestamp);
-            chatBox.appendChild(timeWrapper);
-
-            callback();
-        }
+        else callback();
     }
     tick();
 }
@@ -474,9 +444,8 @@ function playChat() {
     // Show typing indicator for assistant messages
     if (role === 'assistant' && msgIndex > 0) {
         const typingWrapper = document.createElement('div');
-        typingWrapper.className = 'flex gap-2 items-end typing-indicator-wrapper';
+        typingWrapper.className = 'flex justify-start typing-indicator-wrapper';
         typingWrapper.innerHTML = `
-            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">AI</div>
             <div class="px-4 py-3 rounded-2xl bg-white border border-gray-200">
                 <div class="typing-indicator flex gap-1">
                     <span class="w-2 h-2 bg-gray-400 rounded-full"></span>

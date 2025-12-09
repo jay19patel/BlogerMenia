@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% load static %}
+{% load socialaccount %}
+
+{% block title %}Sign In - BlogerMenia{% endblock %}
+
+{% block content %}
+
+<h1>Blog List</h1>
+
+<!-- Search + Filters -->
+<form method="GET">
+
+    <!-- Search -->
+    <input type="text" name="q" placeholder="Search..." value="{{ search_query }}">
+
+    <!-- Category Filter (slug) -->
+    <select name="category">
+        <option value="">All Categories</option>
+        {% for cat in categories %}
+            <option value="{{ cat.slug }}"
+                {% if selected_category == cat.slug %}selected{% endif %}>
+                {{ cat.name }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <!-- Tag Filter (slug) -->
+    <select name="tag">
+        <option value="">All Tags</option>
+        {% for t in tags %}
+            <option value="{{ t.slug }}"
+                {% if selected_tag == t.slug %}selected{% endif %}>
+                {{ t.name }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <button type="submit">Apply</button>
+</form>
+
+<hr>
+
+<!-- Blog List -->
+{% for blog in blogs %}
+    <div style="margin-bottom: 20px;">
+        <h3>{{ blog.title }}</h3>
+        <p>{{ blog.subtitle }}</p>
+        <p><strong>Category:</strong> {{ blog.category.name }}</p>
+        <p><strong>Tags:</strong>
+            {% for t in blog.tags.all %}
+                {{ t.name }}{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+        </p>
+    </div>
+{% empty %}
+    <p>No blogs found.</p>
+{% endfor %}
+
+<hr>
+
+<!-- Pagination -->
+<div>
+    {% if blogs.has_previous %}
+        <a href="?q={{ search_query }}&category={{ selected_category }}&tag={{ selected_tag }}&page={{ blogs.previous_page_number }}">
+            Previous
+        </a>
+    {% endif %}
+
+    <span>Page {{ blogs.number }} of {{ blogs.paginator.num_pages }}</span>
+
+    {% if blogs.has_next %}
+        <a href="?q={{ search_query }}&category={{ selected_category }}&tag={{ selected_tag }}&page={{ blogs.next_page_number }}">
+            Next
+        </a>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+{% endblock %}
+

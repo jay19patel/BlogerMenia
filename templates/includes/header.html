@@ -13,7 +13,7 @@
            class="transition-colors font-medium {% if request.path == '/' %}text-indigo-600 font-semibold{% else %}text-gray-700 hover:text-indigo-600{% endif %}">
           Home
         </a>
-        <a href="#"
+        <a href="{% url 'blogs-list' %}"
            class="text-gray-700 hover:text-indigo-600 transition-colors font-medium">
           Blogs
         </a>

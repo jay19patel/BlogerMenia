@@ -49,9 +49,8 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
-
     # my app
-    'blog',
+    'blogs',
 ]
 
 
@@ -191,7 +190,7 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [
-    BASE_DIR / "blog" / "static",
+    BASE_DIR / "blogs" / "static",
 ]
 
 # Media files (User uploads like profile pictures)
@@ -204,4 +203,4 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Custom User Model
-AUTH_USER_MODEL = 'blog.User'
+AUTH_USER_MODEL = 'blogs.User'

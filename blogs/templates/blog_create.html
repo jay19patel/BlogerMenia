@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Create Blog - BlogerMenia{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto py-12">
+    <h1 class="text-3xl font-bold mb-6">Create New Blog</h1>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="space-y-4">
+
+            <!-- Title -->
+            <div>
+                <label class="block font-medium">Title</label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                    <p class="text-red-600 text-sm">{{ form.title.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Subtitle -->
+            <div>
+                <label class="block font-medium">Subtitle</label>
+                {{ form.subtitle }}
+                {% if form.subtitle.errors %}
+                    <p class="text-red-600 text-sm">{{ form.subtitle.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Slug -->
+            <div>
+                <label class="block font-medium">Slug</label>
+                {{ form.slug }}
+                <small class="text-gray-500">Leave empty to auto-generate from title</small>
+                {% if form.slug.errors %}
+                    <p class="text-red-600 text-sm">{{ form.slug.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Excerpt -->
+            <div>
+                <label class="block font-medium">Excerpt</label>
+                {{ form.excerpt }}
+                {% if form.excerpt.errors %}
+                    <p class="text-red-600 text-sm">{{ form.excerpt.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Content -->
+            <div>
+                <label class="block font-medium">Content (JSON format)</label>
+                {{ form.content }}
+                {% if form.content.errors %}
+                    <p class="text-red-600 text-sm">{{ form.content.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Category -->
+            <div>
+                <label class="block font-medium">Category</label>
+                {{ form.category }}
+                {% if form.category.errors %}
+                    <p class="text-red-600 text-sm">{{ form.category.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Tags -->
+            <div>
+                <label class="block font-medium">Tags</label>
+                {{ form.tags }}
+                {% if form.tags.errors %}
+                    <p class="text-red-600 text-sm">{{ form.tags.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Thumbnail -->
+            <div>
+                <label class="block font-medium">Thumbnail</label>
+                {{ form.thumbnail }}
+                {% if form.thumbnail.errors %}
+                    <p class="text-red-600 text-sm">{{ form.thumbnail.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Featured -->
+            <div>
+                <label class="inline-flex items-center">
+                    {{ form.featured }} Featured
+                </label>
+            </div>
+
+            <!-- Published Date -->
+            <div>
+                <label class="block font-medium">Publish Date</label>
+                {{ form.publishedDate }}
+                {% if form.publishedDate.errors %}
+                    <p class="text-red-600 text-sm">{{ form.publishedDate.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Submit -->
+            <div>
+                <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Create Blog</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
