@@ -115,11 +115,15 @@ class UserBlogListView(ListView):
         context['filter_author'] = author
 
         # User Stats
+        from django.db.models import Sum
         total_blogs = Blog.objects.filter(author=author, isPublished=True).count()
+        total_views = Blog.objects.filter(author=author, isPublished=True).aggregate(Sum('views'))['views__sum'] or 0
+        total_likes = Blog.objects.filter(author=author, isPublished=True).aggregate(Sum('likes'))['likes__sum'] or 0
+
         context['user_stats'] = {
             'blog_count': total_blogs,
-            'total_views': 0,  # TODO: Implement view tracking in future
-            'total_likes': 0,  # TODO: Implement like tracking in future
+            'total_views': total_views,
+            'total_likes': total_likes,
             'member_since': author.date_joined,
         }
 

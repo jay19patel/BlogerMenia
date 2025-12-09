@@ -50,6 +50,20 @@ class User(AbstractUser):
         verbose_name_plural = "Users"
 
 
+class FAQ(models.Model):
+    question = models.CharField(max_length=200)
+    answer = models.TextField()
+
+    def __str__(self):
+        return self.question    
+
+class Testimonial(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField()
+
+    def __str__(self):
+        return f"{self.user.username}'s Testimonial"
+
 class Category(models.Model):
     name = models.CharField(max_length=150, unique=True)
     slug = models.SlugField(unique=True, blank=True)
@@ -69,7 +83,9 @@ class Blog(models.Model):
     slug = models.SlugField(unique=True, blank=True)
 
     excerpt = models.TextField(blank=True, null=True)
-    content = models.JSONField()
+    introduction = models.TextField(blank=True, null=True)
+    sections = models.JSONField()
+    conclusion = models.TextField(blank=True, null=True)
 
     author = models.ForeignKey(
         User,
@@ -88,7 +104,8 @@ class Blog(models.Model):
     
     isPublished = models.BooleanField(default=False)
     publishedDate = models.DateTimeField(blank=True, null=True)
-
+    views = models.IntegerField(default=0)
+    likes = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

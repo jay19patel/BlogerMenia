@@ -108,7 +108,10 @@ class BlogCreateForm(forms.ModelForm):
             "subtitle",
             "slug",
             "excerpt",
-            "content",
+            "introduction",
+            "sections",
+            "conclusion",
             "category",
-            "thumbnail"
+            "thumbnail",
+            "isPublished"
         ]

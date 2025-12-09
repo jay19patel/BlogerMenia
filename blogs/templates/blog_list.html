@@ -28,15 +28,13 @@
 
                 <!-- Search Bar -->
                 <div class="relative">
-                    <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
 
-                    <input type="text"
-                        id="searchInput"
-                        name="q"
-                        placeholder="Search..."
-                        value="{{ search_query }}"
+                    <input type="text" id="searchInput" name="q" placeholder="Search..." value="{{ search_query }}"
                         class="w-full pl-12 pr-24 py-3 bg-white border border-gray-300 rounded-lg" />
 
                     <button type="submit"
@@ -53,8 +51,7 @@
                 <div class="flex flex-wrap gap-3">
 
                     {% for category in categories %}
-                    <a href="?q={{ search_query }}&category={{ category.slug }}"
-                       class="px-5 py-2 rounded-full font-medium transition-all duration-300
+                    <a href="?q={{ search_query }}&category={{ category.slug }}" class="px-5 py-2 rounded-full font-medium transition-all duration-300
                        {% if category.slug == selected_category %}
                            bg-indigo-600 text-white
                        {% else %}
@@ -77,27 +74,31 @@
                 <span class="text-sm font-medium text-gray-700">Active Filters:</span>
 
                 {% if search_query %}
-                <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-300 rounded-full text-sm">
+                <div
+                    class="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-300 rounded-full text-sm">
                     <span class="text-gray-700">{{ search_query }}</span>
 
-                    <a href="?{% if selected_category %}category={{ selected_category }}{% endif %}" class="text-gray-500 hover:text-red-500">
+                    <a href="?{% if selected_category %}category={{ selected_category }}{% endif %}"
+                        class="text-gray-500 hover:text-red-500">
                         ✕
                     </a>
                 </div>
                 {% endif %}
 
                 {% if selected_category %}
-                    {% for category in categories %}
-                        {% if category.slug == selected_category %}
-                        <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-300 rounded-full text-sm">
-                            <span class="text-gray-700">{{ category.name }}</span>
+                {% for category in categories %}
+                {% if category.slug == selected_category %}
+                <div
+                    class="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-300 rounded-full text-sm">
+                    <span class="text-gray-700">{{ category.name }}</span>
 
-                            <a href="?{% if search_query %}q={{ search_query }}{% endif %}" class="text-gray-500 hover:text-red-500">
-                                ✕
-                            </a>
-                        </div>
-                        {% endif %}
-                    {% endfor %}
+                    <a href="?{% if search_query %}q={{ search_query }}{% endif %}"
+                        class="text-gray-500 hover:text-red-500">
+                        ✕
+                    </a>
+                </div>
+                {% endif %}
+                {% endfor %}
                 {% endif %}
 
             </div>
@@ -109,13 +110,13 @@
             <p class="text-gray-600">
                 Showing {{ page_obj.paginator.count }} blog{{ page_obj.paginator.count|pluralize }}
                 {% if search_query %}
-                    matching "{{ search_query }}"
+                matching "{{ search_query }}"
                 {% endif %}
                 {% if selected_category %}
-                    in
-                    {% for category in categories %}
-                        {% if category.slug == selected_category %}{{ category.name }}{% endif %}
-                    {% endfor %}
+                in
+                {% for category in categories %}
+                {% if category.slug == selected_category %}{{ category.name }}{% endif %}
+                {% endfor %}
                 {% endif %}
             </p>
         </div>
@@ -129,26 +130,40 @@
             <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-6">Latest Articles</h2>
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Large Featured Blog (First Blog) -->
-                <a href="{% url 'blog-detail' blogs.0.author.username blogs.0.slug %}" class="lg:col-span-2 group block">
-                    <div class="bg-white border border-gray-300 rounded-xl overflow-hidden hover:border-indigo-500 hover:shadow-lg transition-all duration-300 h-full">
+                <a href="{% url 'blog-detail' blogs.0.author.username blogs.0.slug %}"
+                    class="lg:col-span-2 group block">
+                    <div
+                        class="bg-white border border-gray-300 rounded-xl overflow-hidden hover:border-indigo-500 hover:shadow-lg transition-all duration-300 h-full">
                         <div class="aspect-[16/9] relative overflow-hidden">
                             {% if blogs.0.thumbnail %}
-                            <img src="{{ blogs.0.thumbnail.url }}" alt="{{ blogs.0.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                            <img src="{{ blogs.0.thumbnail.url }}" alt="{{ blogs.0.title }}"
+                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                             {% else %}
-                            <div class="w-full h-full bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center">
+                            <div
+                                class="w-full h-full bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center">
                                 <p class="text-white text-4xl font-bold opacity-50">No Image</p>
                             </div>
                             {% endif %}
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent">
+                            </div>
                         </div>
                         <div class="p-6">
                             <div class="flex items-center gap-3 mb-3">
                                 {% if blogs.0.category %}
-                                <span class="px-3 py-1 bg-indigo-100 text-indigo-600 text-xs font-semibold rounded-full">{{ blogs.0.category.name }}</span>
+                                <span
+                                    class="px-3 py-1 bg-indigo-100 text-indigo-600 text-xs font-semibold rounded-full">
+                                    {{blogs.0.category }}</span>
                                 {% endif %}
                                 <span class="text-gray-500 text-sm">{{ blogs.0.publishedDate|date:"M d, Y" }}</span>
                             </div>
-                            <h3 class="text-2xl font-bold text-gray-900 mb-3 group-hover:text-indigo-600 transition-colors">{{ blogs.0.title }}</h3>
+                            <h3
+                                class="text-2xl font-bold text-gray-900 mb-3 group-hover:text-indigo-600 transition-colors">
+                                {{ blogs.0.title }}</h3>
+
+                            {% if blogs.0.excerpt %}
+                            <p class="text-gray-600 line-clamp-2 font-bold py-2">{{ blogs.0.subtitle }}</p>
+                            {% endif %}
+
                             {% if blogs.0.excerpt %}
                             <p class="text-gray-600 line-clamp-2">{{ blogs.0.excerpt }}</p>
                             {% endif %}
@@ -160,12 +175,15 @@
                 <div class="space-y-6">
                     <!-- Second Blog -->
                     <a href="{% url 'blog-detail' blogs.1.author.username blogs.1.slug %}" class="group block">
-                        <div class="bg-white border border-gray-300 rounded-xl overflow-hidden hover:border-indigo-500 hover:shadow-lg transition-all duration-300">
+                        <div
+                            class="bg-white border border-gray-300 rounded-xl overflow-hidden hover:border-indigo-500 hover:shadow-lg transition-all duration-300">
                             <div class="aspect-[16/9] relative overflow-hidden">
                                 {% if blogs.1.thumbnail %}
-                                <img src="{{ blogs.1.thumbnail.url }}" alt="{{ blogs.1.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                <img src="{{ blogs.1.thumbnail.url }}" alt="{{ blogs.1.title }}"
+                                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                                 {% else %}
-                                <div class="w-full h-full bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center">
+                                <div
+                                    class="w-full h-full bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center">
                                     <p class="text-white text-2xl font-bold opacity-50">No Image</p>
                                 </div>
                                 {% endif %}
@@ -173,23 +191,30 @@
                             <div class="p-4">
                                 <div class="flex items-center gap-2 mb-2">
                                     {% if blogs.1.category %}
-                                    <span class="px-2 py-1 bg-violet-100 text-violet-600 text-xs font-semibold rounded-full">{{ blogs.1.category.name }}</span>
+                                    <span
+                                        class="px-2 py-1 bg-violet-100 text-violet-600 text-xs font-semibold rounded-full">
+                                        {{blogs.1.category }}</span>
                                     {% endif %}
                                     <span class="text-gray-500 text-xs">{{ blogs.1.publishedDate|date:"M d, Y" }}</span>
                                 </div>
-                                <h3 class="text-lg font-bold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors line-clamp-2">{{ blogs.1.title }}</h3>
+                                <h3
+                                    class="text-lg font-bold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors line-clamp-2">
+                                    {{ blogs.1.title }}</h3>
                             </div>
                         </div>
                     </a>
 
                     <!-- Third Blog -->
                     <a href="{% url 'blog-detail' blogs.2.author.username blogs.2.slug %}" class="group block">
-                        <div class="bg-white border border-gray-300 rounded-xl overflow-hidden hover:border-indigo-500 hover:shadow-lg transition-all duration-300">
+                        <div
+                            class="bg-white border border-gray-300 rounded-xl overflow-hidden hover:border-indigo-500 hover:shadow-lg transition-all duration-300">
                             <div class="aspect-[16/9] relative overflow-hidden">
                                 {% if blogs.2.thumbnail %}
-                                <img src="{{ blogs.2.thumbnail.url }}" alt="{{ blogs.2.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                <img src="{{ blogs.2.thumbnail.url }}" alt="{{ blogs.2.title }}"
+                                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                                 {% else %}
-                                <div class="w-full h-full bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center">
+                                <div
+                                    class="w-full h-full bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center">
                                     <p class="text-white text-2xl font-bold opacity-50">No Image</p>
                                 </div>
                                 {% endif %}
@@ -197,11 +222,15 @@
                             <div class="p-4">
                                 <div class="flex items-center gap-2 mb-2">
                                     {% if blogs.2.category %}
-                                    <span class="px-2 py-1 bg-violet-100 text-violet-600 text-xs font-semibold rounded-full">{{ blogs.2.category.name }}</span>
+                                    <span
+                                        class="px-2 py-1 bg-violet-100 text-violet-600 text-xs font-semibold rounded-full">
+                                        {{blogs.2.category }}</span>
                                     {% endif %}
                                     <span class="text-gray-500 text-xs">{{ blogs.2.publishedDate|date:"M d, Y" }}</span>
                                 </div>
-                                <h3 class="text-lg font-bold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors line-clamp-2">{{ blogs.2.title }}</h3>
+                                <h3
+                                    class="text-lg font-bold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors line-clamp-2">
+                                    {{ blogs.2.title }}</h3>
                             </div>
                         </div>
                     </a>
@@ -216,21 +245,28 @@
             <!-- Blog 4 (index 3) -->
             {% if blogs.3 %}
             <a href="{% url 'blog-detail' blogs.3.author.username blogs.3.slug %}" class="group block">
-                <div class="bg-white border border-gray-300 rounded-xl overflow-hidden hover:border-indigo-500 hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+                <div
+                    class="bg-white border border-gray-300 rounded-xl overflow-hidden hover:border-indigo-500 hover:shadow-lg transition-all duration-300 h-full flex flex-col">
                     <div class="aspect-[16/9] relative overflow-hidden">
                         {% if blogs.3.thumbnail %}
-                        <img src="{{ blogs.3.thumbnail.url }}" alt="{{ blogs.3.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <img src="{{ blogs.3.thumbnail.url }}" alt="{{ blogs.3.title }}"
+                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                         {% else %}
-                        <div class="w-full h-full bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center">
+                        <div
+                            class="w-full h-full bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center">
                             <p class="text-white text-3xl font-bold opacity-50">No Image</p>
                         </div>
                         {% endif %}
                     </div>
                     <div class="p-6 flex-grow flex flex-col">
                         {% if blogs.3.category %}
-                        <span class="px-3 py-1 bg-indigo-100 text-indigo-600 text-xs font-semibold rounded-full self-start">{{ blogs.3.category.name }}</span>
+                        <span
+                            class="px-3 py-1 bg-indigo-100 text-indigo-600 text-xs font-semibold rounded-full self-start">{{
+                            blogs.3.category.name }}</span>
                         {% endif %}
-                        <h3 class="text-xl font-bold text-gray-900 mt-2 group-hover:text-indigo-600 transition-colors line-clamp-2">{{ blogs.3.title }}</h3>
+                        <h3
+                            class="text-xl font-bold text-gray-900 mt-2 group-hover:text-indigo-600 transition-colors line-clamp-2">
+                            {{ blogs.3.title }}</h3>
                         {% if blogs.3.excerpt %}
                         <p class="text-gray-600 text-sm line-clamp-3 mt-2 flex-grow">{{ blogs.3.excerpt }}</p>
                         {% endif %}
@@ -242,21 +278,28 @@
             <!-- Blog 5 (index 4) -->
             {% if blogs.4 %}
             <a href="{% url 'blog-detail' blogs.4.author.username blogs.4.slug %}" class="group block">
-                <div class="bg-white border border-gray-300 rounded-xl overflow-hidden hover:border-indigo-500 hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+                <div
+                    class="bg-white border border-gray-300 rounded-xl overflow-hidden hover:border-indigo-500 hover:shadow-lg transition-all duration-300 h-full flex flex-col">
                     <div class="aspect-[16/9] relative overflow-hidden">
                         {% if blogs.4.thumbnail %}
-                        <img src="{{ blogs.4.thumbnail.url }}" alt="{{ blogs.4.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <img src="{{ blogs.4.thumbnail.url }}" alt="{{ blogs.4.title }}"
+                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                         {% else %}
-                        <div class="w-full h-full bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center">
+                        <div
+                            class="w-full h-full bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center">
                             <p class="text-white text-3xl font-bold opacity-50">No Image</p>
                         </div>
                         {% endif %}
                     </div>
                     <div class="p-6 flex-grow flex flex-col">
                         {% if blogs.4.category %}
-                        <span class="px-3 py-1 bg-indigo-100 text-indigo-600 text-xs font-semibold rounded-full self-start">{{ blogs.4.category.name }}</span>
+                        <span
+                            class="px-3 py-1 bg-indigo-100 text-indigo-600 text-xs font-semibold rounded-full self-start">{{
+                            blogs.4.category.name }}</span>
                         {% endif %}
-                        <h3 class="text-xl font-bold text-gray-900 mt-2 group-hover:text-indigo-600 transition-colors line-clamp-2">{{ blogs.4.title }}</h3>
+                        <h3
+                            class="text-xl font-bold text-gray-900 mt-2 group-hover:text-indigo-600 transition-colors line-clamp-2">
+                            {{ blogs.4.title }}</h3>
                         {% if blogs.4.excerpt %}
                         <p class="text-gray-600 text-sm line-clamp-3 mt-2 flex-grow">{{ blogs.4.excerpt }}</p>
                         {% endif %}
@@ -268,21 +311,28 @@
             <!-- Blog 6 (index 5) -->
             {% if blogs.5 %}
             <a href="{% url 'blog-detail' blogs.5.author.username blogs.5.slug %}" class="group block">
-                <div class="bg-white border border-gray-300 rounded-xl overflow-hidden hover:border-indigo-500 hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+                <div
+                    class="bg-white border border-gray-300 rounded-xl overflow-hidden hover:border-indigo-500 hover:shadow-lg transition-all duration-300 h-full flex flex-col">
                     <div class="aspect-[16/9] relative overflow-hidden">
                         {% if blogs.5.thumbnail %}
-                        <img src="{{ blogs.5.thumbnail.url }}" alt="{{ blogs.5.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <img src="{{ blogs.5.thumbnail.url }}" alt="{{ blogs.5.title }}"
+                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                         {% else %}
-                        <div class="w-full h-full bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center">
+                        <div
+                            class="w-full h-full bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center">
                             <p class="text-white text-3xl font-bold opacity-50">No Image</p>
                         </div>
                         {% endif %}
                     </div>
                     <div class="p-6 flex-grow flex flex-col">
                         {% if blogs.5.category %}
-                        <span class="px-3 py-1 bg-indigo-100 text-indigo-600 text-xs font-semibold rounded-full self-start">{{ blogs.5.category.name }}</span>
+                        <span
+                            class="px-3 py-1 bg-indigo-100 text-indigo-600 text-xs font-semibold rounded-full self-start">{{
+                            blogs.5.category.name }}</span>
                         {% endif %}
-                        <h3 class="text-xl font-bold text-gray-900 mt-2 group-hover:text-indigo-600 transition-colors line-clamp-2">{{ blogs.5.title }}</h3>
+                        <h3
+                            class="text-xl font-bold text-gray-900 mt-2 group-hover:text-indigo-600 transition-colors line-clamp-2">
+                            {{ blogs.5.title }}</h3>
                         {% if blogs.5.excerpt %}
                         <p class="text-gray-600 text-sm line-clamp-3 mt-2 flex-grow">{{ blogs.5.excerpt }}</p>
                         {% endif %}
@@ -293,13 +343,69 @@
         </div>
         {% endif %}
 
+        <!-- All Blogs Grid (For page 2+) -->
+        {% if page_obj.number > 1 %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {% for blog in blogs %}
+            <a href="{% url 'blog-detail' blog.author.username blog.slug %}" class="group block">
+                <div
+                    class="bg-white border border-gray-300 rounded-xl overflow-hidden hover:border-indigo-500 hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+                    <div class="aspect-[16/9] relative overflow-hidden">
+                        {% if blog.thumbnail %}
+                        <img src="{{ blog.thumbnail.url }}" alt="{{ blog.title }}"
+                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        {% else %}
+                        <div
+                            class="w-full h-full bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center">
+                            <p class="text-white text-3xl font-bold opacity-50">No Image</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="p-6 flex-grow flex flex-col">
+                        <div class="flex items-center gap-2 mb-2">
+                            {% if blog.category %}
+                            <span
+                                class="px-3 py-1 bg-indigo-100 text-indigo-600 text-xs font-semibold rounded-full">{{
+                                blog.category.name }}</span>
+                            {% endif %}
+                            <span class="text-gray-500 text-xs">{{ blog.publishedDate|date:"M d, Y" }}</span>
+                        </div>
+                        <h3
+                            class="text-xl font-bold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors line-clamp-2">
+                            {{ blog.title }}</h3>
+                        {% if blog.excerpt %}
+                        <p class="text-gray-600 text-sm line-clamp-3 mt-2 flex-grow">{{ blog.excerpt }}</p>
+                        {% endif %}
+                        <div class="flex items-center gap-4 mt-4 pt-4 border-t border-gray-200 text-sm text-gray-500">
+                            <span class="flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                {{ blog.views }}
+                            </span>
+                            <span class="flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                                {{ blog.likes }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
         <!-- Pagination -->
         {% include 'partials/pagination.html' %}
 
         {% else %}
-        {% include 'partials/empty_state.html' with title="No blogs found" message="Try adjusting your search or filters to find what you're looking for" icon="search" %}
+        {% include 'partials/empty_state.html' with title="No blogs found" message="Try adjusting your search or filters
+        to find what you're looking for" icon="search" %}
         {% endif %}
-        
+
     </div>
 </div>
 {% endblock %}
