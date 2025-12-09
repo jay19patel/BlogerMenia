@@ -1,0 +1,356 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ filter_author.username }}'s Profile - BlogerMenia{% endblock %}
+
+{% block content %}
+<div class="py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- User Profile Card with Header Banner -->
+        <div class="mb-12 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <!-- Banner -->
+            <div class="w-full h-32 bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-600"></div>
+
+            <!-- Profile Content -->
+            <div class="px-8 py-6">
+                <!-- Profile Image -->
+                <div class="flex items-center justify-center sm:justify-start mb-4 -mt-16">
+                    <div class="relative w-24 h-24">
+                        <div class="absolute inset-0 border-4 border-white rounded-full overflow-hidden shadow-lg">
+                            {% if filter_author.profile_image %}
+                                <img src="{{ filter_author.profile_image.url }}" alt="{{ filter_author.username }}" class="w-full h-full object-cover">
+                            {% else %}
+                                <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600">
+                                    <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                    </svg>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Info and Categories -->
+                <div class="flex items-center justify-center flex-col sm:flex-row max-sm:gap-4 sm:justify-between mb-6">
+                    <div class="block">
+                        <h3 class="font-bold text-3xl text-gray-900 mb-1 max-sm:text-center">
+                            {{ filter_author.get_full_name|default:filter_author.username }}
+                        </h3>
+                        <p class="font-normal text-base leading-6 text-gray-500 max-sm:text-center">
+                            @{{ filter_author.username }}
+                            {% if filter_author.headline %}
+                                <span> • {{ filter_author.headline }}</span>
+                            {% endif %}
+                        </p>
+                        {% if filter_author.bio %}
+                            <p class="font-normal text-sm leading-5 text-gray-600 mt-2 max-sm:text-center">
+                                {{ filter_author.bio }}
+                            </p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Categories Tags -->
+                    {% if category_names %}
+                        <div class="flex flex-wrap items-center gap-2">
+                            {% for category_name in category_names %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold transition-all duration-300 hover:bg-indigo-100 hover:text-indigo-700">
+                                    {{ category_name }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Stats Section -->
+                <div class="flex flex-col flex-1 gap-6 lg:gap-0 lg:flex-row lg:justify-between">
+                    <!-- Blogs Published -->
+                    <div class="w-full lg:w-1/4 border-b pb-6 lg:border-b-0 lg:pb-0 lg:border-r border-gray-100">
+                        <div class="font-bold text-3xl text-gray-900 mb-2 text-center">
+                            {{ user_stats.blog_count }}
+                        </div>
+                        <span class="text-sm text-gray-500 text-center block">Blogs Published</span>
+                    </div>
+
+                    <!-- Total Views -->
+                    <div class="w-full lg:w-1/4 border-b pb-6 lg:border-b-0 lg:pb-0 lg:border-r border-gray-100">
+                        <div class="font-bold text-3xl text-gray-900 mb-2 text-center">
+                            {{ user_stats.total_views|default:"0" }}
+                        </div>
+                        <span class="text-sm text-gray-500 text-center block">Total Views</span>
+                    </div>
+
+                    <!-- Total Likes -->
+                    <div class="w-full lg:w-1/4 border-b pb-6 lg:border-b-0 lg:pb-0 lg:border-r border-gray-100">
+                        <div class="font-bold text-3xl text-gray-900 mb-2 text-center">
+                            {{ user_stats.total_likes|default:"0" }}
+                        </div>
+                        <span class="text-sm text-gray-500 text-center block">Total Likes</span>
+                    </div>
+
+                    <!-- Member Since -->
+                    <div class="w-full lg:w-1/4">
+                        <div class="font-bold text-3xl text-gray-900 mb-2 text-center">
+                            {{ user_stats.member_since|date:"M Y" }}
+                        </div>
+                        <span class="text-sm text-gray-500 text-center block">Member Since</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Playlists Section (Dummy Data) -->
+        {% if playlists %}
+        <div class="mb-12">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <svg class="w-7 h-7 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+                </svg>
+                All Playlists
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for playlist in playlists %}
+                <a href="#" class="group relative block" style="z-index: {{ forloop.revcounter }};">
+                    <div class="relative">
+                        <!-- Stacked Card Effect -->
+                        <div class="absolute inset-0 bg-gray-50 border border-gray-400 rounded-lg transform translate-x-3 translate-y-3 opacity-40 shadow-md"></div>
+                        <div class="absolute inset-0 bg-gray-50 border border-gray-400 rounded-lg transform translate-x-2 translate-y-2 opacity-60 shadow-md"></div>
+                        <div class="absolute inset-0 bg-gray-50 border border-gray-400 rounded-lg transform translate-x-1 translate-y-1 opacity-80 shadow-md transition-all duration-300"></div>
+
+                        <!-- Main Card -->
+                        <div class="relative bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm group-hover:shadow-lg group-hover:border-indigo-300 group-hover:scale-105 transition-all duration-300">
+                            <!-- Cover Image -->
+                            <div class="relative aspect-[16/9] overflow-hidden bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600">
+                                {% if playlist.cover_image %}
+                                    <img src="{{ playlist.cover_image }}" alt="{{ playlist.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                {% else %}
+                                    <div class="w-full h-full flex items-center justify-center">
+                                        <svg class="w-16 h-16 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                        </svg>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Card Content -->
+                            <div class="p-4">
+                                <h3 class="font-semibold text-lg text-gray-900 mb-1 line-clamp-2 group-hover:text-indigo-600 transition-colors">
+                                    {{ playlist.name }}
+                                </h3>
+
+                                {% if playlist.description %}
+                                    <p class="text-sm text-gray-600 line-clamp-2 mb-3">
+                                        {{ playlist.description }}
+                                    </p>
+                                {% endif %}
+
+                                <!-- Stats -->
+                                <div class="flex items-center gap-3 text-xs text-gray-500 mt-3 pt-3 border-t border-gray-100">
+                                    <span class="flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                        </svg>
+                                        {{ playlist.blog_count }}
+                                    </span>
+                                    <span class="flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        </svg>
+                                        {{ playlist.total_views }}
+                                    </span>
+                                    <span class="flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                        </svg>
+                                        {{ playlist.total_likes }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- All Articles Section -->
+        <div class="mb-8">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-6">All Articles</h2>
+
+            <!-- Search and Filter Section -->
+            <div class="mb-8 space-y-4">
+                <form method="GET" class="space-y-4">
+                    <!-- Search Bar -->
+                    <div class="relative">
+                        <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <input
+                            type="text"
+                            name="q"
+                            placeholder="Search in {{ filter_author.username }}'s blogs..."
+                            value="{{ search_query }}"
+                            class="w-full pl-12 pr-24 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        >
+                        <button
+                            type="submit"
+                            class="absolute right-2 top-1/2 transform -translate-y-1/2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+                        >
+                            Search
+                        </button>
+                    </div>
+
+                    <!-- Categories as Pills -->
+                    {% if categories %}
+                    <div class="space-y-2">
+                        <p class="text-sm text-gray-600">Filter by Category:</p>
+                        <div class="flex flex-wrap gap-3">
+                            {% for category in categories %}
+                                <button
+                                    type="submit"
+                                    name="category"
+                                    value="{{ category.slug }}"
+                                    class="px-5 py-2 rounded-full font-medium transition-all duration-300 {% if category.slug == selected_category %}bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/30{% else %}bg-white text-gray-700 border border-gray-300 hover:border-indigo-500 hover:text-indigo-600{% endif %}"
+                                >
+                                    {{ category.name }}
+                                </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Preserve search query when filtering -->
+                    {% if search_query %}
+                        <input type="hidden" name="q" value="{{ search_query }}">
+                    {% endif %}
+                </form>
+            </div>
+
+            <!-- Active Filters Display -->
+            {% if search_query or selected_category %}
+            <div class="mb-8">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-sm font-medium text-gray-700">Active Filters:</span>
+
+                    <!-- Search Query Filter -->
+                    {% if search_query %}
+                    <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-300 rounded-full text-sm">
+                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <span class="text-gray-700">{{ search_query }}</span>
+                        <a href="?{% if selected_category %}category={{ selected_category }}{% endif %}" class="text-gray-500 hover:text-red-600 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </a>
+                    </div>
+                    {% endif %}
+
+                    <!-- Category Filter -->
+                    {% if selected_category %}
+                        {% for category in categories %}
+                            {% if category.slug == selected_category %}
+                            <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-300 rounded-full text-sm">
+                                <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                                </svg>
+                                <span class="text-gray-700 font-medium">{{ category.name }}</span>
+                                <a href="?{% if search_query %}q={{ search_query }}{% endif %}" class="text-gray-500 hover:text-red-600 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </a>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Results Count -->
+            <div class="mb-6">
+                <p class="text-gray-600">
+                    Showing {{ page_obj.object_list|length }} of {{ total_count }} article{{ total_count|pluralize }}
+                    {% if search_query %}
+                        matching "{{ search_query }}"
+                    {% endif %}
+                    {% if selected_category %}
+                        in
+                        {% for category in categories %}
+                            {% if category.slug == selected_category %}{{ category.name }}{% endif %}
+                        {% endfor %}
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <!-- Blogs Grid (3 per row) -->
+        {% if page_obj.object_list %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            {% for blog in page_obj.object_list %}
+            <a href="{% url 'blog-detail' blog.author.username blog.slug %}" class="group block">
+                <div class="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-indigo-500 hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+                    <!-- Thumbnail -->
+                    <div class="aspect-[16/9] relative overflow-hidden">
+                        {% if blog.thumbnail %}
+                            <img src="{{ blog.thumbnail.url }}" alt="{{ blog.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        {% else %}
+                            <div class="w-full h-full bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center">
+                                <p class="text-white text-3xl font-bold opacity-50">No Image</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Card Content -->
+                    <div class="p-6 flex-grow flex flex-col">
+                        {% if blog.category %}
+                            <span class="px-3 py-1 bg-indigo-100 text-indigo-600 text-xs font-semibold rounded-full w-fit">{{ blog.category.name }}</span>
+                        {% endif %}
+                        <h3 class="text-xl font-bold text-gray-900 mt-2 group-hover:text-indigo-600 transition-colors line-clamp-2">{{ blog.title }}</h3>
+                        {% if blog.excerpt %}
+                            <p class="text-gray-600 text-sm line-clamp-3 mt-2 flex-grow">{{ blog.excerpt }}</p>
+                        {% endif %}
+
+                        <!-- Published Date -->
+                        <p class="text-xs text-gray-500 mt-3">
+                            Published on {{ blog.publishedDate|date:"M d, Y" }}
+                        </p>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- No Blogs Found Message -->
+        <div class="text-center py-16">
+            <svg class="mx-auto h-24 w-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <h3 class="mt-4 text-xl font-semibold text-gray-900">No articles found</h3>
+            <p class="mt-2 text-gray-600">
+                {% if search_query or selected_category  %}
+                    No articles match your search criteria. Try adjusting your filters.
+                {% else %}
+                    {{ filter_author.username }} hasn't published any articles yet.
+                {% endif %}
+            </p>
+            {% if search_query or selected_category  %}
+                <a href="{% url 'user-blogs' filter_author.username %}"
+                   class="inline-block mt-6 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium">
+                    Clear all filters
+                </a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Pagination -->
+        {% if page_obj.object_list %}
+            {% include 'partials/pagination.html' %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

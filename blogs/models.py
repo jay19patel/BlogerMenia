@@ -62,17 +62,6 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
-class Tag(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    slug = models.SlugField(unique=True, blank=True)
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name)
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.name
 
 class Blog(models.Model):
     title = models.CharField(max_length=200)
@@ -95,12 +84,9 @@ class Blog(models.Model):
         related_name="blogs"
     )
 
-    tags = models.ManyToManyField(Tag, related_name="blogs", blank=True)
-
     thumbnail = models.ImageField(upload_to='thumbnails/', blank=True, null=True)
-
-    featured = models.BooleanField(default=False)
-
+    
+    isPublished = models.BooleanField(default=False)
     publishedDate = models.DateTimeField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -109,8 +95,10 @@ class Blog(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.title)
-        if self.publishedDate is None:
+        if self.isPublished and not self.publishedDate:
             self.publishedDate = datetime.datetime.now()
+        elif not self.isPublished:
+            self.publishedDate = None
         super().save(*args, **kwargs)
 
     def __str__(self):

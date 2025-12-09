@@ -65,14 +65,6 @@
                 {% endif %}
             </div>
 
-            <!-- Tags -->
-            <div>
-                <label class="block font-medium">Tags</label>
-                {{ form.tags }}
-                {% if form.tags.errors %}
-                    <p class="text-red-600 text-sm">{{ form.tags.errors.0 }}</p>
-                {% endif %}
-            </div>
 
             <!-- Thumbnail -->
             <div>
@@ -81,13 +73,6 @@
                 {% if form.thumbnail.errors %}
                     <p class="text-red-600 text-sm">{{ form.thumbnail.errors.0 }}</p>
                 {% endif %}
-            </div>
-
-            <!-- Featured -->
-            <div>
-                <label class="inline-flex items-center">
-                    {{ form.featured }} Featured
-                </label>
             </div>
 
             <!-- Published Date -->
