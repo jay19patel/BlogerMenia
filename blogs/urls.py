@@ -11,5 +11,4 @@ urlpatterns = [
 
     # Profile URLs
     path('profile/', account.ProfileView.as_view(), name='profile'),
-    path('profile/remove-image/', account.remove_profile_image, name='remove_profile_image'),
 ]

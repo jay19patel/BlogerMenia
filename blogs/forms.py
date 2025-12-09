@@ -82,13 +82,16 @@ class UserProfileForm(forms.ModelForm):
         image = self.cleaned_data.get('profile_image')
 
         if image:
-            # Check file size (max 2MB)
-            if image.size > 2 * 1024 * 1024:
-                raise forms.ValidationError("Image size should be less than 2MB")
+            # Only validate if it's a new upload (has content_type attribute)
+            # If it's an existing ImageFieldFile, skip validation
+            if hasattr(image, 'content_type'):
+                # Check file size (max 2MB)
+                if image.size > 2 * 1024 * 1024:
+                    raise forms.ValidationError("Image size should be less than 2MB")
 
-            # Check file type
-            if not image.content_type.startswith('image/'):
-                raise forms.ValidationError("Please upload a valid image file")
+                # Check file type
+                if not image.content_type.startswith('image/'):
+                    raise forms.ValidationError("Please upload a valid image file")
 
         return image
 
