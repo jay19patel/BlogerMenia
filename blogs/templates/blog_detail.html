@@ -314,17 +314,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const tableOfContents = [];
     let activeSection = '';
 
+    // Add Introduction to TOC
     const introduction = document.getElementById('introduction');
     if (introduction) tableOfContents.push({ id: 'introduction', title: 'Introduction' });
 
-    {% if blog.sections %}
-    {% for section in blog.sections %}
-        {% if section.title %}
-        tableOfContents.push({ id: 'section-{{ forloop.counter0 }}', title: '{{ section.title|escapejs }}' });
-        {% endif %}
-    {% endfor %}
+    // Add all sections to TOC
+    {% if blog.sections and blog.sections.sections %}
+        {% for section in blog.sections.sections %}
+            {% if section.title %}
+    tableOfContents.push({ id: 'section-{{ forloop.counter0 }}', title: '{{ section.title|escapejs }}' });
+            {% endif %}
+        {% endfor %}
     {% endif %}
 
+    // Add Conclusion to TOC
     const conclusion = document.getElementById('conclusion');
     if (conclusion) tableOfContents.push({ id: 'conclusion', title: 'Conclusion' });
 
