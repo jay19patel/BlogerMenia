@@ -45,7 +45,7 @@
               <a href="{% url 'profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                 Profile Settings
               </a>
-              <a href="{% url 'user-blogs' username=request.user.username %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+              <a href="{% url 'user-blogs-edit' username=request.user.username %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                 My Blogs
               </a>
               <form method="post" action="{% url 'account_logout' %}" class="m-0">

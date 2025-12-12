@@ -14,7 +14,8 @@ class User(AbstractUser):
     bio = models.TextField(null=True, blank=True, help_text="Bio or about section")
 
     def __str__(self):
-        return self.username or self.email
+        # return self.username or self.email
+        return self.get_display_name()
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
@@ -120,3 +121,65 @@ class Blog(models.Model):
 
     def __str__(self):
         return self.slug
+
+
+class BlogLike(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='blog_likes')
+    blog = models.ForeignKey(Blog, on_delete=models.CASCADE, related_name='blog_likes')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'blog')
+
+    def __str__(self):
+        return f"{self.user.username} likes {self.blog.title}"
+
+
+class Playlist(models.Model):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='playlists')
+    name = models.CharField(max_length=200)
+    slug = models.SlugField(unique=True, blank=True)
+    description = models.TextField(blank=True, null=True)
+    thumbnail = models.ImageField(upload_to='playlist_thumbnails/', blank=True, null=True)
+    blogs = models.ManyToManyField(Blog, related_name='playlists', blank=True)
+    is_public = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.name)
+            slug = base_slug
+            counter = 1
+            while Playlist.objects.filter(slug=slug).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
+        
+        # Optimize thumbnail if it exists
+        if self.thumbnail:
+            try:
+                # Check if the image is actually available/changed before processing
+                # This basic check assumes if it has a file, we might need to process it.
+                # A more robust check typically involves checking if 'thumbnail' field is dirty.
+                # For simplicity in this context, we'll process on save if it exists.
+                img = Image.open(self.thumbnail)
+                max_size = (800, 800)
+                if img.height > max_size[1] or img.width > max_size[0]:
+                    img.thumbnail(max_size, Image.Resampling.LANCZOS)
+                    # We need to save it back. This can be complex with storage backends
+                    # ignoring complex storage logic for local file optimization for now:
+                    # img.save(self.thumbnail.path, quality=85, optimize=True)
+                    # NOTE: modifying files in save() directly can be tricky with some storage backends.
+                    # Given the User model does it, I will assume local storage is compliant.
+                    if hasattr(self.thumbnail, 'path'):
+                         img.save(self.thumbnail.path, quality=85, optimize=True)
+
+            except Exception as e:
+                # Fail silently or log error for image processing
+                print(f"Error optimizing playlist thumbnail: {e}")
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name

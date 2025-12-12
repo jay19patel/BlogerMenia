@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}{{ playlist.name }} - Playlist by {{ playlist.owner.username }}{% endblock %}
+
+{% block content %}
+<div class="py-12 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Playlist Header -->
+        <div class="rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-8">
+            <div class="md:flex">
+                <!-- Cover Image -->
+                <div
+                    class="md:w-1/3 h-64 md:h-auto relative bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600">
+                    {% if playlist.thumbnail %}
+                    <img src="{{ playlist.thumbnail.url }}" alt="{{ playlist.name }}"
+                        class="w-full h-full object-cover">
+                    {% else %}
+                    <div class="w-full h-full flex items-center justify-center">
+                        <svg class="w-20 h-20 text-white opacity-50" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                        </svg>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Info -->
+                <div class="p-8 md:w-2/3 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span
+                                    class="px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-full">Playlist</span>
+                                {% if not playlist.is_public %}
+                                <span
+                                    class="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-full flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                    Private
+                                </span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Actions for Owner -->
+                            {% if user.is_authenticated and user == playlist.owner %}
+                            <div class="flex gap-2">
+                                <a href="{% url 'playlist-update' playlist.owner.username playlist.slug %}"
+                                    class="p-2 text-gray-400 hover:text-indigo-600 transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                </a>
+                                <a href="{% url 'playlist-delete' playlist.owner.username playlist.slug %}"
+                                    class="p-2 text-gray-400 hover:text-red-600 transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ playlist.name }}</h1>
+                        {% if playlist.description %}
+                        <p class="text-gray-600 text-lg leading-relaxed mb-6">{{ playlist.description }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="flex items-center gap-4 pt-6 border-t border-gray-100">
+                        <div class="flex items-center gap-3">
+                            {% if playlist.owner.profile_image %}
+                            <img src="{{ playlist.owner.profile_image.url }}" alt="{{ playlist.owner.username }}"
+                                class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm">
+                            {% else %}
+                            <div
+                                class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
+                                {{ playlist.owner.username|make_list|first|upper }}
+                            </div>
+                            {% endif %}
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">Created by <a
+                                        href="{% url 'user-blogs' playlist.owner.username %}"
+                                        class="hover:underline text-indigo-600">@{{ playlist.owner.username }}</a></p>
+                                <p class="text-xs text-gray-500">{{ playlist.created_at|date:"M d, Y" }} •
+                                    {{ playlist.blogs.all|length }} Articles</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Playlist Items -->
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Articles in this Playlist</h2>
+        <div class="space-y-4">
+            {% for blog in playlist.blogs.all %}
+            <div
+                class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow duration-300 flex flex-col md:flex-row gap-6">
+                <!-- Thumbnail -->
+                <div class="w-full md:w-48 aspect-video rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 relative">
+                    {% if blog.thumbnail %}
+                    <img src="{{ blog.thumbnail.url }}" alt="{{ blog.title }}" class="w-full h-full object-cover">
+                    {% else %}
+                    <div class="w-full h-full flex items-center justify-center text-gray-400">
+                        <span class="text-xs">No Image</span>
+                    </div>
+                    {% endif %}
+                    <div class="absolute top-2 left-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+                        #{{ forloop.counter }}
+                    </div>
+                </div>
+
+                <div class="flex-grow flex flex-col justify-center">
+                    {% if blog.category %}
+                    <div class="mb-1">
+                        <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-1 rounded">
+                            {{ blog.category }}</span>
+                    </div>
+                    {% endif %}
+                    <a href="{% url 'blog-detail' blog.author.username blog.slug %}" class="group">
+                        <h3 class="text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors mb-2">
+                            {{ blog.title }}</h3>
+                    </a>
+                    {% if blog.excerpt %}
+                    <p class="text-gray-600 text-sm line-clamp-2 md:line-clamp-1 mb-2">{{ blog.excerpt }}</p>
+                    {% endif %}
+                    <div class="flex items-center text-xs text-gray-500 gap-4">
+                        <span>{{ blog.publishedDate|date:"M d, Y" }}</span>
+                        <span class="flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            {{ blog.views }}
+                        </span>
+                        <span class="flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                            {{ blog.likes }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
+                <p class="text-gray-500">No articles in this playlist yet.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -14,10 +14,23 @@
 
 <style>
     /* Custom Scrollbar */
-    ::-webkit-scrollbar {width: 8px; height: 8px;}
-    ::-webkit-scrollbar-track {background: #f1f1f1;}
-    ::-webkit-scrollbar-thumb {background: #888; border-radius: 4px;}
-    ::-webkit-scrollbar-thumb:hover {background: #555;}
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
 
     /* Code Block Styling */
     .code-block-wrapper {
@@ -38,7 +51,10 @@
         box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
     }
 
-    .code-dots {display: flex; gap: 0.375rem;}
+    .code-dots {
+        display: flex;
+        gap: 0.375rem;
+    }
 
     .code-dot {
         width: 0.75rem;
@@ -106,20 +122,43 @@
     }
 
     /* TOC Styles */
-    .toc-item {transition: all 0.3s ease;}
+    .toc-item {
+        transition: all 0.3s ease;
+    }
+
     .toc-item.active {
         background: linear-gradient(to right, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
-        border-left: 2px solid #6366f1; color: #6366f1;
+        border-left: 2px solid #6366f1;
+        color: #6366f1;
     }
-    html {scroll-behavior: smooth;}
-    .blog-image {transition: transform 0.3s ease;}
-    .blog-image:hover {transform: scale(1.02);}
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    .blog-image {
+        transition: transform 0.3s ease;
+    }
+
+    .blog-image:hover {
+        transform: scale(1.02);
+    }
+
     .note-box {
-        background: rgba(254, 243, 199, 0.5); border-left: 4px solid #facc15;
-        padding: 1.5rem; border-radius: 0 0.5rem 0.5rem 0;
+        background: rgba(254, 243, 199, 0.5);
+        border-left: 4px solid #facc15;
+        padding: 1.5rem;
+        border-radius: 0 0.5rem 0.5rem 0;
     }
-    .resource-link {transition: all 0.2s ease;}
-    .resource-link:hover {border-color: #3b82f6; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);}
+
+    .resource-link {
+        transition: all 0.2s ease;
+    }
+
+    .resource-link:hover {
+        border-color: #3b82f6;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
 </style>
 {% endblock %}
 
@@ -127,27 +166,32 @@
 <div class="min-h-screen py-8 relative">
     <div class="flex justify-center relative z-100">
         <!-- TOC Button -->
-        <button id="tocButton" class="fixed bottom-6 left-6 z-40 bg-white border border-gray-300 hover:border-indigo-500 hover:text-indigo-600 text-gray-700 px-5 py-2 rounded-lg font-medium transition-all duration-300 flex items-center gap-2 shadow-sm">
+        <button id="tocButton"
+            class="fixed bottom-6 left-6 z-40 bg-white border border-gray-300 hover:border-indigo-500 hover:text-indigo-600 text-gray-700 px-5 py-2 rounded-lg font-medium transition-all duration-300 flex items-center gap-2 shadow-sm">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16">
+                </path>
             </svg>
             <span class="hidden md:inline">Table of Contents</span>
         </button>
 
         <!-- TOC Sheet -->
         <div id="tocOverlay" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden">
-            <div id="tocSheet" class="absolute left-0 top-0 bottom-0 w-full sm:w-96 bg-white border-r border-gray-200 overflow-y-auto transform -translate-x-full transition-transform duration-300 ease-out shadow-2xl">
+            <div id="tocSheet"
+                class="absolute left-0 top-0 bottom-0 w-full sm:w-96 bg-white border-r border-gray-200 overflow-y-auto transform -translate-x-full transition-transform duration-300 ease-out shadow-2xl">
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-6">
                         <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 6h16M4 12h16M4 18h16"></path>
                             </svg>
                             Table of Contents
                         </h3>
                         <button id="tocClose" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
                             <svg class="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
                     </div>
@@ -158,7 +202,8 @@
 
         <!-- Main Content -->
         <div class="w-full max-w-5xl px-4">
-            <a href="{% url 'blogs-list' %}" class="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 mb-6 transition-colors">
+            <a href="{% url 'blogs-list' %}"
+                class="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 mb-6 transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                 </svg>
@@ -169,11 +214,14 @@
                 <!-- Featured Image -->
                 <div class="relative h-[400px] w-full">
                     {% if blog.thumbnail %}
-                        <img src="{{ blog.thumbnail.url }}" alt="{{ blog.title }}" class="w-full h-full object-cover">
+                    <img src="{{ blog.thumbnail.url }}" alt="{{ blog.title }}" class="w-full h-full object-cover">
                     {% else %}
-                        <div class="w-full h-full bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center">
-                            <div class="text-center text-white"><p class="text-6xl font-bold opacity-50">Blog Image</p></div>
+                    <div
+                        class="w-full h-full bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center">
+                        <div class="text-center text-white">
+                            <p class="text-6xl font-bold opacity-50">Blog Image</p>
                         </div>
+                    </div>
                     {% endif %}
                     <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
 
@@ -181,11 +229,15 @@
                     <div class="absolute bottom-0 left-0 right-0 p-6 text-white">
                         <div class="flex flex-wrap gap-2 mb-4">
                             {% if blog.category %}
-                            <span class="px-3 py-1 bg-blue-600/80 backdrop-blur-sm rounded-lg text-sm font-medium">{{ blog.category.name }}</span>
+                            <span class="px-3 py-1 bg-blue-600/80 backdrop-blur-sm rounded-lg text-sm font-medium">
+                                {{ blog.category }}
+                            </span>
                             {% endif %}
                         </div>
                         <h1 class="text-3xl md:text-4xl font-bold mb-2">{{ blog.title }}</h1>
-                        {% if blog.subtitle %}<p class="text-lg text-gray-200">{{ blog.subtitle }}</p>{% endif %}
+                        {% if blog.subtitle %}
+                        <p class="text-lg text-gray-200">{{ blog.subtitle }}</p>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -195,30 +247,115 @@
                     <div class="flex flex-wrap gap-6 py-4 mb-6 border-y border-gray-200">
                         <div class="flex items-center gap-2 text-gray-600">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                </path>
                             </svg>
                             <span class="text-sm">{{ blog.publishedDate|date:"F d, Y" }}</span>
                         </div>
                         <div class="flex items-center gap-2 text-gray-600">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                             </svg>
-                            <a href="{% url 'user-blogs' username=blog.author.username %}" class="text-sm hover:text-indigo-600 transition-colors">{{ blog.author.get_display_name }}</a>
+                            <a href="{% url 'user-blogs' username=blog.author.username %}"
+                                class="text-sm hover:text-indigo-600 transition-colors">
+                                {{blog.author}}
+                            </a>
                         </div>
                         <div class="flex items-center gap-2 text-gray-600">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                </path>
                             </svg>
                             <span class="text-sm">{{ blog.views|default:0 }}</span>
                         </div>
-                        <div class="flex items-center gap-2 text-gray-600">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                            </svg>
-                            <span class="text-sm">{{ blog.likes|default:0 }}</span>
+                        <div class="flex items-center gap-2">
+                            <button
+                                id="like-btn"
+                                class="flex items-center gap-2 transition-all duration-200 focus:outline-none"
+                                {% if user.is_authenticated %}
+                                    onclick="toggleLike()"
+                                {% else %}
+                                    title="Login to like"
+                                {% endif %}
+                            >
+                                <svg id="like-icon"
+                                    class="w-6 h-6 transition-colors
+                                            {% if user_has_liked %}
+                                                text-red-500 fill-red-500
+                                            {% else %}
+                                                text-gray-400
+                                            {% endif %}"
+                                    stroke="currentColor"
+                                    fill="{% if user_has_liked %}currentColor{% else %}none{% endif %}"
+                                    viewBox="0 0 24 24">
+
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                </svg>
+
+                                <span id="like-count" class="text-sm font-medium text-gray-600">
+                                    {{ blog.likes|default:0 }}
+                                </span>
+                            </button>
+
                         </div>
                     </div>
+
+                    <script>
+                        async function toggleLike() {
+                            const btn = document.getElementById('like-btn');
+                            const icon = document.getElementById('like-icon');
+                            const countSpan = document.getElementById('like-count');
+
+                            // Optimistic UI Update
+                            const isLiked = icon.classList.contains('text-red-500');
+                            let currentCount = parseInt(countSpan.innerText);
+
+                            if (isLiked) {
+                                icon.classList.remove('text-red-500', 'fill-current');
+                                icon.classList.add('text-gray-400', 'fill-none');
+                                countSpan.innerText = currentCount - 1;
+                            } else {
+                                icon.classList.remove('text-gray-400', 'fill-none');
+                                icon.classList.add('text-red-500', 'fill-current');
+                                countSpan.innerText = currentCount + 1;
+                            }
+
+                            try {
+                                const response = await fetch("{% url 'blog-like-toggle' blog.slug %}", {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRFToken': '{{ csrf_token }}',
+                                        'Content-Type': 'application/json'
+                                    },
+                                });
+
+                                if (response.ok) {
+                                    const data = await response.json();
+                                    // Ensure sync with server
+                                    countSpan.innerText = data.total_likes;
+                                    if (data.liked) {
+                                        icon.classList.remove('text-gray-400', 'fill-none');
+                                        icon.classList.add('text-red-500', 'fill-current');
+                                    } else {
+                                        icon.classList.remove('text-red-500', 'fill-current');
+                                        icon.classList.add('text-gray-400', 'fill-none');
+                                    }
+                                } else {
+                                    // Revert if failed
+                                    console.error('Failed to toggle like');
+                                    // We could revert UI here if strict
+                                }
+                            } catch (error) {
+                                console.error('Error:', error);
+                            }
+                        }
+                    </script>
 
                     <!-- Excerpt -->
                     {% if blog.excerpt %}
@@ -239,119 +376,142 @@
 
                         <!-- Sections -->
                         {% if blog.sections %}
-                            {% for section in blog.sections.sections %}
-                                <div id="section-{{ forloop.counter0 }}" class="mb-10 scroll-mt-24">
-                                    {% if section.type == 'text' %}
-                                        <h3 class="text-2xl font-bold text-gray-900 mb-4">{{ section.title }}</h3>
-                                        <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{{ section.content }}</p>
+                        {% for section in blog.sections.sections %}
+                        <div id="section-{{ forloop.counter0 }}" class="mb-10 scroll-mt-24">
+                            {% if section.type == 'text' %}
+                            <h3 class="text-2xl font-bold text-gray-900 mb-4">{{ section.title }}</h3>
+                            <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{{ section.content }}</p>
 
-                                    {% elif section.type == 'bullets' %}
-                                        <h3 class="text-2xl font-bold text-gray-900 mb-4">{{ section.title }}</h3>
-                                        <ul class="space-y-3">
-                                            {% for item in section.items %}
-                                            <li class="flex items-start gap-3">
-                                                <div class="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
-                                                <span class="text-gray-700">{{ item }}</span>
-                                            </li>
+                            {% elif section.type == 'bullets' %}
+                            <h3 class="text-2xl font-bold text-gray-900 mb-4">{{ section.title }}</h3>
+                            <ul class="space-y-3">
+                                {% for item in section.items %}
+                                <li class="flex items-start gap-3">
+                                    <div class="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
+                                    <span class="text-gray-700">{{ item }}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+
+                            {% elif section.type == 'table' %}
+                            <h3 class="text-2xl font-bold text-gray-900 mb-4">{{ section.title }}</h3>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full border border-gray-200 rounded-lg">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            {% for header in section.headers %}
+                                            <th
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                                                {{ header }}
+                                            </th>
                                             {% endfor %}
-                                        </ul>
-
-                                    {% elif section.type == 'table' %}
-                                        <h3 class="text-2xl font-bold text-gray-900 mb-4">{{ section.title }}</h3>
-                                        <div class="overflow-x-auto">
-                                            <table class="min-w-full border border-gray-200 rounded-lg">
-                                                <thead class="bg-gray-50">
-                                                    <tr>
-                                                        {% for header in section.headers %}
-                                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">{{ header }}</th>
-                                                        {% endfor %}
-                                                    </tr>
-                                                </thead>
-                                                <tbody class="bg-white divide-y divide-gray-200">
-                                                    {% for row in section.rows %}
-                                                    <tr>
-                                                        {% for cell in row %}
-                                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ cell }}</td>
-                                                        {% endfor %}
-                                                    </tr>
-                                                    {% endfor %}
-                                                </tbody>
-                                            </table>
-                                        </div>
-
-                                    {% elif section.type == 'note' %}
-                                        <h3 class="text-2xl font-bold text-gray-900 mb-4">{{ section.title }}</h3>
-                                        <div class="note-box">
-                                            <div class="flex items-start">
-                                                <svg class="w-5 h-5 text-yellow-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                                                </svg>
-                                                <p class="text-yellow-800 whitespace-pre-wrap">{{ section.content }}</p>
-                                            </div>
-                                        </div>
-
-                                    {% elif section.type == 'links' %}
-                                        <h3 class="text-2xl font-bold text-gray-900 mb-4">{{ section.title }}</h3>
-                                        <div class="grid gap-4">
-                                            {% for link in section.links %}
-                                            <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer" class="resource-link block p-4 border border-gray-200 rounded-lg">
-                                                <div class="flex items-start justify-between">
-                                                    <div>
-                                                        <h4 class="font-semibold text-gray-900 mb-1">{{ link.text }}</h4>
-                                                        <p class="text-sm text-gray-600">{{ link.description }}</p>
-                                                    </div>
-                                                    <svg class="w-4 h-4 text-gray-400 ml-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                                                    </svg>
-                                                </div>
-                                            </a>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        {% for row in section.rows %}
+                                        <tr>
+                                            {% for cell in row %}
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ cell }}
+                                            </td>
                                             {% endfor %}
-                                        </div>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
 
-                                    {% elif section.type == 'image' %}
-                                        <h3 class="text-2xl font-bold text-gray-900 mb-4">{{ section.title }}</h3>
-                                        <div class="rounded-lg overflow-hidden border border-gray-200">
-                                            <img src="{{ section.imageUrl }}" alt="{{ section.description|default:section.title }}" class="blog-image w-full h-auto" loading="lazy">
-                                            {% if section.description %}
-                                            <div class="p-4 bg-gray-50 border-t border-gray-200">
-                                                <p class="text-sm text-gray-600 text-center italic">{{ section.description }}</p>
-                                            </div>
-                                            {% endif %}
-                                        </div>
-
-                                    {% elif section.type == 'code' %}
-                                        <h3 class="text-2xl font-bold text-gray-900 mb-4">{{ section.title }}</h3>
-                                        <div class="code-block-wrapper group">
-                                            <div class="code-header">
-                                                <div class="flex items-center gap-2">
-                                                    <div class="code-dots">
-                                                        <div class="code-dot bg-red-500"></div>
-                                                        <div class="code-dot bg-yellow-500"></div>
-                                                        <div class="code-dot bg-green-500"></div>
-                                                    </div>
-                                                    <span class="code-language-label">{{ section.language|default:"code" }}</span>
-                                                </div>
-                                                <button class="copy-btn flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-all duration-200 opacity-0 group-hover:opacity-100 font-medium" data-code="{{ section.content|escapejs }}" title="Copy code" style="font-family: 'Fira Code', monospace;">
-                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                                                    </svg>
-                                                    <span class="copy-text">Copy</span>
-                                                </button>
-                                            </div>
-                                            <div class="code-content">
-                                                <pre class="language-{{ section.language|default:'javascript' }}"><code class="language-{{ section.language|default:'javascript' }}">{{ section.content }}</code></pre>
-                                            </div>
-                                        </div>
-
-                                    {% elif section.type == 'youtube' %}
-                                        <h3 class="text-2xl font-bold text-gray-900 mb-4">{{ section.title }}</h3>
-                                        <div class="aspect-video">
-                                            <iframe src="https://www.youtube.com/embed/{{ section.videoId }}" title="{{ section.videoTitle|default:section.title }}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="w-full h-full rounded-lg"></iframe>
-                                        </div>
-                                        {% if section.description %}<p class="text-gray-600 text-sm italic mt-2">{{ section.description }}</p>{% endif %}
-                                    {% endif %}
+                            {% elif section.type == 'note' %}
+                            <h3 class="text-2xl font-bold text-gray-900 mb-4">{{ section.title }}</h3>
+                            <div class="note-box">
+                                <div class="flex items-start">
+                                    <svg class="w-5 h-5 text-yellow-400 mt-0.5 mr-3 flex-shrink-0" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                                        </path>
+                                    </svg>
+                                    <p class="text-yellow-800 whitespace-pre-wrap">{{ section.content }}</p>
                                 </div>
-                            {% endfor %}
+                            </div>
+
+                            {% elif section.type == 'links' %}
+                            <h3 class="text-2xl font-bold text-gray-900 mb-4">{{ section.title }}</h3>
+                            <div class="grid gap-4">
+                                {% for link in section.links %}
+                                <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer"
+                                    class="resource-link block p-4 border border-gray-200 rounded-lg">
+                                    <div class="flex items-start justify-between">
+                                        <div>
+                                            <h4 class="font-semibold text-gray-900 mb-1">{{ link.text }}</h4>
+                                            <p class="text-sm text-gray-600">{{ link.description }}</p>
+                                        </div>
+                                        <svg class="w-4 h-4 text-gray-400 ml-2 flex-shrink-0" fill="none"
+                                            stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                </a>
+                                {% endfor %}
+                            </div>
+
+                            {% elif section.type == 'image' %}
+                            <h3 class="text-2xl font-bold text-gray-900 mb-4">{{ section.title }}</h3>
+                            <div class="rounded-lg overflow-hidden border border-gray-200">
+                                <img src="{{ section.imageUrl }}" alt="{{ section.description|default:section.title }}"
+                                    class="blog-image w-full h-auto" loading="lazy">
+                                {% if section.description %}
+                                <div class="p-4 bg-gray-50 border-t border-gray-200">
+                                    <p class="text-sm text-gray-600 text-center italic">{{ section.description }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            {% elif section.type == 'code' %}
+                            <h3 class="text-2xl font-bold text-gray-900 mb-4">{{ section.title }}</h3>
+                            <div class="code-block-wrapper group">
+                                <div class="code-header">
+                                    <div class="flex items-center gap-2">
+                                        <div class="code-dots">
+                                            <div class="code-dot bg-red-500"></div>
+                                            <div class="code-dot bg-yellow-500"></div>
+                                            <div class="code-dot bg-green-500"></div>
+                                        </div>
+                                        <span class="code-language-label">{{ section.language|default:"code" }}</span>
+                                    </div>
+                                    <button
+                                        class="copy-btn flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-all duration-200 opacity-0 group-hover:opacity-100 font-medium"
+                                        data-code="{{ section.content|escapejs }}" title="Copy code"
+                                        style="font-family: 'Fira Code', monospace;">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z">
+                                            </path>
+                                        </svg>
+                                        <span class="copy-text">Copy</span>
+                                    </button>
+                                </div>
+                                <div class="code-content">
+                                    <pre
+                                        class="language-{{ section.language|default:'javascript' }}"><code class="language-{{ section.language|default:'javascript' }}">{{ section.content }}</code></pre>
+                                </div>
+                            </div>
+
+                            {% elif section.type == 'youtube' %}
+                            <h3 class="text-2xl font-bold text-gray-900 mb-4">{{ section.title }}</h3>
+                            <div class="aspect-video">
+                                <iframe src="https://www.youtube.com/embed/{{ section.videoId }}"
+                                    title="{{ section.videoTitle|default:section.title }}" frameborder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowfullscreen class="w-full h-full rounded-lg"></iframe>
+                            </div>
+                            {% if section.description %}
+                            <p class="text-gray-600 text-sm italic mt-2">{{ section.description }}</p>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+                        {% endfor %}
                         {% endif %}
 
                         <!-- Conclusion -->
@@ -381,106 +541,106 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-tsx.min.js"></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    Prism.highlightAll();
+    document.addEventListener('DOMContentLoaded', function () {
+        Prism.highlightAll();
 
-    const tocNav = document.getElementById('tocNav');
-    const tableOfContents = [];
-    let activeSection = '';
+        const tocNav = document.getElementById('tocNav');
+        const tableOfContents = [];
+        let activeSection = '';
 
-    // Add Introduction to TOC
-    const introduction = document.getElementById('introduction');
-    if (introduction) tableOfContents.push({ id: 'introduction', title: 'Introduction' });
+        // Add Introduction to TOC
+        const introduction = document.getElementById('introduction');
+        if (introduction) tableOfContents.push({ id: 'introduction', title: 'Introduction' });
 
-    // Add all sections to TOC
-    {% if blog.sections and blog.sections.sections %}
+        // Add all sections to TOC
+        {% if blog.sections and blog.sections.sections %}
         {% for section in blog.sections.sections %}
-            {% if section.title %}
-    tableOfContents.push({ id: 'section-{{ forloop.counter0 }}', title: '{{ section.title|escapejs }}' });
-            {% endif %}
+        {% if section.title %}
+        tableOfContents.push({ id: 'section-{{ forloop.counter0 }}', title: '{{ section.title|escapejs }}' });
+        {% endif %}
         {% endfor %}
-    {% endif %}
+        {% endif %}
 
-    // Add Conclusion to TOC
-    const conclusion = document.getElementById('conclusion');
-    if (conclusion) tableOfContents.push({ id: 'conclusion', title: 'Conclusion' });
+        // Add Conclusion to TOC
+        const conclusion = document.getElementById('conclusion');
+        if (conclusion) tableOfContents.push({ id: 'conclusion', title: 'Conclusion' });
 
-    tableOfContents.forEach((item, index) => {
-        const button = document.createElement('button');
-        button.className = 'toc-item w-full text-left px-4 py-3 rounded-lg text-sm transition-all duration-300 text-gray-700 hover:text-gray-900 hover:bg-gray-50';
-        button.innerHTML = `<div class="flex items-start gap-3"><span class="text-xs font-mono text-gray-400 mt-0.5 flex-shrink-0">${String(index + 1).padStart(2, '0')}</span><span class="flex-1">${item.title}</span></div>`;
-        button.addEventListener('click', () => scrollToSection(item.id));
-        tocNav.appendChild(button);
-    });
-
-    function scrollToSection(sectionId) {
-        const element = document.getElementById(sectionId);
-        if (element) {
-            const offset = 100;
-            const elementPosition = element.offsetTop - offset;
-            window.scrollTo({ top: elementPosition, behavior: 'smooth' });
-            activeSection = sectionId;
-            updateActiveTOCItem(sectionId);
-            closeTOC();
-        }
-    }
-
-    function updateActiveTOCItem(sectionId) {
-        const tocItems = document.querySelectorAll('.toc-item');
-        tocItems.forEach((item, index) => {
-            if (tableOfContents[index]?.id === sectionId) item.classList.add('active');
-            else item.classList.remove('active');
+        tableOfContents.forEach((item, index) => {
+            const button = document.createElement('button');
+            button.className = 'toc-item w-full text-left px-4 py-3 rounded-lg text-sm transition-all duration-300 text-gray-700 hover:text-gray-900 hover:bg-gray-50';
+            button.innerHTML = `<div class="flex items-start gap-3"><span class="text-xs font-mono text-gray-400 mt-0.5 flex-shrink-0">${String(index + 1).padStart(2, '0')}</span><span class="flex-1">${item.title}</span></div>`;
+            button.addEventListener('click', () => scrollToSection(item.id));
+            tocNav.appendChild(button);
         });
-    }
 
-    function handleScroll() {
-        const sections = tableOfContents.map(item => document.getElementById(item.id)).filter(Boolean);
-        const scrollPosition = window.scrollY + 150;
-        for (let i = sections.length - 1; i >= 0; i--) {
-            const section = sections[i];
-            if (section && section.offsetTop <= scrollPosition) {
-                activeSection = section.id;
-                updateActiveTOCItem(section.id);
-                break;
+        function scrollToSection(sectionId) {
+            const element = document.getElementById(sectionId);
+            if (element) {
+                const offset = 100;
+                const elementPosition = element.offsetTop - offset;
+                window.scrollTo({ top: elementPosition, behavior: 'smooth' });
+                activeSection = sectionId;
+                updateActiveTOCItem(sectionId);
+                closeTOC();
             }
         }
-    }
 
-    window.addEventListener('scroll', handleScroll);
+        function updateActiveTOCItem(sectionId) {
+            const tocItems = document.querySelectorAll('.toc-item');
+            tocItems.forEach((item, index) => {
+                if (tableOfContents[index]?.id === sectionId) item.classList.add('active');
+                else item.classList.remove('active');
+            });
+        }
 
-    const tocButton = document.getElementById('tocButton');
-    const tocOverlay = document.getElementById('tocOverlay');
-    const tocSheet = document.getElementById('tocSheet');
-    const tocClose = document.getElementById('tocClose');
-
-    function openTOC() {
-        tocOverlay.classList.remove('hidden');
-        setTimeout(() => tocSheet.classList.remove('-translate-x-full'), 10);
-    }
-
-    function closeTOC() {
-        tocSheet.classList.add('-translate-x-full');
-        setTimeout(() => tocOverlay.classList.add('hidden'), 300);
-    }
-
-    tocButton.addEventListener('click', openTOC);
-    tocClose.addEventListener('click', closeTOC);
-    tocOverlay.addEventListener('click', (e) => { if (e.target === tocOverlay) closeTOC(); });
-
-    const copyButtons = document.querySelectorAll('.copy-btn');
-    copyButtons.forEach(button => {
-        button.addEventListener('click', async function() {
-            const code = this.getAttribute('data-code');
-            const copyText = this.querySelector('.copy-text');
-            try {
-                await navigator.clipboard.writeText(code);
-                copyText.textContent = 'Copied!';
-                setTimeout(() => copyText.textContent = 'Copy', 2000);
-            } catch (err) {
-                console.error('Failed to copy code:', err);
+        function handleScroll() {
+            const sections = tableOfContents.map(item => document.getElementById(item.id)).filter(Boolean);
+            const scrollPosition = window.scrollY + 150;
+            for (let i = sections.length - 1; i >= 0; i--) {
+                const section = sections[i];
+                if (section && section.offsetTop <= scrollPosition) {
+                    activeSection = section.id;
+                    updateActiveTOCItem(section.id);
+                    break;
+                }
             }
+        }
+
+        window.addEventListener('scroll', handleScroll);
+
+        const tocButton = document.getElementById('tocButton');
+        const tocOverlay = document.getElementById('tocOverlay');
+        const tocSheet = document.getElementById('tocSheet');
+        const tocClose = document.getElementById('tocClose');
+
+        function openTOC() {
+            tocOverlay.classList.remove('hidden');
+            setTimeout(() => tocSheet.classList.remove('-translate-x-full'), 10);
+        }
+
+        function closeTOC() {
+            tocSheet.classList.add('-translate-x-full');
+            setTimeout(() => tocOverlay.classList.add('hidden'), 300);
+        }
+
+        tocButton.addEventListener('click', openTOC);
+        tocClose.addEventListener('click', closeTOC);
+        tocOverlay.addEventListener('click', (e) => { if (e.target === tocOverlay) closeTOC(); });
+
+        const copyButtons = document.querySelectorAll('.copy-btn');
+        copyButtons.forEach(button => {
+            button.addEventListener('click', async function () {
+                const code = this.getAttribute('data-code');
+                const copyText = this.querySelector('.copy-text');
+                try {
+                    await navigator.clipboard.writeText(code);
+                    copyText.textContent = 'Copied!';
+                    setTimeout(() => copyText.textContent = 'Copy', 2000);
+                } catch (err) {
+                    console.error('Failed to copy code:', err);
+                }
+            });
         });
     });
-});
 </script>
 {% endblock %}

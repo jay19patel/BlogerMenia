@@ -98,7 +98,7 @@ class UserProfileForm(forms.ModelForm):
 
 # blogs/forms.py
 from django import forms
-from blogs.models import Blog, Category
+from blogs.models import Blog, Category, Playlist
 
 class BlogCreateForm(forms.ModelForm):
     class Meta:
@@ -115,3 +115,41 @@ class BlogCreateForm(forms.ModelForm):
             "thumbnail",
             "isPublished"
         ]
+
+# -------------------------
+# Playlist Form
+# -------------------------
+class PlaylistForm(forms.ModelForm):
+    """
+    Form for creating and updating playlists
+    """
+    def __init__(self, *args, **kwargs):
+        # We expect 'user' to be passed in kwargs to filter blogs
+        user = kwargs.pop('user', None)
+        super(PlaylistForm, self).__init__(*args, **kwargs)
+        
+        # Style all fields
+        for field_name, field in self.fields.items():
+            if field_name != 'is_public':
+                field.widget.attrs['class'] = 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent'
+        
+        # Specific styling
+        self.fields['description'].widget.attrs['rows'] = 4
+        self.fields['blogs'].widget.attrs['class'] = 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent h-48'
+        self.fields['is_public'].widget.attrs['class'] = 'h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded'
+        
+        # Filter blogs query set if user is provided
+        if user:
+            # Show only published blogs by this author
+            self.fields['blogs'].queryset = Blog.objects.filter(author=user, isPublished=True)
+
+    class Meta:
+        model = Playlist
+        fields = ['name', 'description', 'thumbnail', 'is_public', 'blogs']
+        widgets = {
+            'description': forms.Textarea(attrs={'placeholder': 'Describe your playlist...'}),
+            'blogs': forms.SelectMultiple(attrs={'placeholder': 'Select blogs to add...'})
+        }
+        help_texts = {
+            'blogs': 'Hold down "Control", or "Command" on a Mac, to select more than one.'
+        }
