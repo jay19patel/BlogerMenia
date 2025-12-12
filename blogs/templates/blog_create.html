@@ -1,94 +1,583 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block title %}Create Blog - BlogerMenia{% endblock %}
+{% block title %}Create New Blog - BlogerMenia{% endblock %}
+
+{% block extra_head %}
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+<!-- Remark/Rehype for Markdown Preview (Optional, keeping simple for now) -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<style>
+    /* Custom Scrollbar for Chat */
+    .chat-scroll::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .chat-scroll::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .chat-scroll::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 3px;
+    }
+
+    .chat-scroll::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto py-12">
-    <h1 class="text-3xl font-bold mb-6">Create New Blog</h1>
+<div class="py-12 bg-gray-50">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
-    <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="space-y-4">
-
-            <!-- Title -->
-            <div>
-                <label class="block font-medium">Title</label>
-                {{ form.title }}
-                {% if form.title.errors %}
-                    <p class="text-red-600 text-sm">{{ form.title.errors.0 }}</p>
-                {% endif %}
+        <!-- Chat Section (UI Only) -->
+        <div class="mb-6 bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
+                        <i data-lucide="bot" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gray-900">AI Blog Generator</h3>
+                        <p class="text-sm text-gray-600">Describe your blog and I'll create it for you (Demo UI)</p>
+                    </div>
+                </div>
+                <button onclick="toggleChat()" id="toggleChatBtn"
+                    class="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+                    Show Chat
+                </button>
             </div>
 
-            <!-- Subtitle -->
-            <div>
-                <label class="block font-medium">Subtitle</label>
-                {{ form.subtitle }}
-                {% if form.subtitle.errors %}
-                    <p class="text-red-600 text-sm">{{ form.subtitle.errors.0 }}</p>
-                {% endif %}
-            </div>
+            <div id="chatSection" class="hidden">
+                <!-- Chat History -->
+                <div id="chatHistory" class="max-h-96 overflow-y-auto mb-4 space-y-3 chat-scroll"
+                    style="scroll-behavior: smooth;">
+                    <!-- Messages will be injected here -->
+                </div>
 
-            <!-- Slug -->
-            <div>
-                <label class="block font-medium">Slug</label>
-                {{ form.slug }}
-                <small class="text-gray-500">Leave empty to auto-generate from title</small>
-                {% if form.slug.errors %}
-                    <p class="text-red-600 text-sm">{{ form.slug.errors.0 }}</p>
-                {% endif %}
-            </div>
-
-            <!-- Excerpt -->
-            <div>
-                <label class="block font-medium">Excerpt</label>
-                {{ form.excerpt }}
-                {% if form.excerpt.errors %}
-                    <p class="text-red-600 text-sm">{{ form.excerpt.errors.0 }}</p>
-                {% endif %}
-            </div>
-
-            <!-- Content -->
-            <div>
-                <label class="block font-medium">Content (JSON format)</label>
-                {{ form.content }}
-                {% if form.content.errors %}
-                    <p class="text-red-600 text-sm">{{ form.content.errors.0 }}</p>
-                {% endif %}
-            </div>
-
-            <!-- Category -->
-            <div>
-                <label class="block font-medium">Category</label>
-                {{ form.category }}
-                {% if form.category.errors %}
-                    <p class="text-red-600 text-sm">{{ form.category.errors.0 }}</p>
-                {% endif %}
-            </div>
-
-
-            <!-- Thumbnail -->
-            <div>
-                <label class="block font-medium">Thumbnail</label>
-                {{ form.thumbnail }}
-                {% if form.thumbnail.errors %}
-                    <p class="text-red-600 text-sm">{{ form.thumbnail.errors.0 }}</p>
-                {% endif %}
-            </div>
-
-            <!-- Published Date -->
-            <div>
-                <label class="block font-medium">Publish Date</label>
-                {{ form.publishedDate }}
-                {% if form.publishedDate.errors %}
-                    <p class="text-red-600 text-sm">{{ form.publishedDate.errors.0 }}</p>
-                {% endif %}
-            </div>
-
-            <!-- Submit -->
-            <div>
-                <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Create Blog</button>
+                <!-- Chat Input -->
+                <div class="flex gap-2">
+                    <input type="text" id="chatInput" placeholder="Type your blog idea or description..."
+                        class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <button onclick="handleChatSend()" id="sendBtn"
+                        class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 flex items-center gap-2">
+                        <i data-lucide="send" class="w-5 h-5"></i>
+                        <span id="sendBtnText">Send</span>
+                    </button>
+                </div>
             </div>
         </div>
-    </form>
+
+        <!-- Main Form -->
+        <form method="POST" enctype="multipart/form-data" id="blogForm">
+            {% csrf_token %}
+
+            <!-- Hidden Input for Sections JSON -->
+            <input type="hidden" name="sections" id="sectionsInput">
+
+            <!-- Header -->
+            <div class="mb-6 flex items-center justify-between">
+                <div>
+                    <a href="{% url 'blogs-list' %}"
+                        class="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-2">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                        Back to Blogs
+                    </a>
+                    <h1 class="text-3xl font-bold text-gray-900">Create New Blog</h1>
+                </div>
+                <div class="flex items-center gap-3">
+                    <label
+                        class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-lg shadow-purple-500/30 cursor-pointer">
+                        <i data-lucide="upload" class="w-5 h-5"></i>
+                        Load JSON
+                        <input type="file" accept=".json" onchange="handleLoadJSON(event)" class="hidden" />
+                    </label>
+                    <button type="submit"
+                        class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-lg font-medium hover:from-indigo-700 hover:to-violet-700 transition-all duration-300 shadow-lg shadow-indigo-500/30">
+                        <i data-lucide="save" class="w-5 h-5"></i>
+                        Save Blog
+                    </button>
+                </div>
+            </div>
+
+            <!-- Error Messages -->
+            {% if form.errors %}
+            <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+                <strong class="font-bold">Please correct the errors below:</strong>
+                <ul class="mt-2 list-disc list-inside text-sm">
+                    {% for field in form %}
+                    {% for error in field.errors %}
+                    <li>{{ field.label }}: {{ error }}</li>
+                    {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- Basic Information -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">Basic Information</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                        <input type="text" name="title" id="titleInput"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            placeholder="Enter blog title" required />
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="block text-sm font-medium text-gray-700">Slug *</label>
+                                <span id="slugAutoLabel" class="text-xs text-gray-500 italic">Auto-generated</span>
+                            </div>
+                            <input type="text" name="slug" id="slugInput"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                placeholder="blog-slug-url" required />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Category (ID or Select)</label>
+                            <!-- 
+                                Ideally this should be a select box if we had the list, but standard rendering or a simple input 
+                                that expects ID is safer if we don't assume context. 
+                                However, looking at the React code, it was a text input: "Enter category (e.g., Web Development)".
+                                But Django model has a ForeignKey to Category.
+                                The Form expects a ModelChoiceField (ID).
+                                I will render the pure Django field here but styled.
+                             -->
+                            <div class="w-full">
+                                {{ form.category }}
+                            </div>
+                            <!-- Keep hidden input for potential JS mapping if needed, but direct form rendering is safer for FKs -->
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Subtitle</label>
+                        <input type="text" name="subtitle"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            placeholder="Enter subtitle" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Excerpt</label>
+                        <textarea name="excerpt"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            rows="3" placeholder="Short description"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Thumbnail Image</label>
+                        <input type="file" name="thumbnail"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    </div>
+
+                    <div class="flex items-center gap-2 mt-4">
+                        <!-- Manually rendering checkbox to match style -->
+                        {{ form.isPublished }}
+                        <label for="{{ form.isPublished.id_for_label }}" class="text-sm font-medium text-gray-700">
+                            Publish this blog immediately
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Introduction -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">Introduction</h2>
+                <textarea name="introduction" id="introductionInput"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    rows="4" placeholder="Write the introduction for your blog..."></textarea>
+            </div>
+
+            <!-- Sections -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
+                <div class="flex items-center justify-between mb-4 flex-wrap gap-4">
+                    <h2 class="text-xl font-bold text-gray-900">Content Sections</h2>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="addSection('text')"
+                            class="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            <i data-lucide="type" class="w-4 h-4"></i> Text
+                        </button>
+                        <button type="button" onclick="addSection('bullets')"
+                            class="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            <i data-lucide="list" class="w-4 h-4"></i> Bullets
+                        </button>
+                        <button type="button" onclick="addSection('code')"
+                            class="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            <i data-lucide="code" class="w-4 h-4"></i> Code
+                        </button>
+                        <button type="button" onclick="addSection('table')"
+                            class="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            <i data-lucide="table" class="w-4 h-4"></i> Table
+                        </button>
+                        <button type="button" onclick="addSection('youtube')"
+                            class="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            <i data-lucide="youtube" class="w-4 h-4"></i> Video
+                        </button>
+                        <!-- Added more types as per React -->
+                        <button type="button" onclick="addSection('note')"
+                            class="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            <i data-lucide="file-text" class="w-4 h-4"></i> Note
+                        </button>
+                        <button type="button" onclick="addSection('image')"
+                            class="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            <i data-lucide="image" class="w-4 h-4"></i> Image
+                        </button>
+                    </div>
+                </div>
+
+                <div id="sectionsContainer" class="space-y-4">
+                    <!-- Dynamic Sections will appear here -->
+                    <div id="emptySectionsMsg"
+                        class="text-center py-8 text-gray-500 italic border-2 border-dashed border-gray-200 rounded-lg">
+                        No sections yet. Add one from the toolbar above.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conclusion -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">Conclusion</h2>
+                <textarea name="conclusion" id="conclusionInput"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    rows="4" placeholder="Write the conclusion for your blog..."></textarea>
+            </div>
+
+            <!-- Save Button Footer -->
+            <div class="flex justify-end mb-8">
+                <button type="submit"
+                    class="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-lg font-medium hover:from-indigo-700 hover:to-violet-700 transition-all duration-300 shadow-lg shadow-indigo-500/30">
+                    <i data-lucide="save" class="w-5 h-5"></i>
+                    Save Blog
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    // -----------------------------------------------------
+    // State Management
+    // -----------------------------------------------------
+    let sections = [];
+    let autoSlug = true;
+
+    // -----------------------------------------------------
+    // Slug Generation
+    // -----------------------------------------------------
+    const titleInput = document.getElementById('titleInput');
+    const slugInput = document.getElementById('slugInput');
+    const slugAutoLabel = document.getElementById('slugAutoLabel');
+
+    function generateSlug(text) {
+        return text
+            .toLowerCase()
+            .trim()
+            .replace(/[^\w\s-]/g, '')
+            .replace(/[\s_-]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+    }
+
+    titleInput.addEventListener('input', function () {
+        if (autoSlug) {
+            slugInput.value = generateSlug(this.value);
+        }
+    });
+
+    slugInput.addEventListener('input', function () {
+        autoSlug = false;
+        slugAutoLabel.style.display = 'none';
+    });
+
+    // -----------------------------------------------------
+    // Section Management
+    // -----------------------------------------------------
+    function addSection(type) {
+        const newSection = {
+            id: Date.now(),
+            type: type,
+            title: "",
+            content: "",
+            // Specific fields based on type
+            items: type === "bullets" ? [""] : undefined,
+            headers: type === "table" ? ["", ""] : undefined,
+            rows: type === "table" ? [["", ""]] : undefined,
+            language: type === "code" ? "javascript" : undefined,
+            videoId: type === "youtube" ? "" : undefined,
+            videoTitle: type === "youtube" ? "" : undefined,
+            description: (type === "youtube" || type === "image") ? "" : undefined,
+            links: type === "links" ? [{ text: "", url: "", description: "" }] : undefined,
+            imageUrl: type === "image" ? "" : undefined,
+        };
+        sections.push(newSection);
+        renderSections();
+        document.getElementById('emptySectionsMsg').style.display = 'none';
+    }
+
+    function removeSection(id) {
+        sections = sections.filter(s => s.id !== id);
+        renderSections();
+        if (sections.length === 0) {
+            document.getElementById('emptySectionsMsg').style.display = 'block';
+        }
+    }
+
+    function moveSection(index, direction) {
+        if ((direction === 'up' && index === 0) || (direction === 'down' && index === sections.length - 1)) return;
+
+        const targetIndex = direction === 'up' ? index - 1 : index + 1;
+        [sections[index], sections[targetIndex]] = [sections[targetIndex], sections[index]];
+        renderSections();
+    }
+
+    function updateSectionValue(id, field, value) {
+        const section = sections.find(s => s.id === id);
+        if (section) {
+            section[field] = value;
+            // No need to re-render for simple input changes to avoid losing focus
+            // But if it affects structure, we might need to. 
+            // For now, we rely on standard input behavior (DOM keeps state).
+            // Syncing IS important for final submit.
+        }
+    }
+
+    // Specific updaters that might need re-rendering
+    function addBullet(id) {
+        const section = sections.find(s => s.id === id);
+        if (section) {
+            section.items.push("");
+            renderSections();
+        }
+    }
+
+    function removeBullet(id, index) {
+        const section = sections.find(s => s.id === id);
+        if (section) {
+            section.items.splice(index, 1);
+            renderSections();
+        }
+    }
+
+    function updateBullet(id, index, value) {
+        const section = sections.find(s => s.id === id);
+        if (section) {
+            section.items[index] = value;
+        }
+    }
+
+    // -----------------------------------------------------
+    // Rendering Logic
+    // -----------------------------------------------------
+    function renderSections() {
+        const container = document.getElementById('sectionsContainer');
+        container.innerHTML = '';
+
+        if (sections.length === 0) {
+            container.innerHTML = '<div id="emptySectionsMsg" class="text-center py-8 text-gray-500 italic border-2 border-dashed border-gray-200 rounded-lg">No sections yet. Add one from the toolbar above.</div>';
+            return;
+        }
+
+        sections.forEach((section, index) => {
+            const el = document.createElement('div');
+            el.className = 'border border-gray-300 rounded-lg p-4 space-y-4 bg-gray-50';
+
+            // Header: Move/Delete controls
+            let html = `
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="moveSection(${index}, 'up')" ${index === 0 ? 'disabled' : ''} class="p-1 rounded hover:bg-gray-200 disabled:opacity-30">
+                            <i data-lucide="chevron-up" class="w-4 h-4"></i>
+                        </button>
+                         <button type="button" onclick="moveSection(${index}, 'down')" ${index === sections.length - 1 ? 'disabled' : ''} class="p-1 rounded hover:bg-gray-200 disabled:opacity-30">
+                            <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                        </button>
+                        <span class="text-sm font-bold text-gray-700 uppercase tracking-wider">${section.type}</span>
+                    </div>
+                    <button type="button" onclick="removeSection(${section.id})" class="p-1 text-red-600 hover:bg-red-50 rounded">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Section Title</label>
+                    <input type="text" value="${section.title}" oninput="updateSectionValue(${section.id}, 'title', this.value)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Section title">
+                </div>
+            `;
+
+            // Specific Content
+            if (section.type === 'text') {
+                html += `
+                    <textarea oninput="updateSectionValue(${section.id}, 'content', this.value)" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Write your content...">${section.content}</textarea>
+                `;
+            } else if (section.type === 'bullets') {
+                html += `<div class="space-y-2">`;
+                section.items.forEach((item, i) => {
+                    html += `
+                        <div class="flex gap-2">
+                            <input type="text" value="${item}" oninput="updateBullet(${section.id}, ${i}, this.value)" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Bullet point">
+                             <button type="button" onclick="removeBullet(${section.id}, ${i})" class="p-2 text-red-600 hover:bg-red-50 rounded"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
+                    `;
+                });
+                html += `
+                    <button type="button" onclick="addBullet(${section.id})" class="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-100">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Add Bullet Point
+                    </button>
+                </div>`;
+            } else if (section.type === 'code') {
+                html += `
+                     <div class="space-y-2">
+                        <input type="text" value="${section.language || ''}" oninput="updateSectionValue(${section.id}, 'language', this.value)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Language (e.g., javascript, python)">
+                        <textarea oninput="updateSectionValue(${section.id}, 'content', this.value)" rows="6" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm" placeholder="Paste your code here...">${section.content}</textarea>
+                     </div>
+                `;
+            } else if (section.type === 'image') {
+                html += `
+                    <div class="space-y-2">
+                        <input type="text" value="${section.imageUrl || ''}" oninput="updateSectionValue(${section.id}, 'imageUrl', this.value)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Image URL">
+                         <textarea oninput="updateSectionValue(${section.id}, 'description', this.value)" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Image description or caption">${section.description || ''}</textarea>
+                    </div>
+                `;
+            } else if (section.type === 'youtube') {
+                html += `
+                    <div class="space-y-2">
+                        <input type="text" value="${section.videoId || ''}" oninput="updateSectionValue(${section.id}, 'videoId', this.value)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="YouTube Video ID">
+                        <input type="text" value="${section.videoTitle || ''}" oninput="updateSectionValue(${section.id}, 'videoTitle', this.value)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Video Title">
+                         <textarea oninput="updateSectionValue(${section.id}, 'description', this.value)" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Video description">${section.description || ''}</textarea>
+                    </div>
+                `;
+            } else if (section.type === 'note') {
+                html += `
+                    <textarea oninput="updateSectionValue(${section.id}, 'content', this.value)" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-yellow-50" placeholder="Write your note or callout...">${section.content}</textarea>
+                `;
+            } else if (section.type === 'table') {
+                html += `<div class="p-4 bg-yellow-50 rounded border border-yellow-200 text-sm text-yellow-800">Table editing is simplified in this version. Use JSON import for complex tables.</div>`;
+            }
+
+            el.innerHTML = html;
+            container.appendChild(el);
+        });
+
+        // Re-init icons for new elements
+        lucide.createIcons();
+    }
+
+    // -----------------------------------------------------
+    // JSON Import Logic
+    // -----------------------------------------------------
+    function handleLoadJSON(event) {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const jsonData = JSON.parse(e.target.result);
+                // Handle both single blog object and blogs array
+                const blogData = jsonData.blogs ? jsonData.blogs[0] : jsonData;
+
+                // Fill fields
+                if (blogData.title) document.querySelector('[name="title"]').value = blogData.title;
+                if (blogData.slug) {
+                    document.querySelector('[name="slug"]').value = blogData.slug;
+                    autoSlug = false;
+                }
+                if (blogData.subtitle) document.querySelector('[name="subtitle"]').value = blogData.subtitle;
+                if (blogData.excerpt) document.querySelector('[name="excerpt"]').value = blogData.excerpt;
+                if (blogData.content && blogData.content.introduction) document.querySelector('[name="introduction"]').value = blogData.content.introduction;
+                if (blogData.content && blogData.content.conclusion) document.querySelector('[name="conclusion"]').value = blogData.content.conclusion;
+
+                // Load sections
+                if (blogData.content && blogData.content.sections && Array.isArray(blogData.content.sections)) {
+                    sections = blogData.content.sections.map((s, i) => ({ ...s, id: Date.now() + i }));
+                    renderSections();
+                }
+
+                alert("JSON loaded successfully!");
+            } catch (error) {
+                console.error(error);
+                alert("Failed to load JSON file.");
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    // -----------------------------------------------------
+    // Chat Logic (Mock)
+    // -----------------------------------------------------
+    function toggleChat() {
+        const chatSection = document.getElementById('chatSection');
+        const btnFn = document.getElementById('toggleChatBtn');
+        if (chatSection.classList.contains('hidden')) {
+            chatSection.classList.remove('hidden');
+            btnFn.innerText = 'Hide Chat';
+        } else {
+            chatSection.classList.add('hidden');
+            btnFn.innerText = 'Show Chat';
+        }
+    }
+
+    function handleChatSend() {
+        const input = document.getElementById('chatInput');
+        const text = input.value.trim();
+        if (!text) return;
+
+        // Add user message
+        const history = document.getElementById('chatHistory');
+        history.innerHTML += `
+            <div class="flex gap-3 justify-end">
+                <div class="max-w-[80%] rounded-lg p-3 bg-indigo-600 text-white">
+                    <p class="text-sm">${text}</p>
+                </div>
+                 <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="user" class="w-4 h-4 text-indigo-600"></i>
+                </div>
+            </div>
+        `;
+        input.value = '';
+        lucide.createIcons();
+
+        // Simulate AI Response
+        const btnText = document.getElementById('sendBtnText');
+        btnText.innerText = 'Generating...';
+
+        setTimeout(() => {
+            history.innerHTML += `
+                <div class="flex gap-3 justify-start">
+                    <div class="w-8 h-8 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="bot" class="w-4 h-4 text-white"></i>
+                    </div>
+                    <div class="max-w-[80%] rounded-lg p-3 bg-gray-100 text-gray-900">
+                        <p class="text-sm">I am a demo AI. The backend generation logic is currently not connected. In the future, I will generate the blog for you!</p>
+                    </div>
+                </div>
+            `;
+            btnText.innerText = 'Send';
+            history.scrollTop = history.scrollHeight;
+            lucide.createIcons();
+        }, 1000);
+    }
+
+    // -----------------------------------------------------
+    // Form Submission
+    // -----------------------------------------------------
+    document.getElementById('blogForm').addEventListener('submit', function (e) {
+        // Serialize sections to hidden input
+        const sectionsInput = document.getElementById('sectionsInput');
+        sectionsInput.value = JSON.stringify(sections);
+
+        // Let form submit naturally
+    });
+
+</script>
 {% endblock %}
