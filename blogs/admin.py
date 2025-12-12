@@ -1,10 +1,15 @@
 from django.contrib import admin
-from blogs.models import Blog, Category, FAQ, Testimonial
+from blogs.models import Blog, Category, FAQ, Testimonial,User
 
 
 admin.site.site_header = "Blogermenia Admin"
 admin.site.site_title = "Blogermenia Admin Portal"
 admin.site.index_title = "Welcome to Blogermenia Admin Portal"
+
+class UserAdmin(admin.ModelAdmin):
+    list_display = ("username", "email", "is_staff", "is_active", "date_joined")
+    search_fields = ("username", "email")
+    list_filter = ("is_staff", "is_active")
 
 
 class CategoryAdmin(admin.ModelAdmin):
@@ -38,7 +43,7 @@ class TestimonialAdmin(admin.ModelAdmin):
         return obj.content[:50] + "..." if len(obj.content) > 50 else obj.content
     content_preview.short_description = "Content"
 
-
+admin.site.register(User, UserAdmin)
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Blog, BlogAdmin)
 admin.site.register(FAQ, FAQAdmin)
