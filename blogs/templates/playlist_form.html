@@ -5,8 +5,33 @@
 {% if object %}Edit Playlist - {{ object.name }}{% else %}Create New Playlist{% endif %} - BlogerMenia
 {% endblock %}
 
+{% block extra_head %}
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+    /* Custom Scrollbar */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="py-12 bg-gray-50">
+<div class="py-12">
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
             <div class="bg-indigo-600 px-8 py-6">
@@ -55,10 +80,96 @@
                                 </div>
                             </div>
                             {% elif field.name == 'blogs' %}
-                            <div class="mt-2 space-y-2 max-h-60 overflow-y-auto border border-gray-200 rounded-md p-4">
-                                {{ field }}
-                                <p class="text-xs text-gray-500 mt-1">Select articles to include in this playlist.</p>
+                            <label class="block text-sm font-medium text-gray-700 mb-3">
+                                Select Blogs for Playlist
+                                <span class="text-xs font-normal text-gray-500 ml-1">(Selected: <span
+                                        id="selectedCount">0</span>)</span>
+                            </label>
+
+                            <div class="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar p-1">
+                                {% for blog in user_blogs %}
+                                <label
+                                    class="relative flex items-center p-4 border rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md group bg-white border-gray-200 has-[:checked]:border-indigo-600 has-[:checked]:bg-indigo-50 has-[:checked]:ring-1 has-[:checked]:ring-indigo-600">
+                                    <input type="checkbox" name="blogs" value="{{ blog.id }}"
+                                        class="peer sr-only blog-checkbox" {% if blog.id in selected_blog_ids%} checked
+                                        {% endif %} onchange="updateSelectedCount()">
+
+                                    <!-- Checkbox UI -->
+                                    <div class="flex-shrink-0 mr-4">
+                                        <div
+                                            class="w-6 h-6 rounded-full border-2 border-gray-300 peer-checked:border-indigo-600 peer-checked:bg-indigo-600 flex items-center justify-center transition-colors">
+                                            <i data-lucide="check"
+                                                class="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity font-bold"></i>
+                                        </div>
+                                    </div>
+
+                                    <!-- Content -->
+                                    <div class="flex items-center gap-4 flex-1 min-w-0">
+                                        {% if blog.thumbnail %}
+                                        <img src="{{ blog.thumbnail.url }}" alt="{{ blog.title }}"
+                                            class="w-16 h-16 rounded-lg object-cover flex-shrink-0 bg-gray-100">
+                                        {% else %}
+                                        <div
+                                            class="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 text-gray-400">
+                                            <i data-lucide="image" class="w-6 h-6"></i>
+                                        </div>
+                                        {% endif %}
+
+                                        <div class="flex-1 min-w-0">
+                                            <h3 class="text-sm font-semibold text-gray-900 truncate pr-4">
+                                                {{ blog.title }}</h3>
+                                            <div class="flex items-center text-xs text-gray-500 mt-1 gap-2">
+                                                <span>{{ blog.created_at|date:"M d, Y" }}</span>
+                                                <span class="w-1 h-1 rounded-full bg-gray-300"></span>
+                                                <span class="truncate">{{ blog.views|default:"0" }} views</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- View Icon (Hover) -->
+                                        <div class="opacity-0 group-hover:opacity-100 transition-opacity px-2">
+                                            <a href="{% url 'blog-detail' blog.author.username blog.slug %}"
+                                                target="_blank" class="text-gray-400 hover:text-indigo-600 p-1 block"
+                                                title="View Blog">
+                                                <i data-lucide="external-link" class="w-4 h-4"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </label>
+                                {% empty %}
+                                <div class="text-center py-10 border-2 border-dashed border-gray-200 rounded-xl">
+                                    <div
+                                        class="mx-auto w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 mb-3">
+                                        <i data-lucide="file-x" class="w-6 h-6"></i>
+                                    </div>
+                                    <h3 class="text-sm font-medium text-gray-900">No blogs found</h3>
+                                    <p class="text-sm text-gray-500 mt-1">You haven't published any blogs yet.</p>
+                                    <a href="{% url 'blog_create' %}"
+                                        class="mt-3 inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-700">
+                                        Create your first blog
+                                        <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>
+                                    </a>
+                                </div>
+                                {% endfor %}
                             </div>
+                            <div class="mt-1 flex justify-between items-center px-1">
+                                <p class="text-xs text-gray-500">Select the blogs you want to see in this playlist.</p>
+                                <button type="button"
+                                    onclick="document.querySelectorAll('.blog-checkbox').forEach(c => c.checked=false); updateSelectedCount();"
+                                    class="text-xs text-red-500 hover:text-red-700 font-medium">Clear Selection</button>
+                            </div>
+
+                            <script>
+                                function updateSelectedCount() {
+                                    const count = document.querySelectorAll('.blog-checkbox:checked').length;
+                                    document.getElementById('selectedCount').innerText = count;
+                                }
+                                document.addEventListener('DOMContentLoaded', () => {
+                                    if (typeof lucide !== 'undefined') {
+                                        lucide.createIcons();
+                                    }
+                                    updateSelectedCount();
+                                });
+                            </script>
                             {% elif field.name == 'is_public' %}
                             <div class="flex items-center">
                                 {{ field }}

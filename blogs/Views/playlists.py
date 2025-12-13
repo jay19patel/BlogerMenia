@@ -3,7 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, 
 from django.urls import reverse_lazy, reverse
 from django.shortcuts import redirect
 from django.contrib import messages
-from blogs.models import Playlist
+from blogs.models import Playlist, Blog
 from blogs.forms import PlaylistForm
 
 class PlaylistCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
@@ -16,6 +16,11 @@ class PlaylistCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView
         kwargs = super().get_form_kwargs()
         kwargs['user'] = self.request.user
         return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['user_blogs'] = Blog.objects.filter(author=self.request.user, isPublished=True)
+        return context
 
     def form_valid(self, form):
         form.instance.owner = self.request.user
@@ -35,6 +40,12 @@ class PlaylistUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UserPasses
         kwargs = super().get_form_kwargs()
         kwargs['user'] = self.request.user
         return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['user_blogs'] = Blog.objects.filter(author=self.request.user, isPublished=True)
+        context['selected_blog_ids'] = list(self.object.blogs.values_list('id', flat=True))
+        return context
 
     def test_func(self):
         playlist = self.get_object()
@@ -63,6 +74,7 @@ class PlaylistUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UserPasses
 class PlaylistDeleteView(LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Playlist
     template_name = "playlist_confirm_delete.html"
+    context_object_name = "playlist"
     permission_required = 'blogs.delete_playlist'
 
     def test_func(self):
