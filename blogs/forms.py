@@ -115,6 +115,20 @@ class BlogCreateForm(forms.ModelForm):
             "thumbnail",
             "isPublished"
         ]
+        widgets = {
+            'category': forms.Select(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white'
+            }),
+            'thumbnail': forms.FileInput(attrs={
+                'class': 'hidden',
+                'id': 'thumbnailInput',
+                'accept': 'image/*'
+            }),
+            'isPublished': forms.CheckboxInput(attrs={
+                'class': 'sr-only peer',
+                'id': 'isPublishedInput'
+            })
+        }
 
 # -------------------------
 # Playlist Form

@@ -75,11 +75,14 @@ class BlogCreateView(LoginRequiredMixin, CreateView):
     model = Blog
     form_class = BlogCreateForm
     template_name = "blog_create.html"
-    success_url = reverse_lazy("blog-list")
+    success_url = reverse_lazy("blogs-list")
 
     def form_valid(self, form):
         form.instance.author = self.request.user
         return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('user-blogs', kwargs={'username': self.request.user.username})
 
 
 
@@ -199,7 +202,7 @@ class UserBlogManageView(LoginRequiredMixin, UserPassesTestMixin, UserBlogListVi
             author__username=username
         ).select_related('category', 'author')
 
-        queryset = queryset.order_by('-publishedDate', '-created_at')
+        queryset = queryset.order_by('-created_at')
 
         # Filters - reusing search logic
         search = self.request.GET.get('q', '').strip()

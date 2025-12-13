@@ -274,28 +274,23 @@
                             <span class="text-sm">{{ blog.views|default:0 }}</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button
-                                id="like-btn"
-                                class="flex items-center gap-2 transition-all duration-200 focus:outline-none"
-                                {% if user.is_authenticated %}
-                                    onclick="toggleLike()"
-                                {% else %}
-                                    title="Login to like"
-                                {% endif %}
-                            >
-                                <svg id="like-icon"
-                                    class="w-6 h-6 transition-colors
+                            <button id="like-btn"
+                                class="flex items-center gap-2 transition-all duration-200 focus:outline-none" 
+                                {% if user.is_authenticated %} 
+                                onclick="toggleLike()" 
+                                {% else %} title="Login to like" 
+                                {% endif %}>
+                                <svg id="like-icon" class="w-6 h-6 transition-colors
                                             {% if user_has_liked %}
                                                 text-red-500 fill-red-500
                                             {% else %}
                                                 text-gray-400
-                                            {% endif %}"
-                                    stroke="currentColor"
+                                            {% endif %}" stroke="currentColor"
                                     fill="{% if user_has_liked %}currentColor{% else %}none{% endif %}"
                                     viewBox="0 0 24 24">
 
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                                 </svg>
 
                                 <span id="like-count" class="text-sm font-medium text-gray-600">
@@ -376,7 +371,7 @@
 
                         <!-- Sections -->
                         {% if blog.sections %}
-                        {% for section in blog.sections.sections %}
+                        {% for section in blog.sections %}
                         <div id="section-{{ forloop.counter0 }}" class="mb-10 scroll-mt-24">
                             {% if section.type == 'text' %}
                             <h3 class="text-2xl font-bold text-gray-900 mb-4">{{ section.title }}</h3>
@@ -553,8 +548,8 @@
         if (introduction) tableOfContents.push({ id: 'introduction', title: 'Introduction' });
 
         // Add all sections to TOC
-        {% if blog.sections and blog.sections.sections %}
-        {% for section in blog.sections.sections %}
+        {% if blog.sections and blog.sections %}
+        {% for section in blog.sections %}
         {% if section.title %}
         tableOfContents.push({ id: 'section-{{ forloop.counter0 }}', title: '{{ section.title|escapejs }}' });
         {% endif %}
