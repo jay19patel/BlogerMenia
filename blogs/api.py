@@ -2,13 +2,26 @@ from django.http import JsonResponse
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
-from blogs.models import Blog, BlogLike
 from django.db.models import F
+from django.conf import settings
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+import time
+import os
+import uuid
+from blogs.models import Blog, BlogLike
 
-class ToggleBlogLikeAPI(LoginRequiredMixin, View):
+class JsonPostMixin:
+    """Mixin to ensure request is POST and return JSON responses."""
+    def dispatch(self, request, *args, **kwargs):
+        if request.method != 'POST':
+            return JsonResponse({'error': 'Method not allowed'}, status=405)
+        return super().dispatch(request, *args, **kwargs)
+
+class ToggleBlogLikeAPI(LoginRequiredMixin, JsonPostMixin, View):
     def post(self, request, slug, *args, **kwargs):
-        # Get the blog
-        blog = get_object_or_404(Blog, slug=slug)
+        # Get the blog - minimized query
+        blog = get_object_or_404(Blog.objects.only('id', 'likes'), slug=slug)
         user = request.user
         
         # Check if already liked
@@ -20,32 +33,31 @@ class ToggleBlogLikeAPI(LoginRequiredMixin, View):
             liked = False
             # Decrement count safely
             Blog.objects.filter(pk=blog.pk).update(likes=F('likes') - 1)
+            # Calculate new likes without DB hit (approx)
+            new_likes = blog.likes - 1
         else:
             # Just created, so it's a LIKE
             liked = True
             # Increment count safely
             Blog.objects.filter(pk=blog.pk).update(likes=F('likes') + 1)
+            new_likes = blog.likes + 1
             
-        # Refresh blog to get current accurate count
-        blog.refresh_from_db()
-        
         return JsonResponse({
             'liked': liked,
-            'total_likes': blog.likes
+            'total_likes': max(0, new_likes) # Prevent negative if something weird happened
         })
 
-class GenerateBlogAPI(LoginRequiredMixin, View):
+class GenerateBlogAPI(LoginRequiredMixin, JsonPostMixin, View):
     def post(self, request, *args, **kwargs):
-        # Simulate AI generation with a dummy response
-        import time
-        # time.sleep(1) # Optional delay to simulate processing but making it fast for user experience
-
+        # Simulate AI generation
+        # In a real scenario, this would call an AI service
+        
         dummy_blog_data = {
             "title": "The Future of Web Development with AI",
             "slug": "future-web-development-ai",
             "subtitle": "How Artificial Intelligence is transforming the way we build websites.",
             "excerpt": "Explore the revolutionary impact of AI on modern web development workflows, from code generation to automated testing.",
-            "category": "Technology", # The frontend might need to handle this if it expects an ID, but for now sending text is fine as per current form handling
+            "category": "Technology", 
             "content": {
                 "introduction": "In the rapidly evolving landscape of technology, Artificial Intelligence (AI) has emerged as a game-changer for web developers. Gone are the days of manual boilerplate coding; today, intelligent tools assist in everything from design to deployment.",
                 "conclusion": "As we embrace these new tools, the role of the developer is shifting from coder to architect. The future is bright, and AI is the partner that will help us build it.",
@@ -90,7 +102,7 @@ class GenerateBlogAPI(LoginRequiredMixin, View):
         })
 
 
-class UploadImageAPI(LoginRequiredMixin, View):
+class UploadImageAPI(LoginRequiredMixin, JsonPostMixin, View):
     def post(self, request, *args, **kwargs):
         if 'image' not in request.FILES:
             return JsonResponse({'error': 'No image provided'}, status=400)
@@ -100,30 +112,20 @@ class UploadImageAPI(LoginRequiredMixin, View):
             
             # Basic validation
             if not image_file.content_type.startswith('image/'):
-                return JsonResponse({'error': 'Invalid file type'}, status=400)
+                return JsonResponse({'error': 'Invalid file type. Only images are allowed.'}, status=400)
                 
             if image_file.size > 5 * 1024 * 1024:  # 5MB limit
                 return JsonResponse({'error': 'Image too large (max 5MB)'}, status=400)
 
-            # We need to save this file somewhere to get a URL.
-            # Ideally, this should go to a specific Media model or folder.
-            # For now, we will use Django's default storage system manually 
-            # or rely on a helper if we had one.
-            # Since we don't have a dedicated "SectionImage" model in the prompt, 
-            # we will save it using FileSystemStorage to 'blog_uploads/'
-            
-            from django.core.files.storage import default_storage
-            from django.core.files.base import ContentFile
-            import os
-            import uuid
-            
             # Generate unique filename
             ext = os.path.splitext(image_file.name)[1]
             if not ext:
-                ext = '.jpg'
-            filename = f"blog_uploads/{uuid.uuid4()}{ext}"
+                ext = '.jpg' # Default extension
             
-            # Save file
+            # Secure filename generation
+            filename = f"blog_uploads/{uuid.uuid4().hex}{ext}"
+            
+            # Save file using default storage
             path = default_storage.save(filename, ContentFile(image_file.read()))
             
             # Get URL
@@ -132,4 +134,6 @@ class UploadImageAPI(LoginRequiredMixin, View):
             return JsonResponse({'url': url})
             
         except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
+            # Log the full error in production
+            print(f"Error handling upload: {e}") # Replace with logging in prod
+            return JsonResponse({'error': 'Upload failed. Please try again.'}, status=500)

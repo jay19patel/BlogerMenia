@@ -18,10 +18,24 @@ class User(AbstractUser):
         return self.get_display_name()
 
     def save(self, *args, **kwargs):
+        # Check if profile_image has changed
+        if self.pk:
+            try:
+                old_instance = User.objects.get(pk=self.pk)
+                if old_instance.profile_image != self.profile_image:
+                     self._process_image = True
+                else:
+                     self._process_image = False
+            except User.DoesNotExist:
+                # New user
+                self._process_image = True
+        else:
+             self._process_image = True
+
         super().save(*args, **kwargs)
 
-        # Optimize profile image if exists
-        if self.profile_image:
+        # Optimize profile image if exists and flagged for processing
+        if self.profile_image and getattr(self, '_process_image', False):
             try:
                 img_path = self.profile_image.path
                 img = Image.open(img_path)
@@ -156,30 +170,34 @@ class Playlist(models.Model):
                 counter += 1
             self.slug = slug
         
-        # Optimize thumbnail if it exists
-        if self.thumbnail:
+        # Check if thumbnail has changed
+        if self.pk:
             try:
-                # Check if the image is actually available/changed before processing
-                # This basic check assumes if it has a file, we might need to process it.
-                # A more robust check typically involves checking if 'thumbnail' field is dirty.
-                # For simplicity in this context, we'll process on save if it exists.
+                old_instance = Playlist.objects.get(pk=self.pk)
+                if old_instance.thumbnail != self.thumbnail:
+                     self._process_thumbnail = True
+                else:
+                     self._process_thumbnail = False
+            except Playlist.DoesNotExist:
+                pass
+        else:
+             self._process_thumbnail = True
+
+        super().save(*args, **kwargs)
+
+        # Optimize thumbnail if it exists
+        if self.thumbnail and getattr(self, '_process_thumbnail', False):
+            try:
                 img = Image.open(self.thumbnail)
                 max_size = (800, 800)
                 if img.height > max_size[1] or img.width > max_size[0]:
                     img.thumbnail(max_size, Image.Resampling.LANCZOS)
-                    # We need to save it back. This can be complex with storage backends
-                    # ignoring complex storage logic for local file optimization for now:
-                    # img.save(self.thumbnail.path, quality=85, optimize=True)
-                    # NOTE: modifying files in save() directly can be tricky with some storage backends.
-                    # Given the User model does it, I will assume local storage is compliant.
                     if hasattr(self.thumbnail, 'path'):
                          img.save(self.thumbnail.path, quality=85, optimize=True)
 
             except Exception as e:
                 # Fail silently or log error for image processing
                 print(f"Error optimizing playlist thumbnail: {e}")
-
-        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name

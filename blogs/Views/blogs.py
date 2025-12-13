@@ -1,21 +1,20 @@
-from django.views.generic import ListView
-from blogs.models import Blog, Category
-from django.db.models import Q
+from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView
+from django.db.models import Q, Sum, F
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy, reverse
-from django.views.generic import CreateView, DetailView, UpdateView, DeleteView
-from blogs.forms import BlogCreateForm
-from django.shortcuts import redirect
+from django.shortcuts import redirect, get_object_or_404
 from django.contrib import messages
+from django.core.cache import cache
+from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator
+from django.http import Http404
 
-# -------------------------
-# Global Blog List View
-# -------------------------
-from django.views.generic import ListView
-from django.db.models import Q
-from blogs.models import Blog, Category
+from blogs.models import Blog, Category, Playlist, BlogLike
+from blogs.forms import BlogCreateForm
 
+# Cache the public blog list for 15 minutes
+@method_decorator(cache_page(60 * 15), name='dispatch')
 class BlogListView(ListView):
     model = Blog
     template_name = 'blog_list.html'
@@ -45,7 +44,7 @@ class BlogListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # Categories for filter bar (optional)
+        # Categories for filter bar (optimally fetched)
         context['categories'] = Category.objects.all().order_by('name')
         context['selected_category'] = self.request.GET.get('category', '')
         context['search_query'] = self.request.GET.get('q', '')
@@ -53,10 +52,7 @@ class BlogListView(ListView):
         # Total count for info
         context['total_count'] = self.get_queryset().count()
         
-        # Top 3 Playlists by Views
-        from blogs.models import Playlist
-        from django.db.models import Sum
-        
+        # Top 3 Playlists by Views - Optimized
         # Annotate playlists with sum of views of their blogs, order by that sum
         top_playlists = Playlist.objects.filter(is_public=True).annotate(
             total_views=Sum('blogs__views')
@@ -87,23 +83,30 @@ class BlogCreateView(LoginRequiredMixin, CreateView):
 
 
 # -------------------------
-# User Blog List View (Read-Only)
+# User Blog List Mixin (Shared Logic)
 # -------------------------
-class UserBlogListView(ListView):
+class UserBlogListMixin(ListView):
     model = Blog
     template_name = 'blog_list_by_user.html'
     context_object_name = 'blogs'
     paginate_by = 9
+    
+    def get_user_username(self):
+        return self.kwargs.get('username')
+
+    def get_base_queryset(self):
+        # To be overridden by subclasses or handled here with logic
+        username = self.get_user_username()
+        return Blog.objects.filter(author__username=username).select_related('category', 'author')
 
     def get_queryset(self):
-        username = self.kwargs.get('username')
-
-        queryset = Blog.objects.filter(
-            author__username=username,
-            isPublished=True
-        ).select_related('category', 'author')
-
-        queryset = queryset.order_by('-publishedDate', '-created_at')
+        queryset = self.get_base_queryset()
+        
+        # Apply sorting
+        if hasattr(self, 'ordering_field'):
+             queryset = queryset.order_by(self.ordering_field, '-created_at')
+        else:
+             queryset = queryset.order_by('-publishedDate', '-created_at')
 
         # Filters
         search = self.request.GET.get('q', '').strip()
@@ -124,23 +127,23 @@ class UserBlogListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # Author details
-        username = self.kwargs.get('username')
+        username = self.get_user_username()
         User = get_user_model()
-        author = User.objects.get(username=username)
+        author = get_object_or_404(User, username=username)
 
         context['filter_author'] = author
 
-        # User Stats
-        from django.db.models import Sum
-        total_blogs = Blog.objects.filter(author=author, isPublished=True).count()
-        total_views = Blog.objects.filter(author=author, isPublished=True).aggregate(Sum('views'))['views__sum'] or 0
-        total_likes = Blog.objects.filter(author=author, isPublished=True).aggregate(Sum('likes'))['likes__sum'] or 0
-
+        # We want stats for PUBLISHED blogs only, almost always
+        published_blogs = Blog.objects.filter(author=author, isPublished=True)
+        stats = published_blogs.aggregate(
+            total_views=Sum('views'),
+            total_likes=Sum('likes')
+        )
+        
         context['user_stats'] = {
-            'blog_count': total_blogs,
-            'total_views': total_views,
-            'total_likes': total_likes,
+            'blog_count': published_blogs.count(),
+            'total_views': stats['total_views'] or 0,
+            'total_likes': stats['total_likes'] or 0,
             'member_since': author.date_joined,
         }
 
@@ -150,25 +153,35 @@ class UserBlogListView(ListView):
             blogs__isPublished=True
         ).distinct().order_by('name')
         context['categories'] = author_categories
-
-        # Get unique category names for display
         context['category_names'] = list(author_categories.values_list('name', flat=True))
-
-        # Real Playlists
-        from blogs.models import Playlist
-        
-        # In READ-ONLY view, show only PUBLIC playlists
-        playlists = Playlist.objects.filter(owner=author, is_public=True).prefetch_related('blogs')
-        
-        context['playlists'] = playlists
 
         # Filters
         context['selected_category'] = self.request.GET.get('category', '')
         context['search_query'] = self.request.GET.get('q', '')
-
         context['total_count'] = self.get_queryset().count()
         
-        # Explicitly set edit_mode to False
+        return context
+
+
+# -------------------------
+# User Blog List View (Read-Only)
+# -------------------------
+class UserBlogListView(UserBlogListMixin):
+    
+    def get_base_queryset(self):
+        # Public view: Only published blogs
+        return super().get_base_queryset().filter(isPublished=True)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Real Playlists - Public only
+        playlists = Playlist.objects.filter(
+            owner=context['filter_author'], 
+            is_public=True
+        ).prefetch_related('blogs')
+        
+        context['playlists'] = playlists
         context['edit_mode'] = False
 
         return context
@@ -177,60 +190,34 @@ class UserBlogListView(ListView):
 # -------------------------
 # User Blog Manage View (Edit Mode)
 # -------------------------
-class UserBlogManageView(LoginRequiredMixin, UserPassesTestMixin, UserBlogListView):
-    template_name = 'blog_list_by_user.html'
+class UserBlogManageView(LoginRequiredMixin, UserPassesTestMixin, UserBlogListMixin):
+    ordering_field = '-created_at' # Manage view shows newest created first (including drafts)
 
     def test_func(self):
         """Ensure only the profile owner can access this view."""
-        username = self.kwargs.get('username')
-        return self.request.user.username == username
+        return self.request.user.username == self.get_user_username()
 
     def handle_no_permission(self):
         """Redirect if user tries to access someone else's manage page."""
         messages.error(self.request, "You can only manage your own profile.")
         return redirect('user-blogs', username=self.kwargs.get('username'))
     
-    def get_queryset(self):
-        """
-        Override UserBlogListView's get_queryset to show ALL blogs (published and drafts)
-        since this is the management view for the owner.
-        """
-        username = self.kwargs.get('username')
-        
-        # NOTE: base query does NOT filter by isPublished=True here
-        queryset = Blog.objects.filter(
-            author__username=username
-        ).select_related('category', 'author')
-
-        queryset = queryset.order_by('-created_at')
-
-        # Filters - reusing search logic
-        search = self.request.GET.get('q', '').strip()
-        category_slug = self.request.GET.get('category', '').strip()
-
-        if search:
-            queryset = queryset.filter(
-                Q(title__icontains=search) |
-                Q(subtitle__icontains=search) |
-                Q(excerpt__icontains=search)
-            )
-
-        if category_slug:
-            queryset = queryset.filter(category__slug=category_slug)
-
-        return queryset.distinct()
+    def get_base_queryset(self):
+        # Manage view: All blogs (published and drafts)
+        # Note: Base mixin already selects by author
+        return super().get_base_queryset()
 
     def get_context_data(self, **kwargs):
-        # Call the parent's get_context_data to get all stats/blogs
         context = super().get_context_data(**kwargs)
         
         # Enable Edit Mode
         context['edit_mode'] = True
         
         # In MANAGE view, show ALL playlists (public and private)
-        from blogs.models import Playlist
-        author = context['filter_author']
-        playlists = Playlist.objects.filter(owner=author).prefetch_related('blogs')
+        playlists = Playlist.objects.filter(
+            owner=context['filter_author']
+        ).prefetch_related('blogs')
+        
         context['playlists'] = playlists
         
         return context
@@ -250,8 +237,6 @@ class BlogDetailView(DetailView):
         slug = self.kwargs.get('slug')
         
         # Get the blog first
-        from django.shortcuts import get_object_or_404
-        from django.http import Http404
         
         blog = get_object_or_404(
             Blog.objects.select_related('category', 'author'),
@@ -266,7 +251,6 @@ class BlogDetailView(DetailView):
                 raise Http404("Blog not found or not published.")
         
         # Increment view count
-        from django.db.models import F
         Blog.objects.filter(pk=blog.pk).update(views=F('views') + 1)
         
         # Refresh to get updated value (optional, but good for display)
@@ -277,7 +261,6 @@ class BlogDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if self.request.user.is_authenticated:
-            from blogs.models import BlogLike
             context['user_has_liked'] = BlogLike.objects.filter(user=self.request.user, blog=self.object).exists()
         else:
             context['user_has_liked'] = False

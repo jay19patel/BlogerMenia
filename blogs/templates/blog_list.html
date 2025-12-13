@@ -125,7 +125,7 @@
         {% if blogs %}
 
         <!-- Featured Blogs Section (First 3 blogs on page 1) -->
-        {% if page_obj.number == 1 and blogs|length >= 3 %}
+        {% if page_obj.number == 1 %}
         <div class="mb-16">
             <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-6">Latest Articles</h2>
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -160,7 +160,7 @@
                                 class="text-2xl font-bold text-gray-900 mb-3 group-hover:text-indigo-600 transition-colors">
                                 {{ blogs.0.title }}</h3>
 
-                            {% if blogs.0.excerpt %}
+                            {% if blogs.0.subtitle %}
                             <p class="text-gray-600 line-clamp-2 font-bold py-2">{{ blogs.0.subtitle }}</p>
                             {% endif %}
 
@@ -174,6 +174,7 @@
                 <!-- Two Smaller Blogs Stacked (2nd and 3rd Blog) -->
                 <div class="space-y-6">
                     <!-- Second Blog -->
+                    {% if blogs.1 %}
                     <a href="{% url 'blog-detail' blogs.1.author.username blogs.1.slug %}" class="group block">
                         <div
                             class="bg-white border border-gray-300 rounded-xl overflow-hidden hover:border-indigo-500 hover:shadow-lg transition-all duration-300">
@@ -203,8 +204,10 @@
                             </div>
                         </div>
                     </a>
+                    {% endif %}
 
                     <!-- Third Blog -->
+                    {% if blogs.2 %}
                     <a href="{% url 'blog-detail' blogs.2.author.username blogs.2.slug %}" class="group block">
                         <div
                             class="bg-white border border-gray-300 rounded-xl overflow-hidden hover:border-indigo-500 hover:shadow-lg transition-all duration-300">
@@ -234,6 +237,7 @@
                             </div>
                         </div>
                     </a>
+                    {% endif %}
                 </div>
             </div>
         </div>

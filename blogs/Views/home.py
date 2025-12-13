@@ -2,6 +2,10 @@ from django.views.generic import TemplateView
 from blogs.models import FAQ, Testimonial
 
 
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+
+@method_decorator(cache_page(60 * 15), name='dispatch')
 class HomeView(TemplateView):
     template_name = "home.html"
 

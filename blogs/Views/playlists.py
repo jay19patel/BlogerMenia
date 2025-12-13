@@ -101,7 +101,7 @@ class PlaylistDetailView(DetailView):
     context_object_name = "playlist"
 
     def get_object(self, queryset=None):
-        return Playlist.objects.get(
+        return Playlist.objects.prefetch_related('blogs').get(
             owner__username=self.kwargs.get('username'),
             slug=self.kwargs.get('slug')
         )
