@@ -6,19 +6,48 @@
 
 <style>
     @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
-    .animate-fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
-    .chat-message { animation: fadeInUp 0.4s ease-out forwards; }
+
+    .animate-fade-in-up {
+        animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    .chat-message {
+        animation: fadeInUp 0.4s ease-out forwards;
+    }
 
     @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.5;
+        }
     }
-    .typing-indicator span { animation: pulse 1.4s ease-in-out infinite; }
-    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+    .typing-indicator span {
+        animation: pulse 1.4s ease-in-out infinite;
+    }
+
+    .typing-indicator span:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .typing-indicator span:nth-child(3) {
+        animation-delay: 0.4s;
+    }
 </style>
 
 <!-- Hero Section -->
@@ -39,12 +68,27 @@
                     </h1>
 
                     <p class="text-lg text-gray-600 mb-8">
-                        Create professional, insightful blogs powered by AI. Share your knowledge and discover meaningful content.
+                        Create professional, insightful blogs powered by AI. Share your knowledge and discover
+                        meaningful content.
                     </p>
 
-                    <div class="bg-white rounded-full shadow-lg p-2 flex items-center gap-2 mb-8">
-                        <input type="text" placeholder="Type anything you want to know..." class="flex-1 px-6 py-3 rounded-full focus:outline-none text-gray-700">
-                        <button class="bg-indigo-600 text-white px-8 py-3 rounded-full hover:bg-indigo-700 transition-colors font-semibold whitespace-nowrap">Find Blogs</button>
+                    <div class="bg-white rounded-full shadow-lg p-2 flex items-center gap-2 mb-8 relative z-50">
+                        <!-- Search Icon -->
+                        <div class="pl-4 text-gray-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                        <input id="searchInput" type="text" placeholder="Type anything you want to know..."
+                            class="flex-1 px-4 py-3 rounded-full focus:outline-none text-gray-700 bg-transparent"
+                            autocomplete="off">
+
+                        <!-- Search Results Dropdown -->
+                        <div id="searchResults"
+                            class="absolute top-full left-0 right-0 mt-4 bg-white rounded-2xl shadow-xl border border-gray-100 hidden overflow-hidden transition-all duration-200 opacity-0 transform translate-y-2">
+                            <!-- Results go here -->
+                        </div>
                     </div>
 
                     <!-- Stats -->
@@ -53,11 +97,15 @@
                         <!-- Users -->
                         <div class="flex items-center gap-3">
                             <div class="bg-indigo-100 p-3 rounded-lg">
-                                <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
                             </div>
                             <div>
                                 <p class="text-xs text-gray-500 uppercase tracking-wide">Active Users</p>
-                                <p class="text-xl font-bold text-gray-900">12,500+</p>
+                                <p class="text-xl font-bold text-gray-900">{{ stats_active_users|default:"0" }}+</p>
                             </div>
                         </div>
 
@@ -66,11 +114,15 @@
                         <!-- Blogs -->
                         <div class="flex items-center gap-3">
                             <div class="bg-purple-100 p-3 rounded-lg">
-                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                </svg>
                             </div>
                             <div>
                                 <p class="text-xs text-gray-500 uppercase tracking-wide">Blogs Published</p>
-                                <p class="text-xl font-bold text-gray-900">8,432</p>
+                                <p class="text-xl font-bold text-gray-900">{{ stats_blogs_published|default:"0" }}</p>
                             </div>
                         </div>
 
@@ -79,11 +131,15 @@
                         <!-- Views -->
                         <div class="flex items-center gap-3">
                             <div class="bg-green-100 p-3 rounded-lg">
-                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                </svg>
                             </div>
                             <div>
                                 <p class="text-xs text-gray-500 uppercase tracking-wide">Total Views</p>
-                                <p class="text-xl font-bold text-gray-900">2.4M</p>
+                                <p class="text-xl font-bold text-gray-900">{{ stats_total_views|default:"0" }}</p>
                             </div>
                         </div>
 
@@ -95,7 +151,8 @@
                     <div class="absolute -top-8 -left-8 w-32 h-32 bg-indigo-400/20 rounded-full blur-3xl"></div>
                     <div class="absolute -bottom-8 -right-8 w-40 h-40 bg-purple-400/20 rounded-full blur-3xl"></div>
 
-                    <div class="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 p-1 rounded-3xl shadow-2xl">
+                    <div
+                        class="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 p-1 rounded-3xl shadow-2xl">
                         <div class="bg-white rounded-3xl p-6 lg:p-8">
 
                             <div class="flex items-center gap-2 mb-6 pb-4 border-b border-gray-200">
@@ -107,7 +164,9 @@
                                 </div>
                             </div>
 
-                            <div id="chatMessages" class="bg-gradient-to-br from-gray-50 to-indigo-50/30 rounded-xl p-5 border-2 border-indigo-100 h-80 lg:h-96 overflow-y-auto flex flex-col gap-3 shadow-inner"></div>
+                            <div id="chatMessages"
+                                class="bg-gradient-to-br from-gray-50 to-indigo-50/30 rounded-xl p-5 border-2 border-indigo-100 h-80 lg:h-96 overflow-y-auto flex flex-col gap-3 shadow-inner">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -122,71 +181,47 @@
 <section class="py-24">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mb-14 text-center">
-            <h2 class="text-4xl text-center font-bold text-gray-900 leading-tight mb-6 max-w-max lg:max-w-3xl lg:mx-auto">
+            <h2
+                class="text-4xl text-center font-bold text-gray-900 leading-tight mb-6 max-w-max lg:max-w-3xl lg:mx-auto">
                 Built for creators, powered by AI intelligence
             </h2>
             <p class="text-base font-normal text-gray-500 lg:max-w-2xl lg:mx-auto mb-8">
-                Transform your thoughts into well-crafted blogs effortlessly. Share knowledge, engage with readers, and build your digital presence.
+                Transform your thoughts into well-crafted blogs effortlessly. Share knowledge, engage with readers, and
+                build your digital presence.
             </p>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-lg mx-auto md:max-w-2xl lg:max-w-full">
             <div class="relative w-full md:col-span-2 flex">
-                <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl flex justify-between flex-row flex-wrap flex-1">
+                <div
+                    class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl flex justify-between flex-row flex-wrap flex-1">
                     <div class="p-5 xl:p-8 w-full md:w-1/2 flex flex-col">
                         <div class="block">
-                            <svg
-                                width="30"
-                                height="30"
-                                viewBox="0 0 30 30"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
+                            <svg width="30" height="30" viewBox="0 0 30 30" fill="none"
+                                xmlns="http://www.w3.org/2000/svg">
                                 <path
                                     d="M15 12.5V18.75M18.75 2.5L11.25 2.5M15 28.75C8.7868 28.75 3.75 23.7132 3.75 17.5C3.75 11.2868 8.7868 6.25 15 6.25C21.2132 6.25 26.25 11.2868 26.25 17.5C26.25 23.7132 21.2132 28.75 15 28.75Z"
-                                    stroke="white"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
+                                    stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                         </div>
                         <h3 class="text-xl font-bold xl:text-2xl text-white py-5 w-full xl:w-64">
                             Generate blogs instantly with AI assistance.
                         </h3>
                         <p class="text-sm font-normal text-gray-300 w-full mb-8 xl:w-64 flex-grow">
-                            Create engaging, well-structured blogs in minutes. No more staring at blank pages or struggling with writer's block.
+                            Create engaging, well-structured blogs in minutes. No more staring at blank pages or
+                            struggling with writer's block.
                         </p>
                     </div>
                     <div class="relative hidden md:w-1/2 md:flex overflow-hidden rounded-r-2xl">
-                        <div class="w-full bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center">
-                            <svg
-                                width="100"
-                                height="100"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <path
-                                    d="M12 2L2 7L12 12L22 7L12 2Z"
-                                    stroke="white"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
-                                <path
-                                    d="M2 17L12 22L22 17"
-                                    stroke="white"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
-                                <path
-                                    d="M2 12L12 17L22 12"
-                                    stroke="white"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
+                        <div
+                            class="w-full bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center">
+                            <svg width="100" height="100" viewBox="0 0 24 24" fill="none"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="white" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M2 17L12 22L22 17" stroke="white" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                                <path d="M2 12L12 17L22 12" stroke="white" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
                             </svg>
                         </div>
                     </div>
@@ -195,52 +230,36 @@
             <div class="relative w-full flex">
                 <div class="bg-indigo-500 rounded-2xl p-5 xl:p-8 w-full flex flex-col">
                     <div class="block">
-                        <svg
-                            width="30"
-                            height="30"
-                            viewBox="0 0 30 30"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
+                        <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path
                                 d="M24.6429 11.4286C24.6429 14.3872 20.2457 16.7857 14.8214 16.7857C9.3972 16.7857 5 14.3872 5 11.4286M24.6429 16.7857C24.6429 19.7444 20.2457 22.1429 14.8214 22.1429C9.3972 22.1429 5 19.7444 5 16.7857M24.6429 22.1429C24.6429 25.1015 20.2457 27.5 14.8214 27.5C9.3972 27.5 5 25.1015 5 22.1429M24.6429 6.96429C24.6429 9.42984 20.2457 11.4286 14.8214 11.4286C9.3972 11.4286 5 9.42984 5 6.96429C5 4.49873 9.3972 2.5 14.8214 2.5C20.2457 2.5 24.6429 4.49873 24.6429 6.96429Z"
-                                stroke="white"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                            />
+                                stroke="white" stroke-width="2" stroke-linecap="round" />
                         </svg>
                     </div>
                     <h3 class="py-5 text-white text-xl font-bold xl:text-2xl">
                         Share knowledge with your audience
                     </h3>
                     <p class="text-sm font-normal text-white mb-8 flex-grow">
-                        Reach and engage with readers worldwide. Build your thought leadership through quality content sharing.
+                        Reach and engage with readers worldwide. Build your thought leadership through quality content
+                        sharing.
                     </p>
                 </div>
             </div>
             <div class="relative w-full flex">
                 <div class="bg-violet-500 rounded-2xl p-5 xl:p-8 w-full flex flex-col">
                     <div class="block">
-                        <svg
-                            width="30"
-                            height="30"
-                            viewBox="0 0 30 30"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
+                        <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path
                                 d="M26.7301 15.661C26.7301 22.1995 21.306 27.5 14.6151 27.5C7.9241 27.5 2.5 22.1995 2.5 15.661C2.5 9.1225 7.9241 3.822 14.6151 3.822M18.1313 10.1507L18.1313 4.85383C18.1313 3.22503 19.6455 2.00299 21.1519 2.70013C23.7608 3.90751 26.6177 6.25557 27.456 10.2563C27.7542 11.6798 26.4931 12.8563 25.0064 12.8368L20.7873 12.7814C19.3147 12.762 18.1313 11.5899 18.1313 10.1507Z"
-                                stroke="white"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                            />
+                                stroke="white" stroke-width="2" stroke-linecap="round" />
                         </svg>
                     </div>
                     <h3 class="py-5 text-white text-xl font-bold xl:text-2xl">
                         Discover inspiring content daily
                     </h3>
                     <p class="text-sm font-normal text-white mb-8 flex-grow">
-                        Explore trending blogs from creative minds. Learn, get inspired, and stay updated with fresh perspectives across diverse topics.
+                        Explore trending blogs from creative minds. Learn, get inspired, and stay updated with fresh
+                        perspectives across diverse topics.
                     </p>
                 </div>
             </div>
@@ -250,89 +269,90 @@
 
 <!-- Testimonials Section -->
 <section id="testimonials" class="py-16">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
-    <!-- Header with Count -->
-    <div class="flex items-center justify-between mb-8">
-      <h2 class="text-2xl font-bold text-gray-900">
-        {{ testimonials|length }}+ <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">Customer Reviews</span>
-      </h2>
+        <!-- Header with Count -->
+        <div class="flex items-center justify-between mb-8">
+            <h2 class="text-2xl font-bold text-gray-900">
+                {{ testimonials|length }}+ <span
+                    class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">Customer
+                    Reviews</span>
+            </h2>
 
-      <!-- Navigation Buttons -->
-      <div class="flex items-center gap-2">
-        <button id="prevBtn"
-          class="border-2 border-indigo-600 w-9 h-9 rounded-lg flex items-center justify-center hover:bg-indigo-600 group transition">
-          <svg class="w-4 h-4 text-indigo-600 group-hover:text-white" fill="none" stroke="currentColor"
-            viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
+            <!-- Navigation Buttons -->
+            <div class="flex items-center gap-2">
+                <button id="prevBtn"
+                    class="border-2 border-indigo-600 w-9 h-9 rounded-lg flex items-center justify-center hover:bg-indigo-600 group transition">
+                    <svg class="w-4 h-4 text-indigo-600 group-hover:text-white" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
 
-        <button id="nextBtn"
-          class="border-2 border-indigo-600 w-9 h-9 rounded-lg flex items-center justify-center hover:bg-indigo-600 group transition">
-          <svg class="w-4 h-4 text-indigo-600 group-hover:text-white" fill="none" stroke="currentColor"
-            viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- Testimonial Slider -->
-    <div class="relative">
-      <div class="overflow-hidden rounded-xl shadow-lg bg-white">
-        <div id="slider" class="flex transition-transform duration-500 ease-in-out">
-
-          {% for t in testimonials %}
-          <div class="min-w-full p-6">
-            <div class="flex items-center justify-center gap-4">
-
-              <!-- User Image/Avatar -->
-              <div class="flex-shrink-0">
-                {% if t.profile_image %}
-                <img src="{{ t.profile_image }}" class="w-14 h-14 rounded-full object-cover border-2 border-indigo-100">
-                {% else %}
-                <div
-                  class="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xl border-2 border-indigo-100">
-                  {{ t.name|slice:":1"|upper }}
-                </div>
-                {% endif %}
-              </div>
-
-              <!-- Content -->
-              <div class="flex-1 min-w-0">
-                <!-- User Name -->
-                <div class="mb-3">
-                  <p class="text-gray-900 font-semibold text-base">{{ t.name }}</p>
-                </div>
-
-                <!-- Message -->
-                <p class="text-gray-700 text-sm leading-relaxed italic">
-                  "{{ t.message }}"
-                </p>
-              </div>
-
+                <button id="nextBtn"
+                    class="border-2 border-indigo-600 w-9 h-9 rounded-lg flex items-center justify-center hover:bg-indigo-600 group transition">
+                    <svg class="w-4 h-4 text-indigo-600 group-hover:text-white" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
             </div>
-          </div>
-          {% endfor %}
+        </div>
+
+        <!-- Testimonial Slider -->
+        <div class="relative">
+            <div class="overflow-hidden rounded-xl shadow-lg bg-white">
+                <div id="slider" class="flex transition-transform duration-500 ease-in-out">
+
+                    {% for t in testimonials %}
+                    <div class="min-w-full p-6">
+                        <div class="flex items-center justify-center gap-4">
+
+                            <!-- User Image/Avatar -->
+                            <div class="flex-shrink-0">
+                                {% if t.profile_image %}
+                                <img src="{{ t.profile_image }}"
+                                    class="w-14 h-14 rounded-full object-cover border-2 border-indigo-100">
+                                {% else %}
+                                <div
+                                    class="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xl border-2 border-indigo-100">
+                                    {{ t.name|slice:":1"|upper }}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Content -->
+                            <div class="flex-1 min-w-0">
+                                <!-- User Name -->
+                                <div class="mb-3">
+                                    <p class="text-gray-900 font-semibold text-base">{{ t.name }}</p>
+                                </div>
+
+                                <!-- Message -->
+                                <p class="text-gray-700 text-sm leading-relaxed italic">
+                                    "{{ t.message }}"
+                                </p>
+                            </div>
+
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                </div>
+            </div>
+
+            <!-- Indicators -->
+            <div class="flex justify-center gap-2 mt-4">
+                {% for t in testimonials %}
+                <button onclick="goToSlide({{ forloop.counter0 }})"
+                    class="indicator w-2 h-2 rounded-full bg-gray-300 transition-all duration-300 hover:bg-indigo-400"
+                    data-index="{{ forloop.counter0 }}"></button>
+                {% endfor %}
+            </div>
 
         </div>
-      </div>
-
-      <!-- Indicators -->
-      <div class="flex justify-center gap-2 mt-4">
-        {% for t in testimonials %}
-        <button onclick="goToSlide({{ forloop.counter0 }})"
-          class="indicator w-2 h-2 rounded-full bg-gray-300 transition-all duration-300 hover:bg-indigo-400"
-          data-index="{{ forloop.counter0 }}"></button>
-        {% endfor %}
-      </div>
 
     </div>
-
-  </div>
 </section>
 
 
@@ -349,19 +369,26 @@
         <div id="faqContainer" class="space-y-4">
             {% for f in faqs %}
             <div class="border border-gray-200 rounded-lg overflow-hidden bg-white">
-                <button onclick="toggleFAQ({{ forloop.counter }})" class="w-full flex justify-between items-center px-6 py-4 bg-gray-50 hover:bg-gray-100 transition">
+                <button onclick="toggleFAQ({{ forloop.counter }})"
+                    class="w-full flex justify-between items-center px-6 py-4 bg-gray-50 hover:bg-gray-100 transition">
                     <span class="font-semibold text-gray-900">{{ f.question }}</span>
-                    <svg id="faqIcon{{ forloop.counter }}" class="w-6 h-6 text-gray-600 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    <svg id="faqIcon{{ forloop.counter }}" class="w-6 h-6 text-gray-600 transform transition-transform"
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
                 </button>
                 <div id="faqAnswer{{ forloop.counter }}" class="px-6 py-4 hidden text-gray-700">{{ f.answer }}</div>
             </div>
             {% endfor %}
         </div>
 
-        <div class="mt-12 text-center p-8 bg-gradient-to-r from-indigo-50 to-violet-50 rounded-xl border border-indigo-100">
+        <div
+            class="mt-12 text-center p-8 bg-gradient-to-r from-indigo-50 to-violet-50 rounded-xl border border-indigo-100">
             <h3 class="text-xl font-semibold text-gray-900 mb-2">Still have questions?</h3>
             <p class="text-gray-600 mb-4">Can't find the answer you're looking for?</p>
-            <a href="mailto:support@blogermenia.com" class="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors font-semibold">Contact Support</a>
+            <a href="mailto:support@blogermenia.com"
+                class="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors font-semibold">Contact
+                Support</a>
         </div>
 
     </div>
@@ -372,66 +399,65 @@
 
 {% block extra_scripts %}
 <script>
-/* FAQ */
-function toggleFAQ(id) {
-    const answer = document.getElementById(`faqAnswer${id}`);
-    const icon = document.getElementById(`faqIcon${id}`);
-    const isOpen = !answer.classList.contains("hidden");
+    /* FAQ */
+    function toggleFAQ(id) {
+        const answer = document.getElementById(`faqAnswer${id}`);
+        const icon = document.getElementById(`faqIcon${id}`);
+        const isOpen = !answer.classList.contains("hidden");
 
-    answer.classList.toggle("hidden");
-    icon.classList.toggle("rotate-180");
-}
+        answer.classList.toggle("hidden");
+        icon.classList.toggle("rotate-180");
+    }
 
-/* Chat demo */
-const conversation = [
-  { role: 'assistant', content: 'Hey Jay Patel, what kind of blog would you like to create?' },
-  { role: 'user', content: 'Create a blog on Python OOP concepts.' },
-  { role: 'assistant', content: 'Creating your Python OOP blog…' },
-  { role: 'assistant', content: 'Done! "Python OOP Fundamentals" — classes, inheritance, polymorphism with examples.' },
-  { role: 'user', content: 'Add a short introduction as well.' },
-  { role: 'assistant', content: 'Intro: Object-Oriented Programming (OOP) in Python helps structure code using classes and objects for cleaner, reusable designs.' },
-  { role: 'user', content: 'Now, make a blog on JavaScript async/await.' },
-  { role: 'assistant', content: 'Creating your JavaScript async/await blog…' },
-  { role: 'assistant', content: 'Done! "JavaScript Async/Await Explained" — promises, async functions, error handling with examples.' },
-];
+    /* Chat demo */
+    const conversation = [
+        { role: 'assistant', content: 'Hey Jay Patel, what kind of blog would you like to create?' },
+        { role: 'user', content: 'Create a blog on Python OOP concepts.' },
+        { role: 'assistant', content: 'Creating your Python OOP blog…' },
+        { role: 'assistant', content: 'Done! "Python OOP Fundamentals" — classes, inheritance, polymorphism with examples.' },
+        { role: 'user', content: 'Add a short introduction as well.' },
+        { role: 'assistant', content: 'Intro: Object-Oriented Programming (OOP) in Python helps structure code using classes and objects for cleaner, reusable designs.' },
+        { role: 'user', content: 'Now, make a blog on JavaScript async/await.' },
+        { role: 'assistant', content: 'Creating your JavaScript async/await blog…' },
+        { role: 'assistant', content: 'Done! "JavaScript Async/Await Explained" — promises, async functions, error handling with examples.' },
+    ];
 
-const chatBox = document.getElementById('chatMessages');
-let msgIndex = 0;
+    const chatBox = document.getElementById('chatMessages');
+    let msgIndex = 0;
 
-function typeText(role, text, callback) {
-    let i = 0;
-    const wrapper = document.createElement('div');
-    wrapper.className = `chat-message flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
+    function typeText(role, text, callback) {
+        let i = 0;
+        const wrapper = document.createElement('div');
+        wrapper.className = `chat-message flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
 
-    const bubble = document.createElement('div');
-    bubble.className = `px-4 py-3 rounded-2xl max-w-[75%] text-sm shadow-sm ${
-        role === 'user'
+        const bubble = document.createElement('div');
+        bubble.className = `px-4 py-3 rounded-2xl max-w-[75%] text-sm shadow-sm ${role === 'user'
             ? 'bg-gradient-to-br from-indigo-600 to-indigo-500 text-white rounded-br-sm'
             : 'bg-white text-gray-800 border border-gray-200 rounded-bl-sm'
-    }`;
+            }`;
 
-    wrapper.appendChild(bubble);
-    chatBox.appendChild(wrapper);
+        wrapper.appendChild(bubble);
+        chatBox.appendChild(wrapper);
 
-    function tick() {
-        bubble.textContent = text.slice(0, i);
-        i++;
-        chatBox.scrollTop = chatBox.scrollHeight;
-        if (i <= text.length) setTimeout(tick, 15);
-        else callback();
+        function tick() {
+            bubble.textContent = text.slice(0, i);
+            i++;
+            chatBox.scrollTop = chatBox.scrollHeight;
+            if (i <= text.length) setTimeout(tick, 15);
+            else callback();
+        }
+        tick();
     }
-    tick();
-}
 
-function playChat() {
-    if (msgIndex >= conversation.length) return;
-    const { role, content } = conversation[msgIndex];
+    function playChat() {
+        if (msgIndex >= conversation.length) return;
+        const { role, content } = conversation[msgIndex];
 
-    // Show typing indicator for assistant messages
-    if (role === 'assistant' && msgIndex > 0) {
-        const typingWrapper = document.createElement('div');
-        typingWrapper.className = 'flex justify-start typing-indicator-wrapper';
-        typingWrapper.innerHTML = `
+        // Show typing indicator for assistant messages
+        if (role === 'assistant' && msgIndex > 0) {
+            const typingWrapper = document.createElement('div');
+            typingWrapper.className = 'flex justify-start typing-indicator-wrapper';
+            typingWrapper.innerHTML = `
             <div class="px-4 py-3 rounded-2xl bg-white border border-gray-200">
                 <div class="typing-indicator flex gap-1">
                     <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
@@ -440,57 +466,194 @@ function playChat() {
                 </div>
             </div>
         `;
-        chatBox.appendChild(typingWrapper);
-        chatBox.scrollTop = chatBox.scrollHeight;
+            chatBox.appendChild(typingWrapper);
+            chatBox.scrollTop = chatBox.scrollHeight;
 
-        setTimeout(() => {
-            typingWrapper.remove();
+            setTimeout(() => {
+                typingWrapper.remove();
+                typeText(role, content, () => {
+                    msgIndex++;
+                    setTimeout(playChat, 500);
+                });
+            }, 800);
+        } else {
             typeText(role, content, () => {
                 msgIndex++;
                 setTimeout(playChat, 500);
             });
-        }, 800);
-    } else {
-        typeText(role, content, () => {
-            msgIndex++;
-            setTimeout(playChat, 500);
+        }
+    }
+    setTimeout(playChat, 500);
+
+    /* Testimonial Slider Script */
+    let currentIndex = 0;
+    const slider = document.getElementById("slider");
+    const total = slider.children.length;
+
+    function updateSlider() {
+        slider.style.transform = `translateX(-${currentIndex * 100}%)`;
+
+        document.querySelectorAll(".indicator").forEach((dot, i) => {
+            dot.classList.toggle("bg-indigo-600", i === currentIndex);
+            dot.classList.toggle("bg-gray-300", i !== currentIndex);
         });
     }
-}
-setTimeout(playChat, 500);
 
-/* Testimonial Slider Script */
-let currentIndex = 0;
-const slider = document.getElementById("slider");
-const total = slider.children.length;
+    function nextSlide() {
+        currentIndex = (currentIndex + 1) % total;
+        updateSlider();
+    }
 
-function updateSlider() {
-    slider.style.transform = `translateX(-${currentIndex * 100}%)`;
+    function prevSlide() {
+        currentIndex = (currentIndex - 1 + total) % total;
+        updateSlider();
+    }
 
-    document.querySelectorAll(".indicator").forEach((dot, i) => {
-        dot.classList.toggle("bg-indigo-600", i === currentIndex);
-        dot.classList.toggle("bg-gray-300", i !== currentIndex);
+    function goToSlide(i) {
+        currentIndex = i;
+        updateSlider();
+    }
+
+    document.getElementById("nextBtn").onclick = nextSlide;
+    document.getElementById("prevBtn").onclick = prevSlide;
+
+    updateSlider();
+</script>
+
+<script>
+    const searchInput = document.getElementById('searchInput');
+    const searchResults = document.getElementById('searchResults');
+    let searchTimeout;
+    let lastQuery = "";
+
+    // Close results when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+            hideResults();
+        }
     });
-}
 
-function nextSlide() {
-    currentIndex = (currentIndex + 1) % total;
-    updateSlider();
-}
+    searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.trim();
+        clearTimeout(searchTimeout);
 
-function prevSlide() {
-    currentIndex = (currentIndex - 1 + total) % total;
-    updateSlider();
-}
+        if (query.length < 2) {
+            hideResults();
+            return;
+        }
 
-function goToSlide(i) {
-    currentIndex = i;
-    updateSlider();
-}
+        // Logic: Trigger every 4 characters OR wait 2 seconds (2000ms)
+        const isFourCharInterval = (query.length % 4 === 0);
 
-document.getElementById("nextBtn").onclick = nextSlide;
-document.getElementById("prevBtn").onclick = prevSlide;
+        if (isFourCharInterval) {
+            // Immediate trigger (with very slight debounce to prevent UI stutter on fast pasting)
+            searchTimeout = setTimeout(() => {
+                performSearch(query);
+            }, 300);
+        } else {
+            // Long debounce for "stop typing"
+            searchTimeout = setTimeout(() => {
+                performSearch(query);
+            }, 2000);
+        }
+    });
 
-updateSlider();
+    // Make API call
+    async function performSearch(query) {
+        // Avoid repeating same search if multiple triggers fire close together
+        // if (query === lastQuery) return;
+        lastQuery = query;
+
+        try {
+            const response = await fetch('/api/search-blog/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ query: query, limit: 5 })
+            });
+
+            const data = await response.json();
+
+            if (data.results && data.results.length > 0) {
+                renderResults(data.results);
+            } else {
+                renderNoResults();
+            }
+        } catch (error) {
+            console.error('Search error:', error);
+            renderNoResults();
+        }
+    }
+
+    function renderResults(blogs) {
+        let html = '<div class="flex flex-col max-h-[400px] overflow-y-auto">';
+
+        blogs.forEach(blog => {
+            // Construct URL
+            const url = `/blogs/${blog.author_username}/${blog.slug}/`;
+
+            html += `
+                <a href="${url}" class="flex items-start gap-4 p-4 hover:bg-indigo-50 border-b border-gray-100 last:border-0 transition-colors">
+                    <div class="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-gray-200">
+                        ${blog.thumbnail ? `<img src="${blog.thumbnail}" class="w-full h-full object-cover" alt="${blog.title}">` : '<div class="w-full h-full bg-indigo-100 flex items-center justify-center text-indigo-500 font-bold text-xl">B</div>'}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-gray-900 font-semibold text-sm mb-1 truncate">${blog.title}</h4>
+                        <p class="text-gray-500 text-xs line-clamp-2">${blog.excerpt || 'No description available.'}</p>
+                        <div class="flex items-center gap-2 mt-2">
+                            ${blog.category ? `<span class="text-[10px] uppercase font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full tracking-wide">${blog.category}</span>` : ''}
+                        </div>
+                    </div>
+                </a>
+            `;
+        });
+
+        html += '</div>';
+
+        searchResults.innerHTML = html;
+        showResults();
+    }
+
+    function renderNoResults() {
+        searchResults.innerHTML = `
+            <div class="p-8 text-center">
+                <p class="text-gray-500 text-sm">No blogs found matching your search.</p>
+            </div>
+        `;
+        showResults();
+    }
+
+    function showResults() {
+        searchResults.classList.remove('hidden');
+        // Small delay to allow display:block to apply before opacity transition
+        requestAnimationFrame(() => {
+            searchResults.classList.remove('opacity-0', 'translate-y-2');
+        });
+    }
+
+    function hideResults() {
+        searchResults.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => {
+            searchResults.classList.add('hidden');
+        }, 200);
+    }
+
+    // Helper to get cookie
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
 </script>
 {% endblock %}

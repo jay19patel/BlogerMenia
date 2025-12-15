@@ -17,6 +17,7 @@ urlpatterns = [
     # API URLs
     path('api/blogs/<slug:slug>/like/', api.ToggleBlogLikeAPI.as_view(), name='blog-like-toggle'),
     path('api/generate-blog/', api.GenerateBlogAPI.as_view(), name='generate-blog-api'),
+    path('api/search-blog/', api.SearchBlogAPI.as_view(), name='search-blog-api'),
     path('api/upload-image/', api.UploadImageAPI.as_view(), name='upload-image-api'),
 
     # Playlist URLs

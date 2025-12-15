@@ -196,3 +196,7 @@ websockets==15.0.1
 wrapt==1.17.3
 xmljson==0.2.1
 zipp==3.23.0
+
+langchain
+langgraph
+langchain-mistralai

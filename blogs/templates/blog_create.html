@@ -617,9 +617,6 @@
                 <div class="max-w-[80%] rounded-lg p-3 bg-indigo-600 text-white">
                     <p class="text-sm">${text}</p>
                 </div>
-                 <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <i data-lucide="user" class="w-4 h-4 text-indigo-600"></i>
-                </div>
             </div>
         `;
         input.value = '';
@@ -633,6 +630,25 @@
 
         btnText.innerText = 'Generating...';
         sendBtn.disabled = true;
+
+        // Add "Thinking..." message
+        const loadingId = 'loading-' + Date.now();
+        history.innerHTML += `
+            <div id="${loadingId}" class="flex gap-3 justify-start">
+                <div class="rounded-lg p-3 bg-gray-100 text-gray-500 italic">
+                    <p class="text-sm flex items-center gap-2">
+                        Thinking
+                        <span class="flex gap-1">
+                            <span class="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0s"></span>
+                            <span class="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
+                            <span class="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></span>
+                        </span>
+                    </p>
+                </div>
+            </div>
+        `;
+        history.scrollTop = history.scrollHeight;
+        lucide.createIcons();
 
         try {
             // Get CSRF Token robustly from the form input
@@ -648,6 +664,10 @@
                 body: JSON.stringify({ message: text })
             });
 
+            // Remove loading message
+            const loadingMsg = document.getElementById(loadingId);
+            if (loadingMsg) loadingMsg.remove();
+
             if (!response.ok) {
                 // Try to get error detail
                 const errText = await response.text();
@@ -655,16 +675,18 @@
             }
 
             const data = await response.json();
-            const blogData = data.blog_data;
+            const blogData = data.blog_data || {};
 
             // Simulate "Typing" effect or delay if API is too fast
+            const messageHtml = marked.parse(data.message || "I have generated a blog based on your request. Please check the form fields!");
+
             history.innerHTML += `
                 <div class="flex gap-3 justify-start">
                     <div class="w-8 h-8 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
                         <i data-lucide="bot" class="w-4 h-4 text-white"></i>
                     </div>
-                    <div class="max-w-[80%] rounded-lg p-3 bg-gray-100 text-gray-900">
-                        <p class="text-sm">${data.message || "I have generated a blog based on your request. Please check the form fields!"}</p>
+                    <div class="max-w-[80%] rounded-lg p-3 bg-gray-100 text-gray-900 prose prose-sm max-w-none">
+                        ${messageHtml}
                     </div>
                 </div>
             `;

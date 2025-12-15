@@ -634,10 +634,125 @@
         const text = input.value.trim();
         if (!text) return;
 
-        // ... (Mock implementation for simplicity in this replacement) ...
-        // Re-using the exact logic from create is fine.
-        alert("AI Assistant is available in Create mode mainly, but we can implement it here too if needed.");
+        // Add user message
+        const history = document.getElementById('chatHistory');
+        history.innerHTML += `
+            <div class="flex gap-3 justify-end">
+                <div class="max-w-[80%] rounded-lg p-3 bg-indigo-600 text-white">
+                    <p class="text-sm">${text}</p>
+                </div>
+                 <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="user" class="w-4 h-4 text-indigo-600"></i>
+                </div>
+            </div>
+        `;
         input.value = '';
+        lucide.createIcons();
+        history.scrollTop = history.scrollHeight;
+
+        const btnText = document.getElementById('sendBtnText');
+        const sendBtn = document.getElementById('sendBtn');
+        const originalBtnText = btnText ? btnText.innerText : 'Send';
+
+        if (btnText) btnText.innerText = 'Generating...';
+        if (sendBtn) sendBtn.disabled = true;
+
+        // Add "Thinking..." message
+        const loadingId = 'loading-' + Date.now();
+        history.innerHTML += `
+            <div id="${loadingId}" class="flex gap-3 justify-start">
+                <div class="w-8 h-8 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0 animate-pulse">
+                    <i data-lucide="bot" class="w-4 h-4 text-white"></i>
+                </div>
+                <div class="rounded-lg p-3 bg-gray-100 text-gray-500 italic">
+                    <p class="text-sm flex items-center gap-2">
+                        Thinking
+                        <span class="flex gap-1">
+                            <span class="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0s"></span>
+                            <span class="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
+                            <span class="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></span>
+                        </span>
+                    </p>
+                </div>
+            </div>
+        `;
+        history.scrollTop = history.scrollHeight;
+        lucide.createIcons();
+
+        try {
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const response = await fetch("{% url 'generate-blog-api' %}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken },
+                body: JSON.stringify({ message: text })
+            });
+
+            // Remove loading message
+            const loadingMsg = document.getElementById(loadingId);
+            if (loadingMsg) loadingMsg.remove();
+
+            if (!response.ok) throw new Error("API Error");
+            const data = await response.json();
+            const blogData = data.blog_data || {};
+
+            const messageHtml = marked.parse(data.message || "Done!");
+
+            history.innerHTML += `
+                <div class="flex gap-3 justify-start">
+                    <div class="w-8 h-8 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="bot" class="w-4 h-4 text-white"></i>
+                    </div>
+                    <div class="max-w-[80%] rounded-lg p-3 bg-gray-100 text-gray-900 prose prose-sm max-w-none">
+                        ${messageHtml}
+                    </div>
+                </div>
+            `;
+
+            history.scrollTop = history.scrollHeight;
+            lucide.createIcons();
+
+            // Populate Form Fields
+            const titleEl = document.querySelector('[name="title"]');
+            if (titleEl && blogData.title) titleEl.value = blogData.title;
+            const slugEl = document.querySelector('[name="slug"]');
+            if (slugEl && blogData.slug) slugEl.value = blogData.slug;
+            const subtitleEl = document.querySelector('[name="subtitle"]');
+            if (subtitleEl && blogData.subtitle) subtitleEl.value = blogData.subtitle;
+            const excerptEl = document.querySelector('[name="excerpt"]');
+            if (excerptEl && blogData.excerpt) excerptEl.value = blogData.excerpt;
+            const introEl = document.querySelector('[name="introduction"]');
+            if (introEl && blogData.content && blogData.content.introduction) introEl.value = blogData.content.introduction;
+            const conEl = document.querySelector('[name="conclusion"]');
+            if (conEl && blogData.content && blogData.content.conclusion) conEl.value = blogData.content.conclusion;
+
+            // Load sections
+            if (blogData.content && blogData.content.sections && Array.isArray(blogData.content.sections)) {
+                // Ensure sections variable is available in scope or global
+                sections = blogData.content.sections.map((s, i) => ({ ...s, id: Date.now() + i }));
+                renderSections();
+                const emptyMsg = document.getElementById('emptySectionsMsg');
+                if (emptyMsg) emptyMsg.style.display = 'none';
+            }
+
+        } catch (e) {
+            console.error(e);
+            // Remove loading message if error
+            const loadingMsg = document.getElementById(loadingId);
+            if (loadingMsg) loadingMsg.remove();
+            history.innerHTML += `
+                <div class="flex gap-3 justify-start">
+                     <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="alert-circle" class="w-4 h-4 text-red-600"></i>
+                    </div>
+                    <div class="max-w-[80%] rounded-lg p-3 bg-red-50 text-red-800">
+                        <p class="text-sm">Error: ${e.message}</p>
+                    </div>
+                </div>
+            `;
+        } finally {
+            if (btnText) btnText.innerText = originalBtnText;
+            if (sendBtn) sendBtn.disabled = false;
+        }
     }
 
     // -----------------------------------------------------

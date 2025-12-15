@@ -47,59 +47,101 @@ class ToggleBlogLikeAPI(LoginRequiredMixin, JsonPostMixin, View):
             'total_likes': max(0, new_likes) # Prevent negative if something weird happened
         })
 
+
+import json
+import numpy as np
+from django.db.models import Q
+from asgiref.sync import async_to_sync
+from langchain_mistralai import MistralAIEmbeddings
+from blogs.Views.chatapp.service import BlogGeneratorService
+
+# Initialize global service instance to maintain in-memory state (development only)
+# For production, SessionManager should use Redis/Database
+BLOG_SERVICE = BlogGeneratorService()
+
 class GenerateBlogAPI(LoginRequiredMixin, JsonPostMixin, View):
     def post(self, request, *args, **kwargs):
-        # Simulate AI generation
-        # In a real scenario, this would call an AI service
-        
-        dummy_blog_data = {
-            "title": "The Future of Web Development with AI",
-            "slug": "future-web-development-ai",
-            "subtitle": "How Artificial Intelligence is transforming the way we build websites.",
-            "excerpt": "Explore the revolutionary impact of AI on modern web development workflows, from code generation to automated testing.",
-            "category": "Technology", 
-            "content": {
-                "introduction": "In the rapidly evolving landscape of technology, Artificial Intelligence (AI) has emerged as a game-changer for web developers. Gone are the days of manual boilerplate coding; today, intelligent tools assist in everything from design to deployment.",
-                "conclusion": "As we embrace these new tools, the role of the developer is shifting from coder to architect. The future is bright, and AI is the partner that will help us build it.",
-                "sections": [
-                    {
-                        "id": 101,
-                        "type": "text",
-                        "title": "The Rise of AI Coding Assistants",
-                        "content": "Tools like GitHub Copilot and ChatGPT have revolutionized how developers write code. They suggest snippets, refactor functions, and even debug complex issues in real-time."
-                    },
-                    {
-                        "id": 102,
-                        "type": "bullets",
-                        "title": "Key Benefits",
-                        "items": [
-                            "Increased productivity and faster time-to-market",
-                            "Reduction in syntax errors and bugs",
-                            "Automated documentation generation",
-                            "Enhanced creativity by offloading repetitive tasks"
-                        ]
-                    },
-                    {
-                        "id": 103,
-                        "type": "note",
-                        "title": "Important Note",
-                        "content": "While AI is powerful, human oversight remains crucial to ensure security, accessibility, and optimal performance."
-                    },
-                    {
-                        "id": 104,
-                        "type": "code",
-                        "title": "Example: AI Generated Python Code",
-                        "language": "python",
-                        "content": "def analyze_sentiment(text):\n    # This is a mock AI function\n    return 'Positive' if 'good' in text else 'Neutral'"
-                    }
-                ]
-            }
-        }
+        try:
+            data = json.loads(request.body)
+            message = data.get('message')
+            session_id = data.get('session_id') or str(uuid.uuid4())
+            
+            if not message:
+                return JsonResponse({'error': 'Message is required'}, status=400)
 
-        return JsonResponse({
-            'message': 'Blog generated successfully',
-            'blog_data': dummy_blog_data
-        })
+            # Call the AI service
+            # We use the global instance to keep chat history in memory
+            response = async_to_sync(BLOG_SERVICE.process_message)(
+                message=message,
+                session_id=session_id,
+                user_id=str(request.user.id),
+                username=request.user.username
+            )
+            
+            # Add session_id to response so client can maintain conversation
+            response['session_id'] = session_id
+            
+            # Legacy support: Frontend expects 'blog_data', service returns 'blog_state'
+            if 'blog_state' in response:
+                response['blog_data'] = response['blog_state']
+            
+            return JsonResponse(response)
+            
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            print(f"Error in GenerateBlogAPI: {e}")
+            return JsonResponse({'error': str(e)}, status=500)
+
+
+class SearchBlogAPI(JsonPostMixin, View):
+    """
+    Search blogs using Vector Embeddings (Semantic Search)
+    """
+    def post(self, request, *args, **kwargs):
+        try:
+            data = json.loads(request.body)
+            query = data.get('query')
+            limit = data.get('limit', 5)
+            
+            if not query:
+                return JsonResponse({'error': 'Query is required'}, status=400)
+
+            # Standard text-based search
+            blogs = Blog.objects.filter(isPublished=True).select_related('category', 'author')
+
+            if query:
+                blogs = blogs.filter(
+                    Q(title__icontains=query) |
+                    Q(subtitle__icontains=query) |
+                    Q(excerpt__icontains=query)
+                )
+
+            # Limit results
+            blogs = blogs.only(
+                'id', 'title', 'slug', 'thumbnail', 'publishedDate', 'excerpt', 
+                'category__name', 'author__username'
+            )[:limit]
+            
+            response_data = []
+            for blog in blogs:
+                response_data.append({
+                    'id': blog.id,
+                    'title': blog.title,
+                    'slug': blog.slug,
+                    'excerpt': blog.excerpt,
+                    'category': blog.category.name if blog.category else None,
+                    'thumbnail': blog.thumbnail.url if blog.thumbnail else None,
+                    'publishedDate': blog.publishedDate.isoformat() if blog.publishedDate else None,
+                    'author_username': blog.author.username,
+                    'score': 1.0 # Static score for text match
+                })
+                
+            return JsonResponse({'results': response_data})
+
+        except Exception as e:
+            print(f"Error in SearchBlogAPI: {e}")
+            return JsonResponse({'error': str(e)}, status=500)
 
 
 class UploadImageAPI(LoginRequiredMixin, JsonPostMixin, View):

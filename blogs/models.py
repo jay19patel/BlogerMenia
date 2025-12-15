@@ -123,6 +123,9 @@ class Blog(models.Model):
     likes = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    # Store embeddings as vector/list
+    embedding = models.JSONField(blank=True, null=True, help_text="Mistral embeddings (1024 dim)")
 
     def save(self, *args, **kwargs):
         if not self.slug:

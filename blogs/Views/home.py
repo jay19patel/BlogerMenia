@@ -32,5 +32,31 @@ class HomeView(TemplateView):
             }
             for testimonial in testimonials
         ]
+        
+        # --- Real Statistics ---
+        from django.contrib.auth import get_user_model
+        from blogs.models import Blog
+        from django.db.models import Sum
+        
+        User = get_user_model()
+        
+        # 1. Active Users (Total users)
+        context['stats_active_users'] = User.objects.count()
+        
+        # 2. Blogs Published
+        context['stats_blogs_published'] = Blog.objects.filter(isPublished=True).count()
+        
+        # 3. Total Views (Sum of views of all PROCESSED blogs - or published ones)
+        # We'll sum views of published blogs for accuracy
+        total_views = Blog.objects.filter(isPublished=True).aggregate(total=Sum('views'))['total'] or 0
+        
+        # Format total_views for display (e.g., 2.4M) - optional, or just pass number
+        # Let's pass the raw number and let template filter handle it, or do simple formatting here
+        if total_views >= 1000000:
+            context['stats_total_views'] = f"{total_views/1000000:.1f}M"
+        elif total_views >= 1000:
+            context['stats_total_views'] = f"{total_views/1000:.1f}K"
+        else:
+            context['stats_total_views'] = str(total_views)
 
         return context
