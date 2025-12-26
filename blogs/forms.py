@@ -130,6 +130,41 @@ class BlogCreateForm(forms.ModelForm):
             })
         }
 
+    new_category = forms.CharField(
+        required=False,
+        max_length=150,
+        widget=forms.TextInput(attrs={
+            'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white',
+            'placeholder': 'Enter new category name',
+            'id': 'newCategoryInput' 
+        })
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['category'].required = False
+
+    def clean(self):
+        cleaned_data = super().clean()
+        category = cleaned_data.get('category')
+        new_category = cleaned_data.get('new_category')
+
+        if not category and not new_category:
+            raise forms.ValidationError("Please select a category or create a new one.")
+        return cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        new_category_name = self.cleaned_data.get('new_category')
+        
+        if new_category_name:
+            category, created = Category.objects.get_or_create(name=new_category_name)
+            instance.category = category
+        
+        if commit:
+            instance.save()
+        return instance
+
 # -------------------------
 # Playlist Form
 # -------------------------

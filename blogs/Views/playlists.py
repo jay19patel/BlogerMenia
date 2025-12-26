@@ -1,16 +1,15 @@
 from django.views.generic import CreateView, UpdateView, DeleteView, DetailView
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy, reverse
 from django.shortcuts import redirect
 from django.contrib import messages
 from blogs.models import Playlist, Blog
 from blogs.forms import PlaylistForm
 
-class PlaylistCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+class PlaylistCreateView(LoginRequiredMixin, CreateView):
     model = Playlist
     form_class = PlaylistForm
     template_name = "playlist_form.html"
-    permission_required = 'blogs.add_playlist'
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -30,11 +29,10 @@ class PlaylistCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView
     def get_success_url(self):
         return reverse('user-blogs', kwargs={'username': self.request.user.username})
 
-class PlaylistUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin, UpdateView):
+class PlaylistUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Playlist
     form_class = PlaylistForm
     template_name = "playlist_form.html"
-    permission_required = 'blogs.change_playlist'
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -71,11 +69,10 @@ class PlaylistUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UserPasses
             slug=self.kwargs.get('slug')
         )
 
-class PlaylistDeleteView(LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin, DeleteView):
+class PlaylistDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Playlist
     template_name = "playlist_confirm_delete.html"
     context_object_name = "playlist"
-    permission_required = 'blogs.delete_playlist'
 
     def test_func(self):
         playlist = self.get_object()

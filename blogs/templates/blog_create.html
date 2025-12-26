@@ -31,7 +31,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="py-12 bg-gray-50">
+<div class="py-12">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <!-- Chat Section (UI Only) -->
@@ -127,6 +127,19 @@
             <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
                 <h2 class="text-xl font-bold text-gray-900 mb-4">Basic Information</h2>
                 <div class="space-y-4">
+                    <div
+                        class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100 mb-4">
+                        <div class="flex flex-col">
+                            <span class="text-sm font-medium text-gray-900">Publish Immediately</span>
+                            <span class="text-xs text-gray-500">Make this blog visible to everyone upon saving.</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            {{ form.isPublished }}
+                            <div
+                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600">
+                            </div>
+                        </label>
+                    </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
                         <input type="text" name="title" id="titleInput"
@@ -144,12 +157,25 @@
                                 placeholder="blog-slug-url" readonly required />
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                            <div class="relative">
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="block text-sm font-medium text-gray-700">Category</label>
+                                <button type="button" onclick="toggleCategoryMode()" id="toggleCategoryBtn"
+                                    class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
+                                    Create New
+                                </button>
+                            </div>
+
+                            <!-- Select Existing -->
+                            <div id="categorySelectContainer" class="relative">
                                 {{ form.category }}
                                 <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
                                     <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500"></i>
                                 </div>
+                            </div>
+
+                            <!-- Create New -->
+                            <div id="categoryCreateContainer" class="hidden">
+                                {{ form.new_category }}
                             </div>
                         </div>
                     </div>
@@ -194,19 +220,7 @@
                         </div>
                     </div>
 
-                    <div
-                        class="flex items-center justify-between mt-4 p-4 bg-gray-50 rounded-lg border border-gray-100">
-                        <div class="flex flex-col">
-                            <span class="text-sm font-medium text-gray-900">Publish Immediately</span>
-                            <span class="text-xs text-gray-500">Make this blog visible to everyone upon saving.</span>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            {{ form.isPublished }}
-                            <div
-                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600">
-                            </div>
-                        </label>
-                    </div>
+
                 </div>
             </div>
 
@@ -338,6 +352,34 @@
         titleInput.addEventListener('input', function () {
             slugInput.value = generateSlug(this.value);
         });
+    }
+
+    // -----------------------------------------------------
+    // Category Toggle Logic
+    // -----------------------------------------------------
+    function toggleCategoryMode() {
+        const selectContainer = document.getElementById('categorySelectContainer');
+        const createContainer = document.getElementById('categoryCreateContainer');
+        const toggleBtn = document.getElementById('toggleCategoryBtn');
+        const selectInput = document.querySelector('[name="category"]');
+        const createInput = document.getElementById('newCategoryInput');
+
+        const isHidden = createContainer.classList.contains('hidden');
+
+        if (isHidden) {
+            // Switch to Create Mode
+            selectContainer.classList.add('hidden');
+            createContainer.classList.remove('hidden');
+            toggleBtn.innerText = 'Select Existing';
+            if (selectInput) selectInput.value = ""; // Clear selection
+            if (createInput) createInput.focus();
+        } else {
+            // Switch to Select Mode
+            selectContainer.classList.remove('hidden');
+            createContainer.classList.add('hidden');
+            toggleBtn.innerText = 'Create New';
+            if (createInput) createInput.value = ""; // Clear new input
+        }
     }
 
     // Since slug is readonly, we don't need manual input listeners
