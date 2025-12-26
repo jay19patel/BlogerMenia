@@ -12,6 +12,9 @@
 <!-- Prism.js for Syntax Highlighting -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
 
+<!-- Marked.js for Markdown Rendering -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
 <style>
     /* Custom Scrollbar */
     ::-webkit-scrollbar {
@@ -159,6 +162,36 @@
         border-color: #3b82f6;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
+
+    /* Markdown Styles within Text Sections */
+    .markdown-content strong {
+        color: #4c1d95;
+        /* Dark Purple (Indigo-900) */
+        font-weight: 700;
+    }
+
+    .markdown-content em {
+        font-style: italic;
+        color: #4b5563;
+    }
+
+    .markdown-content table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+    }
+
+    .markdown-content th,
+    .markdown-content td {
+        border: 1px solid #e5e7eb;
+        padding: 0.75rem;
+        text-align: left;
+    }
+
+    .markdown-content th {
+        background-color: #f9fafb;
+        font-weight: 600;
+    }
 </style>
 {% endblock %}
 
@@ -275,11 +308,7 @@
                         </div>
                         <div class="flex items-center gap-2">
                             <button id="like-btn"
-                                class="flex items-center gap-2 transition-all duration-200 focus:outline-none" 
-                                {% if user.is_authenticated %} 
-                                onclick="toggleLike()" 
-                                {% else %} title="Login to like" 
-                                {% endif %}>
+                                class="flex items-center gap-2 transition-all duration-200 focus:outline-none" {% if user.is_authenticated %} onclick="toggleLike()" {% else %} title="Login to like" {% endif %}>
                                 <svg id="like-icon" class="w-6 h-6 transition-colors
                                             {% if user_has_liked %}
                                                 text-red-500 fill-red-500
@@ -365,7 +394,9 @@
                         {% if blog.introduction %}
                         <div id="introduction" class="mb-10 scroll-mt-24">
                             <h2 class="text-2xl font-bold text-gray-900 mb-4">Introduction</h2>
-                            <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{{ blog.introduction }}</p>
+                            <script id="markdown-intro" type="text/template">{{ blog.introduction }}</script>
+                            <div class="markdown-content text-gray-700 leading-relaxed space-y-4"
+                                data-source="markdown-intro"></div>
                         </div>
                         {% endif %}
 
@@ -374,16 +405,26 @@
                         {% for section in blog.sections %}
                         <div id="section-{{ forloop.counter0 }}" class="mb-10 scroll-mt-24">
                             {% if section.type == 'text' %}
-                            <h3 class="text-2xl font-bold text-gray-900 mb-4">{{ section.title }}</h3>
-                            <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{{ section.content }}</p>
+                            <h3 class="text-2xl font-bold text-gray-900 mb-4 markdown-title"
+                                data-title="{{ section.title|escapejs }}">{{ section.title }}</h3>
+                            <script id="markdown-source-{{ forloop.counter0 }}"
+                                type="text/template">{{ section.content }}</script>
+                            <div class="markdown-content text-gray-700 leading-relaxed space-y-4"
+                                data-source="markdown-source-{{ forloop.counter0 }}"></div>
 
                             {% elif section.type == 'bullets' %}
-                            <h3 class="text-2xl font-bold text-gray-900 mb-4">{{ section.title }}</h3>
+                            <h3 class="text-2xl font-bold text-gray-900 mb-4 markdown-title"
+                                data-title="{{ section.title|escapejs }}">{{ section.title }}</h3>
                             <ul class="space-y-3">
                                 {% for item in section.items %}
                                 <li class="flex items-start gap-3">
                                     <div class="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
-                                    <span class="text-gray-700">{{ item }}</span>
+                                    <script
+                                        id="markdown-bullet-{{ forloop.parentloop.counter0 }}-{{ forloop.counter0 }}"
+                                        type="text/template">{{ item }}</script>
+                                    <div class="text-gray-700 markdown-content"
+                                        data-source="markdown-bullet-{{ forloop.parentloop.counter0 }}-{{ forloop.counter0 }}">
+                                    </div>
                                 </li>
                                 {% endfor %}
                             </ul>
@@ -513,7 +554,9 @@
                         {% if blog.conclusion %}
                         <div id="conclusion" class="mb-10 scroll-mt-24">
                             <h2 class="text-2xl font-bold text-gray-900 mb-4">Conclusion</h2>
-                            <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{{ blog.conclusion }}</p>
+                            <script id="markdown-conclusion" type="text/template">{{ blog.conclusion }}</script>
+                            <div class="markdown-content text-gray-700 leading-relaxed space-y-4"
+                                data-source="markdown-conclusion"></div>
                         </div>
                         {% endif %}
                     </div>
@@ -537,6 +580,29 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Render Markdown content
+        const markdownElements = document.querySelectorAll('.markdown-content');
+        markdownElements.forEach(el => {
+            const sourceId = el.getAttribute('data-source');
+            if (sourceId) {
+                const sourceEl = document.getElementById(sourceId);
+                if (sourceEl) {
+                    const rawContent = sourceEl.textContent;
+                    el.innerHTML = marked.parse(rawContent);
+                }
+            }
+        });
+
+        // Render Markdown Titles (Inline only)
+        const titleElements = document.querySelectorAll('.markdown-title');
+        titleElements.forEach(el => {
+            const rawTitle = el.getAttribute('data-title');
+            if (rawTitle) {
+                // Use parseInline to avoid wrapping in <p>
+                el.innerHTML = marked.parseInline(rawTitle);
+            }
+        });
+
         Prism.highlightAll();
 
         const tocNav = document.getElementById('tocNav');

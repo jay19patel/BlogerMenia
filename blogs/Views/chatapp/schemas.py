@@ -7,6 +7,13 @@ class BlogContentSection(BaseModel):
     title: Optional[str] = None
     content: Optional[str] = None
     items: Optional[List[str]] = None
+    headers: Optional[List[str]] = None
+    rows: Optional[List[List[str]]] = None
+    imageUrl: Optional[str] = None
+    videoId: Optional[str] = None
+    videoTitle: Optional[str] = None
+    description: Optional[str] = None
+    links: Optional[List[Dict[str, str]]] = None
     language: Optional[str] = None
 
 class BlogContent(BaseModel):

@@ -78,7 +78,7 @@ class BlogCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse('user-blogs', kwargs={'username': self.request.user.username})
+        return reverse('user-blogs-edit', kwargs={'username': self.request.user.username})
 
 
 

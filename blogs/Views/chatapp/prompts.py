@@ -62,10 +62,11 @@ Content Structure Requirements:
 - You MUST include ALL THREE required fields at the top level:
   * introduction: Write a simple, welcoming introduction (2-3 paragraphs) that explains what the topic is about and why it matters
   * sections: Include multiple easy-to-understand sections with varied types:
-    - Use "text" sections for explanations with simple examples
-    - Use "bullets" sections for easy-to-scan lists of key points
-    - Use "code" sections only when absolutely necessary, with clear explanations
-    - Each section should have a clear, descriptive title
+    - Use "text" sections for explanations with simple examples. Use **Markdown** for formatting (e.g., **bold**, *italic*) to highlight key terms like **Django** or **FastAPI**.
+    - Use "bullets" sections for easy-to-scan lists of key points.
+    - Use "table" sections for structured comparisons (must include 'headers' and 'rows').
+    - Use "code" sections only when absolutely necessary, with clear explanations.
+    - Each section should have a clear, descriptive title.
   * conclusion: Write a practical conclusion (2-3 paragraphs) that summarizes key takeaways and gives actionable next steps
 - Add relevant, popular tags that people would search for
 - Set appropriate category
