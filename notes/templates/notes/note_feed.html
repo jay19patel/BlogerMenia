@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}Notes Feed - BlogerMenia{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-6xl">
+    <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+        <div>
+            <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight">Community Notes</h1>
+            <p class="text-gray-500 mt-2">Discover ideas and knowledge shared by others.</p>
+        </div>
+        <a href="{% url 'my_note_list' %}"
+            class="bg-white hover:bg-gray-50 text-gray-700 font-semibold py-2.5 px-6 rounded-xl border border-gray-200 shadow-sm transition-all hover:border-indigo-300 hover:text-indigo-600">
+            Go to My Notes
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for note in notes %}
+        <!-- Card Container -->
+        <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 flex flex-col group relative hover:-translate-y-1 h-full cursor-pointer"
+            onclick="window.location='{% url 'note_detail' pk=note.pk %}'">
+            <div class="p-6 flex-1 flex flex-col">
+
+                <!-- Top Corner Username (Small) -->
+                <div class="flex justify-between items-start mb-3">
+                    <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                        {{ note.user.username }}
+                    </span>
+                    <span class="text-xs text-gray-400">{{ note.created_at|timesince }} ago</span>
+                </div>
+
+                <!-- Title -->
+                <h2
+                    class="text-xl font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-indigo-600 transition-colors">
+                    {{ note.title }}
+                </h2>
+
+                <!-- Tags -->
+                {% if note.tags %}
+                <div class="flex flex-wrap gap-1 mb-3">
+                    {% for tag in note.get_tags_list|slice:":3" %}
+                    <span
+                        class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+                        #{{ tag }}
+                    </span>
+                    {% endfor %}
+                    {% if note.get_tags_list|length > 3 %}
+                    <span class="text-xs text-gray-400 self-center">+{{ note.get_tags_list|length|add:"-3" }}</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Content Preview -->
+                <div class="text-gray-500 text-sm line-clamp-3 mb-4">
+                    {{ note.content|striptags }}
+                </div>
+            </div>
+
+            <!-- Footer: Likes (Stop Propagation to prevent opening detail when liking) -->
+            <div
+                class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center rounded-b-2xl mt-auto">
+                <form action="{% url 'like_note' pk=note.pk %}" method="POST" class="flex items-center"
+                    onclick="event.stopPropagation();">
+                    {% csrf_token %}
+                    <button type="submit"
+                        class="flex items-center gap-1.5 text-gray-500 hover:text-pink-600 transition-colors group/btn">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="h-5 w-5 {% if request.user in note.likes.all %}text-pink-600 fill-current{% else %}group-hover/btn:scale-110 transition-transform{% endif %}"
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                        <span
+                            class="font-medium text-sm {% if request.user in note.likes.all %}text-pink-600{% endif %}">
+                            {{ note.total_likes }}
+                        </span>
+                    </button>
+                </form>
+
+                <!-- Hidden Link for accessibility/SEO, but handled by onclick mainly -->
+                <a href="{% url 'note_detail' pk=note.pk %}"
+                    class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors sm:hidden">
+                    View
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full">
+            <div class="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-300">
+                <p class="text-gray-500 text-lg">No notes published yet.</p>
+                <a href="{% url 'create_note' %}"
+                    class="mt-4 inline-block text-indigo-600 font-semibold hover:underline">
+                    Create a Note
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
