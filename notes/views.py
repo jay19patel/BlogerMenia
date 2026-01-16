@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Q
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View
 from django.urls import reverse_lazy, reverse
 from django.http import HttpResponseRedirect, JsonResponse
@@ -8,7 +9,7 @@ from .forms import NoteForm
 
 # --- Public Feed (Read Only) ---
 
-class NoteFeedView(LoginRequiredMixin, ListView):
+class NoteFeedView(ListView):
     model = Note
     template_name = 'notes/note_feed.html'
     context_object_name = 'notes'
@@ -16,7 +17,18 @@ class NoteFeedView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         # Show all notes (assuming feed is public). Default is_public=True.
         # Order by newest first.
-        return Note.objects.filter(is_public=True).order_by('-created_at')
+        queryset = Note.objects.filter(is_public=True).order_by('-created_at')
+
+        # Filter by search query
+        search_query = self.request.GET.get('q')
+        if search_query:
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) |
+                Q(content__icontains=search_query) |
+                Q(tags__icontains=search_query)
+            )
+        
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -25,7 +37,7 @@ class NoteFeedView(LoginRequiredMixin, ListView):
 
 # --- Note Detail (Read Only) ---
 
-class NoteDetailView(LoginRequiredMixin, DetailView):
+class NoteDetailView(DetailView):
     model = Note
     template_name = 'notes/note_detail.html'
     context_object_name = 'note'

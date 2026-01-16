@@ -83,6 +83,7 @@
 
         <!-- Footer: Actions -->
         <div class="bg-gray-50 px-8 py-6 border-t border-gray-100 flex items-center justify-between">
+            {% if user.is_authenticated %}
             <form action="{% url 'like_note' pk=note.pk %}" method="POST">
                 {% csrf_token %}
                 <button type="submit"
@@ -99,6 +100,20 @@
                     </span>
                 </button>
             </form>
+            {% else %}
+            <a href="{% url 'account_login' %}?next={{ request.path }}"
+                class="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-white hover:shadow-sm transition-all group border border-transparent hover:border-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                    class="h-6 w-6 text-gray-400 group-hover:text-pink-500 group-hover:scale-110 transition-transform"
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+                <span class="font-semibold text-gray-600">
+                    {{ note.total_likes }}
+                </span>
+            </a>
+            {% endif %}
 
             {% if request.user == note.user %}
             <div class="flex items-center gap-4">
