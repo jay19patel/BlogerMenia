@@ -13,6 +13,7 @@ class NoteFeedView(ListView):
     model = Note
     template_name = 'notes/note_feed.html'
     context_object_name = 'notes'
+    paginate_by = 9
 
     def get_queryset(self):
         # Show all notes (assuming feed is public). Default is_public=True.
@@ -48,6 +49,7 @@ class MyNoteListView(LoginRequiredMixin, ListView):
     model = Note
     template_name = 'notes/my_note_list.html'
     context_object_name = 'notes'
+    paginate_by = 9
 
     def get_queryset(self):
         return Note.objects.filter(user=self.request.user).order_by('-updated_at')

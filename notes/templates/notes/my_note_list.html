@@ -81,6 +81,61 @@
         </div>
         {% endfor %}
     </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="mt-8">
+        <nav class="flex items-center gap-2" aria-label="Pagination">
+            <!-- Previous -->
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+                class="p-1.5 rounded-md text-gray-500 hover:text-indigo-600 hover:bg-gray-100 transition-colors"
+                aria-label="Previous">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+            </a>
+            {% else %}
+            <span class="p-1.5 rounded-md text-gray-300 cursor-not-allowed">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+            </span>
+            {% endif %}
+
+            <!-- Page Numbers -->
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <span class="px-2.5 py-1 rounded-md bg-indigo-600 text-white font-medium text-sm">
+                {{ num }}
+            </span>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <a
+                href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+                class="px-2.5 py-1 rounded-md text-gray-600 hover:bg-gray-100 hover:text-indigo-600 font-medium text-sm transition-colors">
+                {{ num }}
+                </a>
+                {% endif %}
+                {% endfor %}
+
+                <!-- Next -->
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+                    class="p-1.5 rounded-md text-gray-500 hover:text-indigo-600 hover:bg-gray-100 transition-colors"
+                    aria-label="Next">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </a>
+                {% else %}
+                <span class="p-1.5 rounded-md text-gray-300 cursor-not-allowed">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </span>
+                {% endif %}
+        </nav>
+    </div>
+    {% endif %}
     {% else %}
     <div class="text-center py-24 bg-white rounded-3xl border border-dashed border-gray-200">
         <h3 class="text-xl font-bold text-gray-900 mb-2">You haven't written any notes yet</h3>
