@@ -25,17 +25,18 @@ TEMPERATURE=config('TEMPERATURE')
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-lsutp+pr0u0f(p@yw%3nox0f8-+bry=rx*(8^ip)3h7)e8$^ir"
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = config('SECRET_KEY', default="django-insecure-lsutp+pr0u0f(p@yw%3nox0f8-+bry=rx*(8^ip)3h7)e8$^ir")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = config('DJANGO_ALLOWED_HOSTS', default='localhost 127.0.0.1').split(' ')
 
 # CSRF settings for development
-CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000']
-CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
-SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
+CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000', 'http://0.0.0.0:8000']
+CSRF_COOKIE_SECURE = not DEBUG  # Set to True in production with HTTPS
+SESSION_COOKIE_SECURE = not DEBUG  # Set to True in production with HTTPS
 
 
 # Application definition
@@ -157,6 +158,18 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+
+if config('DATABASE', default='sqlite') == 'postgres':
+    DATABASES = {
+        "default": {
+            "ENGINE": config('SQL_ENGINE', default='django.db.backends.postgresql'),
+            "NAME": config('SQL_DATABASE', default='hello_django_dev'),
+            "USER": config('SQL_USER', default='hello_django'),
+            "PASSWORD": config('SQL_PASSWORD', default='hello_django'),
+            "HOST": config('SQL_HOST', default='db'),
+            "PORT": config('SQL_PORT', default='5432'),
+        }
+    }
 
 
 # Password validation
