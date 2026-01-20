@@ -36,8 +36,8 @@ dependencies = [
     "boto3>=1.40.21"
 ]
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "black>=25.1.0",
     "isort>=5.13.2"
 ]
