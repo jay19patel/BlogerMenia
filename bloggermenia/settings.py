@@ -34,9 +34,9 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 ALLOWED_HOSTS = config('DJANGO_ALLOWED_HOSTS', default='localhost 127.0.0.1').split(' ')
 
 # CSRF settings for development
-CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000', 'http://0.0.0.0:8000']
-CSRF_COOKIE_SECURE = not DEBUG  # Set to True in production with HTTPS
-SESSION_COOKIE_SECURE = not DEBUG  # Set to True in production with HTTPS
+CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000', 'http://0.0.0.0:8000', 'http://34.9.21.74']
+CSRF_COOKIE_SECURE = False  # Changed to False for HTTP (IP) access
+SESSION_COOKIE_SECURE = False  # Changed to False for HTTP (IP) access
 
 
 # Application definition
