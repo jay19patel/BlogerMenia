@@ -18,11 +18,15 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
+from blogs.api.auth_views import GoogleLogin
 from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
+    path('api/auth/', include('dj_rest_auth.urls')),
+    path('api/auth/registration/', include('dj_rest_auth.registration.urls')),
+    path('api/auth/google/login/', GoogleLogin.as_view(), name='google_login'),
     path('api/', include('blogs.urls')),
     path('api/notes/', include('notes.urls')),
 ]

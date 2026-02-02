@@ -51,9 +51,9 @@ export function AuthProvider({ children }) {
     if (mountedRef.current) {
       return;
     }
-    
+
     mountedRef.current = true;
-    
+
     // Check for token in localStorage on mount - only once
     const storedToken = localStorage.getItem('access_token');
     console.log('AuthContext mounted, token:', storedToken ? 'exists' : 'none');
@@ -66,10 +66,28 @@ export function AuthProvider({ children }) {
     }
   }, []); // Empty dependency array - run only once on mount
 
+  const loginWithGoogle = async (code) => {
+    try {
+      const response = await api.googleLogin(code);
+      const token = response.access_token || response.key; // dj-rest-auth returns 'key' by default, or access if JWT
+
+      // Store token
+      localStorage.setItem('access_token', token);
+      setToken(token);
+
+      // Load user data
+      await loadUser(token);
+
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
   const login = async (email, password) => {
     try {
       const response = await api.login(email, password);
-      const accessToken = response.access_token;
+      const accessToken = response.access_token || response.key;
 
       // Store token
       localStorage.setItem('access_token', accessToken);
@@ -121,7 +139,7 @@ export function AuthProvider({ children }) {
       console.log('Already loading, skipping setAuthFromToken');
       return;
     }
-    
+
     // Store token
     localStorage.setItem('access_token', accessToken);
     setToken(accessToken);
@@ -143,6 +161,7 @@ export function AuthProvider({ children }) {
     token,
     loading,
     login,
+    loginWithGoogle,
     register,
     logout,
     setAuthFromToken,

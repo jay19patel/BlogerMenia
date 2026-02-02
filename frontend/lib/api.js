@@ -62,8 +62,13 @@ export const api = {
     return handleResponse(response);
   },
 
-  getGoogleLoginUrl() {
-    return `${API_BASE_URL}/auth/google/login`;
+  async googleLogin(code) {
+    const response = await fetch(`${API_BASE_URL}/auth/google/login/`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ code: code }),
+    });
+    return handleResponse(response);
   },
 
   // User endpoints

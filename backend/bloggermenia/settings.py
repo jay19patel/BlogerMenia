@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 from decouple import config
 import os
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -58,9 +59,26 @@ INSTALLED_APPS = [
     # my app
     'blogs',
     'notes',
-    'rest_framework',
     'corsheaders',
+    
+    # DJ Rest Auth & Auth
+    'rest_framework',
+    'rest_framework.authtoken',
+    'dj_rest_auth',
+    'dj_rest_auth.registration',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'dj_rest_auth.jwt_auth.JWTCookieAuthentication',
+    )
+}
+
+REST_AUTH = {
+    'USE_JWT': True,
+    'JWT_AUTH_COOKIE': 'blogermenia-auth',
+    'JWT_AUTH_REFRESH_COOKIE': 'blogermenia-refresh-token',
+}
 
 
 # Additional settings for django-allauth
@@ -155,24 +173,25 @@ WSGI_APPLICATION = "bloggermenia.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    'default': dj_database_url.config(
+        default=config('DATABASE_URL', default='sqlite:///' + str(BASE_DIR / 'db.sqlite3')),
+        conn_max_age=600,
+        ssl_require=True
+    )
 }
 
-if config('DATABASE', default='sqlite') == 'postgres':
-    DATABASES = {
-        "default": {
-            "ENGINE": config('SQL_ENGINE', default='django.db.backends.postgresql'),
-            "NAME": config('SQL_DATABASE', default='hello_django_dev'),
-            "USER": config('SQL_USER', default='hello_django'),
-            "PASSWORD": config('SQL_PASSWORD', default='hello_django'),
-            "HOST": config('SQL_HOST', default='db'),
-            "PORT": config('SQL_PORT', default='5432'),
-        }
-    }
+# MongoEngine Configuration
+import mongoengine
+mongoengine.connect(
+    db=config('MONGO_DB_NAME', default='bloggermenia'),
+    host=config('MONGO_URI')
+)
+
+# DATABASE_ROUTERS is not needed for MongoEngine as it bypasses Django ORM
+# DATABASE_ROUTERS = ['bloggermenia.db_routers.HybridRouter']
+
 
 
 # Password validation
@@ -233,3 +252,11 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
 ]
 CORS_ALLOW_CREDENTIALS = True
+
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+}

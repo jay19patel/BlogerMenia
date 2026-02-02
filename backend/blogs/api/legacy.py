@@ -9,7 +9,9 @@ from django.core.files.base import ContentFile
 import time
 import os
 import uuid
-from blogs.models import Blog, BlogLike
+from blogs.models import Blog
+import mongoengine
+from django.http import Http404
 
 class JsonPostMixin:
     """Mixin to ensure request is POST and return JSON responses."""
@@ -20,37 +22,34 @@ class JsonPostMixin:
 
 class ToggleBlogLikeAPI(LoginRequiredMixin, JsonPostMixin, View):
     def post(self, request, slug, *args, **kwargs):
-        # Get the blog - minimized query
-        blog = get_object_or_404(Blog.objects.only('id', 'likes'), slug=slug)
-        user = request.user
+        # Get the blog 
+        blog = Blog.objects(slug=slug).first()
+        if not blog:
+             raise Http404("Blog not found")
+
+        user_id = request.user.id
         
         # Check if already liked
-        like_obj, created = BlogLike.objects.get_or_create(user=user, blog=blog)
-        
-        if not created:
+        if user_id in blog.liked_by:
             # Already liked, so UNLIKE it
-            like_obj.delete()
+            blog.liked_by.remove(user_id)
             liked = False
-            # Decrement count safely
-            Blog.objects.filter(pk=blog.pk).update(likes=F('likes') - 1)
-            # Calculate new likes without DB hit (approx)
-            new_likes = blog.likes - 1
         else:
             # Just created, so it's a LIKE
+            blog.liked_by.append(user_id)
             liked = True
-            # Increment count safely
-            Blog.objects.filter(pk=blog.pk).update(likes=F('likes') + 1)
-            new_likes = blog.likes + 1
             
+        blog.save()
+        
         return JsonResponse({
             'liked': liked,
-            'total_likes': max(0, new_likes) # Prevent negative if something weird happened
+            'total_likes': len(blog.liked_by)
         })
 
 
 import json
 import numpy as np
-from django.db.models import Q
+# from django.db.models import Q # Replace with mongoengine.Q
 from asgiref.sync import async_to_sync
 from langchain_mistralai import MistralAIEmbeddings
 # from blogs.Views.chatapp.service import BlogGeneratorService
@@ -112,32 +111,33 @@ class SearchBlogAPI(JsonPostMixin, View):
                 return JsonResponse({'error': 'Query is required'}, status=400)
 
             # Standard text-based search
-            blogs = Blog.objects.filter(isPublished=True).select_related('category', 'author')
+            blogs = Blog.objects(isPublished=True)
 
             if query:
                 blogs = blogs.filter(
-                    Q(title__icontains=query) |
-                    Q(subtitle__icontains=query) |
-                    Q(excerpt__icontains=query)
+                    (mongoengine.Q(title__icontains=query) |
+                     mongoengine.Q(subtitle__icontains=query) |
+                     mongoengine.Q(excerpt__icontains=query))
                 )
 
             # Limit results
+            # only() selects fields in MongoEngine
             blogs = blogs.only(
                 'id', 'title', 'slug', 'thumbnail', 'publishedDate', 'excerpt', 
-                'category__name', 'author__username'
-            )[:limit]
+                'category', 'author_id'
+            ).limit(limit)
             
             response_data = []
             for blog in blogs:
                 response_data.append({
-                    'id': blog.id,
+                    'id': str(blog.id), # ObjectId to str
                     'title': blog.title,
                     'slug': blog.slug,
                     'excerpt': blog.excerpt,
                     'category': blog.category.name if blog.category else None,
-                    'thumbnail': blog.thumbnail.url if blog.thumbnail else None,
+                    'thumbnail': blog.thumbnail if blog.thumbnail else None,
                     'publishedDate': blog.publishedDate.isoformat() if blog.publishedDate else None,
-                    'author_username': blog.author.username,
+                    'author_username': blog.author.username if blog.author else 'Unknown',
                     'score': 1.0 # Static score for text match
                 })
                 

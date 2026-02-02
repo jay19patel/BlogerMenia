@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Blog, Category, Playlist, User, BlogLike
+from .models import Blog, Category, Playlist, User
 
 class UserSerializer(serializers.ModelSerializer):
     profile_image = serializers.SerializerMethodField()
@@ -16,57 +16,104 @@ class UserSerializer(serializers.ModelSerializer):
             return obj.profile_image.url
         return None
 
-class CategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Category
-        fields = ['id', 'name', 'slug']
+class CategorySerializer(serializers.Serializer):
+    id = serializers.CharField(read_only=True)
+    name = serializers.CharField()
+    slug = serializers.CharField(read_only=True)
 
-class BlogSerializer(serializers.ModelSerializer):
+class BlogSerializer(serializers.Serializer):
+    id = serializers.CharField(read_only=True)
+    title = serializers.CharField()
+    subtitle = serializers.CharField(required=False, allow_blank=True)
+    slug = serializers.CharField(read_only=True)
+    
+    excerpt = serializers.CharField(required=False, allow_blank=True)
+    introduction = serializers.CharField(required=False, allow_blank=True)
+    sections = serializers.ListField(required=False)
+    conclusion = serializers.CharField(required=False, allow_blank=True)
+    
     author = UserSerializer(read_only=True)
+    
     category = CategorySerializer(read_only=True)
-    category_id = serializers.PrimaryKeyRelatedField(
-        queryset=Category.objects.all(), source='category', write_only=True, required=False, allow_null=True
-    )
+    category_id = serializers.CharField(write_only=True, required=False, allow_null=True)
+    
+    thumbnail = serializers.CharField(required=False, allow_null=True) # Expecting URL or Path string
+    isPublished = serializers.BooleanField(default=False)
+    publishedDate = serializers.DateTimeField(read_only=True)
+    views = serializers.IntegerField(read_only=True)
+    likes = serializers.IntegerField(read_only=True) # Property
+    
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
+    
     is_liked = serializers.SerializerMethodField()
-    thumbnail = serializers.ImageField(required=False)
-
-    class Meta:
-        model = Blog
-        fields = [
-            'id', 'title', 'subtitle', 'slug', 'excerpt', 'introduction', 
-            'sections', 'conclusion', 'author', 'category', 'category_id', 
-            'thumbnail', 'isPublished', 'publishedDate', 'views', 'likes', 
-            'created_at', 'updated_at', 'is_liked'
-        ]
-        read_only_fields = ['views', 'likes', 'author', 'slug', 'created_at', 'updated_at']
 
     def get_is_liked(self, obj):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            return BlogLike.objects.filter(user=request.user, blog=obj).exists()
+            return request.user.id in obj.liked_by
         return False
     
     def create(self, validated_data):
         user = self.context['request'].user
-        return Blog.objects.create(author=user, **validated_data)
+        category_id = validated_data.pop('category_id', None)
+        category = None
+        if category_id:
+            # Fetch category doc
+            category = Category.objects.filter(id=category_id).first()
+            
+        blog = Blog(author_id=user.id, category=category, **validated_data)
+        blog.save()
+        return blog
 
-class PlaylistSerializer(serializers.ModelSerializer):
+    def update(self, instance, validated_data):
+        category_id = validated_data.pop('category_id', None)
+        if category_id:
+            instance.category = Category.objects.filter(id=category_id).first()
+        
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        instance.save()
+        return instance
+
+class PlaylistSerializer(serializers.Serializer):
+    id = serializers.CharField(read_only=True)
     owner = UserSerializer(read_only=True)
+    name = serializers.CharField()
+    slug = serializers.CharField(read_only=True)
+    description = serializers.CharField(required=False, allow_blank=True)
+    thumbnail = serializers.CharField(required=False, allow_null=True)
+    
     blogs = BlogSerializer(many=True, read_only=True)
-    blog_ids = serializers.PrimaryKeyRelatedField(
-        queryset=Blog.objects.all(), source='blogs', write_only=True, many=True, required=False
-    )
-    thumbnail = serializers.ImageField(required=False)
-
-    class Meta:
-        model = Playlist
-        fields = ['id', 'owner', 'name', 'slug', 'description', 'thumbnail', 'blogs', 'blog_ids', 'is_public', 'created_at', 'updated_at']
-        read_only_fields = ['owner', 'slug', 'created_at', 'updated_at']
+    blog_ids = serializers.ListField(child=serializers.CharField(), write_only=True, required=False)
+    
+    is_public = serializers.BooleanField(default=True)
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
 
     def create(self, validated_data):
         user = self.context['request'].user
-        blogs = validated_data.pop('blogs', [])
-        playlist = Playlist.objects.create(owner=user, **validated_data)
-        if blogs:
-            playlist.blogs.set(blogs)
+        blog_ids = validated_data.pop('blog_ids', [])
+        
+        playlist = Playlist(owner_id=user.id, **validated_data)
+        
+        if blog_ids:
+             # Fetch blogs
+             blogs = list(Blog.objects.filter(id__in=blog_ids))
+             playlist.blogs = blogs
+        
+        playlist.save()
         return playlist
+
+    def update(self, instance, validated_data):
+        blog_ids = validated_data.pop('blog_ids', None)
+        if blog_ids is not None:
+             blogs = list(Blog.objects.filter(id__in=blog_ids))
+             instance.blogs = blogs
+            
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+            
+        instance.save()
+        return instance
