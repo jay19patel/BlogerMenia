@@ -41,7 +41,7 @@ export default function BlogsPage() {
     try {
       setListLoading(true);
       const skip = skipValue !== null ? skipValue : (currentPage - 1) * BLOGS_PER_PAGE;
-      
+
       // Call API with search and filter parameters
       // Pass selectedCategory as filter if it's not "All"
       const filter = selectedCategory === "All" ? null : selectedCategory;
@@ -52,20 +52,20 @@ export default function BlogsPage() {
         BLOGS_PER_PAGE,
         filter
       );
-      
+
       const blogs = response.blogs || [];
-      
+
       // Transform blog data
       const transformed = blogs.map(blog => ({
         slug: blog.slug,
         title: blog.title,
         description: blog.excerpt,
-        image: blog.image,
-        category: blog.category,
+        image: blog.thumbnail, // Backend uses 'thumbnail'
+        category: blog.category?.name || "General", // Backend returns category object
         date: new Date(blog.publishedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
         featured: blog.featured || false,
         publishedDate: blog.publishedDate,
-        authorUsername: blog.authorUsername, // Add author username for routing
+        authorUsername: blog.author?.username, // Backend returns author object
       }));
 
       setAllBlogs(transformed);
@@ -86,8 +86,8 @@ export default function BlogsPage() {
   // Auto-fetch when input field is cleared (was filled before, now empty)
   useEffect(() => {
     // If previous search had value and current is empty, auto-fetch
-    if (previousSearchQuery && previousSearchQuery.trim().length > 0 && 
-        (!searchQuery || searchQuery.trim().length === 0)) {
+    if (previousSearchQuery && previousSearchQuery.trim().length > 0 &&
+      (!searchQuery || searchQuery.trim().length === 0)) {
       setCurrentPage(1); // Reset to page 1
       fetchBlogs(null, 0); // Fetch without search query
       setPreviousSearchQuery(""); // Reset previous search
@@ -193,11 +193,10 @@ export default function BlogsPage() {
               <button
                 key={category}
                 onClick={() => handleCategoryChange(category)}
-                className={`px-5 py-2 rounded-lg font-medium transition-all duration-300 ${
-                  selectedCategory === category
+                className={`px-5 py-2 rounded-lg font-medium transition-all duration-300 ${selectedCategory === category
                     ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/30"
                     : "bg-white text-gray-700 border border-gray-300 hover:border-indigo-500 hover:text-indigo-600"
-                }`}
+                  }`}
               >
                 {category}
               </button>
@@ -333,11 +332,10 @@ export default function BlogsPage() {
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
-                        className={`w-10 h-10 rounded-lg font-medium transition-all duration-300 ${
-                          currentPage === page
+                        className={`w-10 h-10 rounded-lg font-medium transition-all duration-300 ${currentPage === page
                             ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/30"
                             : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-indigo-500"
-                        }`}
+                          }`}
                       >
                         {page}
                       </button>

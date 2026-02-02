@@ -77,7 +77,7 @@ export default function BlogDetailPage() {
         setIsLoading(false);
       }
     };
-    
+
     fetchBlog();
   }, [slug, username, router]);
 
@@ -86,35 +86,35 @@ export default function BlogDetailPage() {
     const fetchSuggested = async () => {
       try {
         if (!blog) return;
-        
+
         const token = localStorage.getItem('token');
         let relatedBlogs = [];
-        
+
         // Check if blog is in any playlist
         if (token) {
           try {
             const playlistsResponse = await api.getBlogPlaylists(blog.id || blog._id, token);
             const playlists = playlistsResponse.playlists || [];
-            
+
             if (playlists.length > 0) {
               // Blog is in a playlist - get previous 1 + next 3 blogs from first playlist
               const playlist = playlists[0];
               const currentIndex = playlist.blogs.findIndex(
                 b => (b.blog_id === blog.id || b.blog_id === blog._id || b.slug === blog.slug)
               );
-              
+
               if (currentIndex !== -1) {
                 // Get previous 1 blog
-                const prevBlogs = currentIndex > 0 
+                const prevBlogs = currentIndex > 0
                   ? [playlist.blogs[currentIndex - 1]]
                   : [];
-                
+
                 // Get next 3 blogs
                 const nextBlogs = playlist.blogs.slice(
                   currentIndex + 1,
                   currentIndex + 4
                 );
-                
+
                 // Combine and fetch full blog details
                 const blogIds = [...prevBlogs, ...nextBlogs].map(b => b.blog_id);
                 if (blogIds.length > 0) {
@@ -145,7 +145,7 @@ export default function BlogDetailPage() {
                       return null;
                     }
                   });
-                  
+
                   const fetchedBlogs = await Promise.all(blogPromises);
                   relatedBlogs = fetchedBlogs.filter(b => b !== null).slice(0, 4);
                 }
@@ -155,7 +155,7 @@ export default function BlogDetailPage() {
             console.error('Error checking playlists:', e);
           }
         }
-        
+
         // If no playlist blogs or not enough, get related blogs by tags/category
         if (relatedBlogs.length < 4) {
           try {
@@ -169,7 +169,7 @@ export default function BlogDetailPage() {
             console.error('Failed to load suggested blogs', err);
           }
         }
-        
+
         setSuggestedBlogs(relatedBlogs);
       } catch (err) {
         console.error('Failed to load related blogs', err);
@@ -182,7 +182,7 @@ export default function BlogDetailPage() {
         }
       }
     };
-    
+
     if (blog && slug) {
       fetchSuggested();
     }
@@ -233,19 +233,19 @@ export default function BlogDetailPage() {
 
   const handleLike = async () => {
     if (!blog || isLiking) return;
-    
+
     try {
       setIsLiking(true);
       // Convert blog ID to string if needed
       const blogId = typeof blog.id === 'string' ? blog.id : String(blog.id);
       await api.likeBlog(blogId);
-      
+
       // Update the blog's like count
       setBlog(prevBlog => ({
         ...prevBlog,
         likes: (prevBlog.likes || 0) + 1
       }));
-      
+
       setIsLiked(true);
       toast.success('Blog liked! ❤️');
     } catch (error) {
@@ -579,11 +579,10 @@ export default function BlogDetailPage() {
                     <button
                       key={item.id}
                       onClick={() => scrollToSection(item.id)}
-                      className={`w-full text-left px-4 py-3 rounded-lg text-sm transition-all duration-300 ${
-                        activeSection === item.id
+                      className={`w-full text-left px-4 py-3 rounded-lg text-sm transition-all duration-300 ${activeSection === item.id
                           ? 'bg-gradient-to-r from-indigo-500/10 to-violet-500/10 text-indigo-600 border-l-2 border-indigo-500'
                           : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-start gap-3">
                         <span className="text-xs font-mono text-gray-400 mt-0.5 flex-shrink-0">
@@ -601,193 +600,191 @@ export default function BlogDetailPage() {
 
         {/* Main Content */}
         <div className="w-full max-w-5xl px-4">
-        {/* Back Button */}
-        <Link
-          href={backUrl}
-          className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 mb-6 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Blogs
-        </Link>
+          {/* Back Button */}
+          <Link
+            href={backUrl}
+            className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 mb-6 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Blogs
+          </Link>
 
-        <article className="bg-white border border-gray-300 rounded-xl shadow-lg overflow-hidden">
-          {/* Featured Image */}
-          <div className="relative h-[400px] w-full">
-            {blog.image && blog.image.trim() !== "" ? (
-              <Image
-                src={blog.image}
-                alt={blog.title}
-                fill
-                className="object-cover"
-                priority
-              />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center">
-                <div className="text-center text-white">
-                  <p className="text-6xl font-bold opacity-50">Blog Image</p>
+          <article className="bg-white border border-gray-300 rounded-xl shadow-lg overflow-hidden">
+            {/* Featured Image */}
+            <div className="relative h-[400px] w-full">
+              {blog.image && blog.image.trim() !== "" ? (
+                <Image
+                  src={blog.image}
+                  alt={blog.title}
+                  fill
+                  className="object-cover"
+                  priority
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center">
+                  <div className="text-center text-white">
+                    <p className="text-6xl font-bold opacity-50">Blog Image</p>
+                  </div>
                 </div>
-              </div>
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-            {/* Overlay Content */}
-            <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-              <div className="flex flex-wrap gap-2 mb-4">
-                <span className="px-3 py-1 bg-blue-600/80 backdrop-blur-sm rounded-lg text-sm font-medium">
-                  {blog.category}
-                </span>
-                {blog.featured && (
-                  <span className="px-3 py-1 bg-yellow-500/80 backdrop-blur-sm rounded-lg text-sm font-medium">
-                    Featured
+              {/* Overlay Content */}
+              <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <span className="px-3 py-1 bg-blue-600/80 backdrop-blur-sm rounded-lg text-sm font-medium">
+                    {blog.category?.name || "General"}
                   </span>
-                )}
-              </div>
-              <h1 className="text-3xl md:text-4xl font-bold mb-2">
-                {blog.title}
-              </h1>
-              <p className="text-lg text-gray-200">
-                {blog.subtitle}
-              </p>
-            </div>
-          </div>
-
-          {/* Article Content */}
-          <div className="p-6 md:p-10">
-            {/* Meta Information */}
-            <div className="flex flex-wrap gap-6 py-4 mb-6 border-y border-gray-200 dark:border-gray-700">
-              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                <Calendar className="w-5 h-5" />
-                <span className="text-sm">{new Date(blog.publishedDate).toLocaleDateString()}</span>
-              </div>
-              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                <User className="w-5 h-5" />
-                <Link href={blog.authorUsername ? `/blogs/${blog.authorUsername}` : `/blogs`}>
-                  <AuthorTooltip userId={blog.user_id}>
-                    <span className="text-sm cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                      {blog.author}
+                  {blog.featured && (
+                    <span className="px-3 py-1 bg-yellow-500/80 backdrop-blur-sm rounded-lg text-sm font-medium">
+                      Featured
                     </span>
-                  </AuthorTooltip>
-                </Link>
-              </div>
-              {blog.views && (
-                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                  <Eye className="w-5 h-5" />
-                  <span className="text-sm">{blog.views.toLocaleString()}</span>
+                  )}
                 </div>
-              )}
-              {blog.likes !== undefined && (
-                <button
-                  onClick={handleLike}
-                  disabled={isLiked || isLiking}
-                  className={`flex items-center gap-2 transition-all duration-300 ${
-                    isLiked
-                      ? 'text-red-600 hover:text-red-700'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-500'
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
-                  title="Like this blog"
-                >
-                  <Heart 
-                    className={`w-5 h-5 transition-all duration-300 ${
-                      isLiked ? 'fill-current' : ''
-                    } ${isLiking ? 'animate-pulse' : ''}`} 
-                  />
-                  <span className="text-sm">{blog.likes.toLocaleString()}</span>
-                </button>
-              )}
-            </div>
-
-            {/* Tags */}
-            {blog.tags && blog.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-8">
-                {blog.tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Excerpt */}
-            {blog.excerpt && (
-              <div className="mb-8 p-4 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded-r-lg">
-                <p className="text-gray-700 dark:text-gray-300 italic">
-                  {blog.excerpt}
+                <h1 className="text-3xl md:text-4xl font-bold mb-2">
+                  {blog.title}
+                </h1>
+                <p className="text-lg text-gray-200">
+                  {blog.subtitle}
                 </p>
               </div>
-            )}
+            </div>
 
-            {/* Content */}
-            <div className="prose prose-lg dark:prose-invert max-w-none">
-              {/* Introduction */}
-              {blog.content?.introduction && (
-                <div id="introduction" className="mb-10">
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                    Introduction
-                  </h2>
-                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
-                    {blog.content.introduction}
+            {/* Article Content */}
+            <div className="p-6 md:p-10">
+              {/* Meta Information */}
+              <div className="flex flex-wrap gap-6 py-4 mb-6 border-y border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                  <Calendar className="w-5 h-5" />
+                  <span className="text-sm">{new Date(blog.publishedDate).toLocaleDateString()}</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                  <User className="w-5 h-5" />
+                  <Link href={blog.authorUsername ? `/blogs/${blog.authorUsername}` : `/blogs`}>
+                    <AuthorTooltip userId={blog.user_id}>
+                      <span className="text-sm cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                        {blog.author?.username || "Unknown"}
+                      </span>
+                    </AuthorTooltip>
+                  </Link>
+                </div>
+                {blog.views && (
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                    <Eye className="w-5 h-5" />
+                    <span className="text-sm">{blog.views.toLocaleString()}</span>
+                  </div>
+                )}
+                {blog.likes !== undefined && (
+                  <button
+                    onClick={handleLike}
+                    disabled={isLiked || isLiking}
+                    className={`flex items-center gap-2 transition-all duration-300 ${isLiked
+                        ? 'text-red-600 hover:text-red-700'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-500'
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    title="Like this blog"
+                  >
+                    <Heart
+                      className={`w-5 h-5 transition-all duration-300 ${isLiked ? 'fill-current' : ''
+                        } ${isLiking ? 'animate-pulse' : ''}`}
+                    />
+                    <span className="text-sm">{blog.likes.toLocaleString()}</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Tags */}
+              {blog.tags && blog.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-8">
+                  {blog.tags.map((tag, index) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Excerpt */}
+              {blog.excerpt && (
+                <div className="mb-8 p-4 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded-r-lg">
+                  <p className="text-gray-700 dark:text-gray-300 italic">
+                    {blog.excerpt}
                   </p>
                 </div>
               )}
 
-              {/* Sections */}
-              {blog.content?.sections?.map((section, index) => renderSection(section, index))}
+              {/* Content */}
+              <div className="prose prose-lg dark:prose-invert max-w-none">
+                {/* Introduction */}
+                {blog.content?.introduction && (
+                  <div id="introduction" className="mb-10">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                      Introduction
+                    </h2>
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+                      {blog.content.introduction}
+                    </p>
+                  </div>
+                )}
 
-              {/* Conclusion */}
-              {blog.content?.conclusion && (
-                <div id="conclusion" className="mb-10">
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                    Conclusion
-                  </h2>
-                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
-                    {blog.content.conclusion}
-                  </p>
+                {/* Sections */}
+                {blog.content?.sections?.map((section, index) => renderSection(section, index))}
+
+                {/* Conclusion */}
+                {blog.content?.conclusion && (
+                  <div id="conclusion" className="mb-10">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                      Conclusion
+                    </h2>
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+                      {blog.content.conclusion}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </article>
+
+
+          {/* Related Blogs Section */}
+          <div className="mt-10 mb-8">
+            <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Related Blogs</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              {suggestedBlogs.map((item, idx) => (
+                <div key={idx}>
+                  <Link href={item.authorUsername ? `/blogs/${item.authorUsername}/${item.slug}` : `/blogs/${item.slug}`}>
+                    <div className="group bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-200 hover:border-indigo-500 dark:hover:border-indigo-400 hover:shadow-md">
+                      <div className="relative aspect-[16/9] sm:aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-gray-700">
+                        {item.image && item.image.trim() !== "" ? (
+                          <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center">
+                            <p className="text-white text-xs font-medium opacity-50">No Image</p>
+                          </div>
+                        )}
+                        {item.category && (
+                          <div className="absolute top-1.5 left-1.5">
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm">
+                              {item.category?.name || "General"}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-2 sm:p-2.5">
+                        <h3 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white mb-0.5 sm:mb-1 line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{item.title}</h3>
+                        {item.excerpt && (
+                          <p className="text-gray-600 dark:text-gray-400 text-[10px] sm:text-xs line-clamp-2">{item.excerpt}</p>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
                 </div>
-              )}
+              ))}
             </div>
           </div>
-        </article>
-
-
-        {/* Related Blogs Section */}
-        <div className="mt-10 mb-8">
-          <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Related Blogs</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {suggestedBlogs.map((item, idx) => (
-              <div key={idx}>
-                <Link href={item.authorUsername ? `/blogs/${item.authorUsername}/${item.slug}` : `/blogs/${item.slug}`}>
-                  <div className="group bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-200 hover:border-indigo-500 dark:hover:border-indigo-400 hover:shadow-md">
-                    <div className="relative aspect-[16/9] sm:aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-gray-700">
-                      {item.image && item.image.trim() !== "" ? (
-                        <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center">
-                          <p className="text-white text-xs font-medium opacity-50">No Image</p>
-                        </div>
-                      )}
-                      {item.category && (
-                        <div className="absolute top-1.5 left-1.5">
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm">
-                            {item.category}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-2 sm:p-2.5">
-                      <h3 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white mb-0.5 sm:mb-1 line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{item.title}</h3>
-                      {item.excerpt && (
-                        <p className="text-gray-600 dark:text-gray-400 text-[10px] sm:text-xs line-clamp-2">{item.excerpt}</p>
-                      )}
-                    </div>
-                  </div>
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div>
         </div>
       </div>
     </div>

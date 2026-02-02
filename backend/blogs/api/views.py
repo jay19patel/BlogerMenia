@@ -36,6 +36,26 @@ class BlogViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        
+        # Pagination match for frontend
+        try:
+            skip = int(request.query_params.get('skip', 0))
+            limit = int(request.query_params.get('limit', 10))
+        except ValueError:
+             skip = 0
+             limit = 10
+
+        total = queryset.count()
+        blogs = queryset[skip : skip + limit]
+        
+        serializer = self.get_serializer(blogs, many=True)
+        return Response({
+            'blogs': serializer.data,
+            'total': total
+        })
+
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated], url_path='my-blogs')
     def my_blogs(self, request):
         blogs = Blog.objects.filter(author=request.user).order_by('-created_at')
