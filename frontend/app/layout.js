@@ -9,6 +9,7 @@ import GridBackground from "@/components/GridBackground";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "sonner";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import QueryProvider from "@/components/QueryProvider";
 
 const GOOGLE_CLIENT_ID = "1041926678255-imk440263309a9h8k6u7a2b0e6g6v4b3.apps.googleusercontent.com";
 const geistSans = Geist({
@@ -33,16 +34,18 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
       >
         <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-          <AuthProvider>
-            <GridBackground>
-              <Navbar />
-              <main className="flex-1">
-                {children}
-              </main>
-              <Footer />
-            </GridBackground>
-            <Toaster position="top-center" richColors expand={true} />
-          </AuthProvider>
+          <QueryProvider>
+            <AuthProvider>
+              <GridBackground>
+                <Navbar />
+                <main className="flex-1">
+                  {children}
+                </main>
+                <Footer />
+              </GridBackground>
+              <Toaster position="top-center" richColors expand={true} />
+            </AuthProvider>
+          </QueryProvider>
         </GoogleOAuthProvider>
       </body>
     </html>

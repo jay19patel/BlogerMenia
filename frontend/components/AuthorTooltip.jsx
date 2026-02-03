@@ -16,10 +16,10 @@ export default function AuthorTooltip({ userId, children }) {
 
   const fetchUserInfo = async () => {
     if (!userId || isLoading) return;
-    
+
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const user = await api.getUserById(userId);
       setUserInfo(user);
@@ -35,7 +35,7 @@ export default function AuthorTooltip({ userId, children }) {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
-    
+
     timeoutRef.current = setTimeout(() => {
       setShowTooltip(true);
       if (!userInfo && !isLoading) {
@@ -73,13 +73,13 @@ export default function AuthorTooltip({ userId, children }) {
   };
 
   return (
-    <div 
+    <div
       className="relative inline-block"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       {children}
-      
+
       {showTooltip && (
         <div
           ref={tooltipRef}
@@ -92,7 +92,7 @@ export default function AuthorTooltip({ userId, children }) {
         >
           {/* Arrow pointing up */}
           <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-white dark:bg-gray-800 border-l border-t border-gray-200 dark:border-gray-700 rotate-45"></div>
-          
+
           {isLoading ? (
             <div className="flex items-center justify-center py-4">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
@@ -135,18 +135,19 @@ export default function AuthorTooltip({ userId, children }) {
                   <Mail className="w-4 h-4 flex-shrink-0" />
                   <span className="truncate">{userInfo.email}</span>
                 </div>
-                
+
                 <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                   <Calendar className="w-4 h-4 flex-shrink-0" />
                   <span>Joined {formatDate(userInfo.created_at)}</span>
                 </div>
-                
+
                 <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                   <FileText className="w-4 h-4 flex-shrink-0" />
                   <span>{userInfo.blog_count} blog{userInfo.blog_count !== 1 ? 's' : ''} published</span>
                 </div>
-                
-                {userInfo.role === 'Admin' && (
+
+                {/* Role */}
+                {(userInfo.role === 'Admin' || userInfo.is_staff) && (
                   <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
                     <Briefcase className="w-4 h-4 flex-shrink-0" />
                     <span className="font-medium">Administrator</span>
@@ -154,17 +155,17 @@ export default function AuthorTooltip({ userId, children }) {
                 )}
               </div>
 
-              {/* Description */}
-              {userInfo.description && (
+              {/* Description (Bio) */}
+              {(userInfo.bio || userInfo.description) && (
                 <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
                   <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3">
-                    {userInfo.description}
+                    {userInfo.bio || userInfo.description}
                   </p>
                 </div>
               )}
 
               {/* View Profile Button (button to avoid nested anchors inside Link parents) */}
-              <div 
+              <div
                 className="block mt-3 pt-3 border-t border-gray-200 dark:border-gray-700"
                 onClick={(e) => e.stopPropagation()}
               >

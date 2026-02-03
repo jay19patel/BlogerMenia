@@ -34,10 +34,11 @@ function getHeaders(token = null) {
 }
 
 // API object with all methods
+// API object with all methods
 export const api = {
   // Authentication endpoints
   async login(email, password) {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    const response = await fetch(`${API_BASE_URL}/auth/login/`, {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify({ email, password }),
@@ -46,7 +47,7 @@ export const api = {
   },
 
   async register(data) {
-    const response = await fetch(`${API_BASE_URL}/auth/register`, {
+    const response = await fetch(`${API_BASE_URL}/auth/registration/`, {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify(data),
@@ -55,7 +56,7 @@ export const api = {
   },
 
   async logout(token) {
-    const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+    const response = await fetch(`${API_BASE_URL}/auth/logout/`, {
       method: 'POST',
       headers: getHeaders(token),
     });
@@ -73,7 +74,7 @@ export const api = {
 
   // User endpoints
   async getCurrentUser(token) {
-    const response = await fetch(`${API_BASE_URL}/user/me`, {
+    const response = await fetch(`${API_BASE_URL}/auth/user/`, {
       method: 'GET',
       headers: getHeaders(token),
     });
@@ -81,16 +82,24 @@ export const api = {
   },
 
   async updateUserProfile(token, updateData) {
-    const response = await fetch(`${API_BASE_URL}/user/me`, {
-      method: 'PUT',
-      headers: getHeaders(token),
-      body: JSON.stringify(updateData),
+    const headers = getHeaders(token);
+    let body = JSON.stringify(updateData);
+
+    if (updateData instanceof FormData) {
+      delete headers['Content-Type'];
+      body = updateData;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/auth/user/`, {
+      method: 'PATCH', // dj-rest-auth uses PATCH/PUT. PATCH is safer for partial updates.
+      headers: headers,
+      body: body,
     });
     return handleResponse(response);
   },
 
   async getUserById(userId) {
-    const response = await fetch(`${API_BASE_URL}/user/${userId}`, {
+    const response = await fetch(`${API_BASE_URL}/user/${userId}/`, {
       method: 'GET',
       headers: getHeaders(),
     });
@@ -98,7 +107,7 @@ export const api = {
   },
 
   async getUserProfileByUsername(username) {
-    const response = await fetch(`${API_BASE_URL}/user/profile/${username}`, {
+    const response = await fetch(`${API_BASE_URL}/user/profile/${username}/`, {
       method: 'GET',
       headers: getHeaders(),
     });
@@ -107,7 +116,7 @@ export const api = {
 
   // Admin endpoints
   async getAllUsers(token) {
-    const response = await fetch(`${API_BASE_URL}/admin/users`, {
+    const response = await fetch(`${API_BASE_URL}/admin/users/`, {
       method: 'GET',
       headers: getHeaders(token),
     });
@@ -115,7 +124,7 @@ export const api = {
   },
 
   async activateUser(token, userId) {
-    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/activate`, {
+    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/activate/`, {
       method: 'PUT',
       headers: getHeaders(token),
     });
@@ -123,7 +132,7 @@ export const api = {
   },
 
   async deactivateUser(token, userId) {
-    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/deactivate`, {
+    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/deactivate/`, {
       method: 'PUT',
       headers: getHeaders(token),
     });
@@ -131,7 +140,7 @@ export const api = {
   },
 
   async toggleFeaturedBlog(token, blogId) {
-    const response = await fetch(`${API_BASE_URL}/admin/blogs/${blogId}/toggle-featured`, {
+    const response = await fetch(`${API_BASE_URL}/admin/blogs/${blogId}/toggle-featured/`, {
       method: 'PUT',
       headers: getHeaders(token),
     });
@@ -140,7 +149,7 @@ export const api = {
 
   // Blog endpoints
   async getBlogs(searchQuery = null, skip = 0, limit = 10, filter = null, username = null) {
-    let url = `${API_BASE_URL}/blogs?skip=${skip}&limit=${limit}`;
+    let url = `${API_BASE_URL}/blogs/?skip=${skip}&limit=${limit}`;
 
     if (searchQuery) {
       url += `&search=${encodeURIComponent(searchQuery)}`;
@@ -165,7 +174,7 @@ export const api = {
 
   // Get blogs for currently authenticated user (requires token)
   async getMyBlogs(token, searchQuery = null, skip = 0, limit = 10, filter = null) {
-    let url = `${API_BASE_URL}/blogs/my-blogs?skip=${skip}&limit=${limit}`;
+    let url = `${API_BASE_URL}/blogs/my-blogs/?skip=${skip}&limit=${limit}`;
 
     if (searchQuery) {
       url += `&search=${encodeURIComponent(searchQuery)}`;
@@ -184,23 +193,27 @@ export const api = {
   },
 
   async getBlogById(blogId, token = null) {
-    const response = await fetch(`${API_BASE_URL}/blogs/id/${blogId}`, {
+    const response = await fetch(`${API_BASE_URL}/blogs/id/${blogId}/`, {
       method: 'GET',
       headers: getHeaders(token),
     });
     return handleResponse(response);
   },
 
-  async getBlogBySlug(slug) {
-    const response = await fetch(`${API_BASE_URL}/blogs/${slug}`, {
+  async getBlogBySlug(slug, token = null, trackView = true) {
+    let url = `${API_BASE_URL}/blogs/${slug}/`;
+    if (!trackView) {
+      url += '?track_view=false';
+    }
+    const response = await fetch(url, {
       method: 'GET',
-      headers: getHeaders(),
+      headers: getHeaders(token),
     });
     return handleResponse(response);
   },
 
   async createBlog(blogData, token) {
-    const response = await fetch(`${API_BASE_URL}/blogs`, {
+    const response = await fetch(`${API_BASE_URL}/blogs/`, {
       method: 'POST',
       headers: getHeaders(token),
       body: JSON.stringify(blogData),
@@ -209,7 +222,7 @@ export const api = {
   },
 
   async updateBlog(blogId, blogData, token) {
-    const response = await fetch(`${API_BASE_URL}/blogs/${blogId}`, {
+    const response = await fetch(`${API_BASE_URL}/blogs/${blogId}/`, {
       method: 'PUT',
       headers: getHeaders(token),
       body: JSON.stringify(blogData),
@@ -217,16 +230,16 @@ export const api = {
     return handleResponse(response);
   },
 
-  async likeBlog(blogId) {
-    const response = await fetch(`${API_BASE_URL}/blogs/${blogId}/like`, {
+  async likeBlog(blogId, token) {
+    const response = await fetch(`${API_BASE_URL}/blogs/${blogId}/like/`, {
       method: 'POST',
-      headers: getHeaders(),
+      headers: getHeaders(token),
     });
     return handleResponse(response);
   },
 
   async getSuggestedBlogs(limit = 3, excludeSlug = null) {
-    let url = `${API_BASE_URL}/blogs/suggested_blogs?limit=${limit}`;
+    let url = `${API_BASE_URL}/blogs/suggested_blogs/?limit=${limit}`;
     if (excludeSlug) {
       url += `&exclude_slug=${encodeURIComponent(excludeSlug)}`;
     }
@@ -242,7 +255,7 @@ export const api = {
   async getBlogCategories(username = null) {
     // If username provided, filter categories by that user
     // If not provided, get all categories (for main /blogs page)
-    let url = `${API_BASE_URL}/blogs/categories`;
+    let url = `${API_BASE_URL}/blogs/categories/`;
     if (username) {
       url += `?username=${encodeURIComponent(username)}`;
     }
@@ -256,7 +269,7 @@ export const api = {
 
 
   async getStats() {
-    const response = await fetch(`${API_BASE_URL}/blogs/stats`, {
+    const response = await fetch(`${API_BASE_URL}/blogs/stats/`, {
       method: 'GET',
       headers: getHeaders(),
     });
@@ -265,7 +278,7 @@ export const api = {
 
   // Content endpoints
   async getTestimonials() {
-    const response = await fetch(`${API_BASE_URL}/content/testimonials`, {
+    const response = await fetch(`${API_BASE_URL}/content/testimonials/`, {
       method: 'GET',
       headers: getHeaders(),
     });
@@ -273,7 +286,7 @@ export const api = {
   },
 
   async getFAQs() {
-    const response = await fetch(`${API_BASE_URL}/content/faqs`, {
+    const response = await fetch(`${API_BASE_URL}/content/faqs/`, {
       method: 'GET',
       headers: getHeaders(),
     });
@@ -282,7 +295,7 @@ export const api = {
 
   // Chat/Generation endpoints
   async generateBlog(userMessage, sessionId = null) {
-    const response = await fetch(`${API_BASE_URL}/chat/generate`, {
+    const response = await fetch(`${API_BASE_URL}/chat/generate/`, {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify({
@@ -294,7 +307,7 @@ export const api = {
   },
 
   async getSessionState(sessionId) {
-    const response = await fetch(`${API_BASE_URL}/chat/session/${sessionId}`, {
+    const response = await fetch(`${API_BASE_URL}/chat/session/${sessionId}/`, {
       method: 'GET',
       headers: getHeaders(),
     });
@@ -302,7 +315,7 @@ export const api = {
   },
 
   async saveGeneratedBlog(sessionId, token) {
-    const response = await fetch(`${API_BASE_URL}/chat/save`, {
+    const response = await fetch(`${API_BASE_URL}/chat/save/`, {
       method: 'POST',
       headers: getHeaders(token),
       body: JSON.stringify({ session_id: sessionId }),
@@ -311,7 +324,7 @@ export const api = {
   },
 
   async deleteSession(sessionId) {
-    const response = await fetch(`${API_BASE_URL}/chat/session/${sessionId}`, {
+    const response = await fetch(`${API_BASE_URL}/chat/session/${sessionId}/`, {
       method: 'DELETE',
       headers: getHeaders(),
     });
@@ -320,7 +333,7 @@ export const api = {
 
   // Playlist endpoints
   async createPlaylist(playlistData, token) {
-    const response = await fetch(`${API_BASE_URL}/playlists`, {
+    const response = await fetch(`${API_BASE_URL}/playlists/`, {
       method: 'POST',
       headers: getHeaders(token),
       body: JSON.stringify(playlistData),
@@ -329,7 +342,7 @@ export const api = {
   },
 
   async getMyPlaylists(token) {
-    const response = await fetch(`${API_BASE_URL}/playlists/my-playlists`, {
+    const response = await fetch(`${API_BASE_URL}/playlists/my-playlists/`, {
       method: 'GET',
       headers: getHeaders(token),
     });
@@ -337,7 +350,7 @@ export const api = {
   },
 
   async getUserPlaylistsByUsername(username) {
-    const response = await fetch(`${API_BASE_URL}/playlists/user/${username}`, {
+    const response = await fetch(`${API_BASE_URL}/playlists/user/${username}/`, {
       method: 'GET',
       headers: getHeaders(),
     });
@@ -345,7 +358,7 @@ export const api = {
   },
 
   async getPlaylist(playlistId, token = null) {
-    const response = await fetch(`${API_BASE_URL}/playlists/${playlistId}`, {
+    const response = await fetch(`${API_BASE_URL}/playlists/${playlistId}/`, {
       method: 'GET',
       headers: getHeaders(token),
     });
@@ -353,7 +366,7 @@ export const api = {
   },
 
   async updatePlaylist(playlistId, playlistData, token) {
-    const response = await fetch(`${API_BASE_URL}/playlists/${playlistId}`, {
+    const response = await fetch(`${API_BASE_URL}/playlists/${playlistId}/`, {
       method: 'PUT',
       headers: getHeaders(token),
       body: JSON.stringify(playlistData),
@@ -362,7 +375,7 @@ export const api = {
   },
 
   async deletePlaylist(playlistId, token) {
-    const response = await fetch(`${API_BASE_URL}/playlists/${playlistId}`, {
+    const response = await fetch(`${API_BASE_URL}/playlists/${playlistId}/`, {
       method: 'DELETE',
       headers: getHeaders(token),
     });
@@ -374,7 +387,7 @@ export const api = {
   },
 
   async addBlogToPlaylist(playlistId, blogData, token) {
-    const response = await fetch(`${API_BASE_URL}/playlists/${playlistId}/blogs`, {
+    const response = await fetch(`${API_BASE_URL}/playlists/${playlistId}/blogs/`, {
       method: 'POST',
       headers: getHeaders(token),
       body: JSON.stringify(blogData),
@@ -383,7 +396,7 @@ export const api = {
   },
 
   async removeBlogFromPlaylist(playlistId, blogId, token) {
-    const response = await fetch(`${API_BASE_URL}/playlists/${playlistId}/blogs/${blogId}`, {
+    const response = await fetch(`${API_BASE_URL}/playlists/${playlistId}/blogs/${blogId}/`, {
       method: 'DELETE',
       headers: getHeaders(token),
     });
@@ -392,7 +405,7 @@ export const api = {
 
 
   async getBlogPlaylists(blogId, token) {
-    const response = await fetch(`${API_BASE_URL}/playlists/blog/${blogId}/playlists`, {
+    const response = await fetch(`${API_BASE_URL}/playlists/blog/${blogId}/playlists/`, {
       method: 'GET',
       headers: getHeaders(token),
     });
@@ -452,5 +465,12 @@ export const api = {
     });
     return handleResponse(response);
   },
+
+  getGoogleLoginUrl() {
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    const redirectUri = typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : '';
+    const scope = 'email profile';
+    return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}`;
+  }
 };
 

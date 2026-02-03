@@ -8,7 +8,7 @@ import { toast } from "sonner";
 function CallbackContent() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
-	const { setAuthFromToken } = useAuth();
+	const { loginWithGoogle } = useAuth();
 	const [error, setError] = useState(null);
 	const processedRef = useRef(false);
 
@@ -17,39 +17,34 @@ function CallbackContent() {
 		if (processedRef.current) {
 			return;
 		}
-		
+
+		const code = searchParams.get('code');
+		if (!code) return; // Wait for code
+
 		processedRef.current = true;
 		let mounted = true;
 
 		const handleCallback = async () => {
 			try {
-				// Get token from URL query params
-				const token = searchParams.get('token');
-				console.log('Callback received token');
+				console.log('Callback received code, exchanging for token...');
 
-				if (!token) {
+				// Exchange code for token via backend
+				const result = await loginWithGoogle(code);
+
+				if (result.success) {
+					console.log('Google login successful');
 					if (mounted) {
-						toast.error("No authentication token received");
-						setError("No authentication token received");
-						setTimeout(() => router.push('/login'), 3000);
+						toast.success("Successfully logged in with Google!");
+						router.push('/');
 					}
-					return;
-				}
-
-				// Set auth token and load user
-				await setAuthFromToken(token);
-				console.log('Auth set successfully');
-
-				// Show success and redirect to home
-				if (mounted) {
-					toast.success("Successfully logged in with Google!");
-					router.push('/');
+				} else {
+					throw new Error(result.error || "Google login failed");
 				}
 			} catch (err) {
 				console.error('Callback error:', err);
 				if (mounted) {
-					toast.error("Authentication failed. Please try again.");
-					setError("Authentication failed. Please try again.");
+					toast.error(err.message || "Authentication failed. Please try again.");
+					setError(err.message || "Authentication failed. Please try again.");
 					setTimeout(() => router.push('/login'), 3000);
 				}
 			}
@@ -60,7 +55,7 @@ function CallbackContent() {
 		return () => {
 			mounted = false;
 		};
-	}, [searchParams]);
+	}, [searchParams, loginWithGoogle]);
 
 	if (error) {
 		return (

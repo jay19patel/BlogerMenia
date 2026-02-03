@@ -22,7 +22,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!user) return;
-    
+
     setFormData({
       full_name: user.full_name || "",
       username: user.username || "",
@@ -40,21 +40,23 @@ export default function ProfilePage() {
     }));
   };
 
+  const [imageFile, setImageFile] = useState(null);
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Check file size (max 2MB)
       if (file.size > 2 * 1024 * 1024) {
         toast.error("Image size should be less than 2MB");
         return;
       }
-      
-      // Check file type
+
       if (!file.type.startsWith('image/')) {
         toast.error("Please select an image file");
         return;
       }
-      
+
+      setImageFile(file); // Store file for upload
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setFormData((prev) => ({
@@ -71,53 +73,60 @@ export default function ProfilePage() {
     setLoading(true);
 
     try {
-      // Prepare data - convert empty strings to null
-      const updateData = {};
-      
-      // Only send fields that have changed
+      const updateData = new FormData();
+      let hasChanges = false;
+
+      // Handle Full Name Split (Map to first_name, last_name)
       if (formData.full_name !== (user?.full_name || "")) {
-        updateData.full_name = formData.full_name || null;
+        const names = formData.full_name.trim().split(' ');
+        const firstName = names[0];
+        const lastName = names.slice(1).join(' ');
+        updateData.append('first_name', firstName);
+        updateData.append('last_name', lastName);
+        hasChanges = true;
       }
-      
+
       if (formData.username !== (user?.username || "")) {
-        updateData.username = formData.username || null;
+        updateData.append('username', formData.username);
+        hasChanges = true;
       }
-      
+
       if (formData.headline !== (user?.headline || "")) {
-        updateData.headline = formData.headline || null;
+        updateData.append('headline', formData.headline);
+        hasChanges = true;
       }
-      
+
+      // Map description -> bio
       if (formData.description !== (user?.description || "")) {
-        updateData.description = formData.description || null;
+        updateData.append('bio', formData.description);
+        hasChanges = true;
       }
-      
-      // Only include profile_image if it's actually changed
-      if (formData.profile_image && formData.profile_image !== user?.profile_image) {
-        updateData.profile_image = formData.profile_image;
+
+      // Handle Image File
+      if (imageFile) {
+        updateData.append('profile_image', imageFile);
+        hasChanges = true;
       }
-      
-      // Only send if there are changes
-      if (Object.keys(updateData).length === 0) {
+
+      if (!hasChanges) {
         toast.info("No changes to update");
         setLoading(false);
         return;
       }
-      
-      console.log("Sending update data:", updateData);
+
       const result = await api.updateUserProfile(token, updateData);
+
       if (updateProfile) {
         await updateProfile();
       }
-      
-      // Show success toast
-      toast.success("Profile updated successfully!", {
-        duration: 2000,
-      });
-      
-      // Reload the page after showing toast
+
+      toast.success("Profile updated successfully!");
+
+      // Reload mainly to refresh context/UI fully if needed
       setTimeout(() => {
         window.location.reload();
-      }, 2100); // Slightly longer than toast duration
+      }, 1500);
+
     } catch (error) {
       console.error("Profile update error:", error);
       toast.error(error.message || "Failed to update profile");

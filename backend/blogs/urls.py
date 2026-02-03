@@ -1,12 +1,13 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from blogs.api.views import BlogViewSet, PlaylistViewSet
+from blogs.api.views import BlogViewSet, PlaylistViewSet, UserViewSet
 from blogs.api.content_views import ContentViewSet
 from blogs.api import legacy as legacy_api # Keep the old api.py as it had custom views like GenerateBlogAPI
 
 router = DefaultRouter()
 router.register(r'blogs', BlogViewSet, basename='blog')
 router.register(r'playlists', PlaylistViewSet, basename='playlist')
+router.register(r'user', UserViewSet, basename='user')
 router.register(r'content', ContentViewSet, basename='content')
 
 urlpatterns = [
