@@ -24,7 +24,23 @@ class BlogViewSet(viewsets.ModelViewSet):
     lookup_field = 'slug'
 
     def get_queryset(self):
-        queryset = Blog.objects.filter(isPublished=True).order_by('-publishedDate')
+        # Base queryset logic
+        queryset = Blog.objects.all()
+        
+        # Determine if we should show drafts (only if filtering by own username)
+        username_param = self.request.query_params.get('username', None)
+        viewer = self.request.user
+        
+        if username_param and viewer.is_authenticated and viewer.username == username_param:
+            # Viewing own profile: Filter by author only (show drafts + published)
+            queryset = queryset.filter(author=viewer)
+        else:
+            # Public view: Show only published
+            queryset = queryset.filter(isPublished=True)
+
+        # Apply ordering
+        # Drafts might have null publishedDate, so use created_at for consistency or coalesce
+        queryset = queryset.order_by('-publishedDate', '-created_at')
         
         # Search
         search = self.request.query_params.get('search', None)
@@ -40,10 +56,9 @@ class BlogViewSet(viewsets.ModelViewSet):
         if category_name and category_name != 'All' and category_name != 'featuredBlogs':
              queryset = queryset.filter(category__name=category_name)
         
-        # Filter by username
-        username = self.request.query_params.get('username', None)
-        if username:
-            queryset = queryset.filter(author__username=username)
+        # Filter by username (already handled implicitly above for drafts logic, but strictly enforce here for published path)
+        if username_param:
+             queryset = queryset.filter(author__username=username_param)
 
         return queryset
 
@@ -172,9 +187,21 @@ class BlogViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def categories(self, request):
-        categories = Category.objects.all()
-        serializer = CategorySerializer(categories, many=True)
-        return Response(serializer.data)
+        username = request.query_params.get('username', None)
+        
+        # Filter for categories that have at least one published blog
+        qs = Category.objects.filter(blogs__isPublished=True)
+
+        if username:
+            qs = qs.filter(blogs__author__username=username)
+            
+        qs = qs.distinct()
+        
+        # Return simple list of names for frontend dropdowns
+        # Frontend expects { categories: ["Name1", "Name2"] }
+        category_names = list(qs.values_list('name', flat=True))
+        
+        return Response({'categories': category_names})
     
     @action(detail=False, methods=['get'])
     def stats(self, request):
@@ -207,11 +234,53 @@ class PlaylistViewSet(viewsets.ModelViewSet):
     def user_playlists(self, request, username=None):
         try:
             user = User.objects.get(username=username)
-            playlists = Playlist.objects.filter(owner=user, is_public=True).order_by('-created_at')
+            # Start with all playlists by this user
+            playlists = Playlist.objects.filter(owner=user)
+            
+            # If viewer is not the owner, filter public only
+            if request.user != user:
+                playlists = playlists.filter(is_public=True)
+                
+            playlists = playlists.order_by('-created_at')
         except User.DoesNotExist:
             playlists = []
         serializer = self.get_serializer(playlists, many=True)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated], url_path='blogs')
+    def add_blog(self, request, slug=None):
+        playlist = self.get_object()
+        
+        # Check ownership
+        if playlist.owner != request.user:
+            return Response({'error': 'You do not have permission to modify this playlist'}, status=status.HTTP_403_FORBIDDEN)
+            
+        blog_id = request.data.get('blog_id')
+        if not blog_id:
+            return Response({'error': 'Blog ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        blog = get_object_or_404(Blog, pk=blog_id)
+        
+        # Add blog if not already present
+        if blog not in playlist.blogs.all():
+            playlist.blogs.add(blog)
+            
+        return Response({'status': 'added', 'blog_count': playlist.blogs.count()})
+
+    @action(detail=True, methods=['delete'], permission_classes=[permissions.IsAuthenticated], url_path='blogs/(?P<blog_id>\w+)')
+    def remove_blog(self, request, slug=None, blog_id=None):
+        playlist = self.get_object()
+        
+        # Check ownership
+        if playlist.owner != request.user:
+             return Response({'error': 'You do not have permission to modify this playlist'}, status=status.HTTP_403_FORBIDDEN)
+             
+        blog = get_object_or_404(Blog, pk=blog_id)
+        
+        if blog in playlist.blogs.all():
+            playlist.blogs.remove(blog)
+            
+        return Response({'status': 'removed', 'blog_count': playlist.blogs.count()})
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):

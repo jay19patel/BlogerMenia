@@ -349,10 +349,10 @@ export const api = {
     return handleResponse(response);
   },
 
-  async getUserPlaylistsByUsername(username) {
+  async getUserPlaylistsByUsername(username, token = null) {
     const response = await fetch(`${API_BASE_URL}/playlists/user/${username}/`, {
       method: 'GET',
-      headers: getHeaders(),
+      headers: getHeaders(token),
     });
     return handleResponse(response);
   },

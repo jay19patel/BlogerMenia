@@ -36,13 +36,15 @@ class BlogSerializer(serializers.ModelSerializer):
     thumbnail = serializers.ImageField(required=False, allow_null=True) 
     
     likes = serializers.IntegerField(read_only=True) # Property
+    authorUsername = serializers.ReadOnlyField(source='author.username')
+    category_name = serializers.ReadOnlyField(source='category.name')
     is_liked = serializers.SerializerMethodField()
 
     class Meta:
         model = Blog
         fields = [
             'id', 'title', 'subtitle', 'slug', 'excerpt', 'introduction', 
-            'sections', 'conclusion', 'author', 'category', 'category_id', 
+            'sections', 'conclusion', 'author', 'authorUsername', 'category', 'category_name', 'category_id', 
             'thumbnail', 'isPublished', 'publishedDate', 'views', 'likes', 
             'created_at', 'updated_at', 'is_liked'
         ]

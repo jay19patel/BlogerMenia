@@ -5,11 +5,11 @@ import { X, Plus, Check, Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 
-export default function AddToPlaylistDialog({ 
-  isOpen, 
-  onClose, 
-  blogData, 
-  token 
+export default function AddToPlaylistDialog({
+  isOpen,
+  onClose,
+  blogData,
+  token
 }) {
   const [playlists, setPlaylists] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -179,7 +179,13 @@ export default function AddToPlaylistDialog({
               {/* Playlists List */}
               {playlists.length === 0 ? (
                 <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                  <p>No playlists yet. Create one to get started!</p>
+                  <p className="mb-2">No playlists yet.</p>
+                  <button
+                    onClick={() => setShowCreateForm(true)}
+                    className="text-indigo-600 hover:text-indigo-700 font-medium hover:underline"
+                  >
+                    Create one to get started!
+                  </button>
                 </div>
               ) : (
                 <div className="space-y-2">

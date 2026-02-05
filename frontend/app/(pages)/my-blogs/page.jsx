@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
@@ -9,184 +9,181 @@ import Link from "next/link";
 import { toast } from "sonner";
 import LoaderCard from "@/components/ui/loader";
 import AddToPlaylistDialog from "@/components/AddToPlaylistDialog";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+
+const BLOGS_PER_PAGE = 10;
 
 export default function MyBlogsPage() {
   const { isAuthenticated, user, token, loading: authLoading } = useAuth();
   const router = useRouter();
-  const [blogs, setBlogs] = useState([]);
-  // Split loading: initial data load vs list updates
-  const [initialBlogsLoading, setInitialBlogsLoading] = useState(true);
-  const [listLoading, setListLoading] = useState(false);
+  const queryClient = useQueryClient();
+
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
-  const [previousSearchQuery, setPreviousSearchQuery] = useState(""); // Track previous search value
-  const [totalBlogs, setTotalBlogs] = useState(0);
-  const [togglingFeatured, setTogglingFeatured] = useState({});
-  const blogsPerPage = 10;
-  const [categories, setCategories] = useState(["All"]);
+  const [submittedSearch, setSubmittedSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [playlists, setPlaylists] = useState([]);
   const [showAddToPlaylist, setShowAddToPlaylist] = useState(false);
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [deletingPlaylistId, setDeletingPlaylistId] = useState(null);
 
-  // Common function to fetch blogs - Uses authenticated endpoint for security
-  const fetchBlogs = async (searchValue = null, skipValue = null) => {
-    try {
-      // CRITICAL: Ensure user is authenticated and has token before fetching
-      if (!isAuthenticated || !token) {
-        console.warn("Cannot fetch blogs: User not authenticated");
-        setBlogs([]);
-        setTotalBlogs(0);
-        return;
+  // Redirect if not authenticated
+  if (!authLoading && !isAuthenticated) {
+    router.push("/login"); // Or return null/loader while redirecting
+  }
+
+  // 1. Fetch Categories
+  const { data: categoriesData } = useQuery({
+    queryKey: ["blogCategories", user?.username],
+    queryFn: () => api.getBlogCategories(user.username),
+    enabled: !!user?.username,
+    select: (data) => ["All", ...(data.categories || [])],
+  });
+  const categories = categoriesData || ["All"];
+
+  // 2. Fetch Playlists
+  const { data: playlistsData } = useQuery({
+    queryKey: ["myPlaylists", token],
+    queryFn: () => api.getMyPlaylists(token),
+    enabled: !!token,
+  });
+  const playlists = playlistsData?.playlists || [];
+
+  // 3. Fetch Blogs (Main Query)
+  const {
+    data: blogsData,
+    isLoading: blogsLoading,
+    isPlaceholderData,
+  } = useQuery({
+    queryKey: [
+      "myBlogs",
+      token,
+      {
+        search: submittedSearch || null,
+        category: selectedCategory === "All" ? null : selectedCategory,
+        page: currentPage,
+      },
+    ],
+    queryFn: () => {
+      const skip = (currentPage - 1) * BLOGS_PER_PAGE;
+      const search =
+        submittedSearch && submittedSearch.trim().length > 0
+          ? submittedSearch.trim()
+          : null;
+      const filter = selectedCategory === "All" ? null : selectedCategory;
+      // CRITICAL: api.getMyBlogs requires token
+      return api.getMyBlogs(token, search, skip, BLOGS_PER_PAGE, filter);
+    },
+    enabled: !!token,
+    placeholderData: keepPreviousData,
+    staleTime: 60 * 1000,
+  });
+
+  const blogs = blogsData?.blogs || [];
+  const totalBlogs = blogsData?.total || 0;
+  const totalPages = Math.ceil(totalBlogs / BLOGS_PER_PAGE);
+
+  // Mutations
+  const toggleFeaturedMutation = useMutation({
+    mutationFn: ({ blogId, currentFeatured }) =>
+      api.toggleFeaturedBlog(token, blogId),
+    onMutate: async ({ blogId, currentFeatured }) => {
+      await queryClient.cancelQueries(["myBlogs"]);
+      const previousBlogs = queryClient.getQueryData(["myBlogs"]);
+
+      // Optimistic update
+      queryClient.setQueriesData({ queryKey: ["myBlogs"] }, (old) => {
+        if (!old) return old;
+        // Since this runs across multiple pages/filters, we might need a more specific update
+        // But generally setQueriesData with partial matching works if structure matches.
+        // However, for precise page update, it's safer to just iterate active queries
+        // For simplicity here, we invalidate or use simpler query key matching.
+        // React Query v5 syntax:
+        return {
+          ...old,
+          blogs: old.blogs.map((b) =>
+            b.id === blogId ? { ...b, featured: !currentFeatured } : b
+          ),
+          total: old.total
+        };
+      });
+
+      return { previousBlogs };
+    },
+    onError: (err, newTodo, context) => {
+      console.error("Error toggling featured:", err);
+      toast.error("Failed to toggle featured status");
+      if (context?.previousBlogs) {
+        // queryClient.setQueriesData(["myBlogs"], context.previousBlogs); // Revert? complex with varying keys
+        // Easier: just invalidate
+        queryClient.invalidateQueries(["myBlogs"]);
       }
-
-      setListLoading(true);
-      const skip = skipValue !== null ? skipValue : (currentPage - 1) * blogsPerPage;
-      const search = searchValue !== null ? searchValue : (searchQuery && searchQuery.trim().length > 0 ? searchQuery.trim() : null);
-      
-      // CRITICAL: Use authenticated endpoint that automatically filters by current_user
-      // This ensures ONLY logged-in user's blogs are returned, no other user's data
-      const response = await api.getMyBlogs(
-        token,  // Required: authentication token
-        search,
-        skip,
-        blogsPerPage,
-        selectedCategory !== 'All' ? selectedCategory : undefined
+    },
+    onSuccess: (data, { currentFeatured }) => {
+      toast.success(
+        currentFeatured
+          ? "Blog removed from featured"
+          : "Blog featured successfully"
       );
-      setBlogs(response.blogs || []);
-      setTotalBlogs(response.total || 0);
-    } catch (error) {
-      console.error("Error fetching blogs:", error);
-      toast.error("Failed to load blogs");
-      setBlogs([]);
-      setTotalBlogs(0);
-    } finally {
-      setListLoading(false);
-      setInitialBlogsLoading(false);
-    }
-  };
+      queryClient.invalidateQueries(["myBlogs"]);
+    },
+  });
 
-  useEffect(() => {
-    if (authLoading) return; // wait for auth to resolve
-    if (!isAuthenticated) {
-      router.push("/login");
-      return;
+  const deletePlaylistMutation = useMutation({
+    mutationFn: (playlistId) => api.deletePlaylist(playlistId, token),
+    onMutate: (playlistId) => {
+      setDeletingPlaylistId(playlistId);
+    },
+    onSuccess: () => {
+      toast.success('Playlist deleted successfully');
+      queryClient.invalidateQueries(["myPlaylists"]);
+    },
+    onError: (error) => {
+      console.error('Error deleting playlist:', error);
+      toast.error(error.message || 'Failed to delete playlist');
+    },
+    onSettled: () => {
+      setDeletingPlaylistId(null);
     }
-    // Fetch blogs on initial load and when category/page changes (not on search query change)
-    fetchBlogs();
-  }, [authLoading, isAuthenticated, currentPage, selectedCategory]); // Removed searchQuery from dependencies
+  });
 
-  // Auto-fetch when input field is cleared (was filled before, now empty)
-  useEffect(() => {
-    if (authLoading || !isAuthenticated) return;
-    // If previous search had value and current is empty, auto-fetch
-    if (previousSearchQuery && previousSearchQuery.trim().length > 0 && 
-        (!searchQuery || searchQuery.trim().length === 0)) {
-      setCurrentPage(1); // Reset to page 1
-      fetchBlogs(null, 0); // Fetch without search query
-      setPreviousSearchQuery(""); // Reset previous search
-    }
-  }, [searchQuery, previousSearchQuery, authLoading, isAuthenticated]);
 
-  // Handle search button click
+  // Handlers
   const handleSearch = () => {
-    setCurrentPage(1); // Reset to page 1 on search
-    const searchValue = searchQuery && searchQuery.trim().length > 0 ? searchQuery.trim() : null;
-    setPreviousSearchQuery(searchValue || ""); // Track the search value
-    fetchBlogs(searchValue, 0); // Fetch with search query
+    setCurrentPage(1);
+    setSubmittedSearch(searchQuery.trim());
   };
 
-  // Handle Enter key press in search input
   const handleSearchKeyPress = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleSearch();
     }
   };
 
-  // Fetch categories for logged-in user only - Same approach as /blogs/username
-  useEffect(() => {
-    if (authLoading || !isAuthenticated || !user?.username) return;
-    const loadCategories = async () => {
-      try {
-        // CRITICAL: Pass username to filter categories by logged-in user (same as /blogs/username)
-        const resp = await api.getBlogCategories(user.username);
-        const cats = resp.categories || [];
-        setCategories(["All", ...cats]);
-      } catch (e) {
-        console.error("Error loading categories:", e);
-        setCategories(["All"]);
-      }
-    };
-    loadCategories();
-  }, [authLoading, isAuthenticated, user?.username]);
-
-  // Fetch playlists for this user
-  useEffect(() => {
-    if (authLoading || !isAuthenticated || !token) return;
-    const loadPlaylists = async () => {
-      try {
-        const response = await api.getMyPlaylists(token);
-        setPlaylists(response.playlists || []);
-      } catch (e) {
-        console.error('Error loading playlists:', e);
-      }
-    };
-    loadPlaylists();
-  }, [authLoading, isAuthenticated, token]);
-
-  const totalPages = Math.ceil(totalBlogs / blogsPerPage);
-
-  const handleToggleFeatured = async (blogId, currentFeatured) => {
-    try {
-      setTogglingFeatured(prev => ({ ...prev, [blogId]: true }));
-      await api.toggleFeaturedBlog(token, blogId);
-      
-      // Update local state
-      setBlogs(prevBlogs => 
-        prevBlogs.map(blog => 
-          blog.id === blogId 
-            ? { ...blog, featured: !currentFeatured }
-            : blog
-        )
-      );
-      
-      toast.success(
-        currentFeatured 
-          ? "Blog removed from featured" 
-          : "Blog featured successfully"
-      );
-    } catch (error) {
-      console.error("Error toggling featured:", error);
-      toast.error("Failed to toggle featured status");
-    } finally {
-      setTogglingFeatured(prev => ({ ...prev, [blogId]: false }));
-    }
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category);
+    setCurrentPage(1);
   };
 
-  const handleDeletePlaylist = async (playlistId, playlistName) => {
+  const handleToggleFeatured = (blogId, currentFeatured) => {
+    toggleFeaturedMutation.mutate({ blogId, currentFeatured });
+  };
+
+  const handleDeletePlaylist = (playlistId, playlistName) => {
     if (!confirm(`Are you sure you want to delete "${playlistName}"? This action cannot be undone.`)) {
       return;
     }
-
-    try {
-      setDeletingPlaylistId(playlistId);
-      await api.deletePlaylist(playlistId, token);
-      toast.success('Playlist deleted successfully');
-      // Reload playlists
-      const response = await api.getMyPlaylists(token);
-      setPlaylists(response.playlists || []);
-    } catch (error) {
-      console.error('Error deleting playlist:', error);
-      toast.error(error.message || 'Failed to delete playlist');
-    } finally {
-      setDeletingPlaylistId(null);
-    }
+    deletePlaylistMutation.mutate(playlistId);
   };
 
-  if (!isAuthenticated) {
-    return null;
+  if (authLoading || (isAuthenticated && !token)) {
+    return (
+      <div className="min-h-screen py-12 flex items-center justify-center">
+        <LoaderCard message="Loading..." />
+      </div>
+    );
   }
+
+  if (!isAuthenticated) return null; // Router will redirect
 
   return (
     <div className="min-h-screen py-12">
@@ -246,7 +243,7 @@ export default function MyBlogsPage() {
                         {playlist.name}
                       </h3>
                     </Link>
-                    
+
                     {/* Edit and Delete Buttons */}
                     <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 flex items-center gap-2">
                       <Link
@@ -292,7 +289,7 @@ export default function MyBlogsPage() {
                 placeholder="Search blogs by title..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={handleSearchKeyPress}
+                onKeyDown={handleSearchKeyPress}
                 className="w-full px-4 py-2 pr-24 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
               <button
@@ -308,15 +305,11 @@ export default function MyBlogsPage() {
             {categories.map((category) => (
               <button
                 key={category}
-                onClick={() => {
-                  setSelectedCategory(category);
-                  setCurrentPage(1);
-                }}
-                className={`px-5 py-2 rounded-lg font-medium transition-all duration-300 ${
-                  selectedCategory === category
-                    ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/30"
-                    : "bg-white text-gray-700 border border-gray-300 hover:border-indigo-500 hover:text-indigo-600"
-                }`}
+                onClick={() => handleCategoryChange(category)}
+                className={`px-5 py-2 rounded-lg font-medium transition-all duration-300 ${selectedCategory === category
+                  ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/30"
+                  : "bg-white text-gray-700 border border-gray-300 hover:border-indigo-500 hover:text-indigo-600"
+                  }`}
               >
                 {category}
               </button>
@@ -325,10 +318,10 @@ export default function MyBlogsPage() {
         </div>
 
         {/* Blog Table */}
-        {initialBlogsLoading ? (
+        {!blogsData && blogsLoading ? (
           <div className="relative py-12">
             <div className="absolute inset-0 flex items-center justify-center">
-              <LoaderCard message="Loading blogs…" />
+              <LoaderCard message="Loading blogs..." />
             </div>
           </div>
         ) : blogs.length === 0 ? (
@@ -341,12 +334,8 @@ export default function MyBlogsPage() {
         ) : (
           <>
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden relative">
-              {listLoading && (
-                <div className="absolute inset-0 flex items-center justify-center z-10">
-                  <LoaderCard message="Updating results…" />
-                </div>
-              )}
-              <div className={`overflow-x-auto ${listLoading ? 'opacity-50 pointer-events-none' : ''}`}>
+              {/* Overlay removed for smoother transition */}
+              <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
@@ -393,7 +382,7 @@ export default function MyBlogsPage() {
                         </td>
                         <td className="px-6 py-4">
                           <span className="px-3 py-1 text-xs font-semibold bg-indigo-100 text-indigo-700 rounded-full">
-                            {blog.category}
+                            {blog.category_name || (typeof blog.category === 'string' ? blog.category : blog.category?.name) || 'General'}
                           </span>
                         </td>
                         {user?.role === 'Admin' && (
@@ -402,10 +391,10 @@ export default function MyBlogsPage() {
                           </td>
                         )}
                         <td className="px-6 py-4 text-sm text-gray-600">
-                          {new Date(blog.publishedDate).toLocaleDateString('en-US', { 
-                            month: 'short', 
-                            day: 'numeric', 
-                            year: 'numeric' 
+                          {new Date(blog.publishedDate).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
                           })}
                         </td>
                         <td className="px-6 py-4 text-center">
@@ -428,12 +417,11 @@ export default function MyBlogsPage() {
                           <td className="px-6 py-4 text-center">
                             <button
                               onClick={() => handleToggleFeatured(blog.id, blog.featured)}
-                              disabled={togglingFeatured[blog.id]}
-                              className={`flex items-center justify-center gap-1 px-3 py-1 rounded-lg transition-all duration-300 ${
-                                blog.featured
-                                  ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
-                                  : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                              } disabled:opacity-50 disabled:cursor-not-allowed`}
+                              disabled={toggleFeaturedMutation.isPending}
+                              className={`flex items-center justify-center gap-1 px-3 py-1 rounded-lg transition-all duration-300 ${blog.featured
+                                ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
+                                : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                                } disabled:opacity-50 disabled:cursor-not-allowed`}
                               title={blog.featured ? "Remove from featured" : "Add to featured"}
                             >
                               <Star className={`w-4 h-4 ${blog.featured ? "fill-current" : ""}`} />
@@ -481,7 +469,7 @@ export default function MyBlogsPage() {
               <div className="flex items-center justify-center gap-2 mt-8">
                 <button
                   onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1}
+                  disabled={currentPage === 1 || isPlaceholderData}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                 >
                   <ChevronLeft className="w-5 h-5" />
@@ -495,11 +483,11 @@ export default function MyBlogsPage() {
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
-                        className={`w-10 h-10 rounded-lg font-medium transition-all duration-300 ${
-                          currentPage === page
-                            ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/30"
-                            : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-indigo-500"
-                        }`}
+                        disabled={isPlaceholderData}
+                        className={`w-10 h-10 rounded-lg font-medium transition-all duration-300 ${currentPage === page
+                          ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/30"
+                          : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-indigo-500"
+                          }`}
                       >
                         {page}
                       </button>
@@ -511,7 +499,7 @@ export default function MyBlogsPage() {
                   onClick={() =>
                     setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                   }
-                  disabled={currentPage === totalPages}
+                  disabled={currentPage === totalPages || isPlaceholderData}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                 >
                   Next

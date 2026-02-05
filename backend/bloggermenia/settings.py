@@ -123,6 +123,15 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Custom User Model
 AUTH_USER_MODEL = 'blogs.User'
 
+# Authentication Backends
+AUTHENTICATION_BACKENDS = [
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+
+    # `allauth` specific authentication methods, such as login by e-mail
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
 # REST Framework Configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -164,6 +173,7 @@ SITE_ID = 1
 # Updated Allauth Config to minimize warnings
 # 1. Use ACCOUNT_LOGIN_METHODS (modern).
 ACCOUNT_LOGIN_METHODS = {'email'} 
+# ACCOUNT_AUTHENTICATION_METHOD = 'email' # For dj-rest-auth compatibility 
 
 # 2. Define Signup Fields explicitly
 ACCOUNT_SIGNUP_FIELDS = ['email', 'username', 'first_name', 'last_name']

@@ -11,13 +11,20 @@ import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { api } from "@/lib/api";
 import AuthorTooltip from "@/components/AuthorTooltip";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from "@/components/ui/sheet";
 
 export default function BlogDetail({ slug, username }) {
     const router = useRouter();
     const queryClient = useQueryClient();
     const [copiedIndex, setCopiedIndex] = useState(null);
     const [activeSection, setActiveSection] = useState("");
-    const [showTOC, setShowTOC] = useState(false);
+    const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [tableOfContents, setTableOfContents] = useState([]);
 
     // Fetch blog data
@@ -198,7 +205,7 @@ export default function BlogDetail({ slug, username }) {
                 behavior: "smooth",
             });
             setActiveSection(sectionId);
-            setShowTOC(false);
+            setIsSheetOpen(false);
         }
     };
 
@@ -507,74 +514,49 @@ export default function BlogDetail({ slug, username }) {
     return (
         <div className="min-h-screen py-8 relative">
             <div className="flex justify-center relative z-10">
-                {/* TOC Button - Fixed on Left */}
+                {/* TOC Button & Sheet - Fixed on Left */}
                 {tableOfContents.length > 0 && (
-                    <button
-                        onClick={() => setShowTOC(true)}
-                        className="fixed bottom-6 left-6 z-40 bg-white border border-gray-300 hover:border-indigo-500 hover:text-indigo-600 text-gray-700 px-5 py-2 rounded-lg font-medium transition-all duration-300 flex items-center gap-2 shadow-sm"
-                    >
-                        <Menu className="w-5 h-5" />
-                        <span className="hidden md:inline">Table of Contents</span>
-                    </button>
-                )}
-
-                {/* TOC Sheet Overlay */}
-                {showTOC && (
-                    <div
-                        className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
-                        onClick={() => setShowTOC(false)}
-                    >
-                        <div
-                            className="absolute left-0 top-0 bottom-0 w-full sm:w-96 bg-white border-r border-gray-200 overflow-y-auto transform transition-transform duration-300 ease-out shadow-2xl"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <div className="p-6">
-                                <div className="flex items-center justify-between mb-6">
-                                    <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                                        <Menu className="w-6 h-6 text-white" />
+                    <div className="fixed bottom-6 left-6 z-40">
+                        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+                            <SheetTrigger asChild>
+                                <button
+                                    className="bg-white border border-gray-300 hover:border-indigo-500 hover:text-indigo-600 text-gray-700 px-5 py-2 rounded-lg font-medium transition-all duration-300 flex items-center gap-2 shadow-sm"
+                                >
+                                    <Menu className="w-5 h-5" />
+                                    <span className="hidden md:inline">Table of Contents</span>
+                                </button>
+                            </SheetTrigger>
+                            <SheetContent side="left" className="w-[300px] sm:w-[400px]">
+                                <SheetHeader>
+                                    <SheetTitle className="flex items-center gap-2">
+                                        <Menu className="w-5 h-5" />
                                         Table of Contents
-                                    </h3>
-                                    <button
-                                        onClick={() => setShowTOC(false)}
-                                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                                    >
-                                        <svg
-                                            className="w-5 h-5 text-gray-500"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2}
-                                                d="M6 18L18 6M6 6l12 12"
-                                            />
-                                        </svg>
-                                    </button>
+                                    </SheetTitle>
+                                </SheetHeader>
+                                <div className="mt-6 flex-1 overflow-y-auto pr-2 max-h-[calc(100vh-100px)]">
+                                    <nav className="space-y-1">
+                                        {tableOfContents.map((item, index) => (
+                                            <button
+                                                key={item.id}
+                                                onClick={() => scrollToSection(item.id)}
+                                                className={`w-full text-left px-3 py-2.5 rounded-md text-sm transition-all duration-200 ${activeSection === item.id
+                                                        ? "bg-indigo-50 text-indigo-700 font-medium"
+                                                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                                                    }`}
+                                            >
+                                                <div className="flex items-start gap-3">
+                                                    <span className={`text-xs font-mono mt-0.5 flex-shrink-0 ${activeSection === item.id ? "text-indigo-400" : "text-gray-400"
+                                                        }`}>
+                                                        {(index + 1).toString().padStart(2, "0")}
+                                                    </span>
+                                                    <span className="flex-1 leading-snug">{item.title}</span>
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </nav>
                                 </div>
-
-                                <nav className="space-y-2">
-                                    {tableOfContents.map((item, index) => (
-                                        <button
-                                            key={item.id}
-                                            onClick={() => scrollToSection(item.id)}
-                                            className={`w-full text-left px-4 py-3 rounded-lg text-sm transition-all duration-300 ${activeSection === item.id
-                                                ? "bg-gradient-to-r from-indigo-500/10 to-violet-500/10 text-indigo-600 border-l-2 border-indigo-500"
-                                                : "text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-                                                }`}
-                                        >
-                                            <div className="flex items-start gap-3">
-                                                <span className="text-xs font-mono text-gray-400 mt-0.5 flex-shrink-0">
-                                                    {(index + 1).toString().padStart(2, "0")}
-                                                </span>
-                                                <span className="flex-1">{item.title}</span>
-                                            </div>
-                                        </button>
-                                    ))}
-                                </nav>
-                            </div>
-                        </div>
+                            </SheetContent>
+                        </Sheet>
                     </div>
                 )}
 
@@ -807,6 +789,6 @@ export default function BlogDetail({ slug, username }) {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

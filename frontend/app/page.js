@@ -16,10 +16,10 @@ import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/pris
 export default function Home() {
   const [featuredBlogs, setFeaturedBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ 
-    total_users: 0, 
-    total_blogs: 0, 
-    total_views: 0 
+  const [stats, setStats] = useState({
+    total_users: 0,
+    total_blogs: 0,
+    total_views: 0
   });
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -63,26 +63,25 @@ export default function Home() {
           api.getBlogs(null, 0, 4, 'featuredBlogs'),
           api.getStats()
         ]);
-        
+
         // Only use featured blogs - no fallback to regular blogs
         const blogs = blogsResponse.blogs || [];
-        
+
+        // Transform the blog data to match BlogCard component structure
         // Transform the blog data to match BlogCard component structure
         const transformed = blogs.map(blog => ({
-          slug: blog.slug,
-          title: blog.title,
+          ...blog,
+          // BlogCard expects 'category' to be a string name
+          // Backend now provides category_name
+          category: blog.category_name || (typeof blog.category === 'string' ? blog.category : blog.category?.name),
           description: blog.excerpt || blog.subtitle || '',
-          image: blog.image,
-          category: blog.category,
-          date: new Date(blog.publishedDate).toLocaleDateString('en-US', { 
-            month: 'short', 
-            day: 'numeric', 
-            year: 'numeric' 
+          date: new Date(blog.publishedDate).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
           }),
-          featured: blog.featured || false,
-          authorUsername: blog.authorUsername, // Add author username for routing
         }));
-        
+
         setFeaturedBlogs(transformed);
         setStats(statsResponse);
       } catch (error) {
@@ -92,7 +91,7 @@ export default function Home() {
         setLoading(false);
       }
     };
-    
+
     fetchData();
   }, []);
 
@@ -101,7 +100,7 @@ export default function Home() {
     if (!searchQuery.trim()) {
       return;
     }
-    
+
     setIsSearching(true);
     try {
       const response = await api.getBlogs(searchQuery, 0, 3);
@@ -127,7 +126,7 @@ export default function Home() {
           return () => clearTimeout(timer);
         } else {
           // Finished typing this message
-          setDisplayedMessages(prev => 
+          setDisplayedMessages(prev =>
             prev.map((m, idx) => idx === currentTypingIndex ? { ...m, isTyping: false, displayedContent: m.content } : m)
           );
           setCurrentTypingIndex(-1);
@@ -143,7 +142,7 @@ export default function Home() {
 
     const typeMessage = (fullText, role) => new Promise((resolve) => {
       const align = role === "user" ? "right" : "left";
-      
+
       // Add message in typing state at the end
       setDisplayedMessages(prev => {
         const next = [...prev, { role, align, content: fullText, displayedContent: "", isTyping: true }];
@@ -199,7 +198,7 @@ export default function Home() {
         <div className="rounded-2xl bg-indigo-50 py-10 overflow-visible m-5 lg:m-0 2xl:py-16 xl:py-8 lg:rounded-tl-2xl lg:rounded-bl-2xl relative">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 overflow-visible">
             <div className="grid grid-cols-1 gap-14 items-center lg:grid-cols-12 lg:gap-32 overflow-visible">
-                <div className="w-full xl:col-span-5 lg:col-span-6 2xl:-mx-5 xl:-mx-0 overflow-visible">
+              <div className="w-full xl:col-span-5 lg:col-span-6 2xl:-mx-5 xl:-mx-0 overflow-visible">
                 <div className="flex items-center text-sm font-medium text-gray-500 justify-center lg:justify-start">
                   <span className="bg-indigo-600 py-1 px-3 rounded-2xl text-xs font-medium text-white mr-3">
                     #1
@@ -216,24 +215,24 @@ export default function Home() {
                 <div className="relative my-10">
                   <form onSubmit={handleSearchBlogs}>
                     <div className="relative p-1.5 flex items-center gap-y-4 h-auto md:h-16 flex-col md:flex-row justify-between rounded-full md:shadow-[0px_15px_30px_-4px_rgba(16,24,40,0.03)] border border-transparent md:bg-white transition-all duration-500 hover:border-indigo-600 focus-within:border-indigo-600">
-                    <input
-                      type="text"
-                      name="search"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Type anything you want to know..."
-                      className="text-base rounded-full text-gray-900 flex-1 py-4 px-6 shadow-[0px_15px_30px_-4px_rgba(16,24,40,0.03)] md:shadow-none bg-white md:bg-transparent placeholder:text-gray-400 focus:outline-none md:w-fit w-full"
-                    />
-                    <button
-                      type="submit"
-                      disabled={isSearching}
-                      className="bg-indigo-600 rounded-full py-3 px-7 text-base font-semibold text-white hover:bg-indigo-700 cursor-pointer transition-all duration-500 md:w-fit w-full text-center disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isSearching ? "Searching..." : "Find Blogs"}
-                    </button>
+                      <input
+                        type="text"
+                        name="search"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Type anything you want to know..."
+                        className="text-base rounded-full text-gray-900 flex-1 py-4 px-6 shadow-[0px_15px_30px_-4px_rgba(16,24,40,0.03)] md:shadow-none bg-white md:bg-transparent placeholder:text-gray-400 focus:outline-none md:w-fit w-full"
+                      />
+                      <button
+                        type="submit"
+                        disabled={isSearching}
+                        className="bg-indigo-600 rounded-full py-3 px-7 text-base font-semibold text-white hover:bg-indigo-700 cursor-pointer transition-all duration-500 md:w-fit w-full text-center disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSearching ? "Searching..." : "Find Blogs"}
+                      </button>
                     </div>
                   </form>
-                  
+
                   {/* Search Results Dropdown */}
                   {searchResults.length > 0 && searchQuery.trim() !== "" && (
                     <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
@@ -284,103 +283,103 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-             
+
 
 
               <div className="w-full lg:col-span-6 flex justify-center lg:justify-end">
-              <div className="relative w-full max-w-2xl">
-                {/* Floating elements */}
-                <div className="absolute -top-6 -left-6 w-20 h-20 bg-indigo-400/20 rounded-full blur-2xl animate-pulse"></div>
-                <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-purple-400/20 rounded-full blur-2xl animate-pulse delay-1000"></div>
-                
-                {/* Main Card */}
-                <div className="relative rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 p-1 shadow-2xl">
-                  <div className="bg-white rounded-3xl p-8 shadow-inner">
-                    {/* Browser Header */}
-                    <div className="flex items-center gap-2.5 mb-6 pb-4 border-b border-gray-200">
-                      <div className="w-3.5 h-3.5 rounded-full bg-red-500 shadow-sm"></div>
-                      <div className="w-3.5 h-3.5 rounded-full bg-yellow-500 shadow-sm"></div>
-                      <div className="w-3.5 h-3.5 rounded-full bg-green-500 shadow-sm"></div>
-                      <div className="flex-1 ml-4 bg-gray-100 rounded-lg px-4 py-1.5">
-                        <p className="text-xs text-gray-400">blogermenia.com/blog-create-chat</p>
+                <div className="relative w-full max-w-2xl">
+                  {/* Floating elements */}
+                  <div className="absolute -top-6 -left-6 w-20 h-20 bg-indigo-400/20 rounded-full blur-2xl animate-pulse"></div>
+                  <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-purple-400/20 rounded-full blur-2xl animate-pulse delay-1000"></div>
+
+                  {/* Main Card */}
+                  <div className="relative rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 p-1 shadow-2xl">
+                    <div className="bg-white rounded-3xl p-8 shadow-inner">
+                      {/* Browser Header */}
+                      <div className="flex items-center gap-2.5 mb-6 pb-4 border-b border-gray-200">
+                        <div className="w-3.5 h-3.5 rounded-full bg-red-500 shadow-sm"></div>
+                        <div className="w-3.5 h-3.5 rounded-full bg-yellow-500 shadow-sm"></div>
+                        <div className="w-3.5 h-3.5 rounded-full bg-green-500 shadow-sm"></div>
+                        <div className="flex-1 ml-4 bg-gray-100 rounded-lg px-4 py-1.5">
+                          <p className="text-xs text-gray-400">blogermenia.com/blog-create-chat</p>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Chat-like generator */}
-                    <div className="flex flex-col gap-4">
-                      {/* Messages */}
-                      <div ref={messagesRef} className="bg-gray-50 rounded-xl p-4 border-2 border-indigo-100 h-[280px] overflow-y-auto flex flex-col gap-3">
-                        {displayedMessages.map((m, idx) => {
-                          // Determine what to display
-                          let displayText = m.displayedContent;
-                          const isTypingThisMessage = idx === currentTypingIndex && m.isTyping;
-                          if (isTypingThisMessage) {
-                            displayText = typingProgress;
-                          }
+                      {/* Chat-like generator */}
+                      <div className="flex flex-col gap-4">
+                        {/* Messages */}
+                        <div ref={messagesRef} className="bg-gray-50 rounded-xl p-4 border-2 border-indigo-100 h-[280px] overflow-y-auto flex flex-col gap-3">
+                          {displayedMessages.map((m, idx) => {
+                            // Determine what to display
+                            let displayText = m.displayedContent;
+                            const isTypingThisMessage = idx === currentTypingIndex && m.isTyping;
+                            if (isTypingThisMessage) {
+                              displayText = typingProgress;
+                            }
 
-                          return (
-                            <div key={idx} className={m.align === "right" ? "flex justify-end" : "flex justify-start"}>
-                              <div className={
-                                m.align === "right"
-                                  ? "max-w-[85%] bg-indigo-600 text-white rounded-2xl rounded-br-sm px-3 py-2 text-sm"
-                                  : "max-w-[85%] bg-white text-gray-800 border border-gray-200 rounded-2xl rounded-bl-sm px-3 py-2 text-sm"
-                              }>
-                                {m.pending ? (
-                                  <span className="inline-flex items-center gap-1">
-                                    Creating
-                                    <span className="inline-flex gap-1">
-                                      <span className="w-1 h-1 bg-current rounded-full animate-bounce [animation-delay:-0.2s]"></span>
-                                      <span className="w-1 h-1 bg-current rounded-full animate-bounce"></span>
-                                      <span className="w-1 h-1 bg-current rounded-full animate-bounce [animation-delay:0.2s]"></span>
+                            return (
+                              <div key={idx} className={m.align === "right" ? "flex justify-end" : "flex justify-start"}>
+                                <div className={
+                                  m.align === "right"
+                                    ? "max-w-[85%] bg-indigo-600 text-white rounded-2xl rounded-br-sm px-3 py-2 text-sm"
+                                    : "max-w-[85%] bg-white text-gray-800 border border-gray-200 rounded-2xl rounded-bl-sm px-3 py-2 text-sm"
+                                }>
+                                  {m.pending ? (
+                                    <span className="inline-flex items-center gap-1">
+                                      Creating
+                                      <span className="inline-flex gap-1">
+                                        <span className="w-1 h-1 bg-current rounded-full animate-bounce [animation-delay:-0.2s]"></span>
+                                        <span className="w-1 h-1 bg-current rounded-full animate-bounce"></span>
+                                        <span className="w-1 h-1 bg-current rounded-full animate-bounce [animation-delay:0.2s]"></span>
+                                      </span>
                                     </span>
-                                  </span>
-                                ) : (
-                                  <div className="prose prose-sm max-w-none">
-                                    <ReactMarkdown
-                                      remarkPlugins={[remarkGfm]}
-                                      components={{
-                                        code({ node, inline, className, children, ...props }) {
-                                          const match = /language-(\w+)/.exec(className || "");
-                                          const language = match ? match[1] : "";
-                                          return !inline && match ? (
-                                            <SyntaxHighlighter
-                                              style={oneDark}
-                                              language={language}
-                                              PreTag="div"
-                                              className="rounded-lg text-xs"
-                                              {...props}
-                                            >
-                                              {String(children).replace(/\n$/, "")}
-                                            </SyntaxHighlighter>
-                                          ) : (
-                                            <code className={className} {...props}>
-                                              {children}
-                                            </code>
-                                          );
-                                        },
-                                      }}
-                                    >
-                                      {displayText}
-                                    </ReactMarkdown>
-                                    {isTypingThisMessage && displayText.length < m.content.length && (
-                                      <span className="inline-block w-0.5 h-4 bg-current ml-1 animate-pulse"></span>
-                                    )}
-                                  </div>
-                                )}
+                                  ) : (
+                                    <div className="prose prose-sm max-w-none">
+                                      <ReactMarkdown
+                                        remarkPlugins={[remarkGfm]}
+                                        components={{
+                                          code({ node, inline, className, children, ...props }) {
+                                            const match = /language-(\w+)/.exec(className || "");
+                                            const language = match ? match[1] : "";
+                                            return !inline && match ? (
+                                              <SyntaxHighlighter
+                                                style={oneDark}
+                                                language={language}
+                                                PreTag="div"
+                                                className="rounded-lg text-xs"
+                                                {...props}
+                                              >
+                                                {String(children).replace(/\n$/, "")}
+                                              </SyntaxHighlighter>
+                                            ) : (
+                                              <code className={className} {...props}>
+                                                {children}
+                                              </code>
+                                            );
+                                          },
+                                        }}
+                                      >
+                                        {displayText}
+                                      </ReactMarkdown>
+                                      {isTypingThisMessage && displayText.length < m.content.length && (
+                                        <span className="inline-block w-0.5 h-4 bg-current ml-1 animate-pulse"></span>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                            );
+                          })}
+                        </div>
 
-                      {/* No input — pure simulation */}
+                        {/* No input — pure simulation */}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            
+
             </div>
           </div>
         </div>

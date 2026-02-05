@@ -170,7 +170,7 @@ export default function PlaylistDetailPage() {
               </div>
             )}
           </div>
-          
+
           <div className="px-8 py-6">
             {/* Playlist Info */}
             <div className="flex items-center justify-center sm:justify-start mb-4 -mt-16">
@@ -206,14 +206,14 @@ export default function PlaylistDetailPage() {
                 </div>
                 <span className="text-sm text-gray-500 text-center block">Blogs</span>
               </div>
-              
+
               <div className="w-full lg:w-1/3 border-b pb-6 lg:border-b-0 lg:pb-0 lg:border-r border-gray-100">
                 <div className="font-bold text-3xl text-gray-900 mb-2 text-center">
                   {(playlist.total_views || 0).toLocaleString()}
                 </div>
                 <span className="text-sm text-gray-500 text-center block">Total Views</span>
               </div>
-              
+
               <div className="w-full lg:w-1/3">
                 <div className="font-bold text-3xl text-gray-900 mb-2 text-center">
                   {(playlist.total_likes || 0).toLocaleString()}
@@ -226,7 +226,7 @@ export default function PlaylistDetailPage() {
 
         {/* Edit Modal */}
         {isEditing && (
-          <div 
+          <div
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={(e) => {
               if (e.target === e.currentTarget && !saving) {
@@ -234,7 +234,7 @@ export default function PlaylistDetailPage() {
               }
             }}
           >
-            <div 
+            <div
               className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
@@ -369,7 +369,7 @@ export default function PlaylistDetailPage() {
                   title: blog.title,
                   description: blog.excerpt || '',
                   image: blog.image || '',
-                  category: blog.category || 'Uncategorized',
+                  category: blog.category_name || (typeof blog.category === 'string' ? blog.category : blog.category?.name) || 'Uncategorized',
                   date: blogDate,
                   featured: blog.featured || false,
                   authorUsername: username
@@ -381,11 +381,11 @@ export default function PlaylistDetailPage() {
                     <div className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center bg-indigo-600 text-white rounded-full font-bold text-sm shadow-lg">
                       {index + 1}
                     </div>
-                    
+
                     {/* BlogCard Component */}
                     <div className="relative">
                       <BlogCard blog={blogCardData} />
-                      
+
                       {/* Remove Button - Overlay on hover (owner only) */}
                       {isOwner && token && (
                         <div className="absolute bottom-4 right-4 z-10">
