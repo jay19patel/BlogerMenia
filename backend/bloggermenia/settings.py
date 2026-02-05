@@ -45,6 +45,9 @@ INSTALLED_APPS = [
     
     # Local apps
     "blogs",
+    "playlists",
+    "users",
+    "content",
     "notes",
 ]
 
@@ -121,7 +124,7 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Custom User Model
-AUTH_USER_MODEL = 'blogs.User'
+AUTH_USER_MODEL = 'users.User'
 
 # Authentication Backends
 AUTHENTICATION_BACKENDS = [

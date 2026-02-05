@@ -1,12 +1,18 @@
-from rest_framework import viewsets, permissions, status
-from rest_framework.decorators import action
+from rest_framework import generics, permissions, status, views
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.db.models import Q, Sum, F
 from django.shortcuts import get_object_or_404
-from blogs.models import Blog, Category, Playlist, BlogLike, BlogView
-from blogs.serializers import BlogSerializer, CategorySerializer, PlaylistSerializer, UserSerializer
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_headers
+
+from blogs.models import Blog, Category, BlogLike, BlogView
+from blogs.serializers import BlogSerializer, CategorySerializer
+from users.serializers import UserSerializer
+from blogs.api.paginations import StandardResultsSetPagination
 from django.contrib.auth import get_user_model
+
 User = get_user_model()
 
 def get_client_ip(request):
@@ -17,15 +23,16 @@ def get_client_ip(request):
         ip = request.META.get('REMOTE_ADDR')
     return ip
 
-class BlogViewSet(viewsets.ModelViewSet):
+# --- Blog Views ---
+
+class BlogListCreateView(generics.ListCreateAPIView):
     serializer_class = BlogSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     parser_classes = (MultiPartParser, FormParser, JSONParser)
-    lookup_field = 'slug'
+    pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
-        # Base queryset logic
-        queryset = Blog.objects.all()
+        queryset = Blog.objects.select_related('author', 'category').all()
         
         # Determine if we should show drafts (only if filtering by own username)
         username_param = self.request.query_params.get('username', None)
@@ -39,7 +46,6 @@ class BlogViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(isPublished=True)
 
         # Apply ordering
-        # Drafts might have null publishedDate, so use created_at for consistency or coalesce
         queryset = queryset.order_by('-publishedDate', '-created_at')
         
         # Search
@@ -56,16 +62,22 @@ class BlogViewSet(viewsets.ModelViewSet):
         if category_name and category_name != 'All' and category_name != 'featuredBlogs':
              queryset = queryset.filter(category__name=category_name)
         
-        # Filter by username (already handled implicitly above for drafts logic, but strictly enforce here for published path)
-        if username_param:
+        # Filter by username (for public profile views)
+        if username_param and (not viewer.is_authenticated or viewer.username != username_param):
              queryset = queryset.filter(author__username=username_param)
 
         return queryset
 
-    # Removed manual list method to use DRF standard pagination
-    # Note: Frontend might need adjustment if it relies on 'blogs' key instead of 'results'
-    # Checking api.js is crucial.
-    
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
+
+class BlogDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Blog.objects.all()
+    serializer_class = BlogSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    lookup_field = 'slug'
+
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         
@@ -76,119 +88,117 @@ class BlogViewSet(viewsets.ModelViewSet):
             user = request.user if request.user.is_authenticated else None
             ip_addr = get_client_ip(request)
             
-            # Optional: Debounce or check recent view to avoid spamming DB? 
-            # For now, we log every hit as requested for granular tracking.
+            # Create View Record
             BlogView.objects.create(user=user, blog=instance, ip_address=ip_addr)
             
-            # Increment View Counter
+            # Increment View Counter using F expression for atomicity
             Blog.objects.filter(pk=instance.pk).update(views=F('views') + 1)
             
-            # Refresh to get updated view count in response? Or just continue.
-            # instance.refresh_from_db() 
-            instance.views += 1 # Optimistic update for response
+            # Optimistic update for response
+            instance.views += 1
         
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
-    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated], url_path='my-blogs')
-    def my_blogs(self, request):
-        queryset = Blog.objects.filter(author=request.user).order_by('-created_at')
-        
-        search = request.query_params.get('search', None)
-        if search:
-             queryset = queryset.filter(title__icontains=search)
-            
-        try:
-            skip = int(request.query_params.get('skip', 0))
-            limit = int(request.query_params.get('limit', 10))
-        except ValueError:
-             skip = 0
-             limit = 10
-             
-        total = queryset.count()
-        blogs = queryset[skip : skip + limit]
-        
-        serializer = self.get_serializer(blogs, many=True)
-        return Response({
-            'blogs': serializer.data,
-            'total': total
-        })
 
-    @action(detail=False, methods=['get'], url_path=r'id/(?P<pk>\w+)')
-    def get_by_id(self, request, pk=None):
-        blog = get_object_or_404(Blog, pk=pk)
-        
-        # Track View (Duplicate logic or call self.retrieve logic?)
-        # Since retrieve depends on lookup_field='slug', calling it with pk might be tricky without hacking kwargs.
-        # Just duplicate logic here.
-        user = request.user if request.user.is_authenticated else None
-        ip_addr = get_client_ip(request)
-        
-        BlogView.objects.create(user=user, blog=blog, ip_address=ip_addr)
-        Blog.objects.filter(pk=blog.pk).update(views=F('views') + 1)
-        blog.views += 1
-        
-        serializer = self.get_serializer(blog)
+class BlogDetailByIdView(generics.RetrieveAPIView):
+    """
+    Retrieve blog by ID specifically (useful if slug changes or logic requires ID)
+    """
+    queryset = Blog.objects.all()
+    serializer_class = BlogSerializer
+    permission_classes = [permissions.AllowAny]
+    lookup_field = 'pk'
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        # Similar view tracking logic could apply here, but usually slug view is primary for frontend
+        serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
-    @action(detail=False, methods=['get'], url_path='suggested_blogs')
-    def suggested_blogs(self, request):
-        limit = int(request.query_params.get('limit', 3))
-        exclude_slug = request.query_params.get('exclude_slug', None)
+
+class UserBlogListView(generics.ListAPIView):
+    """
+    'My Blogs' view - strictly for the authenticated user
+    """
+    serializer_class = BlogSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+
+    def get_queryset(self):
+        queryset = Blog.objects.filter(author=self.request.user).order_by('-created_at')
+        search = self.request.query_params.get('search', None)
+        if search:
+             queryset = queryset.filter(title__icontains=search)
+        return queryset
+
+
+class SuggestedBlogListView(generics.ListAPIView):
+    serializer_class = BlogSerializer
+    permission_classes = [permissions.AllowAny]
+    
+    # Cache suggestions for 5 minutes since they are random/heavy
+    @method_decorator(cache_page(60 * 5))
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    def get_queryset(self):
+        limit = int(self.request.query_params.get('limit', 3))
+        exclude_slug = self.request.query_params.get('exclude_slug', None)
         
         queryset = Blog.objects.filter(isPublished=True)
         if exclude_slug:
             queryset = queryset.exclude(slug=exclude_slug)
             
-        # Basic suggestion: Random.
-        # Future: Use embeddings or collaborative filtering (user likes/views).
-        blogs = queryset.order_by('?')[:limit]
-        
-        serializer = self.get_serializer(blogs, many=True)
-        return Response({'blogs': serializer.data})
+        # Random ordering for suggestions
+        return queryset.order_by('?')[:limit]
 
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
-    def like(self, request, slug=None):
-        blog = self.get_object()
+
+class BlogLikeView(views.APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, slug=None):
+        blog = get_object_or_404(Blog, slug=slug)
         user = request.user
         
         existing_like = BlogLike.objects.filter(user=user, blog=blog).first()
         
         if existing_like:
             existing_like.delete()
-            # Decrement counter
             Blog.objects.filter(pk=blog.pk).update(likes=F('likes') - 1)
             status_msg = 'unliked'
+            # fetch fresh value or calculate
             likes_count = max(0, blog.likes - 1)
         else:
             BlogLike.objects.create(user=user, blog=blog)
-            # Increment counter
             Blog.objects.filter(pk=blog.pk).update(likes=F('likes') + 1)
             status_msg = 'liked'
             likes_count = blog.likes + 1
             
         return Response({'status': status_msg, 'total_likes': likes_count})
 
-    @action(detail=False, methods=['get'])
-    def categories(self, request):
+
+class CategoryListView(generics.ListAPIView):
+    permission_classes = [permissions.AllowAny]
+    
+    @method_decorator(cache_page(60 * 15)) # Cache for 15 mins
+    def get(self, request, *args, **kwargs):
         username = request.query_params.get('username', None)
-        
-        # Filter for categories that have at least one published blog
         qs = Category.objects.filter(blogs__isPublished=True)
 
         if username:
             qs = qs.filter(blogs__author__username=username)
             
         qs = qs.distinct()
-        
-        # Return simple list of names for frontend dropdowns
-        # Frontend expects { categories: ["Name1", "Name2"] }
         category_names = list(qs.values_list('name', flat=True))
-        
         return Response({'categories': category_names})
-    
-    @action(detail=False, methods=['get'])
-    def stats(self, request):
+
+
+class StatsView(views.APIView):
+    permission_classes = [permissions.AllowAny]
+
+    @method_decorator(cache_page(60 * 15))
+    def get(self, request):
          total_users = User.objects.count()
          total_blogs = Blog.objects.filter(isPublished=True).count()
          total_views = Blog.objects.filter(isPublished=True).aggregate(Sum('views'))['views__sum'] or 0
@@ -200,105 +210,7 @@ class BlogViewSet(viewsets.ModelViewSet):
          })
 
 
-class PlaylistViewSet(viewsets.ModelViewSet):
-    serializer_class = PlaylistSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    lookup_field = 'slug'
-
-    def get_queryset(self):
-        queryset = Playlist.objects.all()
-        user = self.request.user
-        
-        if user.is_authenticated:
-            # Authenticated users: See their own playlists (public or private) AND all other public playlists
-            return queryset.filter(Q(is_public=True) | Q(owner=user)).distinct().order_by('-created_at')
-        
-        # Anonymous users: See only public playlists
-        return queryset.filter(is_public=True).order_by('-created_at')
-
-    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated], url_path='my-playlists')
-    def my_playlists(self, request):
-        playlists = Playlist.objects.filter(owner=request.user).order_by('-created_at')
-        
-        page = self.paginate_queryset(playlists)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(playlists, many=True)
-        return Response(serializer.data)
-
-    @action(detail=False, methods=['get'], url_path='user/(?P<username>[^/.]+)')
-    def user_playlists(self, request, username=None):
-        try:
-            user = User.objects.get(username=username)
-            # Start with all playlists by this user
-            playlists = Playlist.objects.filter(owner=user)
-            
-            # If viewer is not the owner, filter public only
-            if request.user != user:
-                playlists = playlists.filter(is_public=True)
-                
-            playlists = playlists.order_by('-created_at')
-        except User.DoesNotExist:
-            playlists = [] # Empty list or return generic response?
-            
-        # Treat empty list as QuerySet for pagination consistency if possible, or just return empty list
-        if isinstance(playlists, list):
-             # If it's a list (exception case), just return it (or wrap it manually)
-             return Response([])
-
-        page = self.paginate_queryset(playlists)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-            
-        serializer = self.get_serializer(playlists, many=True)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated], url_path='blogs')
-    def add_blog(self, request, slug=None):
-        playlist = self.get_object()
-        
-        # Check ownership
-        if playlist.owner != request.user:
-            return Response({'error': 'You do not have permission to modify this playlist'}, status=status.HTTP_403_FORBIDDEN)
-            
-        blog_id = request.data.get('blog_id')
-        if not blog_id:
-            return Response({'error': 'Blog ID is required'}, status=status.HTTP_400_BAD_REQUEST)
-            
-        blog = get_object_or_404(Blog, pk=blog_id)
-        
-        # Add blog if not already present
-        if blog not in playlist.blogs.all():
-            playlist.blogs.add(blog)
-            
-        return Response({'status': 'added', 'blog_count': playlist.blogs.count()})
-
-    @action(detail=True, methods=['delete'], permission_classes=[permissions.IsAuthenticated], url_path='blogs/(?P<blog_id>\w+)')
-    def remove_blog(self, request, slug=None, blog_id=None):
-        playlist = self.get_object()
-        
-        # Check ownership
-        if playlist.owner != request.user:
-             return Response({'error': 'You do not have permission to modify this playlist'}, status=status.HTTP_403_FORBIDDEN)
-             
-        blog = get_object_or_404(Blog, pk=blog_id)
-        
-        if blog in playlist.blogs.all():
-            playlist.blogs.remove(blog)
-            
-        return Response({'status': 'removed', 'blog_count': playlist.blogs.count()})
 
 
-class UserViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = [permissions.AllowAny] # Public profiles
-    
-    @action(detail=False, methods=['get'], url_path='profile/(?P<username>[^/.]+)')
-    def profile(self, request, username=None):
-        user = get_object_or_404(User, username=username)
-        serializer = self.get_serializer(user)
-        return Response(serializer.data)
+
+

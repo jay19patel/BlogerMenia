@@ -7,11 +7,13 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = []
+    dependencies = [
+        ("blogs", "0001_initial"),
+    ]
 
     operations = [
         migrations.CreateModel(
-            name="Note",
+            name="Playlist",
             fields=[
                 (
                     "id",
@@ -22,20 +24,24 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
-                ("title", models.CharField(max_length=200)),
-                ("content", models.TextField(blank=True, null=True)),
+                ("name", models.CharField(max_length=200)),
+                ("slug", models.SlugField(blank=True, max_length=255, unique=True)),
+                ("description", models.TextField(blank=True, null=True)),
                 (
-                    "tags",
-                    models.CharField(
-                        blank=True,
-                        help_text="Comma-separated tags",
-                        max_length=500,
-                        null=True,
+                    "thumbnail",
+                    models.ImageField(
+                        blank=True, null=True, upload_to="playlist_thumbnails/"
                     ),
                 ),
                 ("is_public", models.BooleanField(default=True)),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
                 ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "blogs",
+                    models.ManyToManyField(
+                        blank=True, related_name="playlists", to="blogs.blog"
+                    ),
+                ),
             ],
             options={
                 "ordering": ["-created_at"],

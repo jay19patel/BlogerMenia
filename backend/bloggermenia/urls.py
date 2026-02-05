@@ -28,6 +28,9 @@ urlpatterns = [
     path('api/auth/registration/', include('dj_rest_auth.registration.urls')),
     path('api/auth/google/login/', GoogleLogin.as_view(), name='google_login'),
     path('api/', include('blogs.urls')),
+    path('api/', include('playlists.urls')),
+    path('api/user/', include('users.urls')),
+    path('api/content/', include('content.urls')),
     path('api/notes/', include('notes.urls')),
 ]
 

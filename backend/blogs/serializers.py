@@ -1,24 +1,11 @@
 from rest_framework import serializers
-from .models import Blog, Category, Playlist, User
+from .models import Blog, Category
+from users.serializers import UserSerializer
+from django.contrib.auth import get_user_model
 
-class UserSerializer(serializers.ModelSerializer):
-    profile_image = serializers.SerializerMethodField()
-    blog_count = serializers.SerializerMethodField()
+User = get_user_model()
 
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'profile_image', 'headline', 'bio', 'blog_count', 'is_staff']
 
-    def get_profile_image(self, obj):
-        if obj.profile_image:
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(obj.profile_image.url)
-            return obj.profile_image.url
-        return None
-
-    def get_blog_count(self, obj):
-        return obj.blogs.filter(isPublished=True).count()
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -62,25 +49,4 @@ class BlogSerializer(serializers.ModelSerializer):
         validated_data['author'] = user
         return super().create(validated_data)
 
-class PlaylistSerializer(serializers.ModelSerializer):
-    owner = UserSerializer(read_only=True)
-    blogs = BlogSerializer(many=True, read_only=True)
-    blog_ids = serializers.PrimaryKeyRelatedField(
-        queryset=Blog.objects.all(), source='blogs', write_only=True, many=True, required=False
-    )
-    thumbnail = serializers.ImageField(required=False, allow_null=True)
-    # Alias thumbnail to cover_image for frontend compatibility
-    cover_image = serializers.ImageField(source='thumbnail', read_only=True)
 
-    class Meta:
-        model = Playlist
-        fields = [
-            'id', 'owner', 'name', 'slug', 'description', 'thumbnail', 'cover_image',
-            'blogs', 'blog_ids', 'is_public', 'created_at', 'updated_at'
-        ]
-        read_only_fields = ['id', 'slug', 'created_at', 'updated_at']
-
-    def create(self, validated_data):
-        user = self.context['request'].user
-        validated_data['owner'] = user
-        return super().create(validated_data)

@@ -1,5 +1,8 @@
 from django.core.management.base import BaseCommand
-from blogs.models import FAQ, Testimonial, User
+from content.models import FAQ, Testimonial
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 class Command(BaseCommand):
     help = 'Seed database with dummy FAQs and Testimonials'
