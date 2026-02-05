@@ -432,8 +432,8 @@ export const api = {
     return { success: true };
   },
 
-  async addBlogToPlaylist(playlistId, blogData, token) {
-    const response = await fetch(`${API_BASE_URL}/playlists/${playlistId}/blogs/`, {
+  async addBlogToPlaylist(playlistIdOrSlug, blogData, token) {
+    const response = await fetch(`${API_BASE_URL}/playlists/${playlistIdOrSlug}/blogs/`, {
       method: 'POST',
       headers: getHeaders(token),
       body: JSON.stringify(blogData),
@@ -441,8 +441,8 @@ export const api = {
     return handleResponse(response);
   },
 
-  async removeBlogFromPlaylist(playlistId, blogId, token) {
-    const response = await fetch(`${API_BASE_URL}/playlists/${playlistId}/blogs/${blogId}/`, {
+  async removeBlogFromPlaylist(playlistIdOrSlug, blogId, token) {
+    const response = await fetch(`${API_BASE_URL}/playlists/${playlistIdOrSlug}/blogs/${blogId}/`, {
       method: 'DELETE',
       headers: getHeaders(token),
     });

@@ -34,7 +34,7 @@ export default function PlaylistDetailPage() {
     retry: false,
   });
 
-  const isOwner = user && playlist && user.username === playlist.username;
+  const isOwner = user && playlist && playlist.owner && user.username === playlist.owner.username;
 
   useEffect(() => {
     if (playlist) {
@@ -51,7 +51,7 @@ export default function PlaylistDetailPage() {
 
     try {
       setRemovingId(blogId);
-      await api.removeBlogFromPlaylist(playlist.id, blogId, authToken);
+      await api.removeBlogFromPlaylist(playlistSlug, blogId, authToken);
       queryClient.invalidateQueries({ queryKey: ['playlist', playlistSlug] });
       toast.success('Blog removed from playlist');
     } catch (error) {
@@ -70,7 +70,7 @@ export default function PlaylistDetailPage() {
 
     try {
       setSaving(true);
-      await api.updatePlaylist(playlist.id, {
+      await api.updatePlaylist(playlistSlug, {
         name: editName.trim(),
         description: editDescription.trim() || null,
         cover_image: editCoverImage.trim() || null
@@ -175,7 +175,7 @@ export default function PlaylistDetailPage() {
                   {playlist.name}
                 </h3>
                 <p className="font-normal text-base leading-6 text-gray-500 max-sm:text-center">
-                  Playlist by @{playlist.username}
+                  Playlist by @{playlist.owner?.username}
                 </p>
                 {playlist.description && (
                   <p className="font-normal text-sm leading-5 text-gray-600 mt-2 max-sm:text-center">
@@ -363,7 +363,7 @@ export default function PlaylistDetailPage() {
                 };
 
                 return (
-                  <div key={blog.blog_id} className="relative">
+                  <div key={blog.id} className="relative">
                     {/* Index Badge - Top Right Corner */}
                     <div className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center bg-indigo-600 text-white rounded-full font-bold text-sm shadow-lg">
                       {index + 1}
@@ -374,19 +374,19 @@ export default function PlaylistDetailPage() {
                       <BlogCard blog={blogCardData} />
 
                       {/* Remove Button - Overlay on hover (owner only) */}
-                      {isOwner && token && (
+                      {isOwner && authToken && (
                         <div className="absolute bottom-4 right-4 z-10">
                           <button
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              handleRemoveBlog(blog.blog_id);
+                              handleRemoveBlog(blog.id);
                             }}
-                            disabled={removingId === blog.blog_id}
+                            disabled={removingId === blog.id}
                             className="p-2 bg-white/90 backdrop-blur-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 shadow-lg"
                             title="Remove from playlist"
                           >
-                            {removingId === blog.blog_id ? (
+                            {removingId === blog.id ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
                               <Trash2 className="w-4 h-4" />

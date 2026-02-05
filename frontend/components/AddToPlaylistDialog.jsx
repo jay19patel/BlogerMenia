@@ -79,7 +79,7 @@ export default function AddToPlaylistDialog({
       }, token);
 
       // Add blog to new playlist
-      await api.addBlogToPlaylist(newPlaylist.id, {
+      await api.addBlogToPlaylist(newPlaylist.id || newPlaylist.slug, {
         blog_id: blogData.id || blogData._id,
         slug: blogData.slug,
         title: blogData.title,
@@ -143,7 +143,7 @@ export default function AddToPlaylistDialog({
                 {playlists.map((playlist) => (
                   <button
                     key={playlist.id}
-                    onClick={() => handleAddToPlaylist(playlist.id)}
+                    onClick={() => handleAddToPlaylist(playlist.slug)}
                     disabled={loading}
                     className="group w-full p-4 text-left bg-white dark:bg-gray-750 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-indigo-500 dark:hover:border-indigo-400 hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
                   >
