@@ -8,8 +8,8 @@ from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_headers
 
 from blogs.models import Blog, Category, BlogLike, BlogView
-from blogs.serializers import BlogSerializer, CategorySerializer
-from users.serializers import UserSerializer
+from blogs.api.serializers import BlogSerializer, CategorySerializer
+from users.api.serializers import UserSerializer
 from blogs.api.paginations import StandardResultsSetPagination
 from django.contrib.auth import get_user_model
 
@@ -48,24 +48,6 @@ class BlogListCreateView(generics.ListCreateAPIView):
         # Apply ordering
         queryset = queryset.order_by('-publishedDate', '-created_at')
         
-        # Search
-        search = self.request.query_params.get('search', None)
-        if search:
-            queryset = queryset.filter(
-                Q(title__icontains=search) | 
-                Q(subtitle__icontains=search) |
-                Q(excerpt__icontains=search)
-            )
-        
-        # Filter by category
-        category_name = self.request.query_params.get('filter', None)
-        if category_name and category_name != 'All' and category_name != 'featuredBlogs':
-             queryset = queryset.filter(category__name=category_name)
-        
-        # Filter by username (for public profile views)
-        if username_param and (not viewer.is_authenticated or viewer.username != username_param):
-             queryset = queryset.filter(author__username=username_param)
-
         return queryset
 
     def perform_create(self, serializer):
@@ -73,144 +55,176 @@ class BlogListCreateView(generics.ListCreateAPIView):
 
 
 class BlogDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Blog.objects.all()
+    queryset = Blog.objects.select_related('author', 'category').all()
     serializer_class = BlogSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    parser_classes = (MultiPartParser, FormParser, JSONParser)
     lookup_field = 'slug'
 
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
+    def get_object(self):
+        obj = super().get_object()
         
-        # Track View
-        track_view = request.query_params.get('track_view', 'true')
+        # Track view
+        if self.request.method == 'GET':
+            ip_address = get_client_ip(self.request)
+            user = self.request.user if self.request.user.is_authenticated else None
+            
+            # Check if view already exists for this IP/user combo
+            if user:
+                exists = BlogView.objects.filter(blog=obj, user=user).exists()
+            else:
+                exists = BlogView.objects.filter(blog=obj, ip_address=ip_address, user__isnull=True).exists()
+            
+            if not exists:
+                BlogView.objects.create(
+                    blog=obj,
+                    user=user,
+                    ip_address=ip_address
+                )
         
-        if track_view != 'false':
-            user = request.user if request.user.is_authenticated else None
-            ip_addr = get_client_ip(request)
-            
-            # Create View Record
-            BlogView.objects.create(user=user, blog=instance, ip_address=ip_addr)
-            
-            # Increment View Counter using F expression for atomicity
-            Blog.objects.filter(pk=instance.pk).update(views=F('views') + 1)
-            
-            # Optimistic update for response
-            instance.views += 1
-        
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
+        return obj
 
 
 class BlogDetailByIdView(generics.RetrieveAPIView):
-    """
-    Retrieve blog by ID specifically (useful if slug changes or logic requires ID)
-    """
-    queryset = Blog.objects.all()
+    queryset = Blog.objects.select_related('author', 'category').all()
     serializer_class = BlogSerializer
     permission_classes = [permissions.AllowAny]
     lookup_field = 'pk'
 
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        # Similar view tracking logic could apply here, but usually slug view is primary for frontend
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
-
 
 class UserBlogListView(generics.ListAPIView):
-    """
-    'My Blogs' view - strictly for the authenticated user
-    """
     serializer_class = BlogSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
-        queryset = Blog.objects.filter(author=self.request.user).order_by('-created_at')
-        search = self.request.query_params.get('search', None)
-        if search:
-             queryset = queryset.filter(title__icontains=search)
-        return queryset
+        return Blog.objects.filter(author=self.request.user).select_related('author', 'category').order_by('-created_at')
 
 
 class SuggestedBlogListView(generics.ListAPIView):
     serializer_class = BlogSerializer
     permission_classes = [permissions.AllowAny]
-    
-    # Cache suggestions for 5 minutes since they are random/heavy
-    @method_decorator(cache_page(60 * 5))
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
+    pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
-        limit = int(self.request.query_params.get('limit', 3))
-        exclude_slug = self.request.query_params.get('exclude_slug', None)
-        
-        queryset = Blog.objects.filter(isPublished=True)
-        if exclude_slug:
-            queryset = queryset.exclude(slug=exclude_slug)
-            
-        # Random ordering for suggestions
-        return queryset.order_by('?')[:limit]
+        # Simple suggestion: Random published blogs
+        return Blog.objects.filter(isPublished=True).select_related('author', 'category').order_by('?')[:10]
 
 
 class BlogLikeView(views.APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request, slug=None):
+    def post(self, request, slug):
         blog = get_object_or_404(Blog, slug=slug)
         user = request.user
+
+        # Check if already liked
+        like, created = BlogLike.objects.get_or_create(blog=blog, user=user)
         
-        existing_like = BlogLike.objects.filter(user=user, blog=blog).first()
-        
-        if existing_like:
-            existing_like.delete()
-            Blog.objects.filter(pk=blog.pk).update(likes=F('likes') - 1)
-            status_msg = 'unliked'
-            # fetch fresh value or calculate
-            likes_count = max(0, blog.likes - 1)
+        if not created:
+            # Already liked, so unlike
+            like.delete()
+            liked = False
         else:
-            BlogLike.objects.create(user=user, blog=blog)
-            Blog.objects.filter(pk=blog.pk).update(likes=F('likes') + 1)
-            status_msg = 'liked'
-            likes_count = blog.likes + 1
-            
-        return Response({'status': status_msg, 'total_likes': likes_count})
+            liked = True
+
+        return Response({
+            'liked': liked,
+            'total_likes': blog.likes
+        })
 
 
 class CategoryListView(generics.ListAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
     permission_classes = [permissions.AllowAny]
-    
-    @method_decorator(cache_page(60 * 15)) # Cache for 15 mins
-    def get(self, request, *args, **kwargs):
-        username = request.query_params.get('username', None)
-        qs = Category.objects.filter(blogs__isPublished=True)
-
-        if username:
-            qs = qs.filter(blogs__author__username=username)
-            
-        qs = qs.distinct()
-        category_names = list(qs.values_list('name', flat=True))
-        return Response({'categories': category_names})
 
 
 class StatsView(views.APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.AllowAny]  # Public endpoint for homepage
 
     @method_decorator(cache_page(60 * 15))
     def get(self, request):
-         total_users = User.objects.count()
-         total_blogs = Blog.objects.filter(isPublished=True).count()
-         total_views = Blog.objects.filter(isPublished=True).aggregate(Sum('views'))['views__sum'] or 0
-         
-         return Response({
-             'total_users': total_users,
-             'total_blogs': total_blogs,
-             'total_views': total_views
-         })
+        # If user is authenticated, return their personal stats
+        if request.user.is_authenticated:
+            user = request.user
+            user_blogs = Blog.objects.filter(author=user)
+            
+            total_blogs = user_blogs.count()
+            published_blogs = user_blogs.filter(isPublished=True).count()
+            draft_blogs = total_blogs - published_blogs
+            
+            total_views = BlogView.objects.filter(blog__author=user).count()
+            total_likes = BlogLike.objects.filter(blog__author=user).count()
+            
+            serializer = UserSerializer(user, context={'request': request})
+            
+            return Response({
+                'user': serializer.data,
+                'stats': {
+                    'total_blogs': total_blogs,
+                    'published_blogs': published_blogs,
+                    'draft_blogs': draft_blogs,
+                    'total_views': total_views,
+                    'total_likes': total_likes,
+                }
+            })
+        else:
+            # Public stats for homepage
+            total_users = User.objects.count()
+            total_blogs = Blog.objects.filter(isPublished=True).count()
+            total_views = BlogView.objects.count()
+            
+            return Response({
+                'total_users': total_users,
+                'total_blogs': total_blogs,
+                'total_views': total_views
+            })
 
 
+class ImageUploadView(generics.GenericAPIView):
+    """
+    Upload images for blog content
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request):
+        if 'image' not in request.FILES:
+            return Response({'error': 'No image provided'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            from django.core.files.storage import default_storage
+            from django.core.files.base import ContentFile
+            import uuid
+            import os
+            
+            image_file = request.FILES['image']
+            
+            # Basic validation
+            if not image_file.content_type.startswith('image/'):
+                return Response(
+                    {'error': 'Invalid file type. Only images are allowed.'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+                
+            if image_file.size > 5 * 1024 * 1024:  # 5MB limit
+                return Response(
+                    {'error': 'Image too large (max 5MB)'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
-
-
-
+            # Generate unique filename
+            ext = os.path.splitext(image_file.name)[1] or '.jpg'
+            filename = f"blog_uploads/{uuid.uuid4().hex}{ext}"
+            
+            # Save file
+            path = default_storage.save(filename, ContentFile(image_file.read()))
+            url = default_storage.url(path)
+            
+            return Response({'url': url})
+            
+        except Exception as e:
+            return Response(
+                {'error': 'Upload failed. Please try again.'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

@@ -153,9 +153,11 @@ REST_AUTH = {
     'USE_JWT': True,
     'JWT_AUTH_COOKIE': 'bloggermenia_access_token',
     'JWT_AUTH_REFRESH_COOKIE': 'bloggermenia_refresh_token',
-    'JWT_AUTH_HTTPONLY': True, 
+    'JWT_AUTH_HTTPONLY': True,
+    'JWT_AUTH_SECURE': False,  # Set to False for local development (http)
+    'JWT_AUTH_SAMESITE': 'Lax',  # Allow cookies in cross-origin requests
     'SESSION_LOGIN': False,
-    'USER_DETAILS_SERIALIZER': 'blogs.serializers.UserSerializer', # Point to our custom serializer
+    'USER_DETAILS_SERIALIZER': 'users.api.serializers.UserSerializer',
 }
 
 from datetime import timedelta
@@ -167,8 +169,17 @@ SIMPLE_JWT = {
 }
 
 # CORS Configuration
-CORS_ALLOW_ALL_ORIGINS = True 
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
 CORS_ALLOW_CREDENTIALS = True
+
+# Cookie settings for local development
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
 
 # Allauth settings
 SITE_ID = 1

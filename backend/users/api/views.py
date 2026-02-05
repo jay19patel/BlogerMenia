@@ -1,7 +1,7 @@
 from rest_framework import generics, permissions
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
-from users.serializers import UserSerializer
+from users.api.serializers import UserSerializer
 
 User = get_user_model()
 

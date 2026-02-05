@@ -2,9 +2,9 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from blogs.api.views import (
     BlogListCreateView, BlogDetailView, BlogDetailByIdView, UserBlogListView,
-    SuggestedBlogListView, BlogLikeView, CategoryListView, StatsView
+    SuggestedBlogListView, BlogLikeView, CategoryListView, StatsView, ImageUploadView
 )
-from blogs.api import legacy as legacy_api
+
 
 # Keep router only for ContentViewSet if it's still a ViewSet
 urlpatterns = [
@@ -21,7 +21,6 @@ urlpatterns = [
     path('blogs/<slug:slug>/', BlogDetailView.as_view(), name='blog-detail'),
     path('blogs/<slug:slug>/like/', BlogLikeView.as_view(), name='blog-like'),
     
-    # Legacy/Chat
-    path('chat/generate', legacy_api.GenerateBlogAPI.as_view(), name='generate-blog-api'),
-    path('upload-image/', legacy_api.UploadImageAPI.as_view(), name='upload-image-api'),
+    # Image Upload
+    path('upload-image/', ImageUploadView.as_view(), name='upload-image'),
 ]

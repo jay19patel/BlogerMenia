@@ -1,7 +1,7 @@
 from rest_framework import viewsets, mixins
 from rest_framework.permissions import AllowAny
 from content.models import FAQ, Testimonial
-from content.serializers import FAQSerializer, TestimonialSerializer
+from content.api.serializers import FAQSerializer, TestimonialSerializer
 
 class FAQViewSet(viewsets.ReadOnlyModelViewSet):
     """

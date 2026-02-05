@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from .models import FAQ, Testimonial
-from users.serializers import UserSerializer
+from content.models import FAQ, Testimonial
+from users.api.serializers import UserSerializer
 
 class FAQSerializer(serializers.ModelSerializer):
     class Meta:

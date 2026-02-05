@@ -27,11 +27,11 @@ urlpatterns = [
     path('api/auth/', include('dj_rest_auth.urls')),
     path('api/auth/registration/', include('dj_rest_auth.registration.urls')),
     path('api/auth/google/login/', GoogleLogin.as_view(), name='google_login'),
-    path('api/', include('blogs.urls')),
-    path('api/', include('playlists.urls')),
-    path('api/user/', include('users.urls')),
-    path('api/content/', include('content.urls')),
-    path('api/notes/', include('notes.urls')),
+    path('api/', include('blogs.api.urls')),
+    path('api/', include('playlists.api.urls')),
+    path('api/user/', include('users.api.urls')),
+    path('api/content/', include('content.api.urls')),
+    path('api/notes/', include('notes.api.urls')),
 ]
 
 # Serve media files in development

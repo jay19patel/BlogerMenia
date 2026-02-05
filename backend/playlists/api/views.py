@@ -5,7 +5,7 @@ from django.db.models import Q
 from django.contrib.auth import get_user_model
 
 from playlists.models import Playlist
-from playlists.serializers import PlaylistSerializer
+from playlists.api.serializers import PlaylistSerializer
 from blogs.models import Blog
 from blogs.api.paginations import StandardResultsSetPagination
 

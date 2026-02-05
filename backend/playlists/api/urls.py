@@ -1,5 +1,5 @@
 from django.urls import path
-from playlists.views import (
+from playlists.api.views import (
     PlaylistListCreateView, PlaylistDetailView, MyPlaylistsView, UserPlaylistsView,
     PlaylistBlogActionView
 )

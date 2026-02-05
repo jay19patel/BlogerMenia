@@ -1,12 +1,14 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Note
-from .serializers import NoteSerializer
+from notes.models import Note
+from notes.api.serializers import NoteSerializer
+from blogs.api.paginations import StandardResultsSetPagination
 
 class NoteViewSet(viewsets.ModelViewSet):
     serializer_class = NoteSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    pagination_class = StandardResultsSetPagination
     lookup_field = 'id'
 
     def get_queryset(self):
