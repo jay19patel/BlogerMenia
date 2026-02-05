@@ -62,25 +62,9 @@ class BlogViewSet(viewsets.ModelViewSet):
 
         return queryset
 
-    def list(self, request, *args, **kwargs):
-        # Maintain existing frontend pagination behavior (skip/limit)
-        queryset = self.filter_queryset(self.get_queryset())
-        
-        try:
-            skip = int(request.query_params.get('skip', 0))
-            limit = int(request.query_params.get('limit', 10))
-        except ValueError:
-             skip = 0
-             limit = 10
-
-        total = queryset.count()
-        blogs = queryset[skip : skip + limit]
-        
-        serializer = self.get_serializer(blogs, many=True)
-        return Response({
-            'blogs': serializer.data,
-            'total': total
-        })
+    # Removed manual list method to use DRF standard pagination
+    # Note: Frontend might need adjustment if it relies on 'blogs' key instead of 'results'
+    # Checking api.js is crucial.
     
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -222,11 +206,25 @@ class PlaylistViewSet(viewsets.ModelViewSet):
     lookup_field = 'slug'
 
     def get_queryset(self):
-        return Playlist.objects.filter(is_public=True).order_by('-created_at')
+        queryset = Playlist.objects.all()
+        user = self.request.user
+        
+        if user.is_authenticated:
+            # Authenticated users: See their own playlists (public or private) AND all other public playlists
+            return queryset.filter(Q(is_public=True) | Q(owner=user)).distinct().order_by('-created_at')
+        
+        # Anonymous users: See only public playlists
+        return queryset.filter(is_public=True).order_by('-created_at')
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated], url_path='my-playlists')
     def my_playlists(self, request):
         playlists = Playlist.objects.filter(owner=request.user).order_by('-created_at')
+        
+        page = self.paginate_queryset(playlists)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
         serializer = self.get_serializer(playlists, many=True)
         return Response(serializer.data)
 
@@ -243,7 +241,18 @@ class PlaylistViewSet(viewsets.ModelViewSet):
                 
             playlists = playlists.order_by('-created_at')
         except User.DoesNotExist:
-            playlists = []
+            playlists = [] # Empty list or return generic response?
+            
+        # Treat empty list as QuerySet for pagination consistency if possible, or just return empty list
+        if isinstance(playlists, list):
+             # If it's a list (exception case), just return it (or wrap it manually)
+             return Response([])
+
+        page = self.paginate_queryset(playlists)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+            
         serializer = self.get_serializer(playlists, many=True)
         return Response(serializer.data)
 

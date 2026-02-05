@@ -169,7 +169,22 @@ export const api = {
       method: 'GET',
       headers: getHeaders(),
     });
-    return handleResponse(response);
+    const data = await handleResponse(response);
+
+    // Adapt DRF standard pagination response to application format
+    // DRF returns: { count: 10, next: "...", previous: "...", results: [...] }
+    // Application expects: { total: 10, blogs: [...] }
+    if (data.results) {
+      return {
+        total: data.count,
+        blogs: data.results,
+        next: data.next,
+        previous: data.previous
+      };
+    }
+
+    // Fallback for unpaginated or already formatted response
+    return data;
   },
 
   // Get blogs for currently authenticated user (requires token)
@@ -189,7 +204,18 @@ export const api = {
       method: 'GET',
       headers: getHeaders(token),  // CRITICAL: Requires authentication token
     });
-    return handleResponse(response);
+    const data = await handleResponse(response);
+
+    // Adapt DRF standard pagination response
+    if (data.results) {
+      return {
+        total: data.count,
+        blogs: data.results,
+        next: data.next,
+        previous: data.previous
+      };
+    }
+    return data;
   },
 
   async getBlogById(blogId, token = null) {
@@ -346,7 +372,17 @@ export const api = {
       method: 'GET',
       headers: getHeaders(token),
     });
-    return handleResponse(response);
+    const data = await handleResponse(response);
+
+    if (data.results) {
+      return {
+        total: data.count,
+        playlists: data.results,
+        next: data.next,
+        previous: data.previous
+      };
+    }
+    return { playlists: Array.isArray(data) ? data : [] }; // Fallback
   },
 
   async getUserPlaylistsByUsername(username, token = null) {
@@ -354,7 +390,17 @@ export const api = {
       method: 'GET',
       headers: getHeaders(token),
     });
-    return handleResponse(response);
+    const data = await handleResponse(response);
+
+    if (data.results) {
+      return {
+        total: data.count,
+        playlists: data.results,
+        next: data.next,
+        previous: data.previous
+      };
+    }
+    return { playlists: Array.isArray(data) ? data : [] }; // Fallback
   },
 
   async getPlaylist(playlistId, token = null) {
@@ -374,8 +420,8 @@ export const api = {
     return handleResponse(response);
   },
 
-  async deletePlaylist(playlistId, token) {
-    const response = await fetch(`${API_BASE_URL}/playlists/${playlistId}/`, {
+  async deletePlaylist(playlistIdOrSlug, token) {
+    const response = await fetch(`${API_BASE_URL}/playlists/${playlistIdOrSlug}/`, {
       method: 'DELETE',
       headers: getHeaders(token),
     });

@@ -33,19 +33,19 @@ class BlogSerializer(serializers.ModelSerializer):
     )
     
     sections = serializers.JSONField(required=False, default=list)
-    thumbnail = serializers.ImageField(required=False, allow_null=True) 
+    thumbnail = serializers.ImageField(required=False, allow_null=True)
+    image = serializers.ImageField(source='thumbnail', read_only=True)
     
     likes = serializers.IntegerField(read_only=True) # Property
     authorUsername = serializers.ReadOnlyField(source='author.username')
     category_name = serializers.ReadOnlyField(source='category.name')
     is_liked = serializers.SerializerMethodField()
-
     class Meta:
         model = Blog
         fields = [
             'id', 'title', 'subtitle', 'slug', 'excerpt', 'introduction', 
             'sections', 'conclusion', 'author', 'authorUsername', 'category', 'category_name', 'category_id', 
-            'thumbnail', 'isPublished', 'publishedDate', 'views', 'likes', 
+            'thumbnail', 'image', 'isPublished', 'publishedDate', 'views', 'likes', 
             'created_at', 'updated_at', 'is_liked'
         ]
         read_only_fields = ['id', 'slug', 'publishedDate', 'views', 'created_at', 'updated_at']
@@ -69,11 +69,13 @@ class PlaylistSerializer(serializers.ModelSerializer):
         queryset=Blog.objects.all(), source='blogs', write_only=True, many=True, required=False
     )
     thumbnail = serializers.ImageField(required=False, allow_null=True)
+    # Alias thumbnail to cover_image for frontend compatibility
+    cover_image = serializers.ImageField(source='thumbnail', read_only=True)
 
     class Meta:
         model = Playlist
         fields = [
-            'id', 'owner', 'name', 'slug', 'description', 'thumbnail', 
+            'id', 'owner', 'name', 'slug', 'description', 'thumbnail', 'cover_image',
             'blogs', 'blog_ids', 'is_public', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'slug', 'created_at', 'updated_at']

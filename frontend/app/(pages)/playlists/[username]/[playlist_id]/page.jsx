@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
@@ -16,23 +17,24 @@ export default function PlaylistDetailPage() {
   const { user, token: authToken } = useAuth();
   const playlistSlug = params.playlist_id; // This is actually the slug now
   const username = params.username;
-  const [playlist, setPlaylist] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [removingId, setRemovingId] = useState(null);
-  const [token, setToken] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editCoverImage, setEditCoverImage] = useState('');
   const [saving, setSaving] = useState(false);
-  const isOwner = user && playlist && user.username === playlist.username;
 
-  useEffect(() => {
-    // Get token from localStorage or auth context
-    const storedToken = localStorage.getItem('token') || authToken;
-    setToken(storedToken);
-    fetchPlaylist();
-  }, [playlistSlug, authToken]);
+  const queryClient = useQueryClient();
+
+  // Fetch Playlist
+  const { data: playlist, isLoading } = useQuery({
+    queryKey: ['playlist', playlistSlug],
+    queryFn: () => api.getPlaylist(playlistSlug, authToken),
+    staleTime: 60 * 1000,
+    retry: false,
+  });
+
+  const isOwner = user && playlist && user.username === playlist.username;
 
   useEffect(() => {
     if (playlist) {
@@ -42,21 +44,6 @@ export default function PlaylistDetailPage() {
     }
   }, [playlist]);
 
-  const fetchPlaylist = async () => {
-    try {
-      setLoading(true);
-      const storedToken = localStorage.getItem('token');
-      // API now supports slug
-      const playlistData = await api.getPlaylist(playlistSlug, storedToken);
-      setPlaylist(playlistData);
-    } catch (error) {
-      console.error('Error fetching playlist:', error);
-      toast.error('Failed to load playlist');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleRemoveBlog = async (blogId) => {
     if (!confirm('Remove this blog from playlist?')) {
       return;
@@ -64,9 +51,9 @@ export default function PlaylistDetailPage() {
 
     try {
       setRemovingId(blogId);
-      await api.removeBlogFromPlaylist(playlist.id, blogId, token);
+      await api.removeBlogFromPlaylist(playlist.id, blogId, authToken);
+      queryClient.invalidateQueries({ queryKey: ['playlist', playlistSlug] });
       toast.success('Blog removed from playlist');
-      fetchPlaylist();
     } catch (error) {
       console.error('Error removing blog:', error);
       toast.error(error.message || 'Failed to remove blog');
@@ -87,11 +74,11 @@ export default function PlaylistDetailPage() {
         name: editName.trim(),
         description: editDescription.trim() || null,
         cover_image: editCoverImage.trim() || null
-      }, token);
+      }, authToken);
 
       toast.success('Playlist updated successfully!');
+      queryClient.invalidateQueries({ queryKey: ['playlist', playlistSlug] });
       setIsEditing(false);
-      fetchPlaylist();
     } catch (error) {
       console.error('Error updating playlist:', error);
       toast.error(error.message || 'Failed to update playlist');
@@ -107,7 +94,7 @@ export default function PlaylistDetailPage() {
     setIsEditing(false);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />

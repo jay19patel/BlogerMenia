@@ -112,7 +112,7 @@ export default function BlogsList() {
 
     // Loading state
     // We only show full loader if it's the very first load and we have no data
-    if (isLoading) {
+    if (!blogsData && isLoading) {
         return (
             <div className="py-12">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -166,8 +166,8 @@ export default function BlogsList() {
                                 key={category}
                                 onClick={() => handleCategoryChange(category)}
                                 className={`px-5 py-2 rounded-lg font-medium transition-all duration-300 ${selectedCategory === category
-                                        ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/30"
-                                        : "bg-white text-gray-700 border border-gray-300 hover:border-indigo-500 hover:text-indigo-600"
+                                    ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/30"
+                                    : "bg-white text-gray-700 border border-gray-300 hover:border-indigo-500 hover:text-indigo-600"
                                     }`}
                             >
                                 {category}
@@ -302,12 +302,7 @@ export default function BlogsList() {
                                 ))}
                             </div>
 
-                            {/* Show small loader overlay if fetching next page/filtering (but keeping previous data) */}
-                            {isPlaceholderData && (
-                                <div className="absolute inset-0 bg-white/50 z-10 flex items-center justify-center">
-                                    <LoaderCard message="Updating..." />
-                                </div>
-                            )}
+                            {/* Overlay removed for smoother transition */}
                         </div>
 
                         {/* Pagination */}
@@ -333,8 +328,8 @@ export default function BlogsList() {
                                                 onClick={() => setCurrentPage(page)}
                                                 disabled={isPlaceholderData}
                                                 className={`w-10 h-10 rounded-lg font-medium transition-all duration-300 ${currentPage === page
-                                                        ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/30"
-                                                        : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-indigo-500"
+                                                    ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/30"
+                                                    : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-indigo-500"
                                                     }`}
                                             >
                                                 {page}
