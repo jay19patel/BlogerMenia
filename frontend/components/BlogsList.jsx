@@ -198,7 +198,7 @@ export default function BlogsList() {
 
                         {/* Pagination */}
                         {totalPages > 1 && (
-                            <div className="flex items-center justify-center gap-2">
+                            <div className="flex items-center justify-center gap-2 mt-12 pb-8">
                                 <button
                                     onClick={() =>
                                         setCurrentPage((prev) => Math.max(prev - 1, 1))

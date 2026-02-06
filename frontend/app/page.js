@@ -594,12 +594,20 @@ export default function Home() {
               {playlists.map((playlist) => (
                 <Link key={playlist.slug} href={`/playlists/${playlist.owner?.username}/${playlist.slug}`} className="group block bg-gray-50 rounded-xl overflow-hidden hover:shadow-lg transition-all border border-gray-100">
                   <div className="flex h-full">
-                    <div className="w-1/3 relative h-automin-h-[160px]">
-                      <img
-                        src={playlist.thumbnail || "https://images.unsplash.com/photo-1499750310159-5b5f87920786?q=80&w=2070&auto=format&fit=crop"}
-                        alt={playlist.name}
-                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
+                    <div className="w-1/3 relative h-auto min-h-[160px]">
+                      {playlist.thumbnail ? (
+                        <img
+                          src={playlist.thumbnail}
+                          alt={playlist.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center p-2 text-center">
+                          <p className="text-white text-sm font-bold opacity-90 line-clamp-3">
+                            {playlist.name}
+                          </p>
+                        </div>
+                      )}
                     </div>
                     <div className="w-2/3 p-6 flex flex-col justify-center">
                       <h3 className="text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors mb-2 line-clamp-1">
