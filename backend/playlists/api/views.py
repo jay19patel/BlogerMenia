@@ -29,6 +29,24 @@ class PlaylistListCreateView(generics.ListCreateAPIView):
         # Anonymous: Public only
         return queryset.filter(is_public=True).order_by('-created_at')
 
+
+class PublicPlaylistListView(generics.ListAPIView):
+    """
+    Public Playlists for Homepage.
+    Returns 6 public playlists sorted by popularity (most liked content).
+    Sorts by sum of likes of all blogs in the playlist.
+    """
+    serializer_class = PlaylistSerializer
+    permission_classes = [permissions.AllowAny]
+    
+    def get_queryset(self):
+        from django.db.models import Sum, Count, F
+        # Sort by total likes of all blogs in the playlist (counting BlogLike objects)
+        return Playlist.objects.filter(is_public=True).annotate(
+            total_likes=Count('blogs__blog_likes'),
+            blogs_count=Count('blogs', distinct=True) 
+        ).order_by('-total_likes', '-created_at')[:6]
+
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 

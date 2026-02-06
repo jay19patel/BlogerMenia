@@ -34,6 +34,8 @@ class PlaylistSerializer(serializers.ModelSerializer):
 
     def get_blog_count(self, obj):
         """Return the number of blogs in this playlist"""
+        if hasattr(obj, 'blogs_count'):
+            return obj.blogs_count
         return obj.blogs.count()
 
     def get_total_views(self, obj):
@@ -46,6 +48,10 @@ class PlaylistSerializer(serializers.ModelSerializer):
 
     def get_total_likes(self, obj):
         """Return total likes across all blogs in this playlist"""
+        # Use annotated value if available (from PublicPlaylistListView)
+        if hasattr(obj, 'total_likes'):
+            return obj.total_likes or 0
+            
         from blogs.models import BlogLike
         total = 0
         for blog in obj.blogs.all():

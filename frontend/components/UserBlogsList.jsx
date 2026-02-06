@@ -36,7 +36,9 @@ export default function UserBlogsList({ username }) {
             return profile;
         },
         retry: false,
-        staleTime: 60 * 1000,
+        staleTime: 5 * 60 * 1000,
+        refetchOnWindowFocus: false,
+        placeholderData: keepPreviousData,
     });
 
     // 2. Fetch Categories
@@ -45,6 +47,9 @@ export default function UserBlogsList({ username }) {
         queryFn: () => api.getBlogCategories(username),
         enabled: !!username,
         select: (data) => ["All", ...(data.categories || [])],
+        refetchOnWindowFocus: false,
+        staleTime: 5 * 60 * 1000,
+        placeholderData: keepPreviousData,
     });
     const categories = categoriesData || ["All"];
 
@@ -53,6 +58,9 @@ export default function UserBlogsList({ username }) {
         queryKey: ["userPlaylists", username, token],
         queryFn: () => api.getUserPlaylistsByUsername(username, token),
         enabled: !!username,
+        refetchOnWindowFocus: false,
+        staleTime: 5 * 60 * 1000,
+        placeholderData: keepPreviousData,
     });
     const playlists = playlistsData?.playlists || [];
 
@@ -83,6 +91,7 @@ export default function UserBlogsList({ username }) {
         enabled: !!username,
         placeholderData: keepPreviousData,
         staleTime: 60 * 1000,
+        refetchOnWindowFocus: false,
     });
 
     const allBlogs = blogsData?.blogs || [];
@@ -125,8 +134,8 @@ export default function UserBlogsList({ username }) {
         { label: userProfile?.username || username || "User", href: null },
     ];
 
-    // Loading State
-    if (profileLoading) {
+    // Loading State - Only show full loader if we have NO data yet
+    if (!userProfile && profileLoading) {
         return (
             <div className="py-12">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

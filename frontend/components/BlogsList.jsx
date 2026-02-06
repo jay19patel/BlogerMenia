@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import BlogCard from "@/components/BlogCard";
+import HorizontalBlogCard from "@/components/HorizontalBlogCard";
 import Breadcrumb from "@/components/Breadcrumb";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { api } from "@/lib/api";
@@ -73,6 +73,8 @@ export default function BlogsList() {
         featured: blog.featured || false,
         publishedDate: blog.publishedDate,
         authorUsername: blog.author?.username,
+        views: blog.views,
+        likes: blog.likes
     }));
 
     // Handlers
@@ -183,126 +185,15 @@ export default function BlogsList() {
                     </p>
                 </div>
 
-                {/* Featured / Latest Section */}
-                {latestBlogs.length > 0 && (
-                    <div className="mb-16">
-                        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">
-                            Latest Articles
-                        </h2>
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            {/* Large Featured */}
-                            {latestBlog && (
-                                <Link
-                                    href={
-                                        latestBlog.authorUsername
-                                            ? `/blogs/${latestBlog.authorUsername}/${latestBlog.slug}`
-                                            : `/blogs/${latestBlog.slug}`
-                                    }
-                                    className="lg:col-span-2 group"
-                                >
-                                    <div className="relative h-full bg-white border border-gray-300 rounded-xl overflow-hidden hover:border-indigo-500 hover:shadow-lg transition-all duration-300">
-                                        <div className="aspect-[16/9] relative overflow-hidden">
-                                            {latestBlog.image && latestBlog.image.trim() !== "" ? (
-                                                <img
-                                                    src={latestBlog.image}
-                                                    alt={latestBlog.title}
-                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                                />
-                                            ) : (
-                                                <div className="w-full h-full bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center">
-                                                    <p className="text-white text-4xl font-bold opacity-50">
-                                                        No Image
-                                                    </p>
-                                                </div>
-                                            )}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                                        </div>
-                                        <div className="p-6">
-                                            <div className="flex items-center gap-3 mb-3">
-                                                <span className="px-3 py-1 bg-indigo-100 text-indigo-600 text-xs font-semibold rounded-full">
-                                                    {latestBlog.category}
-                                                </span>
-                                                <span className="text-gray-500 text-sm">
-                                                    {latestBlog.date}
-                                                </span>
-                                            </div>
-                                            <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-indigo-600 transition-colors">
-                                                {latestBlog.title}
-                                            </h3>
-                                            <p className="text-gray-600 line-clamp-2">
-                                                {latestBlog.description}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </Link>
-                            )}
-
-                            {/* Smaller List */}
-                            <div className="space-y-6">
-                                {otherLatestBlogs.map((blog) => (
-                                    <Link
-                                        href={
-                                            blog.authorUsername
-                                                ? `/blogs/${blog.authorUsername}/${blog.slug}`
-                                                : `/blogs/${blog.slug}`
-                                        }
-                                        key={blog.slug}
-                                        className="group block"
-                                    >
-                                        <div className="bg-white border border-gray-300 rounded-xl overflow-hidden hover:border-indigo-500 hover:shadow-lg transition-all duration-300">
-                                            <div className="aspect-[16/9] relative overflow-hidden">
-                                                {blog.image && blog.image.trim() !== "" ? (
-                                                    <img
-                                                        src={blog.image}
-                                                        alt={blog.title}
-                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                                    />
-                                                ) : (
-                                                    <div className="w-full h-full bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center">
-                                                        <p className="text-white text-2xl font-bold opacity-50">
-                                                            No Image
-                                                        </p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="p-4">
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <span className="px-2 py-1 bg-violet-100 text-violet-600 text-xs font-semibold rounded-full">
-                                                        {blog.category}
-                                                    </span>
-                                                    <span className="text-gray-500 text-xs">
-                                                        {blog.date}
-                                                    </span>
-                                                </div>
-                                                <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors line-clamp-2">
-                                                    {blog.title}
-                                                </h3>
-                                            </div>
-                                        </div>
-                                    </Link>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Grid of Remaining Blogs */}
+                {/* Blogs List - Single Column */}
                 {transformedBlogs.length > 0 ? (
                     <>
-                        {isDefaultView && remainingBlogs.length > 0 && (
-                            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">
-                                All Articles
-                            </h2>
-                        )}
-
-                        <div className="relative mb-12">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {remainingBlogs.map((blog) => (
-                                    <BlogCard key={blog.slug} blog={blog} />
+                        <div className="mx-auto">
+                            <div className="space-y-6">
+                                {transformedBlogs.map((blog) => (
+                                    <HorizontalBlogCard key={blog.slug} blog={blog} />
                                 ))}
                             </div>
-
-                            {/* Overlay removed for smoother transition */}
                         </div>
 
                         {/* Pagination */}
@@ -355,8 +246,7 @@ export default function BlogsList() {
                     <div className="text-center py-16">
                         <p className="text-xl text-gray-600 mb-4">No blogs found</p>
                         <p className="text-gray-500">
-                            Try adjusting your search or filter to find what you're looking
-                            for.
+                            Try adjusting your search or filter to find what you're looking for.
                         </p>
                     </div>
                 )}

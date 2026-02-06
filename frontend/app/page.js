@@ -2,25 +2,20 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Users, TrendingUp } from "lucide-react";
+import { ArrowRight, BookOpen, Users, TrendingUp, Eye, Heart } from "lucide-react";
 import BlogCard from "@/components/BlogCard";
 import Testimonial from "@/components/Testimonial";
 import FAQ from "@/components/FAQ";
 import { api } from "@/lib/api";
 import LoaderCard from "@/components/ui/loader";
+import { Skeleton } from "@/components/ui/skeleton";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 
 export default function Home() {
-  const [featuredBlogs, setFeaturedBlogs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    total_users: 0,
-    total_blogs: 0,
-    total_views: 0
-  });
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -29,8 +24,53 @@ export default function Home() {
   const [currentTypingIndex, setCurrentTypingIndex] = useState(-1);
   const [typingProgress, setTypingProgress] = useState("");
 
+  // React Query for Featured Blogs - Fetch 6 for 2x3 grid
+  const { data: featuredBlogs = [], isLoading: loading } = useQuery({
+    queryKey: ['featuredBlogs'],
+    queryFn: async () => {
+      const response = await api.getBlogs(null, 0, 6, 'featuredBlogs');
+      const blogs = response.blogs || [];
+      return blogs.map(blog => ({
+        ...blog,
+        category: blog.category_name || (typeof blog.category === 'string' ? blog.category : blog.category?.name),
+        description: blog.excerpt || blog.subtitle || '',
+        date: new Date(blog.publishedDate).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        }),
+      }));
+    },
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
+  // React Query for Stats
+  const { data: stats = { total_users: 0, total_blogs: 0, total_views: 0 } } = useQuery({
+    queryKey: ['siteStats'],
+    queryFn: api.getStats,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
+  // React Query for Public Playlists
+  const { data: playlists = [], isLoading: playlistsLoading } = useQuery({
+    queryKey: ['publicPlaylists'],
+    queryFn: api.getPublicPlaylists,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
+  // React Query for Top Authors
+  const { data: topAuthors = [], isLoading: authorsLoading } = useQuery({
+    queryKey: ['topAuthors'],
+    queryFn: api.getTopAuthors,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
+
   // Simple scripted chat simulation (alternating user/assistant)
-  // Explicit alignment per message (left/right) to match your request
   const scriptedConversation = useMemo(() => ([
     { role: "assistant", content: "Hey Jay Patel, what kind of blog would you like to create?" },
     { role: "user", content: "Create a blog on Python OOP concepts." },
@@ -51,49 +91,6 @@ export default function Home() {
       el.scrollTop = el.scrollHeight;
     }
   }, [displayedMessages, currentTypingIndex, typingProgress]);
-
-  // Removed unused hero typing animation effect
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        // Fetch featured blogs using the API with filter parameter
-        const [blogsResponse, statsResponse] = await Promise.all([
-          api.getBlogs(null, 0, 4, 'featuredBlogs'),
-          api.getStats()
-        ]);
-
-        // Only use featured blogs - no fallback to regular blogs
-        const blogs = blogsResponse.blogs || [];
-
-        // Transform the blog data to match BlogCard component structure
-        // Transform the blog data to match BlogCard component structure
-        const transformed = blogs.map(blog => ({
-          ...blog,
-          // BlogCard expects 'category' to be a string name
-          // Backend now provides category_name
-          category: blog.category_name || (typeof blog.category === 'string' ? blog.category : blog.category?.name),
-          description: blog.excerpt || blog.subtitle || '',
-          date: new Date(blog.publishedDate).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-          }),
-        }));
-
-        setFeaturedBlogs(transformed);
-        setStats(statsResponse);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setFeaturedBlogs([]); // Set empty array on error
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
 
   const handleSearchBlogs = async (e) => {
     e.preventDefault();
@@ -537,13 +534,19 @@ export default function Home() {
           </div>
 
           {loading ? (
-            <div className="relative py-12">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <LoaderCard message="Loading featured blogs…" />
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="flex flex-col space-y-3">
+                  <Skeleton className="h-[200px] w-full rounded-xl" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : featuredBlogs.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {featuredBlogs.map((blog) => (
                 <BlogCard key={blog.slug} blog={blog} />
               ))}
@@ -563,6 +566,131 @@ export default function Home() {
               <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* Public Playlists Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center mb-12">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+                Popular Playlists
+              </h2>
+              <p className="text-gray-600">
+                Curated collections of great reads.
+              </p>
+            </div>
+          </div>
+
+          {playlistsLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <Skeleton key={i} className="h-48 w-full rounded-xl" />
+              ))}
+            </div>
+          ) : playlists.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {playlists.map((playlist) => (
+                <Link key={playlist.slug} href={`/playlists/${playlist.owner?.username}/${playlist.slug}`} className="group block bg-gray-50 rounded-xl overflow-hidden hover:shadow-lg transition-all border border-gray-100">
+                  <div className="flex h-full">
+                    <div className="w-1/3 relative h-automin-h-[160px]">
+                      <img
+                        src={playlist.thumbnail || "https://images.unsplash.com/photo-1499750310159-5b5f87920786?q=80&w=2070&auto=format&fit=crop"}
+                        alt={playlist.name}
+                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                    <div className="w-2/3 p-6 flex flex-col justify-center">
+                      <h3 className="text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors mb-2 line-clamp-1">
+                        {playlist.name}
+                      </h3>
+                      <p className="text-gray-500 text-sm line-clamp-2 mb-3">
+                        {playlist.description || "No description available."}
+                      </p>
+                      <div className="flex items-center gap-4 text-xs text-gray-500 font-medium mt-auto">
+                        <div className="flex items-center gap-1">
+                          <BookOpen className="w-3.5 h-3.5" />
+                          <span>{playlist.blog_count || 0} Articles</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>{playlist.total_views || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Heart className="w-3.5 h-3.5" />
+                          <span>{playlist.total_likes || 0}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 bg-gray-50 rounded-xl">
+              <p className="text-gray-500">No playlists found.</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Top Authors Section */}
+      <section className="py-16 bg-indigo-50/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+              Top Creators
+            </h2>
+            <p className="text-gray-600">
+              Meet the minds behind the most popular content.
+            </p>
+          </div>
+
+          {authorsLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[...Array(3)].map((_, i) => (
+                <Skeleton key={i} className="h-64 w-full rounded-xl" />
+              ))}
+            </div>
+          ) : topAuthors.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {topAuthors.map((author) => (
+                <Link key={author.username} href={`/blogs/${author.username}`} className="block bg-white rounded-xl p-4 text-center hover:shadow-lg transition-all border border-gray-100 group">
+                  <div className="relative w-16 h-16 mx-auto mb-3 rounded-full overflow-hidden p-0.5 border-2 border-indigo-100 group-hover:border-indigo-600 transition-colors">
+                    <img
+                      src={author.profile_image || `https://ui-avatars.com/api/?name=${author.username}&background=random`}
+                      alt={author.username}
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-0.5 group-hover:text-indigo-600 transition-colors">
+                    {author.first_name ? `${author.first_name} ${author.last_name}` : author.username}
+                  </h3>
+                  <p className="text-indigo-500 font-medium text-xs mb-3">@{author.username}</p>
+
+                  <div className="flex justify-center gap-4 border-t border-gray-100 pt-3">
+                    <div className="text-center">
+                      <span className="block text-base font-bold text-gray-900">{author.blog_count || 0}</span>
+                      <span className="text-[10px] text-gray-500 uppercase tracking-wide">Blogs</span>
+                    </div>
+                    <div className="text-center md:border-l md:pl-4 border-gray-100">
+                      <span className="block text-base font-bold text-gray-900">{author.total_views || 0}</span>
+                      <span className="text-[10px] text-gray-500 uppercase tracking-wide">Views</span>
+                    </div>
+                    <div className="text-center md:border-l md:pl-4 border-gray-100">
+                      <span className="block text-base font-bold text-gray-900">{author.total_likes || 0}</span>
+                      <span className="text-[10px] text-gray-500 uppercase tracking-wide">Likes</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-500">No authors found.</p>
+            </div>
+          )}
         </div>
       </section>
 

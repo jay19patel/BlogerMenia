@@ -241,9 +241,8 @@ export default function BlogDetailPage() {
             }
 
             setIsLiking(true);
-            const blogId = typeof blog.id === 'string' ? blog.id : String(blog.id);
-
-            const response = await api.likeBlog(blogId, token);
+            // Use slug instead of ID for the like endpoint
+            const response = await api.likeBlog(blog.slug, token);
 
             // Update local state based on response or toggle
             if (response && response.status) {

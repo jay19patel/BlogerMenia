@@ -2,7 +2,8 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from blogs.api.views import (
     BlogListCreateView, BlogDetailView, BlogDetailByIdView, UserBlogListView,
-    SuggestedBlogListView, BlogLikeView, CategoryListView, StatsView, ImageUploadView
+    SuggestedBlogListView, RandomRelatedBlogsView, BlogLikeView, CategoryListView, 
+    StatsView, ImageUploadView
 )
 
 
@@ -13,6 +14,7 @@ urlpatterns = [
     path('blogs/', BlogListCreateView.as_view(), name='blog-list-create'),
     path('blogs/my-blogs/', UserBlogListView.as_view(), name='my-blogs'),
     path('blogs/suggested_blogs/', SuggestedBlogListView.as_view(), name='suggested-blogs'),
+    path('blogs/random_related/', RandomRelatedBlogsView.as_view(), name='random-related-blogs'),
     path('blogs/categories/', CategoryListView.as_view(), name='category-list'),
     path('blogs/stats/', StatsView.as_view(), name='stats'),
     

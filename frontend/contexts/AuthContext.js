@@ -26,20 +26,21 @@ export function AuthProvider({ children }) {
       setUser(userData);
       console.log('User loaded successfully:', userData);
     } catch (error) {
-      console.error('Failed to load user:', error);
-
       const isAuthError =
         error.status === 401 ||
         (error.response && error.response.status === 401) ||
         error.message.includes('401') ||
         error.message.toLowerCase().includes('token not valid') ||
-        error.message.toLowerCase().includes('credentials');
+        error.message.toLowerCase().includes('credentials') ||
+        error.message.toLowerCase().includes('given token not valid');
 
       if (isAuthError) {
-        console.log('Invalid token (401), clearing...');
+        console.warn('Authentication session expired or invalid. Clearing session.');
         localStorage.removeItem('access_token');
         setToken(null);
         setUser(null);
+      } else {
+        console.error('Failed to load user:', error);
       }
     } finally {
       setLoading(false);

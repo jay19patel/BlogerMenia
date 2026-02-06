@@ -54,10 +54,6 @@ class Blog(models.Model):
     isPublished = models.BooleanField(default=False)
     publishedDate = models.DateTimeField(blank=True, null=True)
     
-    # Counters
-    views = models.IntegerField(default=0)
-    likes = models.IntegerField(default=0)
-    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -66,6 +62,16 @@ class Blog(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+    @property
+    def likes(self):
+        """Dynamic count of likes from BlogLike model."""
+        return self.blog_likes.count()
+
+    @property
+    def views(self):
+        """Dynamic count of views from BlogView model."""
+        return self.blog_views.count()
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -80,6 +86,7 @@ class Blog(models.Model):
 
     def __str__(self):
         return self.slug
+
 
 
 class BlogLike(models.Model):

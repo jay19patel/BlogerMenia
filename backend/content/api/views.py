@@ -1,7 +1,7 @@
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets, mixins, generics
 from rest_framework.permissions import AllowAny
-from content.models import FAQ, Testimonial
-from content.api.serializers import FAQSerializer, TestimonialSerializer
+from content.models import FAQ, Testimonial, ContactMessage
+from content.api.serializers import FAQSerializer, TestimonialSerializer, ContactMessageSerializer
 
 class FAQViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -20,3 +20,12 @@ class TestimonialViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = TestimonialSerializer
     permission_classes = [AllowAny]
     pagination_class = None
+
+class ContactMessageCreateView(generics.CreateAPIView):
+    """
+    Create a new contact message.
+    Public endpoint.
+    """
+    queryset = ContactMessage.objects.all()
+    serializer_class = ContactMessageSerializer
+    permission_classes = [AllowAny]

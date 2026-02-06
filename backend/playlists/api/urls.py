@@ -1,11 +1,12 @@
 from django.urls import path
 from playlists.api.views import (
     PlaylistListCreateView, PlaylistDetailView, MyPlaylistsView, UserPlaylistsView,
-    PlaylistBlogActionView
+    PlaylistBlogActionView, PublicPlaylistListView
 )
 
 urlpatterns = [
     path('playlists/', PlaylistListCreateView.as_view(), name='playlist-list-create'),
+    path('playlists/public/', PublicPlaylistListView.as_view(), name='public-playlists'),
     path('playlists/my-playlists/', MyPlaylistsView.as_view(), name='my-playlists'),
     
     # Specific User Playlists (e.g. /playlists/user/jay/)

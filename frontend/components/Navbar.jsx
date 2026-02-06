@@ -75,6 +75,15 @@ export default function Navbar() {
             >
               Notes
             </Link>
+            <Link
+              href="/contact"
+              className={`transition-colors font-medium ${pathname === "/contact"
+                ? "text-indigo-600 font-semibold"
+                : "text-gray-700 hover:text-indigo-600"
+                }`}
+            >
+              Contact
+            </Link>
 
             {loading ? (
               <div className="flex items-center gap-4">
@@ -200,6 +209,16 @@ export default function Navbar() {
                     }`}
                 >
                   Notes
+                </Link>
+                <Link
+                  href="/contact"
+                  onClick={() => setIsSheetOpen(false)}
+                  className={`block py-3 px-4 rounded-lg transition-colors font-medium ${pathname === "/contact"
+                    ? "bg-indigo-50 text-indigo-600 font-semibold"
+                    : "text-gray-700 hover:bg-gray-100"
+                    }`}
+                >
+                  Contact
                 </Link>
 
                 {loading ? (

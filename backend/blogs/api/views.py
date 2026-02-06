@@ -111,6 +111,30 @@ class SuggestedBlogListView(generics.ListAPIView):
         return Blog.objects.filter(isPublished=True).select_related('author', 'category').order_by('?')[:10]
 
 
+class RandomRelatedBlogsView(generics.ListAPIView):
+    """
+    Get random related blogs for a given blog.
+    Returns 5 random published blogs excluding the current blog.
+    In future, this will be enhanced with interest-based filtering.
+    """
+    serializer_class = BlogSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        # Get the exclude_slug from query params
+        exclude_slug = self.request.query_params.get('exclude_slug', None)
+        limit = int(self.request.query_params.get('limit', 5))
+        
+        queryset = Blog.objects.filter(isPublished=True).select_related('author', 'category')
+        
+        # Exclude the current blog if slug provided
+        if exclude_slug:
+            queryset = queryset.exclude(slug=exclude_slug)
+        
+        # Return random blogs, limit to requested count
+        return queryset.order_by('?')[:limit]
+
+
 class BlogLikeView(views.APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -124,14 +148,15 @@ class BlogLikeView(views.APIView):
         if not created:
             # Already liked, so unlike
             like.delete()
-            liked = False
+            status_msg = 'unliked'
         else:
-            liked = True
+            status_msg = 'liked'
 
         return Response({
-            'liked': liked,
+            'status': status_msg,
             'total_likes': blog.likes
         })
+
 
 
 class CategoryListView(generics.ListAPIView):

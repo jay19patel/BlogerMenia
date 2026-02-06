@@ -278,6 +278,18 @@ export const api = {
     return result.blogs || [];
   },
 
+  async getRandomRelatedBlogs(limit = 5, excludeSlug = null) {
+    let url = `${API_BASE_URL}/blogs/random_related/?limit=${limit}`;
+    if (excludeSlug) {
+      url += `&exclude_slug=${encodeURIComponent(excludeSlug)}`;
+    }
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    return handleResponse(response);
+  },
+
   async getBlogCategories(username = null) {
     // If username provided, filter categories by that user
     // If not provided, get all categories (for main /blogs page)
@@ -302,22 +314,91 @@ export const api = {
     return handleResponse(response);
   },
 
-  // Content endpoints
-  async getTestimonials() {
-    const response = await fetch(`${API_BASE_URL}/content/testimonials/`, {
+  async getPublicPlaylists() {
+    const response = await fetch(`${API_BASE_URL}/playlists/public/`, {
       method: 'GET',
       headers: getHeaders(),
+    });
+    const data = await handleResponse(response);
+    return data && data.results ? data.results : (data || []);
+  },
+
+  async getTopAuthors() {
+    const response = await fetch(`${API_BASE_URL}/user/top-authors/`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    const data = await handleResponse(response);
+    return data && data.results ? data.results : (data || []);
+  },
+
+  async contactUs(data) {
+    const response = await fetch(`${API_BASE_URL}/content/contact/`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(data),
     });
     return handleResponse(response);
   },
 
-  async getFAQs() {
-    const response = await fetch(`${API_BASE_URL}/content/faqs/`, {
-      method: 'GET',
-      headers: getHeaders(),
-    });
-    return handleResponse(response);
+  // Mock Data for Testimonials
+  async getTestimonials() {
+    return {
+      testimonials: [
+        {
+          name: "Sarah Jenkins",
+          role: "Content Creator",
+          image: "https://pagedone.io/asset/uploads/1696229969.png",
+          rating: 5,
+          content: "BlogerMenia has completely transformed how I share my thoughts. The platform is intuitive and the community is incredibly supportive."
+        },
+        {
+          name: "David Miller",
+          role: "Tech Blogger",
+          image: "https://pagedone.io/asset/uploads/1696229994.png",
+          rating: 5,
+          content: "The best blogging platform I've used. The editor is powerful yet simple, and managing my posts is a breeze."
+        },
+        {
+          name: "Emily Chen",
+          role: "Travel Writer",
+          image: "https://pagedone.io/asset/uploads/1696230027.png",
+          rating: 4,
+          content: "I love the clean design and how easy it is to connect with readers. Highly recommended for anyone starting a blog."
+        }
+      ]
+    };
   },
+
+  // Mock Data for FAQs
+  async getFAQs() {
+    return {
+      faqs: [
+        {
+          id: 1,
+          question: "How do I get started with BlogerMenia?",
+          answer: "Getting started is easy! Simply sign up for an account, complete your profile, and click on 'Write' to start creating your first blog post."
+        },
+        {
+          id: 2,
+          question: "Is BlogerMenia free to use?",
+          answer: "Yes, BlogerMenia is free to use for all writers and readers. We believe in open access to knowledge and creativity."
+        },
+        {
+          id: 3,
+          question: "Can I customize my blog's appearance?",
+          answer: "Currently, we offer a clean, standardized layout to ensure readability. We are working on more customization options for the future."
+        },
+        {
+          id: 4,
+          question: "How do I grow my audience?",
+          answer: "Engage with other writers, share your posts on social media, and consistently publish high-quality content. Using relevant tags also helps readers find your work."
+        }
+      ]
+    };
+  },
+
+
 
   // Chat/Generation endpoints
   async generateBlog(userMessage, sessionId = null) {

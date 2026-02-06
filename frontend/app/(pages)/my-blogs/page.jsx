@@ -7,9 +7,9 @@ import { api } from "@/lib/api";
 import { ChevronLeft, ChevronRight, Plus, Eye, Heart, Star, BookOpen, ListMusic, Edit2, Trash2, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import LoaderCard from "@/components/ui/loader";
 import AddToPlaylistDialog from "@/components/AddToPlaylistDialog";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const BLOGS_PER_PAGE = 10;
 
@@ -26,25 +26,29 @@ export default function MyBlogsPage() {
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [deletingPlaylistId, setDeletingPlaylistId] = useState(null);
 
-  // Redirect if not authenticated
+  // Redirect if definitely not authenticated and not loading
   if (!authLoading && !isAuthenticated) {
-    router.push("/login"); // Or return null/loader while redirecting
+    router.push("/login");
   }
 
   // 1. Fetch Categories
-  const { data: categoriesData } = useQuery({
+  const { data: categoriesData, isLoading: categoriesLoading } = useQuery({
     queryKey: ["blogCategories", user?.username],
     queryFn: () => api.getBlogCategories(user.username),
     enabled: !!user?.username,
     select: (data) => ["All", ...(data.categories || [])],
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
   const categories = categoriesData || ["All"];
 
   // 2. Fetch Playlists
-  const { data: playlistsData } = useQuery({
+  const { data: playlistsData, isLoading: playlistsLoading } = useQuery({
     queryKey: ["myPlaylists", token],
     queryFn: () => api.getMyPlaylists(token),
     enabled: !!token,
+    refetchOnWindowFocus: false,
+    staleTime: 60 * 1000,
   });
   const playlists = playlistsData?.playlists || [];
 
@@ -70,12 +74,12 @@ export default function MyBlogsPage() {
           ? submittedSearch.trim()
           : null;
       const filter = selectedCategory === "All" ? null : selectedCategory;
-      // CRITICAL: api.getMyBlogs requires token
       return api.getMyBlogs(token, search, skip, BLOGS_PER_PAGE, filter);
     },
     enabled: !!token,
     placeholderData: keepPreviousData,
     staleTime: 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const blogs = blogsData?.blogs || [];
@@ -90,14 +94,8 @@ export default function MyBlogsPage() {
       await queryClient.cancelQueries(["myBlogs"]);
       const previousBlogs = queryClient.getQueryData(["myBlogs"]);
 
-      // Optimistic update
       queryClient.setQueriesData({ queryKey: ["myBlogs"] }, (old) => {
         if (!old) return old;
-        // Since this runs across multiple pages/filters, we might need a more specific update
-        // But generally setQueriesData with partial matching works if structure matches.
-        // However, for precise page update, it's safer to just iterate active queries
-        // For simplicity here, we invalidate or use simpler query key matching.
-        // React Query v5 syntax:
         return {
           ...old,
           blogs: old.blogs.map((b) =>
@@ -113,8 +111,6 @@ export default function MyBlogsPage() {
       console.error("Error toggling featured:", err);
       toast.error("Failed to toggle featured status");
       if (context?.previousBlogs) {
-        // queryClient.setQueriesData(["myBlogs"], context.previousBlogs); // Revert? complex with varying keys
-        // Easier: just invalidate
         queryClient.invalidateQueries(["myBlogs"]);
       }
     },
@@ -146,7 +142,6 @@ export default function MyBlogsPage() {
     }
   });
 
-
   // Handlers
   const handleSearch = () => {
     setCurrentPage(1);
@@ -175,15 +170,10 @@ export default function MyBlogsPage() {
     deletePlaylistMutation.mutate(playlistId);
   };
 
-  if (authLoading || (isAuthenticated && !token)) {
-    return (
-      <div className="min-h-screen py-12 flex items-center justify-center">
-        <LoaderCard message="Loading..." />
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) return null; // Router will redirect
+  // If we are still checking auth and have no user, show a partial skeleton or nothing,
+  // but allow the shell to render.
+  // If not authenticated (and done loading), the router push handles it, but we return null to avoid flash.
+  if (!authLoading && !isAuthenticated) return null;
 
   return (
     <div className="min-h-screen py-12">
@@ -209,87 +199,98 @@ export default function MyBlogsPage() {
           </div>
 
           {/* Playlists Section */}
-          {playlists.length > 0 && (
-            <div className="mb-6 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                  <ListMusic className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                  My Playlists
-                </h2>
-                <Link
-                  href={`/blogs/${user.username}`}
-                  className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium"
-                >
-                  View All →
-                </Link>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {playlists.slice(0, 5).map((playlist) => (
-                  <div
-                    key={playlist.id}
-                    className="group relative bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-400 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
+          <div className="mb-6">
+            {!playlistsLoading && playlists.length === 0 ? null : (
+              <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <ListMusic className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                    My Playlists
+                  </h2>
+                  <Link
+                    href={`/blogs/${user?.username}`}
+                    className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium"
                   >
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    View All →
+                  </Link>
+                </div>
 
-                    <Link
-                      href={`/playlists/${user.username}/${playlist.slug}`}
-                      className="block p-4"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform duration-300">
-                          <ListMusic className="w-5 h-5" />
-                        </div>
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-xs font-medium text-gray-600 dark:text-gray-300">
-                          <BookOpen className="w-3 h-3" />
-                          {playlist.blog_count || 0}
-                        </span>
-                      </div>
-
-                      <h3 className="text-sm font-bold text-gray-900 dark:text-white line-clamp-2 mb-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                        {playlist.name}
-                      </h3>
-                      {playlist.is_public === false && (
-                        <span className="text-[10px] text-gray-400 flex items-center gap-1">
-                          Private
-                        </span>
-                      )}
-                    </Link>
-
-                    {/* Quick Actions */}
-                    <div className="flex border-t border-gray-100 dark:border-gray-700">
-                      <Link
-                        href={`/playlists/${user.username}/${playlist.slug}`}
-                        className="flex-1 py-2.5 flex items-center justify-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                        Edit
-                      </Link>
-                      <div className="w-px bg-gray-100 dark:bg-gray-700" />
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleDeletePlaylist(playlist.slug, playlist.name);
-                        }}
-                        disabled={deletingPlaylistId === playlist.slug}
-                        className="flex-1 py-2.5 flex items-center justify-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors disabled:opacity-50"
-                      >
-                        {deletingPlaylistId === playlist.slug ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                          <>
-                            <Trash2 className="w-3.5 h-3.5" />
-                            Delete
-                          </>
-                        )}
-                      </button>
-                    </div>
+                {playlistsLoading ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    {[...Array(5)].map((_, i) => (
+                      <Skeleton key={i} className="h-28 w-full rounded-xl" />
+                    ))}
                   </div>
-                ))}
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    {playlists.slice(0, 5).map((playlist) => (
+                      <div
+                        key={playlist.id}
+                        className="group relative bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-400 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
+                      >
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                        <Link
+                          href={`/playlists/${user?.username}/${playlist.slug}`}
+                          className="block p-4"
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform duration-300">
+                              <ListMusic className="w-5 h-5" />
+                            </div>
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-xs font-medium text-gray-600 dark:text-gray-300">
+                              <BookOpen className="w-3 h-3" />
+                              {playlist.blog_count || 0}
+                            </span>
+                          </div>
+
+                          <h3 className="text-sm font-bold text-gray-900 dark:text-white line-clamp-2 mb-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                            {playlist.name}
+                          </h3>
+                          {playlist.is_public === false && (
+                            <span className="text-[10px] text-gray-400 flex items-center gap-1">
+                              Private
+                            </span>
+                          )}
+                        </Link>
+
+                        {/* Quick Actions */}
+                        <div className="flex border-t border-gray-100 dark:border-gray-700">
+                          <Link
+                            href={`/playlists/${user?.username}/${playlist.slug}`}
+                            className="flex-1 py-2.5 flex items-center justify-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                            Edit
+                          </Link>
+                          <div className="w-px bg-gray-100 dark:bg-gray-700" />
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleDeletePlaylist(playlist.slug, playlist.name);
+                            }}
+                            disabled={deletingPlaylistId === playlist.slug}
+                            className="flex-1 py-2.5 flex items-center justify-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors disabled:opacity-50"
+                          >
+                            {deletingPlaylistId === playlist.slug ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <>
+                                <Trash2 className="w-3.5 h-3.5" />
+                                Delete
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Search / Category / Create Section */}
@@ -331,9 +332,16 @@ export default function MyBlogsPage() {
 
         {/* Blog Table */}
         {!blogsData && blogsLoading ? (
-          <div className="relative py-12">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <LoaderCard message="Loading blogs..." />
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden p-6">
+            <div className="space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex items-center space-x-4">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-4 w-1/6" />
+                  <Skeleton className="h-4 w-1/6" />
+                  <Skeleton className="h-4 w-1/6" />
+                </div>
+              ))}
             </div>
           </div>
         ) : blogs.length === 0 ? (
@@ -345,8 +353,8 @@ export default function MyBlogsPage() {
           </div>
         ) : (
           <>
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden relative">
-              {/* Overlay removed for smoother transition */}
+            <div className={`bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden relative transition-opacity duration-200 ${blogsLoading ? 'opacity-50' : 'opacity-100'}`}>
+
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b border-gray-200">
@@ -538,4 +546,3 @@ export default function MyBlogsPage() {
     </div>
   );
 }
-
