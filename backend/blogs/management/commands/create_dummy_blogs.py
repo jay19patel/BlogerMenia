@@ -10,10 +10,10 @@ import datetime
 User = get_user_model()
 
 class Command(BaseCommand):
-    help = 'Generates 20 rich dummy blog posts based on user schema'
+    help = 'Generates 200 rich dummy blog posts and 100 playlists'
 
     def handle(self, *args, **kwargs):
-        self.stdout.write('Generating rich dummy blogs...')
+        self.stdout.write('Generating rich dummy data...')
 
         users = list(User.objects.all())
         if not users:
@@ -45,9 +45,11 @@ class Command(BaseCommand):
             ("Writing a Novel", "Lifestyle"),
         ]
 
-        for title_base, category_name in topics:
+        # Generate 200 Blogs
+        for i in range(200):
+            title_base, category_name = random.choice(topics)
             run_id = str(uuid.uuid4())[:8]
-            title = f"{title_base} {run_id}"
+            title = f"{title_base} {run_id}-{i}"
             slug = slugify(title)
             
             author = random.choice(users)
@@ -118,9 +120,9 @@ class Command(BaseCommand):
                 publishedDate=datetime.datetime.now()
             )
             
-            self.stdout.write(self.style.SUCCESS(f'Created rich blog: {title_base}'))
+            self.stdout.write(self.style.SUCCESS(f'Created rich blog ({i+1}/200): {title_base}'))
 
-        self.stdout.write(self.style.SUCCESS('Successfully created 20 rich dummy blogs.'))
+        self.stdout.write(self.style.SUCCESS('Successfully created 200 rich dummy blogs.'))
 
         # Generate Dummy Playlists
         self.stdout.write('Generating dummy playlists...')
@@ -145,7 +147,7 @@ class Command(BaseCommand):
             "Healthy Life Choices"
         ]
 
-        for i in range(10):
+        for i in range(100):
             # Pick a random title
             base_title = random.choice(playlist_titles)
             unique_title = f"{base_title} {run_id}-{i}"
@@ -164,6 +166,6 @@ class Command(BaseCommand):
             selected_blogs = random.sample(all_blogs, min(num_blogs, len(all_blogs)))
             playlist.blogs.set(selected_blogs)
             
-            self.stdout.write(self.style.SUCCESS(f'Created playlist: {unique_title} with {len(selected_blogs)} blogs'))
+            self.stdout.write(self.style.SUCCESS(f'Created playlist ({i+1}/100): {unique_title} with {len(selected_blogs)} blogs'))
             
-        self.stdout.write(self.style.SUCCESS('Successfully created 10 dummy playlists.'))
+        self.stdout.write(self.style.SUCCESS('Successfully created 100 dummy playlists.'))
