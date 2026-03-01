@@ -111,27 +111,7 @@ export default function Home() {
     }
   };
 
-  // Typing effect for messages
-  useEffect(() => {
-    if (currentTypingIndex >= 0 && currentTypingIndex < displayedMessages.length) {
-      const msg = displayedMessages[currentTypingIndex];
-      if (msg.isTyping) {
-        if (typingProgress.length < msg.content.length) {
-          const timer = setTimeout(() => {
-            setTypingProgress(msg.content.slice(0, typingProgress.length + 1));
-          }, 20); // Typing speed
-          return () => clearTimeout(timer);
-        } else {
-          // Finished typing this message
-          setDisplayedMessages(prev =>
-            prev.map((m, idx) => idx === currentTypingIndex ? { ...m, isTyping: false, displayedContent: m.content } : m)
-          );
-          setCurrentTypingIndex(-1);
-          setTypingProgress("");
-        }
-      }
-    }
-  }, [currentTypingIndex, typingProgress, displayedMessages]);
+
 
   // Auto-play the scripted conversation one-by-one (deterministic, no polling)
   useEffect(() => {

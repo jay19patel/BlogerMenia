@@ -211,22 +211,65 @@ export default function BlogsList() {
                                 </button>
 
                                 <div className="flex items-center gap-2">
-                                    {[...Array(totalPages)].map((_, index) => {
-                                        const page = index + 1;
-                                        return (
-                                            <button
-                                                key={page}
-                                                onClick={() => setCurrentPage(page)}
-                                                disabled={isPlaceholderData}
-                                                className={`w-10 h-10 rounded-lg font-medium transition-all duration-300 ${currentPage === page
-                                                    ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/30"
-                                                    : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-indigo-500"
-                                                    }`}
-                                            >
-                                                {page}
-                                            </button>
-                                        );
-                                    })}
+                                    {(() => {
+                                        // Helper to generate pagination range
+                                        const getPaginationRange = (current, total) => {
+                                            if (total <= 7) {
+                                                return Array.from({ length: total }, (_, i) => i + 1);
+                                            }
+
+                                            // Always show first 3
+                                            let pages = [1, 2, 3];
+
+                                            // Always show last 3
+                                            pages.push(total - 2, total - 1, total);
+
+                                            // Show current and neighbors
+                                            if (current > 1 && current < total) {
+                                                pages.push(current - 1, current, current + 1);
+                                            }
+
+                                            // Filter out-of-bounds and sort, then unique
+                                            pages = [...new Set(pages)].filter(p => p > 0 && p <= total).sort((a, b) => a - b);
+
+                                            // Insert ellipses
+                                            const result = [];
+                                            for (let i = 0; i < pages.length; i++) {
+                                                if (i > 0 && pages[i] - pages[i - 1] > 1) {
+                                                    result.push('...');
+                                                }
+                                                result.push(pages[i]);
+                                            }
+
+                                            return result;
+                                        };
+
+                                        const paginationRange = getPaginationRange(currentPage, totalPages);
+
+                                        return paginationRange.map((page, index) => {
+                                            if (page === '...') {
+                                                return (
+                                                    <span key={`dots-${index}`} className="px-2 text-gray-400">
+                                                        ...
+                                                    </span>
+                                                );
+                                            }
+
+                                            return (
+                                                <button
+                                                    key={page}
+                                                    onClick={() => setCurrentPage(page)}
+                                                    disabled={isPlaceholderData}
+                                                    className={`w-10 h-10 rounded-lg font-medium transition-all duration-300 ${currentPage === page
+                                                        ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/30"
+                                                        : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-indigo-500"
+                                                        }`}
+                                                >
+                                                    {page}
+                                                </button>
+                                            );
+                                        });
+                                    })()}
                                 </div>
 
                                 <button
