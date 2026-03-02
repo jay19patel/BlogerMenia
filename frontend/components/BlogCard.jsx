@@ -1,24 +1,28 @@
 import Link from "next/link";
 import { Calendar, Tag, Star } from "lucide-react";
+import { getImageUrl } from "../lib/utils";
 
 export default function BlogCard({ blog }) {
   // If blog has author info, construct URL with username
   // Otherwise use the simple slug route
   const getBlogUrl = () => {
-    if (blog.authorUsername) {
-      return `/blogs/${blog.authorUsername}/${blog.slug}`;
+    const authorIdentifier = blog.author?.email || blog.author_email || blog.authorUsername;
+    if (authorIdentifier) {
+      return `/blogs/${authorIdentifier}/${blog.slug}`;
     }
     return `/blogs/${blog.slug}`;
   };
+
+  const imagePath = blog.thumbnail?.file_path || blog.image;
 
   return (
     <Link href={getBlogUrl()}>
       <div className="group bg-white rounded-xl border border-gray-300 overflow-hidden transition-all duration-300 hover:border-indigo-500 hover:shadow-lg">
         {/* Image */}
         <div className="relative aspect-[16/9] overflow-hidden bg-gray-100">
-          {blog.image && blog.image.trim() !== "" ? (
+          {imagePath ? (
             <img
-              src={blog.image}
+              src={getImageUrl(imagePath)}
               alt={blog.title}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             />

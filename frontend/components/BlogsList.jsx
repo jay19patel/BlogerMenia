@@ -1,69 +1,91 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import HorizontalBlogCard from "@/components/HorizontalBlogCard";
 import Breadcrumb from "@/components/Breadcrumb";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { api } from "@/lib/api";
-import Link from "next/link";
 import LoaderCard from "@/components/ui/loader";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
 
 const BLOGS_PER_PAGE = 9;
 
 export default function BlogsList() {
-    const [searchQuery, setSearchQuery] = useState("");
-    // We use a separate state for the actual search term to debounce or control when the query updates
-    // But for now matching original behavior (search on button/enter)
-    const [submittedSearch, setSubmittedSearch] = useState("");
-    const [selectedCategory, setSelectedCategory] = useState("All");
-    const [currentPage, setCurrentPage] = useState(1);
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+
+    // Read initial states from URL
+    const initialPage = parseInt(searchParams.get("page") || "1", 10);
+    const initialSearch = searchParams.get("search") || "";
+    const initialCategory = searchParams.get("category") || "All";
+
+    const [searchQuery, setSearchQuery] = useState(initialSearch);
+    const [submittedSearch, setSubmittedSearch] = useState(initialSearch);
+    const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+    const [currentPage, setCurrentPage] = useState(initialPage);
+
+    // Data States
+    const [categories, setCategories] = useState(["All"]);
+    const [allBlogs, setAllBlogs] = useState([]);
+    const [totalBlogs, setTotalBlogs] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isFetchingBlogs, setIsFetchingBlogs] = useState(false);
+
+    // Sync URL when state changes
+    const updateUrl = useCallback((page, search, category) => {
+        const params = new URLSearchParams();
+        if (page > 1) params.set("page", page.toString());
+        if (search && search.trim() !== "") params.set("search", search.trim());
+        if (category && category !== "All") params.set("category", category);
+
+        const newUrl = `${pathname}${params.toString() ? `?${params.toString()}` : ""}`;
+        router.push(newUrl, { scroll: false });
+    }, [pathname, router]);
 
     // Fetch Categories
-    const { data: categoriesData } = useQuery({
-        queryKey: ["blogCategories"],
-        queryFn: () => api.getBlogCategories(),
-        select: (data) => ["All", ...(data.categories || [])],
-    });
-
-    const categories = categoriesData || ["All"];
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await api.getBlogCategories();
+                setCategories(["All", ...(response.categories || [])]);
+            } catch (error) {
+                console.error("Error fetching categories:", error);
+            }
+        };
+        fetchCategories();
+    }, []);
 
     // Fetch Blogs
-    const {
-        data: blogsData,
-        isLoading,
-        isPlaceholderData,
-    } = useQuery({
-        queryKey: [
-            "blogs",
-            {
-                search: submittedSearch || null,
-                category: selectedCategory === "All" ? null : selectedCategory,
-                page: currentPage,
-            },
-        ],
-        queryFn: () => {
-            const skip = (currentPage - 1) * BLOGS_PER_PAGE;
-            const search =
-                submittedSearch && submittedSearch.trim().length > 0
-                    ? submittedSearch.trim()
-                    : null;
-            const filter = selectedCategory === "All" ? null : selectedCategory;
-            return api.getBlogs(search, skip, BLOGS_PER_PAGE, filter);
-        },
-        placeholderData: keepPreviousData,
-        staleTime: 60 * 1000, // 1 minute
-    });
+    useEffect(() => {
+        const fetchBlogs = async () => {
+            setIsFetchingBlogs(true);
+            try {
+                const skip = (currentPage - 1) * BLOGS_PER_PAGE;
+                const search = submittedSearch && submittedSearch.trim().length > 0 ? submittedSearch.trim() : null;
+                const filter = selectedCategory === "All" ? null : selectedCategory;
 
-    const allBlogs = blogsData?.blogs || [];
-    const totalBlogs = blogsData?.total || 0;
+                const response = await api.getBlogs(search, skip, BLOGS_PER_PAGE, filter);
+                setAllBlogs(response.blogs || []);
+                setTotalBlogs(response.total || 0);
+            } catch (error) {
+                console.error("Error fetching blogs:", error);
+            } finally {
+                setIsLoading(false);
+                setIsFetchingBlogs(false);
+            }
+        };
 
-    // Transform logic (moved from original file)
+        fetchBlogs();
+        updateUrl(currentPage, submittedSearch, selectedCategory);
+    }, [currentPage, submittedSearch, selectedCategory, updateUrl]);
+
+    // Transform logic
     const transformedBlogs = allBlogs.map((blog) => ({
         slug: blog.slug,
         title: blog.title,
         description: blog.excerpt,
-        image: blog.thumbnail,
+        image: blog.thumbnail?.file_path || blog.image,
         category: blog.category?.name || "General",
         date: new Date(blog.publishedDate).toLocaleDateString("en-US", {
             month: "short",
@@ -72,7 +94,9 @@ export default function BlogsList() {
         }),
         featured: blog.featured || false,
         publishedDate: blog.publishedDate,
-        authorUsername: blog.author?.username,
+        authorFullName: blog.author?.full_name,
+        authorUsername: blog.author?.username || blog.author?.email,
+        authorEmail: blog.author?.email,
         views: blog.views,
         likes: blog.likes
     }));
@@ -114,7 +138,7 @@ export default function BlogsList() {
 
     // Loading state
     // We only show full loader if it's the very first load and we have no data
-    if (!blogsData && isLoading) {
+    if (isLoading) {
         return (
             <div className="py-12">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -203,7 +227,7 @@ export default function BlogsList() {
                                     onClick={() =>
                                         setCurrentPage((prev) => Math.max(prev - 1, 1))
                                     }
-                                    disabled={currentPage === 1 || isPlaceholderData}
+                                    disabled={currentPage === 1 || isFetchingBlogs}
                                     className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                                 >
                                     <ChevronLeft className="w-5 h-5" />
@@ -259,7 +283,7 @@ export default function BlogsList() {
                                                 <button
                                                     key={page}
                                                     onClick={() => setCurrentPage(page)}
-                                                    disabled={isPlaceholderData}
+                                                    disabled={isFetchingBlogs}
                                                     className={`w-10 h-10 rounded-lg font-medium transition-all duration-300 ${currentPage === page
                                                         ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/30"
                                                         : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-indigo-500"
@@ -276,7 +300,7 @@ export default function BlogsList() {
                                     onClick={() =>
                                         setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                                     }
-                                    disabled={currentPage === totalPages || isPlaceholderData}
+                                    disabled={currentPage === totalPages || isFetchingBlogs}
                                     className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                                 >
                                     Next

@@ -32,7 +32,7 @@ export default function UserListPage() {
 
   const fetchAllUsers = async () => {
     if (!token) return;
-    
+
     setLoading(true);
     try {
       const usersData = await api.getAllUsers(token);
@@ -47,7 +47,7 @@ export default function UserListPage() {
 
   const handleActivateUser = async (userId) => {
     if (!token) return;
-    
+
     setProcessingIds(prev => new Set(prev).add(userId));
     try {
       await api.activateUser(token, userId);
@@ -67,7 +67,7 @@ export default function UserListPage() {
 
   const handleDeactivateUser = async (userId) => {
     if (!token) return;
-    
+
     setProcessingIds(prev => new Set(prev).add(userId));
     try {
       await api.deactivateUser(token, userId);
@@ -151,19 +151,19 @@ export default function UserListPage() {
                           <Avatar className="w-10 h-10">
                             <AvatarImage src={u.profile_image} />
                             <AvatarFallback className="bg-indigo-100 text-indigo-600">
-                              {u.full_name?.[0] || u.username?.[0] || u.email?.[0] || "U"}
+                              {u.full_name?.[0] || u.email?.[0] || "U"}
                             </AvatarFallback>
                           </Avatar>
                           <div>
                             <div className="text-sm font-medium text-gray-900">
-                              {u.full_name || u.username}
+                              {u.full_name || u.email.split('@')[0]}
                               {u.is_active ? (
                                 <span className="ml-2 text-xs text-green-600 font-medium">(Active)</span>
                               ) : (
                                 <span className="ml-2 text-xs text-gray-500 font-medium">(Inactive)</span>
                               )}
                             </div>
-                            <div className="text-sm text-gray-500">@{u.username}</div>
+                            <div className="text-sm text-gray-500">{u.email}</div>
                           </div>
                         </div>
                       </td>
@@ -174,11 +174,10 @@ export default function UserListPage() {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                          u.role === 'Admin' 
-                            ? 'bg-purple-100 text-purple-700' 
+                        <span className={`px-3 py-1 text-xs font-semibold rounded-full ${u.role === 'Admin'
+                            ? 'bg-purple-100 text-purple-700'
                             : 'bg-gray-100 text-gray-700'
-                        }`}>
+                          }`}>
                           {u.role}
                         </span>
                       </td>
@@ -186,11 +185,10 @@ export default function UserListPage() {
                         <button
                           onClick={() => u.is_active ? handleDeactivateUser(u.id) : handleActivateUser(u.id)}
                           disabled={processingIds.has(u.id)}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                            u.is_active 
-                              ? 'bg-green-100 text-green-700 hover:bg-green-200 active:bg-green-300' 
+                          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed ${u.is_active
+                              ? 'bg-green-100 text-green-700 hover:bg-green-200 active:bg-green-300'
                               : 'bg-gray-100 text-gray-600 hover:bg-gray-200 active:bg-gray-300'
-                          }`}
+                            }`}
                         >
                           {u.is_active ? (
                             <>

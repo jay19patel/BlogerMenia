@@ -12,7 +12,6 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
-    username: "",
     firstName: "",
     lastName: "",
     email: "",
@@ -38,32 +37,12 @@ export default function RegisterPage() {
       return;
     }
 
-    // Validate username length
-    if (formData.username.length < 3) {
-      toast.error("Username must be at least 3 characters long");
-      return;
-    }
-
-    if (!formData.firstName.trim()) {
-      toast.error("First Name is required");
-      return;
-    }
-
-    // Last Name is technically required by backend setting 'last_name', so enforce it.
-    if (!formData.lastName.trim()) {
-      toast.error("Last Name is required");
-      return;
-    }
-
     setLoading(true);
-
     try {
       const result = await register({
         email: formData.email,
-        username: formData.username,
         password: formData.password,
-        first_name: formData.firstName,
-        last_name: formData.lastName,
+        full_name: `${formData.firstName} ${formData.lastName}`,
       });
 
       if (result.success) {
@@ -162,30 +141,6 @@ export default function RegisterPage() {
 
               {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Username */}
-                <div>
-                  <label
-                    htmlFor="username"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Username
-                  </label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input
-                      id="username"
-                      type="text"
-                      required
-                      minLength={3}
-                      value={formData.username}
-                      onChange={(e) =>
-                        setFormData({ ...formData, username: e.target.value })
-                      }
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
-                      placeholder="johndoe"
-                    />
-                  </div>
-                </div>
 
                 {/* First Name & Last Name */}
                 <div className="grid grid-cols-2 gap-4">

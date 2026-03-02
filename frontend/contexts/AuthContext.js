@@ -102,10 +102,9 @@ export function AuthProvider({ children }) {
   const register = async (data) => {
     try {
       const registerPayload = {
-        username: data.username,
         email: data.email,
-        password1: data.password,
-        password2: data.confirmPassword || data.password,
+        password: data.password, // Changed from password1/password2 to match backend
+        full_name: data.full_name,
       };
 
       await api.register(registerPayload);

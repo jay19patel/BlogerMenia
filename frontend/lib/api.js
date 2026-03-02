@@ -38,7 +38,7 @@ function getHeaders(token = null) {
 export const api = {
   // Authentication endpoints
   async login(email, password) {
-    const response = await fetch(`${API_BASE_URL}/auth/login/`, {
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify({ email, password }),
@@ -47,7 +47,7 @@ export const api = {
   },
 
   async register(data) {
-    const response = await fetch(`${API_BASE_URL}/auth/registration/`, {
+    const response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify(data),
@@ -56,7 +56,7 @@ export const api = {
   },
 
   async logout(token) {
-    const response = await fetch(`${API_BASE_URL}/auth/logout/`, {
+    const response = await fetch(`${API_BASE_URL}/auth/logout`, {
       method: 'POST',
       headers: getHeaders(token),
     });
@@ -74,7 +74,7 @@ export const api = {
 
   // User endpoints
   async getCurrentUser(token) {
-    const response = await fetch(`${API_BASE_URL}/auth/user/`, {
+    const response = await fetch(`${API_BASE_URL}/auth/me`, {
       method: 'GET',
       headers: getHeaders(token),
     });
@@ -90,7 +90,7 @@ export const api = {
       body = updateData;
     }
 
-    const response = await fetch(`${API_BASE_URL}/auth/user/`, {
+    const response = await fetch(`${API_BASE_URL}/auth/me`, {
       method: 'PATCH', // dj-rest-auth uses PATCH/PUT. PATCH is safer for partial updates.
       headers: headers,
       body: body,
@@ -106,8 +106,8 @@ export const api = {
     return handleResponse(response);
   },
 
-  async getUserProfileByUsername(username) {
-    const response = await fetch(`${API_BASE_URL}/user/profile/${username}/`, {
+  async getUserProfileByEmail(email) {
+    const response = await fetch(`${API_BASE_URL}/user/profile/${encodeURIComponent(email)}/`, {
       method: 'GET',
       headers: getHeaders(),
     });
@@ -148,21 +148,21 @@ export const api = {
   },
 
   // Blog endpoints
-  async getBlogs(searchQuery = null, skip = 0, limit = 10, filter = null, username = null) {
+  async getBlogs(searchQuery = null, skip = 0, limit = 10, filter = null, authorId = null) {
     let url = `${API_BASE_URL}/blogs/?skip=${skip}&limit=${limit}`;
 
     if (searchQuery) {
       url += `&search=${encodeURIComponent(searchQuery)}`;
     }
 
-    // filter can be "featuredBlogs" for featured blogs, or a category name, or null/"All" for no filter
+    // filter can be a category name, or null/"All" for no filter
     if (filter && filter !== "All") {
-      url += `&filter=${encodeURIComponent(filter)}`;
+      url += `&category.name=${encodeURIComponent(filter)}`;
     }
 
-    // CRITICAL: Always pass username if provided to filter results
-    if (username) {
-      url += `&username=${encodeURIComponent(username)}`;
+    // Pass author.$id to filter correctly using generic CRUD
+    if (authorId) {
+      url += `&author.$id=${encodeURIComponent(authorId)}`;
     }
 
     const response = await fetch(url, {
@@ -176,7 +176,7 @@ export const api = {
     // Application expects: { total: 10, blogs: [...] }
     if (data.results) {
       return {
-        total: data.count,
+        total: data.total || data.count || 0,
         blogs: data.results,
         next: data.next,
         previous: data.previous
@@ -195,9 +195,9 @@ export const api = {
       url += `&search=${encodeURIComponent(searchQuery)}`;
     }
 
-    // filter can be "featuredBlogs" for featured blogs, or a category name, or null/"All" for no filter
+    // filter can be a category name, or null/"All" for no filter
     if (filter && filter !== "All") {
-      url += `&filter=${encodeURIComponent(filter)}`;
+      url += `&category.name=${encodeURIComponent(filter)}`;
     }
 
     const response = await fetch(url, {
@@ -209,7 +209,7 @@ export const api = {
     // Adapt DRF standard pagination response
     if (data.results) {
       return {
-        total: data.count,
+        total: data.total || data.count || 0,
         blogs: data.results,
         next: data.next,
         previous: data.previous
@@ -218,13 +218,7 @@ export const api = {
     return data;
   },
 
-  async getBlogById(blogId, token = null) {
-    const response = await fetch(`${API_BASE_URL}/blogs/id/${blogId}/`, {
-      method: 'GET',
-      headers: getHeaders(token),
-    });
-    return handleResponse(response);
-  },
+
 
   async getBlogBySlug(slug, token = null, trackView = true) {
     let url = `${API_BASE_URL}/blogs/${slug}/`;
@@ -247,9 +241,9 @@ export const api = {
     return handleResponse(response);
   },
 
-  async updateBlog(blogId, blogData, token) {
-    const response = await fetch(`${API_BASE_URL}/blogs/${blogId}/`, {
-      method: 'PUT',
+  async updateBlog(slug, blogData, token) {
+    const response = await fetch(`${API_BASE_URL}/blogs/${slug}/`, {
+      method: 'PATCH',
       headers: getHeaders(token),
       body: JSON.stringify(blogData),
     });
@@ -265,29 +259,23 @@ export const api = {
   },
 
   async getSuggestedBlogs(limit = 3, excludeSlug = null) {
-    let url = `${API_BASE_URL}/blogs/suggested_blogs/?limit=${limit}`;
+    let url = `${API_BASE_URL}/blogs/?page=1&page_size=${limit}`;
     if (excludeSlug) {
-      url += `&exclude_slug=${encodeURIComponent(excludeSlug)}`;
+      url += `&slug__ne=${encodeURIComponent(excludeSlug)}`;
     }
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: getHeaders(),
-    });
-    const result = await handleResponse(response);
-    // Return blogs array from the response
-    return result.blogs || [];
+    const response = await fetch(url, { headers: getHeaders() });
+    const data = await handleResponse(response);
+    return data.results ? data.results : data;
   },
 
   async getRandomRelatedBlogs(limit = 5, excludeSlug = null) {
-    let url = `${API_BASE_URL}/blogs/random_related/?limit=${limit}`;
+    let url = `${API_BASE_URL}/blogs/?page=1&page_size=${limit}`;
     if (excludeSlug) {
-      url += `&exclude_slug=${encodeURIComponent(excludeSlug)}`;
+      url += `&slug__ne=${encodeURIComponent(excludeSlug)}`;
     }
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: getHeaders(),
-    });
-    return handleResponse(response);
+    const response = await fetch(url, { headers: getHeaders() });
+    const data = await handleResponse(response);
+    return data.results ? data.results : data;
   },
 
   async getBlogCategories(username = null) {
@@ -448,8 +436,8 @@ export const api = {
     return handleResponse(response);
   },
 
-  async getMyPlaylists(token) {
-    const response = await fetch(`${API_BASE_URL}/playlists/my-playlists/`, {
+  async getMyPlaylists(token, userId) {
+    const response = await fetch(`${API_BASE_URL}/playlists/?owner.$id=${userId}`, {
       method: 'GET',
       headers: getHeaders(token),
     });
@@ -466,8 +454,12 @@ export const api = {
     return { playlists: Array.isArray(data) ? data : [] }; // Fallback
   },
 
-  async getUserPlaylistsByUsername(username, token = null) {
-    const response = await fetch(`${API_BASE_URL}/playlists/user/${username}/`, {
+  async getUserPlaylistsByEmail(email, userId, token = null, isOwner = false) {
+    let url = `${API_BASE_URL}/playlists/?owner.$id=${userId}`;
+    if (!isOwner) {
+      url += '&is_public=true';
+    }
+    const response = await fetch(url, {
       method: 'GET',
       headers: getHeaders(token),
     });
@@ -532,7 +524,7 @@ export const api = {
 
 
   async getBlogPlaylists(blogId, token) {
-    const response = await fetch(`${API_BASE_URL}/playlists/blog/${blogId}/playlists/`, {
+    const response = await fetch(`${API_BASE_URL}/playlists/?blogs.$id=${blogId}`, {
       method: 'GET',
       headers: getHeaders(token),
     });
@@ -598,6 +590,27 @@ export const api = {
     const redirectUri = typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : '';
     const scope = 'email profile';
     return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}`;
+  },
+
+  async uploadImage(file, collectionName = 'blogs', token = null) {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (collectionName) {
+      formData.append('collection_name', collectionName);
+    }
+
+    const headers = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/media/upload/image`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    return handleResponse(response);
   }
 };
 

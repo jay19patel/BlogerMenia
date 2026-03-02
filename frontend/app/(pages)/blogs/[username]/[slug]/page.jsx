@@ -1,8 +1,3 @@
-import {
-  dehydrate,
-  HydrationBoundary,
-  QueryClient,
-} from "@tanstack/react-query";
 import BlogDetail from "@/components/BlogDetail";
 import { api } from "@/lib/api";
 
@@ -36,23 +31,8 @@ export async function generateMetadata({ params }) {
 
 export default async function BlogPage({ params }) {
   const { slug, username } = await params;
-  const queryClient = new QueryClient();
-
-  // Prefetch the blog data
-  await queryClient.prefetchQuery({
-    queryKey: ["blog", slug],
-    queryKey: ["blog", slug],
-    queryFn: async () => {
-      // Server-side prefetch shouldn't count as a view
-      const blog = await api.getBlogBySlug(slug, null, false);
-      if (!blog) throw new Error("Blog not found");
-      return blog;
-    },
-  });
 
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <BlogDetail slug={slug} username={username} />
-    </HydrationBoundary>
+    <BlogDetail slug={slug} username={username} />
   );
 }

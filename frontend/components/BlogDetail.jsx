@@ -4,12 +4,12 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { ExternalLink, AlertCircle, Copy, Check, Menu, ArrowLeft, Calendar, User, Eye, Heart } from 'lucide-react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { api } from '@/lib/api';
+import { getImageUrl } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthorTooltip from '@/components/AuthorTooltip';
 
@@ -17,9 +17,13 @@ export default function BlogDetailPage() {
     const { token } = useAuth();
     const params = useParams();
     const router = useRouter();
-    const queryClient = useQueryClient();
     const slug = params.slug;
     const username = params.username;
+
+    const [blog, setBlog] = useState(null);
+    const [suggestedBlogs, setSuggestedBlogs] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isError, setIsError] = useState(false);
 
     const [activeSection, setActiveSection] = useState('');
     const [showTOC, setShowTOC] = useState(false);
@@ -28,88 +32,46 @@ export default function BlogDetailPage() {
     const [isLikedState, setIsLikedState] = useState(false);
     const [likesCount, setLikesCount] = useState(0);
 
+    // Define authorIdentifier for use in JSX and effects
+    const authorIdentifier = blog?.author?.email || blog?.author_email || blog?.authorUsername;
+
     // Always go back to /blogs
     const backUrl = '/blogs';
 
-    // 1. Fetch Blog Data using useQuery
-    // Key MUST match server-side prefetch key ['blog', slug] for hydration to work.
-    const {
-        data: blog,
-        isLoading,
-        isError
-    } = useQuery({
-        queryKey: ['blog', slug], // Key matches SSR
-        queryFn: async () => {
-            // We pass token here so if it refetches, it gets authenticated data
-            const data = await api.getBlogBySlug(slug, token);
-            if (!data) throw new Error('Blog not found');
-            return data;
-        },
-        placeholderData: keepPreviousData,
-        staleTime: 60 * 1000,
-        select: (data) => {
-            // Normalize content structure
-            return {
-                ...data,
-                content: data.content || {
-                    introduction: data.introduction,
-                    sections: data.sections || [],
-                    conclusion: data.conclusion
-                }
-            };
-        }
-    });
-
-    // Invalidate query when token changes (e.g. login) to update is_liked status
+    // 1. Fetch Blog Data Using useEffect
     useEffect(() => {
-        if (slug) {
-            queryClient.invalidateQueries({ queryKey: ['blog', slug] });
-        }
-    }, [token, slug, queryClient]);
+        const fetchBlog = async () => {
+            if (!slug) return;
+            setIsLoading(true);
+            setIsError(false);
+            try {
+                const data = await api.getBlogBySlug(slug, token);
+                if (!data) throw new Error('Blog not found');
 
-    // 2. Local state sync for likes (to handle optimistic updates separately if needed, or just sync when data loads)
+                // Normalize content structure
+                setBlog({
+                    ...data,
+                    content: data.content || {
+                        introduction: data.introduction,
+                        sections: data.sections || [],
+                        conclusion: data.conclusion
+                    }
+                });
+            } catch (err) {
+                console.error("Error fetching blog:", err);
+                setIsError(true);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchBlog();
+    }, [slug, token]);
+
+    // 2. Fetch Suggested Blogs
     useEffect(() => {
-        if (blog) {
-            setIsLikedState(blog.is_liked);
-            setLikesCount(blog.likes || 0);
-        }
-    }, [blog]);
-
-    // 3. Handle Redirects
-    useEffect(() => {
-        if (blog && username && blog.authorUsername && username !== blog.authorUsername) {
-            router.replace(`/blogs/${blog.authorUsername}/${slug}`);
-        }
-    }, [blog, username, slug, router]);
-
-    // 4. Generate Table of Contents
-    const tableOfContents = blog ? (() => {
-        const toc = [];
-        const content = blog.content;
-
-        if (content?.introduction) {
-            toc.push({ id: 'introduction', title: 'Introduction' });
-        }
-
-        if (content?.sections) {
-            content.sections.forEach((section, index) => {
-                if (section.title) {
-                    toc.push({ id: `section-${index}`, title: section.title });
-                }
-            });
-        }
-
-        if (content?.conclusion) {
-            toc.push({ id: 'conclusion', title: 'Conclusion' });
-        }
-        return toc;
-    })() : [];
-
-    // 5. Fetch Suggested Blogs (Playlist Aware)
-    const { data: suggestedBlogs = [] } = useQuery({
-        queryKey: ['suggestedBlogs', slug, blog?.id, token],
-        queryFn: async () => {
-            if (!blog) return [];
+        const fetchSuggested = async () => {
+            if (!blog) return;
 
             let relatedBlogs = [];
 
@@ -177,11 +139,49 @@ export default function BlogDetailPage() {
                     console.error('Suggested fetch error:', e);
                 }
             }
-            return relatedBlogs;
-        },
-        enabled: !!blog,
-        staleTime: 60 * 1000
-    });
+            setSuggestedBlogs(relatedBlogs);
+        };
+
+        fetchSuggested();
+    }, [blog, token, slug, username]);
+
+    // 3. Local state sync for likes
+    useEffect(() => {
+        if (blog) {
+            setIsLikedState(blog.is_liked);
+            setLikesCount(blog.likes || 0);
+        }
+    }, [blog]);
+
+    // 4. Handle Redirects
+    useEffect(() => {
+        if (blog && username && authorIdentifier && username !== authorIdentifier) {
+            router.replace(`/blogs/${authorIdentifier}/${slug}`);
+        }
+    }, [blog, username, slug, router, authorIdentifier]);
+
+    // 5. Generate Table of Contents
+    const tableOfContents = blog ? (() => {
+        const toc = [];
+        const content = blog.content;
+
+        if (content?.introduction) {
+            toc.push({ id: 'introduction', title: 'Introduction' });
+        }
+
+        if (content?.sections) {
+            content.sections.forEach((section, index) => {
+                if (section.title) {
+                    toc.push({ id: `section-${index}`, title: section.title });
+                }
+            });
+        }
+
+        if (content?.conclusion) {
+            toc.push({ id: 'conclusion', title: 'Conclusion' });
+        }
+        return toc;
+    })() : [];
 
     // 6. Scroll Tracking
     useEffect(() => {
@@ -636,9 +636,9 @@ export default function BlogDetailPage() {
                     <article className="bg-white border border-gray-300 rounded-xl shadow-lg overflow-hidden">
                         {/* Featured Image */}
                         <div className="relative h-[400px] w-full">
-                            {blog.image && blog.image.trim() !== "" ? (
+                            {(blog.thumbnail?.file_path || blog.image) ? (
                                 <Image
-                                    src={blog.image}
+                                    src={getImageUrl(blog.thumbnail?.file_path || blog.image)}
                                     alt={blog.title}
                                     fill
                                     className="object-cover"
@@ -684,10 +684,10 @@ export default function BlogDetailPage() {
                                 </div>
                                 <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                                     <User className="w-5 h-5" />
-                                    <Link href={blog.authorUsername ? `/blogs/${blog.authorUsername}` : `/blogs`}>
+                                    <Link href={authorIdentifier ? `/blogs/${authorIdentifier}` : `/blogs`}>
                                         <AuthorTooltip userId={blog.author?.id || blog.user_id}>
                                             <span className="text-sm cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                                                {typeof blog.author === 'object' ? (blog.author.username || blog.authorUsername) : blog.author}
+                                                {typeof blog.author === 'object' ? (blog.author.full_name || blog.author_email || blog.author.username || blog.authorUsername) : blog.author}
                                             </span>
                                         </AuthorTooltip>
                                     </Link>
@@ -778,11 +778,11 @@ export default function BlogDetailPage() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                             {suggestedBlogs.map((item, idx) => (
                                 <div key={idx}>
-                                    <Link href={item.authorUsername ? `/blogs/${item.authorUsername}/${item.slug}` : `/blogs/${item.slug}`}>
+                                    <Link href={(item.author?.email || item.author_email || item.authorUsername) ? `/blogs/${(item.author?.email || item.author_email || item.authorUsername)}/${item.slug}` : `/blogs/${item.slug}`}>
                                         <div className="group bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-200 hover:border-indigo-500 dark:hover:border-indigo-400 hover:shadow-md">
                                             <div className="relative aspect-[16/9] sm:aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-gray-700">
-                                                {item.image && item.image.trim() !== "" ? (
-                                                    <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                                                {(item.thumbnail?.file_path || item.image) ? (
+                                                    <img src={getImageUrl(item.thumbnail?.file_path || item.image)} alt={item.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                                                 ) : (
                                                     <div className="w-full h-full bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center">
                                                         <p className="text-white text-xs font-medium opacity-50">No Image</p>

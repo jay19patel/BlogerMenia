@@ -1,23 +1,27 @@
 import Link from "next/link";
 import { Calendar, Eye, Heart, User } from "lucide-react";
+import { getImageUrl } from "../lib/utils";
 
 export default function HorizontalBlogCard({ blog }) {
     // Construct URL
     const getBlogUrl = () => {
-        if (blog.authorUsername) {
-            return `/blogs/${blog.authorUsername}/${blog.slug}`;
+        const authorIdentifier = blog.author?.email || blog.authorEmail || blog.authorUsername;
+        if (authorIdentifier) {
+            return `/blogs/${authorIdentifier}/${blog.slug}`;
         }
         return `/blogs/${blog.slug}`;
     };
+
+    const imagePath = blog.thumbnail?.file_path || blog.image;
 
     return (
         <Link href={getBlogUrl()} className="block group">
             <div className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-xl hover:border-indigo-500 transition-all duration-300 flex flex-col md:flex-row h-full md:h-64">
                 {/* Image Section - Left side on desktop (35-40% width) */}
                 <div className="md:w-2/5 relative h-48 md:h-full overflow-hidden">
-                    {blog.image && blog.image.trim() !== "" ? (
+                    {imagePath ? (
                         <img
-                            src={blog.image}
+                            src={getImageUrl(imagePath)}
                             alt={blog.title}
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
@@ -60,7 +64,7 @@ export default function HorizontalBlogCard({ blog }) {
                                 <User className="w-4 h-4" />
                             </div>
                             <span className="text-sm font-medium text-gray-700">
-                                {blog.authorUsername || "Author"}
+                                {blog.author?.full_name || blog.authorFullName || blog.authorUsername || "Author"}
                             </span>
                         </div>
 

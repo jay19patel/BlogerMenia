@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import BlogCard from "@/components/BlogCard";
 import Breadcrumb from "@/components/Breadcrumb";
 import { Search, ChevronLeft, ChevronRight, User as UserIcon, ListMusic, BookOpen, Eye, Heart, Plus } from "lucide-react";
@@ -9,7 +9,6 @@ import { api } from "@/lib/api";
 import Link from "next/link";
 import Image from "next/image";
 import LoaderCard from "@/components/ui/loader";
-import { useQuery, keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import CreatePlaylistDialog from "@/components/CreatePlaylistDialog";
 
@@ -17,92 +16,124 @@ const BLOGS_PER_PAGE = 9;
 
 export default function UserBlogsList({ username }) {
     const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
     const { user, token } = useAuth();
-    const queryClient = useQueryClient();
-    const [searchQuery, setSearchQuery] = useState("");
-    const [submittedSearch, setSubmittedSearch] = useState("");
-    const [selectedCategory, setSelectedCategory] = useState("All");
-    const [currentPage, setCurrentPage] = useState(1);
+
+    // Read initial states from URL
+    const initialPage = parseInt(searchParams.get("page") || "1", 10);
+    const initialSearch = searchParams.get("search") || "";
+    const initialCategory = searchParams.get("category") || "All";
+
+    const [searchQuery, setSearchQuery] = useState(initialSearch);
+    const [submittedSearch, setSubmittedSearch] = useState(initialSearch);
+    const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+    const [currentPage, setCurrentPage] = useState(initialPage);
     const [isCreatePlaylistOpen, setIsCreatePlaylistOpen] = useState(false);
 
-    const isOwner = user?.username === username;
+    const isOwner = user?.email === username;
+
+    // Data States
+    const [userProfile, setUserProfile] = useState(null);
+    const [categories, setCategories] = useState(["All"]);
+    const [playlists, setPlaylists] = useState([]);
+    const [allBlogs, setAllBlogs] = useState([]);
+    const [totalBlogs, setTotalBlogs] = useState(0);
+
+    // Loading States
+    const [profileLoading, setProfileLoading] = useState(true);
+    const [blogsLoading, setBlogsLoading] = useState(true);
+    const [isFetchingBlogs, setIsFetchingBlogs] = useState(false);
+
+    // Sync URL when state changes
+    const updateUrl = useCallback((page, search, category) => {
+        const params = new URLSearchParams();
+        if (page > 1) params.set("page", page.toString());
+        if (search && search.trim() !== "") params.set("search", search.trim());
+        if (category && category !== "All") params.set("category", category);
+
+        const newUrl = `${pathname}${params.toString() ? `?${params.toString()}` : ""}`;
+        router.push(newUrl, { scroll: false });
+    }, [pathname, router]);
 
     // 1. Fetch User Profile
-    const { data: userProfile, isLoading: profileLoading } = useQuery({
-        queryKey: ["userProfile", username],
-        queryFn: async () => {
-            const profile = await api.getUserProfileByUsername(username);
-            if (!profile) throw new Error("User not found");
-            return profile;
-        },
-        retry: false,
-        staleTime: 5 * 60 * 1000,
-        refetchOnWindowFocus: false,
-        placeholderData: keepPreviousData,
-    });
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const profile = await api.getUserProfileByEmail(username);
+                setUserProfile(profile);
+            } catch (error) {
+                console.error("Error fetching User profile:", error);
+            } finally {
+                setProfileLoading(false);
+            }
+        };
+        if (username) fetchProfile();
+    }, [username]);
 
     // 2. Fetch Categories
-    const { data: categoriesData } = useQuery({
-        queryKey: ["blogCategories", username],
-        queryFn: () => api.getBlogCategories(username),
-        enabled: !!username,
-        select: (data) => ["All", ...(data.categories || [])],
-        refetchOnWindowFocus: false,
-        staleTime: 5 * 60 * 1000,
-        placeholderData: keepPreviousData,
-    });
-    const categories = categoriesData || ["All"];
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await api.getBlogCategories(username);
+                // The generic API returns { results: [...] }
+                const categoriesList = response.results || response.categories || [];
+                setCategories(["All", ...categoriesList.map(c => typeof c === 'string' ? c : c.name)]);
+            } catch (error) {
+                console.error("Error fetching categories:", error);
+            }
+        };
+        if (username) fetchCategories();
+    }, [username]);
 
     // 3. Fetch Playlists
-    const { data: playlistsData } = useQuery({
-        queryKey: ["userPlaylists", username, token],
-        queryFn: () => api.getUserPlaylistsByUsername(username, token),
-        enabled: !!username,
-        refetchOnWindowFocus: false,
-        staleTime: 5 * 60 * 1000,
-        placeholderData: keepPreviousData,
-    });
-    const playlists = playlistsData?.playlists || [];
+    const fetchPlaylists = useCallback(async () => {
+        if (!username || !userProfile) return;
+        try {
+            const authorId = userProfile.id || userProfile._id;
+            const response = await api.getUserPlaylistsByEmail(username, authorId, token, isOwner);
+            setPlaylists(response.playlists || []);
+        } catch (error) {
+            console.error("Error fetching User playlists:", error);
+        }
+    }, [username, token, userProfile, isOwner]);
+
+    useEffect(() => {
+        fetchPlaylists();
+    }, [fetchPlaylists]);
 
     // 4. Fetch Blogs
-    const {
-        data: blogsData,
-        isLoading: blogsLoading,
-        isPlaceholderData,
-    } = useQuery({
-        queryKey: [
-            "userBlogs",
-            username,
-            {
-                search: submittedSearch || null,
-                category: selectedCategory === "All" ? null : selectedCategory,
-                page: currentPage,
-            },
-        ],
-        queryFn: () => {
-            const skip = (currentPage - 1) * BLOGS_PER_PAGE;
-            const search =
-                submittedSearch && submittedSearch.trim().length >= 3
-                    ? submittedSearch.trim()
-                    : null;
-            const filter = selectedCategory === "All" ? null : selectedCategory;
-            return api.getBlogs(search, skip, BLOGS_PER_PAGE, filter, username);
-        },
-        enabled: !!username,
-        placeholderData: keepPreviousData,
-        staleTime: 60 * 1000,
-        refetchOnWindowFocus: false,
-    });
+    useEffect(() => {
+        const fetchBlogs = async () => {
+            if (!userProfile) return;
+            setIsFetchingBlogs(true);
+            try {
+                const skip = (currentPage - 1) * BLOGS_PER_PAGE;
+                const search = submittedSearch && submittedSearch.trim().length >= 3 ? submittedSearch.trim() : null;
+                const filter = selectedCategory === "All" ? null : selectedCategory;
 
-    const allBlogs = blogsData?.blogs || [];
-    const totalBlogs = blogsData?.total || 0;
+                const authorId = userProfile.id || userProfile._id;
+                const response = await api.getBlogs(search, skip, BLOGS_PER_PAGE, filter, authorId);
+                setAllBlogs(response.blogs || []);
+                setTotalBlogs(response.total || 0);
+            } catch (error) {
+                console.error("Error fetching blogs:", error);
+            } finally {
+                setBlogsLoading(false);
+                setIsFetchingBlogs(false);
+            }
+        };
+
+        if (userProfile) fetchBlogs();
+        updateUrl(currentPage, submittedSearch, selectedCategory);
+    }, [currentPage, submittedSearch, selectedCategory, updateUrl, userProfile]);
 
     // Transform logic
     const transformedBlogs = allBlogs.map((blog) => ({
         slug: blog.slug,
         title: blog.title,
         description: blog.excerpt,
-        image: blog.image,
+        image: blog.thumbnail?.file_path || blog.image,
         category: blog.category_name || (typeof blog.category === 'string' ? blog.category : blog.category?.name),
         date: new Date(blog.publishedDate).toLocaleDateString("en-US", {
             month: "short",
@@ -111,7 +142,8 @@ export default function UserBlogsList({ username }) {
         }),
         featured: blog.featured || false,
         publishedDate: blog.publishedDate,
-        authorUsername: username,
+        authorUsername: username, // here username is the email
+        authorEmail: username,
     }));
 
     // Handlers
@@ -131,7 +163,7 @@ export default function UserBlogsList({ username }) {
     const breadcrumbItems = [
         { label: "Home", href: "/" },
         { label: "Blogs", href: "/blogs" },
-        { label: userProfile?.username || username || "User", href: null },
+        { label: userProfile?.full_name || username || "User", href: null },
     ];
 
     // Loading State - Only show full loader if we have NO data yet
@@ -173,10 +205,10 @@ export default function UserBlogsList({ username }) {
                         <div className="flex items-center justify-center sm:justify-start mb-4 -mt-16">
                             <div className="relative w-24 h-24">
                                 <div className="absolute inset-0 border-4 border-white rounded-full overflow-hidden shadow-lg">
-                                    {userProfile.profile_image ? (
+                                    {(typeof userProfile.profile_image === 'string' ? userProfile.profile_image : userProfile.profile_image?.file_path) ? (
                                         <Image
-                                            src={userProfile.profile_image}
-                                            alt={userProfile.username}
+                                            src={typeof userProfile.profile_image === 'string' ? userProfile.profile_image : userProfile.profile_image.file_path}
+                                            alt={userProfile.username || 'User'}
                                             fill
                                             className="object-cover"
                                         />
@@ -192,10 +224,10 @@ export default function UserBlogsList({ username }) {
                         <div className="flex items-center justify-center flex-col sm:flex-row max-sm:gap-4 sm:justify-between mb-6">
                             <div className="block">
                                 <h3 className="font-bold text-3xl text-gray-900 mb-1 max-sm:text-center">
-                                    {userProfile.full_name || userProfile.username}
+                                    {userProfile.full_name || userProfile.email?.split('@')[0] || "User"}
                                 </h3>
                                 <p className="font-normal text-base leading-6 text-gray-500 max-sm:text-center">
-                                    @{userProfile.username}
+                                    {userProfile.email}
                                     {userProfile.headline && (
                                         <span> • {userProfile.headline}</span>
                                     )}
@@ -309,9 +341,9 @@ export default function UserBlogsList({ username }) {
 
                                         <div className="relative bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm group-hover:shadow-lg group-hover:border-indigo-300 group-hover:scale-105 transition-all duration-300">
                                             <div className="relative aspect-[16/9] overflow-hidden bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600">
-                                                {playlist.cover_image ? (
+                                                {(typeof (playlist.cover_image || playlist.thumbnail) === 'string' ? (playlist.cover_image || playlist.thumbnail) : (playlist.cover_image?.file_path || playlist.thumbnail?.file_path)) ? (
                                                     <img
-                                                        src={playlist.cover_image}
+                                                        src={typeof (playlist.cover_image || playlist.thumbnail) === 'string' ? (playlist.cover_image || playlist.thumbnail) : (playlist.cover_image?.file_path || playlist.thumbnail?.file_path)}
                                                         alt={playlist.name}
                                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                                     />
@@ -360,7 +392,7 @@ export default function UserBlogsList({ username }) {
                     isOpen={isCreatePlaylistOpen}
                     onClose={() => setIsCreatePlaylistOpen(false)}
                     onSuccess={() => {
-                        queryClient.invalidateQueries(["userPlaylists", username]);
+                        fetchPlaylists();
                     }}
                 />
 
@@ -437,7 +469,7 @@ export default function UserBlogsList({ username }) {
                                     onClick={() =>
                                         setCurrentPage((prev) => Math.max(prev - 1, 1))
                                     }
-                                    disabled={currentPage === 1 || isPlaceholderData}
+                                    disabled={currentPage === 1 || isFetchingBlogs}
                                     className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                                 >
                                     <ChevronLeft className="w-5 h-5" />
@@ -463,7 +495,7 @@ export default function UserBlogsList({ username }) {
                                             <button
                                                 key={page}
                                                 onClick={() => setCurrentPage(page)}
-                                                disabled={isPlaceholderData}
+                                                disabled={isFetchingBlogs}
                                                 className={`w-10 h-10 rounded-lg font-medium transition-all duration-300 ${currentPage === page
                                                     ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/30"
                                                     : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-indigo-500"
@@ -479,7 +511,7 @@ export default function UserBlogsList({ username }) {
                                     onClick={() =>
                                         setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                                     }
-                                    disabled={currentPage === totalPages || isPlaceholderData}
+                                    disabled={currentPage === totalPages || isFetchingBlogs}
                                     className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                                 >
                                     Next
@@ -488,7 +520,7 @@ export default function UserBlogsList({ username }) {
                             </div>
                         )}
                     </>
-                ) : !blogsData && blogsLoading ? (
+                ) : blogsLoading || isFetchingBlogs ? (
                     <div className="relative py-12">
                         <div className="absolute inset-0 flex items-center justify-center">
                             <LoaderCard message="Loading articles..." />

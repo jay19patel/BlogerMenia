@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X, Plus, Check, Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 export default function AddToPlaylistDialog({
@@ -11,6 +12,7 @@ export default function AddToPlaylistDialog({
   blogData,
   token
 }) {
+  const { user } = useAuth();
   const [playlists, setPlaylists] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
@@ -28,7 +30,8 @@ export default function AddToPlaylistDialog({
   const fetchPlaylists = async () => {
     try {
       setFetching(true);
-      const response = await api.getMyPlaylists(token);
+      const userId = user?.id || user?._id;
+      const response = await api.getMyPlaylists(token, userId);
       setPlaylists(response.playlists || []);
     } catch (error) {
       console.error('Error fetching playlists:', error);
@@ -47,7 +50,7 @@ export default function AddToPlaylistDialog({
         blog_id: blogData.id || blogData._id,
         slug: blogData.slug,
         title: blogData.title,
-        image: blogData.image,
+        image: blogData.thumbnail?.file_path || blogData.image,
         excerpt: blogData.excerpt
       }, token);
 
@@ -83,7 +86,7 @@ export default function AddToPlaylistDialog({
         blog_id: blogData.id || blogData._id,
         slug: blogData.slug,
         title: blogData.title,
-        image: blogData.image,
+        image: blogData.thumbnail?.file_path || blogData.image,
         excerpt: blogData.excerpt
       }, token);
 

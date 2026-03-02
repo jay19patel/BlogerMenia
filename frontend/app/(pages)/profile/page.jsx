@@ -15,7 +15,6 @@ export default function ProfilePage() {
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
-    username: "",
     headline: "",
     bio: "",
     profile_image: "",
@@ -27,7 +26,6 @@ export default function ProfilePage() {
     setFormData({
       first_name: user.first_name || "",
       last_name: user.last_name || "",
-      username: user.username || "",
       headline: user.headline || "",
       bio: user.bio || "",
       profile_image: user.profile_image || "",
@@ -87,11 +85,6 @@ export default function ProfilePage() {
       // Check last_name
       if (formData.last_name !== (user?.last_name || "")) {
         updateData.append('last_name', formData.last_name);
-        hasChanges = true;
-      }
-
-      if (formData.username !== (user?.username || "")) {
-        updateData.append('username', formData.username);
         hasChanges = true;
       }
 
@@ -159,9 +152,9 @@ export default function ProfilePage() {
             <div className="flex items-center gap-6">
               <div className="relative">
                 <Avatar className="w-24 h-24">
-                  <AvatarImage src={formData.profile_image} alt={user?.username} />
+                  <AvatarImage src={formData.profile_image} alt={user?.full_name || user?.email} />
                   <AvatarFallback className="bg-indigo-600 text-white text-2xl">
-                    {user?.full_name?.[0] || user?.username?.[0] || user?.email?.[0] || "U"}
+                    {user?.full_name?.[0] || user?.email?.[0] || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <label
@@ -240,33 +233,6 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Username */}
-            <div>
-              <label
-                htmlFor="username"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Username
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  id="username"
-                  name="username"
-                  type="text"
-                  required
-                  minLength={3}
-                  maxLength={100}
-                  value={formData.username}
-                  onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
-                  placeholder="Enter your username"
-                />
-              </div>
-              <p className="mt-1 text-xs text-gray-500">
-                Must be alphanumeric with optional _ or -
-              </p>
-            </div>
 
             {/* Email (Read-only) */}
             <div>

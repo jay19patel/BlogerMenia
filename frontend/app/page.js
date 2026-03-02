@@ -13,7 +13,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { getImageUrl } from "@/lib/utils";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -24,50 +24,67 @@ export default function Home() {
   const [currentTypingIndex, setCurrentTypingIndex] = useState(-1);
   const [typingProgress, setTypingProgress] = useState("");
 
-  // React Query for Featured Blogs - Fetch 6 for 2x3 grid
-  const { data: featuredBlogs = [], isLoading: loading } = useQuery({
-    queryKey: ['featuredBlogs'],
-    queryFn: async () => {
-      const response = await api.getBlogs(null, 0, 6, 'featuredBlogs');
-      const blogs = response.blogs || [];
-      return blogs.map(blog => ({
-        ...blog,
-        category: blog.category_name || (typeof blog.category === 'string' ? blog.category : blog.category?.name),
-        description: blog.excerpt || blog.subtitle || '',
-        date: new Date(blog.publishedDate).toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric'
-        }),
-      }));
-    },
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  });
+  // States for data
+  const [featuredBlogs, setFeaturedBlogs] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // React Query for Stats
-  const { data: stats = { total_users: 0, total_blogs: 0, total_views: 0 } } = useQuery({
-    queryKey: ['siteStats'],
-    queryFn: api.getStats,
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  });
+  const [stats, setStats] = useState({ total_users: 0, total_blogs: 0, total_views: 0 });
 
-  // React Query for Public Playlists
-  const { data: playlists = [], isLoading: playlistsLoading } = useQuery({
-    queryKey: ['publicPlaylists'],
-    queryFn: api.getPublicPlaylists,
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  });
+  const [playlists, setPlaylists] = useState([]);
+  const [playlistsLoading, setPlaylistsLoading] = useState(true);
 
-  // React Query for Top Authors
-  const { data: topAuthors = [], isLoading: authorsLoading } = useQuery({
-    queryKey: ['topAuthors'],
-    queryFn: api.getTopAuthors,
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  });
+  const [topAuthors, setTopAuthors] = useState([]);
+  const [authorsLoading, setAuthorsLoading] = useState(true);
+
+  // Fetch all initial data
+  useEffect(() => {
+    const fetchHomeData = async () => {
+      // 1. Fetch Featured Blogs
+      try {
+        const response = await api.getBlogs(null, 0, 6, "featuredBlogs");
+        const blogs = response.blogs || [];
+        setFeaturedBlogs(
+          blogs.map((blog) => ({
+            ...blog,
+            category:
+              blog.category_name ||
+              (typeof blog.category === "string"
+                ? blog.category
+                : blog.category?.name),
+            description: blog.excerpt || blog.subtitle || "",
+            date: new Date(blog.publishedDate).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            }),
+          }))
+        );
+      } catch (e) {
+        console.error("Failed to fetch featured blogs:", e);
+      } finally {
+        setLoading(false);
+      }
+
+      // 2. Fetch Stats
+      api.getStats().then((data) => {
+        if (data) setStats(data);
+      }).catch((e) => console.error("Failed to fetch stats:", e));
+
+      // 3. Fetch Playlists
+      api.getPublicPlaylists().then((data) => {
+        setPlaylists(data || []);
+      }).catch((e) => console.error("Failed to fetch playlists:", e))
+        .finally(() => setPlaylistsLoading(false));
+
+      // 4. Fetch Top Authors
+      api.getTopAuthors().then((data) => {
+        setTopAuthors(data || []);
+      }).catch((e) => console.error("Failed to fetch top authors:", e))
+        .finally(() => setAuthorsLoading(false));
+    };
+
+    fetchHomeData();
+  }, []);
 
 
   // Simple scripted chat simulation (alternating user/assistant)
@@ -216,7 +233,7 @@ export default function Home() {
                       {searchResults.map((blog, index) => (
                         <Link
                           key={blog.slug}
-                          href={blog.authorUsername ? `/blogs/${blog.authorUsername}/${blog.slug}` : `/blogs/${blog.slug}`}
+                          href={blog.author_email ? `/blogs/${blog.author_email}/${blog.slug}` : (blog.authorUsername ? `/blogs/${blog.authorUsername}/${blog.slug}` : `/blogs/${blog.slug}`)}
                           className="block px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-indigo-50 transition-colors"
                         >
                           <p className="text-gray-900 font-medium text-sm">{blog.title}</p>
@@ -572,12 +589,12 @@ export default function Home() {
           ) : playlists.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {playlists.map((playlist) => (
-                <Link key={playlist.slug} href={`/playlists/${playlist.owner?.username}/${playlist.slug}`} className="group block bg-gray-50 rounded-xl overflow-hidden hover:shadow-lg transition-all border border-gray-100">
+                <Link key={playlist.slug} href={`/playlists/${playlist.owner?.email || playlist.owner?.username}/${playlist.slug}`} className="group block bg-gray-50 rounded-xl overflow-hidden hover:shadow-lg transition-all border border-gray-100">
                   <div className="flex h-full">
                     <div className="w-1/3 relative h-auto min-h-[160px]">
                       {playlist.thumbnail ? (
                         <img
-                          src={playlist.thumbnail}
+                          src={getImageUrl(playlist.thumbnail?.file_path || playlist.thumbnail)}
                           alt={playlist.name}
                           className="w-full h-full object-cover"
                         />
@@ -644,18 +661,18 @@ export default function Home() {
           ) : topAuthors.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {topAuthors.map((author) => (
-                <Link key={author.username} href={`/blogs/${author.username}`} className="block bg-white rounded-xl p-4 text-center hover:shadow-lg transition-all border border-gray-100 group">
+                <Link key={author.email} href={`/blogs/${author.email}`} className="block bg-white rounded-xl p-4 text-center hover:shadow-lg transition-all border border-gray-100 group">
                   <div className="relative w-16 h-16 mx-auto mb-3 rounded-full overflow-hidden p-0.5 border-2 border-indigo-100 group-hover:border-indigo-600 transition-colors">
                     <img
-                      src={author.profile_image || `https://ui-avatars.com/api/?name=${author.username}&background=random`}
-                      alt={author.username}
+                      src={author.profile_image || `https://ui-avatars.com/api/?name=${author.full_name || author.email}&background=random`}
+                      alt={author.full_name || author.email}
                       className="w-full h-full rounded-full object-cover"
                     />
                   </div>
                   <h3 className="text-lg font-bold text-gray-900 mb-0.5 group-hover:text-indigo-600 transition-colors">
-                    {author.first_name ? `${author.first_name} ${author.last_name}` : author.username}
+                    {author.full_name || author.email.split('@')[0]}
                   </h3>
-                  <p className="text-indigo-500 font-medium text-xs mb-3">@{author.username}</p>
+                  <p className="text-indigo-500 font-medium text-xs mb-3">{author.email}</p>
 
                   <div className="flex justify-center gap-4 border-t border-gray-100 pt-3">
                     <div className="text-center">

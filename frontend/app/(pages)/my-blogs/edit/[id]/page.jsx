@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { 
+import {
   Plus, Trash2, ChevronUp, ChevronDown, Save, ArrowLeft,
   Type, List, Code, Table, Youtube, FileText, Link as LinkIcon, Image as ImageIcon, Upload, Send, Bot, User
 } from "lucide-react";
@@ -44,7 +44,7 @@ export default function EditBlogPage() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [autoSlug, setAutoSlug] = useState(true); // Track if slug is auto-generated
-  
+
   // Main blog fields
   const [slug, setSlug] = useState("");
   const [title, setTitle] = useState("");
@@ -56,7 +56,7 @@ export default function EditBlogPage() {
   const [tags, setTags] = useState("");
   const [image, setImage] = useState("");
   const [featured, setFeatured] = useState(false);
-  
+
   // Sections
   const [sections, setSections] = useState([]);
 
@@ -88,8 +88,9 @@ export default function EditBlogPage() {
     const fetchBlogData = async () => {
       try {
         setLoading(true);
-        const blogData = await api.getBlogById(blogId, token);
-        
+        // blogId is actually the slug since we changed the edit link
+        const blogData = await api.getBlogBySlug(blogId, token, false);
+
         if (!blogData) {
           toast.error("Blog not found", {
             description: "The blog you're trying to edit doesn't exist.",
@@ -115,7 +116,7 @@ export default function EditBlogPage() {
         if (blogData.content) {
           setIntroduction(blogData.content.introduction || "");
           setConclusion(blogData.content.conclusion || "");
-          
+
           if (blogData.content.sections && Array.isArray(blogData.content.sections)) {
             const loadedSections = blogData.content.sections.map((section, index) => ({
               id: Date.now() + index,
@@ -149,7 +150,7 @@ export default function EditBlogPage() {
     reader.onload = (e) => {
       try {
         const jsonData = JSON.parse(e.target.result);
-        
+
         // Handle both single blog object and blogs array
         const blogData = jsonData.blogs ? jsonData.blogs[0] : jsonData;
 
@@ -172,7 +173,7 @@ export default function EditBlogPage() {
         if (blogData.content) {
           if (blogData.content.introduction) setIntroduction(blogData.content.introduction);
           if (blogData.content.conclusion) setConclusion(blogData.content.conclusion);
-          
+
           // Load sections
           if (blogData.content.sections && Array.isArray(blogData.content.sections)) {
             const loadedSections = blogData.content.sections.map((section, index) => ({
@@ -196,7 +197,7 @@ export default function EditBlogPage() {
       }
     };
     reader.readAsText(file);
-    
+
     // Reset input
     event.target.value = "";
   };
@@ -213,7 +214,7 @@ export default function EditBlogPage() {
 
     try {
       const response = await api.generateBlog(userMessage, sessionId);
-      
+
       // Update session ID if provided
       if (response.session_id) {
         setSessionId(response.session_id);
@@ -265,7 +266,7 @@ export default function EditBlogPage() {
           if (blogState.content.conclusion) {
             setConclusion(blogState.content.conclusion);
           }
-          
+
           // Load sections
           if (blogState.content.sections && Array.isArray(blogState.content.sections)) {
             const loadedSections = blogState.content.sections.map((section, index) => ({
@@ -290,7 +291,7 @@ export default function EditBlogPage() {
         try {
           setIsGenerating(true);
           const saveResponse = await api.saveGeneratedBlog(response.session_id, token);
-          
+
           toast.success("Blog saved successfully!", {
             description: saveResponse.message || "Your blog has been saved to your collection.",
             duration: 3000,
@@ -317,9 +318,9 @@ export default function EditBlogPage() {
         description: error.message || "Please try again or use the Load JSON option.",
         duration: 4000,
       });
-      setChatHistory(prev => [...prev, { 
-        role: "assistant", 
-        content: "Sorry, I encountered an error generating your blog. Please try again." 
+      setChatHistory(prev => [...prev, {
+        role: "assistant",
+        content: "Sorry, I encountered an error generating your blog. Please try again."
       }]);
     } finally {
       setIsGenerating(false);
@@ -535,7 +536,7 @@ export default function EditBlogPage() {
         excerpt,
         introduction,
         conclusion,
-        author: user?.full_name || user?.username || "Anonymous",
+        author: user?.full_name || user?.email || "Anonymous",
         publishedDate: new Date().toISOString().split("T")[0],
         tags: tags.split(",").map((t) => t.trim()),
         image,
@@ -606,9 +607,8 @@ export default function EditBlogPage() {
                 {chatHistory.map((msg, index) => (
                   <div
                     key={index}
-                    className={`flex gap-3 ${
-                      msg.role === "user" ? "justify-end" : "justify-start"
-                    }`}
+                    className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"
+                      }`}
                   >
                     {msg.role === "assistant" && (
                       <div className="w-8 h-8 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -616,11 +616,10 @@ export default function EditBlogPage() {
                       </div>
                     )}
                     <div
-                      className={`max-w-[80%] rounded-lg p-3 ${
-                        msg.role === "user"
-                          ? "bg-indigo-600 text-white"
-                          : "bg-gray-100 text-gray-900"
-                      }`}
+                      className={`max-w-[80%] rounded-lg p-3 ${msg.role === "user"
+                        ? "bg-indigo-600 text-white"
+                        : "bg-gray-100 text-gray-900"
+                        }`}
                     >
                       <div className={`text-sm prose prose-sm max-w-none ${msg.role === "user" ? "prose-invert" : ""}`}>
                         <ReactMarkdown

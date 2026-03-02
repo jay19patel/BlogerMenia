@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
@@ -24,17 +23,27 @@ export default function PlaylistDetailPage() {
   const [editCoverImage, setEditCoverImage] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const queryClient = useQueryClient();
+  const [playlist, setPlaylist] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch Playlist
-  const { data: playlist, isLoading } = useQuery({
-    queryKey: ['playlist', playlistSlug],
-    queryFn: () => api.getPlaylist(playlistSlug, authToken),
-    staleTime: 60 * 1000,
-    retry: false,
-  });
+  const fetchPlaylist = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const data = await api.getPlaylist(playlistSlug, authToken);
+      setPlaylist(data);
+    } catch (error) {
+      console.error('Error fetching playlist:', error);
+      toast.error('Failed to load playlist');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [playlistSlug, authToken]);
 
-  const isOwner = user && playlist && playlist.owner && user.username === playlist.owner.username;
+  useEffect(() => {
+    fetchPlaylist();
+  }, [fetchPlaylist]);
+
+  const isOwner = user && playlist && playlist.owner && user.email === playlist.owner.email;
 
   useEffect(() => {
     if (playlist) {
@@ -52,7 +61,13 @@ export default function PlaylistDetailPage() {
     try {
       setRemovingId(blogId);
       await api.removeBlogFromPlaylist(playlistSlug, blogId, authToken);
-      queryClient.invalidateQueries({ queryKey: ['playlist', playlistSlug] });
+      if (playlist && playlist.blogs) {
+        setPlaylist({
+          ...playlist,
+          blogs: playlist.blogs.filter(b => b.id !== blogId),
+          blog_count: Math.max(0, (playlist.blog_count || 1) - 1)
+        });
+      }
       toast.success('Blog removed from playlist');
     } catch (error) {
       console.error('Error removing blog:', error);
@@ -77,7 +92,12 @@ export default function PlaylistDetailPage() {
       }, authToken);
 
       toast.success('Playlist updated successfully!');
-      queryClient.invalidateQueries({ queryKey: ['playlist', playlistSlug] });
+      setPlaylist({
+        ...playlist,
+        name: editName.trim(),
+        description: editDescription.trim() || null,
+        cover_image: editCoverImage.trim() || null
+      });
       setIsEditing(false);
     } catch (error) {
       console.error('Error updating playlist:', error);
@@ -114,7 +134,7 @@ export default function PlaylistDetailPage() {
             className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to {username}'s Articles
+            Back to {playlist?.owner?.full_name || username}'s Articles
           </Link>
         </div>
       </div>
@@ -130,7 +150,7 @@ export default function PlaylistDetailPage() {
           className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to {username}'s Articles
+          Back to {playlist?.owner?.full_name || username}'s Articles
         </Link>
 
         {/* Playlist Profile Section - Similar to User Profile */}
@@ -175,7 +195,7 @@ export default function PlaylistDetailPage() {
                   {playlist.name}
                 </h3>
                 <p className="font-normal text-base leading-6 text-gray-500 max-sm:text-center">
-                  Playlist by @{playlist.owner?.username}
+                  Playlist by {playlist.owner?.full_name || playlist.owner?.email}
                 </p>
                 {playlist.description && (
                   <p className="font-normal text-sm leading-5 text-gray-600 mt-2 max-sm:text-center">
@@ -413,7 +433,7 @@ export default function PlaylistDetailPage() {
               href={`/blogs/${username}`}
               className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
             >
-              Go to {username}'s Articles
+              Go to {playlist?.owner?.full_name || username}'s Articles
             </Link>
           </div>
         )}
