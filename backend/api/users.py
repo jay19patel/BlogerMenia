@@ -29,14 +29,33 @@ user_crud = GenericCrud(
     permission_classes=[AllowAny]
 )
 
-router = user_crud.router
+router = APIRouter()
+
+# --- Custom Routes FIRST ---
+
+@router.get("/user/top-authors/", tags=["Users"])
+async def get_top_authors():
+    user_repo = get_repo(User)
+    users = await user_repo.get_all({"is_active": True}, limit=5)
+    return {"results": users}
+
+# Include generic routes AFTER
+router.include_router(user_crud.router)
+
 
 def get_repo(model) -> BeanieRepository:
     repo = BeanieRepository(BackboneConfig.get_instance().database)
     repo.initialize(model)
     return repo
 
-@router.get("/profile/{email}/", tags=["Users"])
+from backbone.schemas import UserOut
+
+class UserProfileOut(UserOut):
+    blog_count: int = 0
+    total_views: int = 0
+    total_likes: int = 0
+
+@router.get("/user/profile/{email}/", response_model=UserProfileOut, tags=["Users"])
 async def get_user_profile(email: str):
     decoded_email = urllib.parse.unquote(email)
     
@@ -72,8 +91,3 @@ async def get_user_profile(email: str):
         "total_likes": total_likes
     }
 
-@router.get("/top-authors/", tags=["Users"])
-async def get_top_authors():
-    user_repo = get_repo(User)
-    users = await user_repo.get_all({"is_active": True}, limit=5)
-    return {"results": users}

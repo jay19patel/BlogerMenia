@@ -247,14 +247,25 @@ class GenericList(BaseGenericView):
             
             skip_val = (page - 1) * page_size
             
+            sort_parsed = None
+            if sort:
+                sort_parsed = []
+                for s in sort.split(","):
+                    s = s.strip()
+                    if s.startswith("-"):
+                        sort_parsed.append((s[1:], -1))
+                    else:
+                        sort_parsed.append((s, 1))
+            
             results = await self.repository.get_all(
                 query, 
                 skip=skip_val, 
                 limit=page_size, 
+                sort=sort_parsed,
                 projection=self._get_projection(),
                 populate_fields=self.populate_fields
             )
-            total = await self.repository.count(query)
+            total = await self.repository.count(query, populate_fields=self.populate_fields)
             
             return {
                 "total": total,
@@ -267,7 +278,9 @@ class GenericList(BaseGenericView):
 
 class GenericCreate(BaseGenericView):
     def __init__(self, *args, **kwargs):
-        kwargs["use_auth"] = True
+        # Default use_auth to True for creation unless explicitly set
+        if "use_auth" not in kwargs:
+            kwargs["use_auth"] = True
         super().__init__(*args, **kwargs)
         self._register_create_route()
 
@@ -275,14 +288,19 @@ class GenericCreate(BaseGenericView):
         from datetime import datetime, timezone
         @self.router.post("/", response_model=self.schema, status_code=201)
         @cache(expire=30, include_ip=True, key_prefix=f"backbone:{self.prefix}:create") # Idempotency
-        async def create(request: Request, data: self.schema, user: UserOut = Depends(self.perm_dep)):
+        async def create(request: Request, data: self.schema, user: Optional[UserOut] = Depends(self.perm_dep)):
             await self._resolve_context(request)
             validated_data = data.model_dump(by_alias=True, exclude={"id"})
-            validated_data.update({
+            
+            # Prepare audit fields
+            audit_data = {
                 "created_at": datetime.now(timezone.utc),
-                "created_by": str(user.id),
                 "is_deleted": False
-            })
+            }
+            if user:
+                audit_data["created_by"] = str(user.id)
+                
+            validated_data.update(audit_data)
             result = await self.repository.create(validated_data)
             await self._invalidate_cache()
             return result
@@ -314,6 +332,13 @@ class GenericRetrieve(BaseGenericView):
                 perm = permission_class(request, user)
                 if not await perm.has_object_permission(item):
                     raise HTTPException(status_code=403, detail="Object-level access denied")
+            
+            # Emit Signal for analytics (View counting, etc.)
+            from ..core.signals import signals
+            try:
+                await signals.on_view.emit(item, model_class=self.schema, request=request, user=user)
+            except Exception:
+                pass 
             
             return item
 
@@ -366,3 +391,133 @@ class GenericCrud(GenericList, GenericCreate, GenericRetrieve, GenericUpdate, Ge
         self._register_retrieve_route()
         self._register_update_route()
         self._register_delete_route()
+
+class GenericStats(BaseGenericView):
+    """
+    Generic view to fetch counts, sums, etc. for multiple models in one endpoint.
+    Example stats_config:
+    [
+        {"name": "total_posts", "model": Blog, "type": "count", "filters": {"is_deleted": False}},
+        {"name": "total_views", "model": Blog, "type": "sum", "field": "views", "filters": {"is_deleted": False}}
+    ]
+    """
+    def __init__(self, stats_config: List[Dict[str, Any]], *args, **kwargs):
+        # Ensure we don't accidentally enforce object owner auth for stats
+        kwargs.setdefault("use_auth", False)
+        kwargs.setdefault("permission_classes", [AllowAny])
+        super().__init__(*args, **kwargs)
+        self.stats_config = stats_config
+        self._register_stats_route()
+
+    def _register_stats_route(self):
+        @self.router.get("/", tags=self.router.tags)
+        async def get_stats(request: Request):
+            await self._resolve_context(request)
+            results = {}
+            for config in self.stats_config:
+                model = config["model"]
+                stat_type = config.get("type", "count")
+                filters = config.get("filters", {})
+                name = config["name"]
+                
+                repo = BeanieRepository(self.repository.db)
+                repo.initialize(model)
+                
+                if stat_type == "count":
+                    count = await repo.count(filters)
+                    results[name] = count
+                elif stat_type == "sum":
+                    field = config.get("field")
+                    # Use get_pymongo_collection (which is the Motor collection in this setup)
+                    # and handle the Motor 3.x cursor correctly (aggregate() is not awaitable)
+                    collection = model.get_pymongo_collection()
+                    pipeline = [
+                        {"$match": filters},
+                        {"$group": {"_id": None, "total": {"$sum": f"${field}"}}}
+                    ]
+                    # Ensure we return 0 if total is None or result is empty
+                    results[name] = (agg_results[0].get("total") or 0) if agg_results else 0
+            return results
+
+
+class GenericSubResource(BaseGenericView):
+    """
+    Generic view for adding or removing items from an array field (Like playlists -> blogs).
+    """
+    def __init__(self, array_field: str, target_id_param: str = "id", *args, **kwargs):
+        kwargs.setdefault("use_auth", True)
+        super().__init__(*args, **kwargs)
+        self.array_field = array_field
+        self.target_id_param = target_id_param
+        self._register_array_routes()
+
+    def _register_array_routes(self):
+        from fastapi import Body
+        from beanie import PydanticObjectId
+        
+        @self.router.post("/{pk}/" + self.array_field + "/", status_code=200)
+        async def add_item(request: Request, pk: str, data: Dict[str, Any] = Body(...), user: Optional[UserOut] = Depends(self.perm_dep)):
+            item = await self._get_object_internal(pk, request, user, use_cache=False)
+            
+            target_id = data.get(self.target_id_param)
+            if not target_id:
+                raise HTTPException(status_code=400, detail=f"Missing {self.target_id_param}")
+                
+            query = {"_id": item.id}
+            await self.repository.update(query, {
+                "$addToSet": {self.array_field: PydanticObjectId(target_id)}
+            })
+            await self._invalidate_cache()
+            return {"status": "success", "message": f"Added to {self.array_field}"}
+
+        @self.router.delete("/{pk}/" + self.array_field + "/{target_id}/", status_code=200)
+        async def remove_item(request: Request, pk: str, target_id: str, user: Optional[UserOut] = Depends(self.perm_dep)):
+            item = await self._get_object_internal(pk, request, user, use_cache=False)
+            
+            query = {"_id": item.id}
+            await self.repository.update(query, {
+                "$pull": {self.array_field: PydanticObjectId(target_id)}
+            })
+            await self._invalidate_cache()
+            return {"status": "success", "message": f"Removed from {self.array_field}"}
+
+
+class GenericCustomApi(BaseGenericView):
+    """
+    Generic view to easily build custom endpoints using standard Backbone permissions logic.
+    Subclasses should override `get` or `post`.
+    """
+    def __init__(self, endpoint: str = "", *args, **kwargs):
+        # BaseGenericView needs a schema, but custom APIs might not map to a DB collection.
+        # We can pass schema=None if it doesn't map directly, but the repository logic might complain 
+        # so typically a dummy schema or the main model schema is passed.
+        from ..core.permissions import AllowAny
+        kwargs.setdefault("permission_classes", [AllowAny])
+        super().__init__(*args, **kwargs)
+        self.endpoint = endpoint
+        self._register_custom_routes()
+
+    def _register_custom_routes(self):
+        from fastapi import Body
+
+        # Check if the subclass implemented `get`
+        if type(self).get != GenericCustomApi.get:
+            @self.router.get(self.endpoint, tags=self.router.tags)
+            async def custom_get(request: Request, user: Optional[UserOut] = Depends(self.perm_dep)):
+                await self._resolve_context(request) # Ensure db access is ready if needed
+                return await self.get(request, user)
+
+        # Check if the subclass implemented `post`
+        if type(self).post != GenericCustomApi.post:
+            @self.router.post(self.endpoint, tags=self.router.tags)
+            async def custom_post(request: Request, data: Dict[str, Any] = Body(...), user: Optional[UserOut] = Depends(self.perm_dep)):
+                await self._resolve_context(request)
+                return await self.post(request, data, user)
+
+    async def get(self, request: Request, user: Optional[UserOut]) -> Any:
+        # Override in subclass
+        raise NotImplementedError("GET method not implemented")
+
+    async def post(self, request: Request, data: Dict[str, Any], user: Optional[UserOut]) -> Any:
+        # Override in subclass
+        raise NotImplementedError("POST method not implemented")

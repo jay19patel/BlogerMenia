@@ -67,15 +67,6 @@ export default function Navbar() {
               Blogs
             </Link>
             <Link
-              href="/notes"
-              className={`transition-colors font-medium ${pathname?.startsWith("/notes")
-                ? "text-indigo-600 font-semibold"
-                : "text-gray-700 hover:text-indigo-600"
-                }`}
-            >
-              Notes
-            </Link>
-            <Link
               href="/contact"
               className={`transition-colors font-medium ${pathname === "/contact"
                 ? "text-indigo-600 font-semibold"
@@ -199,16 +190,6 @@ export default function Navbar() {
                     }`}
                 >
                   Blogs
-                </Link>
-                <Link
-                  href="/notes"
-                  onClick={() => setIsSheetOpen(false)}
-                  className={`block py-3 px-4 rounded-lg transition-colors font-medium ${pathname?.startsWith("/notes")
-                    ? "bg-indigo-50 text-indigo-600 font-semibold"
-                    : "text-gray-700 hover:bg-gray-100"
-                    }`}
-                >
-                  Notes
                 </Link>
                 <Link
                   href="/contact"

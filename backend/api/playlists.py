@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from backbone import GenericCrud, AllowAny, BeanieRepository
 from backbone.core.dependencies import get_current_user, get_optional_user
 from backbone.core.models import User
@@ -6,101 +6,75 @@ from schemas.playlists import Playlist
 from schemas.blogs import Blog
 from typing import List, Optional
 from beanie import PydanticObjectId
+from backbone.generic.views import GenericSubResource
+
+class PlaylistRepository(BeanieRepository[Playlist]):
+    async def get_all(self, *args, **kwargs):
+        results = await super().get_all(*args, **kwargs)
+        for res in results:
+            blogs = res.get("blogs", [])
+            res["blog_count"] = len(blogs) if isinstance(blogs, list) else 0
+            res["total_views"] = sum(b.get("views", 0) for b in blogs) if isinstance(blogs, list) else 0
+            res["total_likes"] = sum(b.get("likes", 0) for b in blogs) if isinstance(blogs, list) else 0
+        return results
+
+    async def get_one(self, *args, **kwargs):
+        res = await super().get_one(*args, **kwargs)
+        if res:
+            # When fetching one, blogs are usually fetched as links if fetch_links=True
+            blogs = res.get("blogs", [])
+            res["blog_count"] = len(blogs) if isinstance(blogs, list) else 0
+            res["total_views"] = sum(b.get("views", 0) for b in blogs) if isinstance(blogs, list) else 0
+            res["total_likes"] = sum(b.get("likes", 0) for b in blogs) if isinstance(blogs, list) else 0
+        return res
+
+# Repository Instance
+playlist_repo = PlaylistRepository()
 
 playlist_crud = GenericCrud(
     schema=Playlist,
+    repository=playlist_repo,
     prefix="/playlists",
     tags=["Playlists"],
     search_fields=["name", "description"],
-    list_fields=["id", "name", "slug", "owner", "is_public"],
+    list_fields=["id", "name", "slug", "owner", "is_public", "blogs", "blog_count", "total_views", "total_likes"],
     fetch_links=True,
     permission_classes=[AllowAny],
     filter_fields=["owner.$id", "is_public", "slug", "blogs.$id"],
     lookup_field="slug"
 )
 
-router = playlist_crud.router
+# Create a new router to control route order
+router = APIRouter()
 
-class PlaylistRepository(BeanieRepository[Playlist]):
-    pass
-
-class BlogRepository(BeanieRepository[Blog]):
-    pass
-
-def get_repo(model) -> BeanieRepository:
+def get_repo(model, request: Request = None) -> BeanieRepository:
     from backbone import BackboneConfig
-    repo = BeanieRepository(BackboneConfig.get_instance().database)
+    db = None
+    if request and hasattr(request.app.state, "backbone_config"):
+        db = request.app.state.backbone_config.database
+    else:
+        try:
+            db = BackboneConfig.get_instance().database
+        except:
+            pass
+            
+    repo = BeanieRepository(db)
     repo.initialize(model)
     return repo
 
+playlist_blogs = GenericSubResource(
+    schema=Playlist,
+    repository=playlist_repo,
+    array_field="blogs",
+    target_id_param="blog_id",
+    prefix="/playlists",
+    tags=["Playlists"],
+    lookup_field="slug"
+)
+router.include_router(playlist_blogs.router)
 
-# --- Custom Routes ---
+# Include generic routing AFTER custom specific routes
+router.include_router(playlist_crud.router)
 
-
-# --- Custom POST/DELETE Routes ---
-
-@router.post("/{playlist_id_or_slug}/blogs/", tags=["Playlists"])
-async def add_blog_to_playlist(
-    playlist_id_or_slug: str,
-    blog_data: dict,
-    current_user: User = Depends(get_current_user)
-):
-    """Add a blog to a playlist."""
-    playlist_repo = get_repo(Playlist)
-    playlist = await playlist_repo.get_one(
-        {"$or": [{"slug": playlist_id_or_slug}, {"id": playlist_id_or_slug}], "is_deleted": False}
-    )
-    if not playlist:
-        raise HTTPException(status_code=404, detail="Playlist not found")
-        
-    owner_id = playlist["owner"]["id"] if isinstance(playlist.get("owner"), dict) else str(playlist.get("owner", ""))
-    if owner_id != str(current_user.id):
-        raise HTTPException(status_code=403, detail="Not authorized")
-    
-    blog_repo = get_repo(Blog)
-    blog_id = blog_data.get("blog_id")
-    blog = await blog_repo.get_one({"id": blog_id, "is_deleted": False})
-    if not blog:
-        raise HTTPException(status_code=404, detail="Blog not found")
-        
-    # Check if blog already exists in playlist blogs array via pure DB approach
-    playlist_id = playlist["id"]
-    from beanie import PydanticObjectId
-    from pymongo import UpdateOne
-    
-    # We securely use the motor collection to push
-    # For robust repositry isolation, we add a push abstraction conceptually,
-    # or just use native update pipeline in Beanie: 
-    await playlist_repo.update({"_id": playlist_id}, {
-        "$addToSet": {"blogs": PydanticObjectId(blog_id)}
-    })
-    
-    return {"status": "success", "message": "Blog added"}
-
-@router.delete("/{playlist_id_or_slug}/blogs/{blog_id}/", tags=["Playlists"])
-async def remove_blog_from_playlist(
-    playlist_id_or_slug: str,
-    blog_id: str,
-    current_user: User = Depends(get_current_user)
-):
-    """Remove a blog from a playlist."""
-    playlist_repo = get_repo(Playlist)
-    playlist = await playlist_repo.get_one(
-        {"$or": [{"slug": playlist_id_or_slug}, {"id": playlist_id_or_slug}], "is_deleted": False}
-    )
-    
-    if not playlist:
-        raise HTTPException(status_code=404, detail="Playlist not found")
-        
-    owner_id = playlist["owner"]["id"] if isinstance(playlist.get("owner"), dict) else str(playlist.get("owner", ""))
-    if owner_id != str(current_user.id):
-        raise HTTPException(status_code=403, detail="Not authorized")
-        
-    playlist_id = playlist["id"]
-    from beanie import PydanticObjectId
-    
-    await playlist_repo.update({"_id": playlist_id}, {
-        "$pull": {"blogs": PydanticObjectId(blog_id)}
-    })
-
-    return {"status": "success", "message": "Blog removed"}
+class BlogRepository(BeanieRepository[Blog]):
+    pass

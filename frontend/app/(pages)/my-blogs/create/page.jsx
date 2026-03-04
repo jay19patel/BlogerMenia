@@ -14,6 +14,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
+import CategorySelect from "@/components/CategorySelect";
 
 const SECTION_TYPES = [
   { value: "text", label: "Text", icon: Type },
@@ -49,7 +50,8 @@ export default function CreateBlogPage() {
   const [excerpt, setExcerpt] = useState("");
   const [introduction, setIntroduction] = useState("");
   const [conclusion, setConclusion] = useState("");
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState("");     // display name
+  const [categoryId, setCategoryId] = useState(null); // resolved mongo ID
   const [tags, setTags] = useState("");
   const [image, setImage] = useState("");
   const [featured, setFeatured] = useState(false);
@@ -63,7 +65,10 @@ export default function CreateBlogPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [sessionId, setSessionId] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const chatContainerRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   // Auto-scroll to bottom when chat history changes
   useEffect(() => {
@@ -138,6 +143,31 @@ export default function CreateBlogPage() {
 
     // Reset input
     event.target.value = "";
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSectionImageChange = (sectionId, e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSections(sections.map(s =>
+          s.id === sectionId ? { ...s, imageFile: file, imagePreview: reader.result } : s
+        ));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleChatSend = async () => {
@@ -477,9 +507,9 @@ export default function CreateBlogPage() {
       return;
     }
 
-    if (!image || !image.trim()) {
-      toast.error("Image URL is required", {
-        description: "Please enter an image URL for your blog.",
+    if (!imageFile && !image) {
+      toast.error("Image is required", {
+        description: "Please select or upload an image for your blog.",
         duration: 3000,
       });
       return;
@@ -495,6 +525,54 @@ export default function CreateBlogPage() {
 
     setSaving(true);
     try {
+      let finalImageUrl = image;
+      let finalImageId = null;
+
+      // 1. Upload main thumbnail if file exists
+      if (imageFile) {
+        try {
+          const uploadRes = await api.uploadImage(imageFile, 'blogs', token);
+          finalImageUrl = uploadRes.url;
+          finalImageId = uploadRes.id;
+        } catch (uploadError) {
+          console.error("Error uploading thumbnail:", uploadError);
+          toast.error("Failed to upload thumbnail image");
+          setSaving(false);
+          return;
+        }
+      }
+
+      // 2. Upload section images if files exist
+      const updatedSections = await Promise.all(sections.map(async (section) => {
+        if (section.type === 'image' && section.imageFile) {
+          try {
+            const uploadRes = await api.uploadImage(section.imageFile, 'blogs', token);
+            const { imageFile, imagePreview, ...rest } = section;
+            return { ...rest, imageUrl: uploadRes.url, imageId: uploadRes.id };
+          } catch (uploadError) {
+            console.error("Error uploading section image:", uploadError);
+            toast.error(`Failed to upload image for section: ${section.title || 'Untitled'}`);
+            throw uploadError;
+          }
+        }
+        // If URL was entered but not yet uploaded, import it now
+        if (section.type === 'image' && section.imageUrl && !section.imageId && section.imageUrl.startsWith('http')) {
+          try {
+            const uploadRes = await api.uploadImageFromUrl(section.imageUrl, 'blogs', token);
+            const { imageFile, imagePreview, ...rest } = section;
+            return { ...rest, imageUrl: uploadRes.url, imageId: uploadRes.id };
+          } catch (uploadError) {
+            console.error("Error importing URL image for section:", uploadError);
+            // Non-fatal: keep the original URL
+          }
+        }
+        const { id, imageFile, imagePreview, ...rest } = section;
+        return rest;
+      }));
+
+      // Category is already resolved by CategorySelect — use categoryId directly
+      const finalCategoryId = categoryId || null;
+
       const blogData = {
         slug: slug.trim(),
         title: title.trim(),
@@ -502,16 +580,14 @@ export default function CreateBlogPage() {
         excerpt: excerpt?.trim() || undefined,
         introduction: introduction?.trim() || undefined,
         conclusion: conclusion?.trim() || undefined,
-        author: user?.full_name || user?.email || "Anonymous",
+        author: user?.id || user?._id || "Anonymous", // Pass MongoDB ID!
         publishedDate: new Date().toISOString().split("T")[0],
         tags: tags ? tags.split(",").map((t) => t.trim()).filter((t) => t.length > 0) : [],
-        image: image.trim(),
-        category: category.trim(),
+        thumbnail: finalImageId,
+        image: finalImageUrl,
+        category: finalCategoryId,
         featured,
-        sections: sections.map((section) => {
-          const { id, ...rest } = section;
-          return rest;
-        }),
+        sections: updatedSections,
       };
 
       const response = await api.createBlog(blogData, token);
@@ -600,8 +676,8 @@ export default function CreateBlogPage() {
                     )}
                     <div
                       className={`max-w-[80%] rounded-lg p-3 ${msg.role === "user"
-                          ? "bg-indigo-600 text-white"
-                          : "bg-gray-100 text-gray-900"
+                        ? "bg-indigo-600 text-white"
+                        : "bg-gray-100 text-gray-900"
                         }`}
                     >
                       <div className={`text-sm prose prose-sm max-w-none ${msg.role === "user" ? "prose-invert" : ""}`}>
@@ -754,14 +830,14 @@ export default function CreateBlogPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Category
+                  Category *
                 </label>
-                <input
-                  type="text"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="Enter category (e.g., Web Development, React, AI/ML)"
+                <CategorySelect
+                  categoryId={category}
+                  categoryName={category}
+                  onSelect={(id, name) => { setCategoryId(id); setCategory(name); }}
+                  token={token}
+                  required
                 />
               </div>
             </div>
@@ -791,15 +867,66 @@ export default function CreateBlogPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Image URL
+                Featured Image *
               </label>
-              <input
-                type="text"
-                value={image}
-                onChange={(e) => setImage(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="/blog-images/image.jpg"
-              />
+              <div className="flex flex-col gap-4">
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`relative w-full h-64 rounded-xl border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center cursor-pointer overflow-hidden ${imagePreview || image
+                    ? 'border-indigo-500 bg-indigo-50/10'
+                    : 'border-gray-300 hover:border-indigo-400 bg-gray-50'
+                    }`}
+                >
+                  {imagePreview || image ? (
+                    <>
+                      <img
+                        src={imagePreview || image}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <div className="flex items-center gap-2 text-white font-medium">
+                          <Upload className="w-5 h-5" />
+                          Change Image
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center p-6">
+                      <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Upload className="w-6 h-6" />
+                      </div>
+                      <p className="text-sm font-medium text-gray-900">Click to upload featured image</p>
+                      <p className="text-xs text-gray-500 mt-1">PNG, JPG or WebP up to 10MB</p>
+                    </div>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                </div>
+
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <LinkIcon className="h-4 w-4 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    value={image}
+                    onChange={(e) => {
+                      const url = e.target.value;
+                      setImage(url);
+                      setImageFile(null);
+                      setImagePreview(url || null); // show preview instantly
+                    }}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                    placeholder="Or paste image URL to preview"
+                  />
+                </div>
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -844,21 +971,6 @@ export default function CreateBlogPage() {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-900">Content Sections</h2>
-            <div className="flex flex-wrap gap-2">
-              {SECTION_TYPES.map((sectionType) => {
-                const Icon = sectionType.icon;
-                return (
-                  <button
-                    key={sectionType.value}
-                    onClick={() => addSection(sectionType.value)}
-                    className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <Icon className="w-4 h-4" />
-                    {sectionType.label}
-                  </button>
-                );
-              })}
-            </div>
           </div>
 
           <div className="space-y-4">
@@ -1137,16 +1249,69 @@ export default function CreateBlogPage() {
                 )}
 
                 {section.type === "image" && (
-                  <div className="space-y-2">
-                    <input
-                      type="text"
-                      value={section.imageUrl || ""}
-                      onChange={(e) =>
-                        updateSection(section.id, "imageUrl", e.target.value)
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      placeholder="Image URL"
-                    />
+                  <div className="space-y-4">
+                    <div className="flex flex-col gap-3">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Section Image
+                      </label>
+                      <div
+                        onClick={() => document.getElementById(`section-file-${section.id}`).click()}
+                        className={`relative w-full h-48 rounded-lg border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center cursor-pointer overflow-hidden ${section.imagePreview || section.imageUrl
+                          ? 'border-indigo-500 bg-indigo-50/10'
+                          : 'border-gray-300 hover:border-indigo-400 bg-gray-50'
+                          }`}
+                      >
+                        {section.imagePreview || section.imageUrl ? (
+                          <>
+                            <img
+                              src={section.imagePreview || section.imageUrl}
+                              alt="Preview"
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <div className="flex items-center gap-2 text-white font-medium">
+                                <Upload className="w-4 h-4" />
+                                Change Section Image
+                              </div>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="text-center p-4">
+                            <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                            <p className="text-xs font-medium text-gray-900">Click to upload image</p>
+                          </div>
+                        )}
+                        <input
+                          id={`section-file-${section.id}`}
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleSectionImageChange(section.id, e)}
+                          className="hidden"
+                        />
+                      </div>
+
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <LinkIcon className="h-3.5 w-3.5 text-gray-400" />
+                        </div>
+                        <input
+                          type="text"
+                          value={section.imageUrl || ""}
+                          onChange={(e) => {
+                            const url = e.target.value;
+                            // Update imageUrl + imagePreview together to make the preview show instantly
+                            setSections(prev => prev.map(s =>
+                              s.id === section.id
+                                ? { ...s, imageUrl: url, imagePreview: url || null, imageFile: null, imageId: null }
+                                : s
+                            ));
+                          }}
+                          className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                          placeholder="Or paste image URL to preview"
+                        />
+                      </div>
+                    </div>
+
                     <textarea
                       value={section.description || ""}
                       onChange={(e) =>
@@ -1160,6 +1325,25 @@ export default function CreateBlogPage() {
                 )}
               </div>
             ))}
+          </div>
+
+          <div className="mt-6 border-t border-gray-100 pt-6">
+            <h3 className="text-sm font-medium text-gray-700 mb-3">Add New Section</h3>
+            <div className="flex flex-wrap gap-2">
+              {SECTION_TYPES.map((sectionType) => {
+                const Icon = sectionType.icon;
+                return (
+                  <button
+                    key={sectionType.value}
+                    onClick={() => addSection(sectionType.value)}
+                    className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <Icon className="w-4 h-4" />
+                    {sectionType.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -1187,7 +1371,7 @@ export default function CreateBlogPage() {
           </button>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
 

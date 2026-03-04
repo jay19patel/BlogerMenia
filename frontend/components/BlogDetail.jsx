@@ -9,7 +9,7 @@ import { ExternalLink, AlertCircle, Copy, Check, Menu, ArrowLeft, Calendar, User
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { api } from '@/lib/api';
-import { getImageUrl } from '@/lib/utils';
+import { getImageUrl, formatDate } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthorTooltip from '@/components/AuthorTooltip';
 
@@ -680,7 +680,7 @@ export default function BlogDetailPage() {
                             <div className="flex flex-wrap gap-6 py-4 mb-6 border-y border-gray-200 dark:border-gray-700">
                                 <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                                     <Calendar className="w-5 h-5" />
-                                    <span className="text-sm">{new Date(blog.publishedDate).toLocaleDateString()}</span>
+                                    <span className="text-sm">{formatDate(blog.publishedDate || blog.created_at)}</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                                     <User className="w-5 h-5" />
@@ -692,7 +692,7 @@ export default function BlogDetailPage() {
                                         </AuthorTooltip>
                                     </Link>
                                 </div>
-                                {blog.views && (
+                                {blog.views !== undefined && (
                                     <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                                         <Eye className="w-5 h-5" />
                                         <span className="text-sm">{blog.views.toLocaleString()}</span>
@@ -701,7 +701,7 @@ export default function BlogDetailPage() {
                                 {likesCount !== undefined && (
                                     <button
                                         onClick={handleLike}
-                                        disabled={isLikedState || isLiking} // Disabled if liked
+                                        disabled={isLiking}
                                         className={`flex items-center gap-2 transition-all duration-300 ${isLikedState
                                             ? 'text-red-600 hover:text-red-700'
                                             : 'text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-500'

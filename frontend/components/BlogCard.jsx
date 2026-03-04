@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Calendar, Tag, Star } from "lucide-react";
+import { Calendar, Tag, Star, Eye, Heart } from "lucide-react";
 import { getImageUrl } from "../lib/utils";
 
 export default function BlogCard({ blog }) {
@@ -54,10 +54,23 @@ export default function BlogCard({ blog }) {
           </p>
 
           {/* Meta */}
-          <div className="flex items-center gap-4 text-xs text-gray-500">
-            <div className="flex items-center gap-1">
-              <Calendar className="w-4 h-4" />
-              <span>{blog.date}</span>
+          <div className="flex items-center justify-between mt-auto">
+            <div className="flex items-center gap-4 text-xs text-gray-500">
+              <div className="flex items-center gap-1">
+                <Calendar className="w-4 h-4" />
+                <span>{blog.date}</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4 text-xs text-gray-500">
+              <div className="flex items-center gap-1">
+                <Eye className="w-4 h-4" />
+                <span>{blog.views || 0}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Heart className="w-4 h-4" />
+                <span>{blog.likes || 0}</span>
+              </div>
             </div>
           </div>
         </div>

@@ -13,7 +13,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { getImageUrl } from "@/lib/utils";
+import { getImageUrl, formatDate } from "@/lib/utils";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -28,7 +28,7 @@ export default function Home() {
   const [featuredBlogs, setFeaturedBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [stats, setStats] = useState({ total_users: 0, total_blogs: 0, total_views: 0 });
+  const [stats, setStats] = useState({ active_users: 0, blogs_published: 0, total_views: 0 });
 
   const [playlists, setPlaylists] = useState([]);
   const [playlistsLoading, setPlaylistsLoading] = useState(true);
@@ -41,8 +41,7 @@ export default function Home() {
     const fetchHomeData = async () => {
       // 1. Fetch Featured Blogs
       try {
-        const response = await api.getBlogs(null, 0, 6, "featuredBlogs");
-        const blogs = response.blogs || [];
+        const blogs = await api.getFeaturedBlogs();
         setFeaturedBlogs(
           blogs.map((blog) => ({
             ...blog,
@@ -52,11 +51,7 @@ export default function Home() {
                 ? blog.category
                 : blog.category?.name),
             description: blog.excerpt || blog.subtitle || "",
-            date: new Date(blog.publishedDate).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            }),
+            date: formatDate(blog.publishedDate || blog.created_at),
           }))
         );
       } catch (e) {
@@ -252,7 +247,7 @@ export default function Home() {
                     </div>
                     <div>
                       <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">Active Users</p>
-                      <p className="text-lg font-bold text-gray-900">{stats.total_users > 0 ? stats.total_users.toLocaleString() : '0'}</p>
+                      <p className="text-lg font-bold text-gray-900">{stats.active_users > 0 ? stats.active_users.toLocaleString() : '0'}</p>
                     </div>
                   </div>
                   <div className="h-10 w-px bg-gray-300"></div>
@@ -262,7 +257,7 @@ export default function Home() {
                     </div>
                     <div>
                       <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">Blogs Published</p>
-                      <p className="text-lg font-bold text-gray-900">{stats.total_blogs > 0 ? stats.total_blogs.toLocaleString() : '0'}</p>
+                      <p className="text-lg font-bold text-gray-900">{stats.blogs_published > 0 ? stats.blogs_published.toLocaleString() : '0'}</p>
                     </div>
                   </div>
                   <div className="h-10 w-px bg-gray-300"></div>
@@ -515,10 +510,10 @@ export default function Home() {
           <div className="flex justify-between items-center mb-12">
             <div>
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-                Featured Blogs
+                Top Viewed Blogs
               </h2>
               <p className="text-gray-600">
-                Discover the latest stories from our community
+                Check out the most popular stories from our community
               </p>
             </div>
             <Link
@@ -550,7 +545,7 @@ export default function Home() {
             </div>
           ) : (
             <div className="text-center py-12">
-              <p className="text-gray-600">No featured blogs available at the moment.</p>
+              <p className="text-gray-600">No popular blogs available at the moment.</p>
             </div>
           )}
 

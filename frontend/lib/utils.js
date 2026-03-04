@@ -14,3 +14,15 @@ export function getImageUrl(path) {
   const serverUrl = baseUrl.replace(/\/api\/?$/, '');
   return `${serverUrl}${path.startsWith('/') ? '' : '/'}${path}`;
 }
+
+export function formatDate(dateString, fallback = "N/A") {
+  if (!dateString) return fallback;
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return fallback;
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}

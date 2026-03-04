@@ -13,8 +13,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    first_name: "",
-    last_name: "",
+    full_name: "",
     headline: "",
     bio: "",
     profile_image: "",
@@ -24,11 +23,10 @@ export default function ProfilePage() {
     if (!user) return;
 
     setFormData({
-      first_name: user.first_name || "",
-      last_name: user.last_name || "",
+      full_name: user.full_name || "",
       headline: user.headline || "",
       bio: user.bio || "",
-      profile_image: user.profile_image || "",
+      profile_image: user.profile_image || user.profile_image_url || "",
     });
   }, [user]);
 
@@ -76,15 +74,9 @@ export default function ProfilePage() {
       const updateData = new FormData();
       let hasChanges = false;
 
-      // Check first_name
-      if (formData.first_name !== (user?.first_name || "")) {
-        updateData.append('first_name', formData.first_name);
-        hasChanges = true;
-      }
-
-      // Check last_name
-      if (formData.last_name !== (user?.last_name || "")) {
-        updateData.append('last_name', formData.last_name);
+      // Check full_name
+      if (formData.full_name !== (user?.full_name || "")) {
+        updateData.append('full_name', formData.full_name);
         hasChanges = true;
       }
 
@@ -188,48 +180,26 @@ export default function ProfilePage() {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Name Fields (First & Last) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label
-                  htmlFor="first_name"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  First Name
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    id="first_name"
-                    name="first_name"
-                    type="text"
-                    value={formData.first_name}
-                    onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
-                    placeholder="First Name"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="last_name"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Last Name
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    id="last_name"
-                    name="last_name"
-                    type="text"
-                    value={formData.last_name}
-                    onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
-                    placeholder="Last Name"
-                  />
-                </div>
+            {/* Full Name Field */}
+            <div>
+              <label
+                htmlFor="full_name"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Full Name
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  id="full_name"
+                  name="full_name"
+                  type="text"
+                  value={formData.full_name}
+                  onChange={handleInputChange}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                  placeholder="Full Name"
+                  required
+                />
               </div>
             </div>
 

@@ -11,6 +11,7 @@ import Image from "next/image";
 import LoaderCard from "@/components/ui/loader";
 import { useAuth } from "@/contexts/AuthContext";
 import CreatePlaylistDialog from "@/components/CreatePlaylistDialog";
+import { formatDate } from "@/lib/utils";
 
 const BLOGS_PER_PAGE = 9;
 
@@ -135,15 +136,13 @@ export default function UserBlogsList({ username }) {
         description: blog.excerpt,
         image: blog.thumbnail?.file_path || blog.image,
         category: blog.category_name || (typeof blog.category === 'string' ? blog.category : blog.category?.name),
-        date: new Date(blog.publishedDate).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-        }),
+        date: formatDate(blog.publishedDate || blog.created_at),
         featured: blog.featured || false,
         publishedDate: blog.publishedDate,
         authorUsername: username, // here username is the email
         authorEmail: username,
+        views: blog.views,
+        likes: blog.likes
     }));
 
     // Handlers

@@ -7,6 +7,7 @@ import Breadcrumb from "@/components/Breadcrumb";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { api } from "@/lib/api";
 import LoaderCard from "@/components/ui/loader";
+import { formatDate } from "../lib/utils";
 
 const BLOGS_PER_PAGE = 9;
 
@@ -48,7 +49,8 @@ export default function BlogsList() {
         const fetchCategories = async () => {
             try {
                 const response = await api.getBlogCategories();
-                setCategories(["All", ...(response.categories || [])]);
+                const categoriesList = response.results || response.categories || [];
+                setCategories(["All", ...categoriesList.map(c => typeof c === 'string' ? c : c.name)]);
             } catch (error) {
                 console.error("Error fetching categories:", error);
             }
@@ -87,11 +89,7 @@ export default function BlogsList() {
         description: blog.excerpt,
         image: blog.thumbnail?.file_path || blog.image,
         category: blog.category?.name || "General",
-        date: new Date(blog.publishedDate).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-        }),
+        date: formatDate(blog.publishedDate || blog.created_at),
         featured: blog.featured || false,
         publishedDate: blog.publishedDate,
         authorFullName: blog.author?.full_name,

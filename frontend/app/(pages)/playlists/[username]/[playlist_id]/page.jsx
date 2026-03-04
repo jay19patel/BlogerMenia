@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
+import { formatDate } from '@/lib/utils';
 import { ArrowLeft, BookOpen, Trash2, Loader2, Edit2, X, Save, Eye, Heart } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -361,15 +362,7 @@ export default function PlaylistDetailPage() {
               {playlist.blogs.map((blog, index) => {
                 // Transform blog data to match BlogCard format
                 // Use publishedDate first, then created_at, then added_at (for backward compatibility)
-                let blogDate = '';
-                if (blog.publishedDate) {
-                  blogDate = new Date(blog.publishedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                } else if (blog.created_at) {
-                  blogDate = new Date(blog.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                } else if (blog.added_at) {
-                  // Fallback for old playlists that still have added_at
-                  blogDate = new Date(blog.added_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                }
+                const blogDate = formatDate(blog.publishedDate || blog.created_at || blog.added_at);
 
                 const blogCardData = {
                   slug: blog.slug,
@@ -379,7 +372,9 @@ export default function PlaylistDetailPage() {
                   category: blog.category_name || (typeof blog.category === 'string' ? blog.category : blog.category?.name) || 'Uncategorized',
                   date: blogDate,
                   featured: blog.featured || false,
-                  authorUsername: username
+                  authorUsername: username,
+                  views: blog.views || 0,
+                  likes: blog.likes || 0
                 };
 
                 return (

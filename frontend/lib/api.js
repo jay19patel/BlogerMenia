@@ -8,13 +8,19 @@ async function handleResponse(response) {
       detail: `HTTP error! status: ${response.status}`
     }));
 
-    // Create error object with full details for better error handling
-    const error = new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+    // Properly serialize detail — it may be an array (Pydantic validation errors) or string
+    let detailMessage;
+    if (Array.isArray(errorData.detail)) {
+      detailMessage = errorData.detail.map(e => `${e.loc?.join('.')} — ${e.msg}`).join('; ');
+    } else if (typeof errorData.detail === 'object' && errorData.detail !== null) {
+      detailMessage = JSON.stringify(errorData.detail);
+    } else {
+      detailMessage = errorData.detail || `HTTP error! status: ${response.status}`;
+    }
+
+    const error = new Error(detailMessage);
     error.status = response.status;
-    error.response = {
-      status: response.status,
-      data: errorData
-    };
+    error.response = { status: response.status, data: errorData };
     throw error;
   }
   return response.json();
@@ -139,13 +145,6 @@ export const api = {
     return handleResponse(response);
   },
 
-  async toggleFeaturedBlog(token, blogId) {
-    const response = await fetch(`${API_BASE_URL}/admin/blogs/${blogId}/toggle-featured/`, {
-      method: 'PUT',
-      headers: getHeaders(token),
-    });
-    return handleResponse(response);
-  },
 
   // Blog endpoints
   async getBlogs(searchQuery = null, skip = 0, limit = 10, filter = null, authorId = null) {
@@ -187,9 +186,16 @@ export const api = {
     return data;
   },
 
+  async getFeaturedBlogs() {
+    // Return top 6 blogs sorted by views
+    const response = await fetch(`${API_BASE_URL}/blogs/?sort=-views&limit=6`);
+    const data = await handleResponse(response);
+    return data.results || data;
+  },
+
   // Get blogs for currently authenticated user (requires token)
-  async getMyBlogs(token, searchQuery = null, skip = 0, limit = 10, filter = null) {
-    let url = `${API_BASE_URL}/blogs/my-blogs/?skip=${skip}&limit=${limit}`;
+  async getMyBlogs(token, userId, searchQuery = null, skip = 0, limit = 10, filter = null) {
+    let url = `${API_BASE_URL}/blogs/?author.$id=${encodeURIComponent(userId)}&skip=${skip}&limit=${limit}`;
 
     if (searchQuery) {
       url += `&search=${encodeURIComponent(searchQuery)}`;
@@ -258,6 +264,15 @@ export const api = {
     return handleResponse(response);
   },
 
+  async toggleFeaturedBlog(token, blogId, newStatus) {
+    const response = await fetch(`${API_BASE_URL}/blogs/${blogId}/`, {
+      method: 'PATCH',
+      headers: getHeaders(token),
+      body: JSON.stringify({ featured: newStatus })
+    });
+    return handleResponse(response);
+  },
+
   async getSuggestedBlogs(limit = 3, excludeSlug = null) {
     let url = `${API_BASE_URL}/blogs/?page=1&page_size=${limit}`;
     if (excludeSlug) {
@@ -303,7 +318,16 @@ export const api = {
   },
 
   async getPublicPlaylists() {
-    const response = await fetch(`${API_BASE_URL}/playlists/public/`, {
+    const response = await fetch(`${API_BASE_URL}/playlists/?is_public=true`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    const data = await handleResponse(response);
+    return data && data.results ? data.results : (data || []);
+  },
+
+  async getPopularPlaylists() {
+    const response = await fetch(`${API_BASE_URL}/playlists/?is_public=true&limit=6&sort=%5B%28%22views%22%2C%20-1%29%5D`, {
       method: 'GET',
       headers: getHeaders(),
     });
@@ -329,61 +353,38 @@ export const api = {
     return handleResponse(response);
   },
 
-  // Mock Data for Testimonials
+  // Real API Data for Testimonials
   async getTestimonials() {
-    return {
-      testimonials: [
-        {
-          name: "Sarah Jenkins",
-          role: "Content Creator",
-          image: "https://pagedone.io/asset/uploads/1696229969.png",
-          rating: 5,
-          content: "BlogerMenia has completely transformed how I share my thoughts. The platform is intuitive and the community is incredibly supportive."
-        },
-        {
-          name: "David Miller",
-          role: "Tech Blogger",
-          image: "https://pagedone.io/asset/uploads/1696229994.png",
-          rating: 5,
-          content: "The best blogging platform I've used. The editor is powerful yet simple, and managing my posts is a breeze."
-        },
-        {
-          name: "Emily Chen",
-          role: "Travel Writer",
-          image: "https://pagedone.io/asset/uploads/1696230027.png",
-          rating: 4,
-          content: "I love the clean design and how easy it is to connect with readers. Highly recommended for anyone starting a blog."
-        }
-      ]
-    };
+    try {
+      const response = await fetch(`${API_BASE_URL}/testimonials/`, {
+        method: 'GET',
+        headers: getHeaders(),
+      });
+      const data = await handleResponse(response);
+      return {
+        testimonials: data.results || []
+      };
+    } catch (error) {
+      console.error("Error fetching testimonials:", error);
+      return { testimonials: [] };
+    }
   },
 
-  // Mock Data for FAQs
+  // Real API Data for FAQs
   async getFAQs() {
-    return {
-      faqs: [
-        {
-          id: 1,
-          question: "How do I get started with BlogerMenia?",
-          answer: "Getting started is easy! Simply sign up for an account, complete your profile, and click on 'Write' to start creating your first blog post."
-        },
-        {
-          id: 2,
-          question: "Is BlogerMenia free to use?",
-          answer: "Yes, BlogerMenia is free to use for all writers and readers. We believe in open access to knowledge and creativity."
-        },
-        {
-          id: 3,
-          question: "Can I customize my blog's appearance?",
-          answer: "Currently, we offer a clean, standardized layout to ensure readability. We are working on more customization options for the future."
-        },
-        {
-          id: 4,
-          question: "How do I grow my audience?",
-          answer: "Engage with other writers, share your posts on social media, and consistently publish high-quality content. Using relevant tags also helps readers find your work."
-        }
-      ]
-    };
+    try {
+      const response = await fetch(`${API_BASE_URL}/faqs/`, {
+        method: 'GET',
+        headers: getHeaders(),
+      });
+      const data = await handleResponse(response);
+      return {
+        faqs: data.results || []
+      };
+    } catch (error) {
+      console.error("Error fetching FAQs:", error);
+      return { faqs: [] };
+    }
   },
 
 
@@ -531,59 +532,69 @@ export const api = {
     return handleResponse(response);
   },
 
-  // Notes endpoints
-  async getNotes(token) {
-    const response = await fetch(`${API_BASE_URL}/notes/`, {
+  async getCategories(token = null) {
+    const res = await fetch(`${API_BASE_URL}/blogs/categories/?limit=100`, {
       method: 'GET',
       headers: getHeaders(token),
     });
-    return handleResponse(response);
+    const data = await handleResponse(res);
+    return data.results || data.items || data || [];
   },
 
-  async getMyNotes(token) {
-    const response = await fetch(`${API_BASE_URL}/notes/my_notes/`, {
-      method: 'GET',
-      headers: getHeaders(token),
-    });
-    return handleResponse(response);
-  },
+  async getOrCreateCategory(name, token) {
+    if (!name || !name.trim()) return null;
 
-  async createNote(noteData, token) {
-    const response = await fetch(`${API_BASE_URL}/notes/`, {
-      method: 'POST',
-      headers: getHeaders(token),
-      body: JSON.stringify(noteData),
-    });
-    return handleResponse(response);
-  },
+    const trimmedName = name.trim();
+    const slug = trimmedName.toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^\w-]/g, '')
+      .replace(/--+/g, '-')
+      .replace(/^-+|-+$/g, '');
 
-  async updateNote(noteId, noteData, token) {
-    const response = await fetch(`${API_BASE_URL}/notes/${noteId}/`, {
-      method: 'PUT',
-      headers: getHeaders(token),
-      body: JSON.stringify(noteData),
-    });
-    return handleResponse(response);
-  },
+    // Helper: load all categories and find name match
+    const findExisting = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/blogs/categories/?limit=200`, {
+          method: 'GET',
+          headers: getHeaders(token),
+        });
+        const data = await res.json();
+        const all = data.results || data.items || (Array.isArray(data) ? data : []);
+        return all.find(c => c.name.toLowerCase() === trimmedName.toLowerCase()) || null;
+      } catch { return null; }
+    };
 
-  async deleteNote(noteId, token) {
-    const response = await fetch(`${API_BASE_URL}/notes/${noteId}/`, {
-      method: 'DELETE',
-      headers: getHeaders(token),
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    // 1. Try to find existing category first
+    const existing = await findExisting();
+    if (existing) return existing.id;
+
+    // 2. Category not found — create it
+    try {
+      const createRes = await fetch(`${API_BASE_URL}/blogs/categories/`, {
+        method: 'POST',
+        headers: getHeaders(token),
+        body: JSON.stringify({ name: trimmedName, slug }),
+      });
+
+      if (createRes.ok) {
+        const created = await createRes.json();
+        return created.id || created._id;
+      }
+
+      // POST failed (e.g. duplicate slug race condition) — try finding again
+      const retry = await findExisting();
+      if (retry) return retry.id;
+
+      console.error("Category create failed:", createRes.status, await createRes.text().catch(() => ''));
+      return null;
+    } catch (e) {
+      console.error("Error creating category:", e);
+      // Last resort: try finding again
+      const retry = await findExisting();
+      return retry?.id || null;
     }
-    return { success: true };
   },
 
-  async likeNote(noteId, token) {
-    const response = await fetch(`${API_BASE_URL}/notes/${noteId}/like/`, {
-      method: 'POST',
-      headers: getHeaders(token),
-    });
-    return handleResponse(response);
-  },
 
   getGoogleLoginUrl() {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
@@ -610,6 +621,19 @@ export const api = {
       body: formData,
     });
 
+    return handleResponse(response);
+  },
+
+  async uploadImageFromUrl(imageUrl, collectionName = 'blogs', token = null) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    const response = await fetch(`${API_BASE_URL}/media/upload/url`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ url: imageUrl, collection_name: collectionName }),
+    });
     return handleResponse(response);
   }
 };
