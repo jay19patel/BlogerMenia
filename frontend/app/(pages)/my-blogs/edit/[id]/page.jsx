@@ -379,6 +379,7 @@ export default function EditBlogPage() {
       description: type === "youtube" || type === "image" ? "" : undefined,
       links: type === "links" ? [{ text: "", url: "", description: "" }] : undefined,
       imageUrl: type === "image" ? "" : undefined,
+      attachment: type === "image" ? null : undefined,
     };
     setSections([...sections, newSection]);
   };
@@ -588,8 +589,8 @@ export default function EditBlogPage() {
         if (section.type === 'image' && section.imageFile) {
           try {
             const uploadRes = await api.uploadImage(section.imageFile, 'blogs', token);
-            const { imageFile, imagePreview, ...rest } = section;
-            return { ...rest, imageUrl: uploadRes.url, imageId: uploadRes.id };
+            const { imageFile, imagePreview, imageUrl, imageId, id, ...rest } = section;
+            return { ...rest, attachment: uploadRes.id };
           } catch (uploadError) {
             console.error("Error uploading section image:", uploadError);
             toast.error(`Failed to upload image for section: ${section.title || 'Untitled'}`);
@@ -597,20 +598,20 @@ export default function EditBlogPage() {
           }
         }
         // If URL was entered but not yet uploaded, import it now
-        if (section.type === 'image' && section.imageUrl && !section.imageId && section.imageUrl.startsWith('http')) {
+        if (section.type === 'image' && section.imageUrl && !section.attachment && section.imageUrl.startsWith('http')) {
           // Verify it's not an existing API media URL to prevent re-uploading
           if (!section.imageUrl.includes('/media/')) {
             try {
               const uploadRes = await api.uploadImage(null, 'blogs', token, section.imageUrl);
-              const { imageFile, imagePreview, ...rest } = section;
-              return { ...rest, imageUrl: uploadRes.url, imageId: uploadRes.id };
+              const { imageFile, imagePreview, imageUrl, imageId, id, ...rest } = section;
+              return { ...rest, attachment: uploadRes.id };
             } catch (uploadError) {
               console.error("Error importing URL image for section:", uploadError);
               // Non-fatal: keep the original URL if import fails
             }
           }
         }
-        const { id, imageFile, imagePreview, ...rest } = section;
+        const { id, imageFile, imagePreview, imageUrl, imageId, ...rest } = section;
         return rest;
       }));
 
@@ -1290,15 +1291,15 @@ export default function EditBlogPage() {
                       </label>
                       <div
                         onClick={() => document.getElementById(`section-file-${section.id}`).click()}
-                        className={`relative w-full h-48 rounded-lg border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center cursor-pointer overflow-hidden ${section.imagePreview || section.imageUrl
+                        className={`relative w-full h-48 rounded-lg border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center cursor-pointer overflow-hidden ${section.imagePreview || section.imageUrl || section.attachment?.file_path
                           ? 'border-indigo-500 bg-indigo-50/10'
                           : 'border-gray-300 hover:border-indigo-400 bg-gray-50'
                           }`}
                       >
-                        {section.imagePreview || section.imageUrl ? (
+                        {section.imagePreview || section.imageUrl || section.attachment?.file_path ? (
                           <>
                             <img
-                              src={section.imagePreview || section.imageUrl}
+                              src={section.imagePreview || section.imageUrl || section.attachment?.file_path}
                               alt="Preview"
                               className="w-full h-full object-cover"
                             />
@@ -1336,7 +1337,7 @@ export default function EditBlogPage() {
                             // Update imageUrl + imagePreview together to make the preview show instantly
                             setSections(prev => prev.map(s =>
                               s.id === section.id
-                                ? { ...s, imageUrl: url, imagePreview: url || null, imageFile: null, imageId: null }
+                                ? { ...s, imageUrl: url, imagePreview: url || null, imageFile: null, attachment: null }
                                 : s
                             ));
                           }}

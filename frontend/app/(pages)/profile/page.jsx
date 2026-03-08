@@ -149,7 +149,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Profile Card */}
-        <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.04)] overflow-hidden mb-10">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.04)] overflow-hidden mb-10">
           <div className="p-8 md:p-12">
             {/* Profile Image Section */}
             <div className="mb-12">
@@ -266,7 +266,7 @@ export default function ProfilePage() {
                   rows={4}
                   value={formData.bio}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3.5 bg-gray-50 border border-gray-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all resize-none font-medium text-gray-900"
+                  className="w-full px-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all resize-none font-medium text-gray-900"
                   placeholder="Share a bit about yourself..."
                 />
               </div>
@@ -298,7 +298,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Support the Community Section */}
-        <div className="bg-white rounded-[2.5rem] p-8 md:p-10 border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.04)] relative overflow-hidden group">
+        <div className="bg-white rounded-2xl p-8 md:p-10 border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.04)] relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full blur-3xl opacity-50 -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700"></div>
           <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
             <div className="w-20 h-20 bg-indigo-50 rounded-2xl flex items-center justify-center shrink-0">
