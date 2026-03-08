@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}{{ model_name }} Detail | Backbone Admin{% endblock %}
+{% block header %}{{ model_name }} Detail{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex items-center justify-between">
+    <div class="flex items-center space-x-2 text-sm text-slate-400">
+        <a href="/admin" class="hover:text-indigo-600 transition-colors">Admin</a>
+        <i class="fas fa-chevron-right text-[10px]"></i>
+        <a href="/admin/{{ model_name }}" class="hover:text-indigo-600 transition-colors">{{ model_name }}</a>
+        <i class="fas fa-chevron-right text-[10px]"></i>
+        <span class="text-slate-600 font-medium">Record {{ item.id }}</span>
+    </div>
+    <a href="/admin/{{ model_name }}"
+        class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold transition-all">
+        <i class="fas fa-arrow-left mr-2"></i> Back to List
+    </a>
+</div>
+
+<form action="/admin/{{ model_name }}/{{ item.id }}" method="POST"
+    class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="p-8 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-800">Edit Record</h2>
+            <p class="text-slate-500 text-sm mt-1">Update values for this {{ model_name }} entry.</p>
+        </div>
+        <div class="flex items-center space-x-3">
+            <a href="/admin/{{ model_name }}/{{ item.id }}/delete"
+                onclick="return confirm('Are you sure you want to delete this record?')"
+                class="px-4 py-2 text-red-600 hover:bg-red-50 rounded-xl text-sm font-semibold transition-all">
+                <i class="fas fa-trash-alt mr-2"></i> Delete
+            </a>
+            <div class="h-12 w-12 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center">
+                <i class="fas fa-edit text-xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="p-8">
+        <div class="grid grid-cols-1 gap-y-6">
+            {% for name, field in model_fields.items() %}
+            {% if name not in ['hashed_password', 'password'] and name not in internal_fields %}
+            <div class="border-b border-slate-50 pb-6 last:border-0 last:pb-0">
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">{{ name|nice_title
+                    }}</label>
+
+                {% set value = item[name] %}
+
+                {% if name in internal_fields %}
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-slate-500 font-mono text-sm">
+                    {{ value }}
+                </div>
+                {% else %}
+                {% set f_type = field.annotation | string %}
+                {% set link_model = field_links.get(name) %}
+                {% if 'bool' in f_type %}
+                <select name="{{ name }}"
+                    class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                    <option value="true" {% if value %}selected{% endif %}>True</option>
+                    <option value="false" {% if not value %}selected{% endif %}>False</option>
+                </select>
+                {% elif 'int' in f_type or 'float' in f_type %}
+                <input type="number" name="{{ name }}" step="any" value="{{ value }}"
+                    class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                {% elif link_model and value is mapping and value.id %}
+                {% if link_model == 'Attachment' and value.file_path %}
+                <a href="/admin/{{ link_model }}/{{ value.id }}"
+                    class="block w-64 overflow-hidden rounded-xl border border-slate-200 hover:border-indigo-400 transition-colors shadow-sm bg-white">
+                    <img src="{{ value.file_path }}" alt="Attachment"
+                        class="w-full h-40 object-cover border-b border-slate-100">
+                    <div
+                        class="p-3 bg-slate-50 text-xs flex justify-between items-center text-slate-600 truncate font-medium">
+                        <span>{{ value.filename or 'Attachment' }}</span>
+                        <i class="fas fa-external-link-alt text-slate-400"></i>
+                    </div>
+                </a>
+                {% else %}
+                <a href="/admin/{{ link_model }}/{{ value.id }}"
+                    class="block p-4 bg-indigo-50/30 hover:bg-indigo-50 border border-indigo-100/50 rounded-xl transition-colors">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-indigo-700">
+                            {{ value.name or value.title or value.email or value.full_name or value.id }}
+                        </span>
+                        <span
+                            class="text-[10px] uppercase font-bold text-indigo-400 bg-white px-2 py-1 rounded-md border border-indigo-100 shadow-sm flex items-center shadow-sm">
+                            {{ link_model }} <i class="fas fa-arrow-right ml-1"></i>
+                        </span>
+                    </div>
+                </a>
+                {% endif %}
+                {% elif link_model and value is iterable and value is not string and value|length > 0 and value[0] is
+                mapping and value[0].id %}
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {% for rel_val in value %}
+                    <a href="/admin/{{ link_model }}/{{ rel_val.id }}"
+                        class="block p-3 bg-indigo-50/30 hover:bg-indigo-50 border border-indigo-100/50 rounded-xl transition-colors flex items-center justify-between">
+                        <span class="text-sm font-medium text-indigo-700 truncate mr-2">
+                            {{ rel_val.name or rel_val.title or rel_val.email or rel_val.full_name or rel_val.id }}
+                        </span>
+                        <i class="fas fa-external-link-alt text-indigo-400 text-xs flex-shrink-0"></i>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% elif value is mapping or (value is iterable and value is not string) or 'list' in f_type.lower() or
+                'dict' in f_type.lower() %}
+                <textarea name="{{ name }}" rows="4"
+                    class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-mono text-sm">{{ value | tojson(indent=2) if value is defined and value is not none else '' }}</textarea>
+                {% else %}
+                <input type="text" name="{{ name }}" value="{{ value }}"
+                    class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                {% endif %}
+                {% endif %}
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="p-8 bg-slate-50 border-t border-slate-100 flex justify-end">
+        <button type="submit"
+            class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold shadow-lg shadow-indigo-500/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0">
+            Save Changes
+        </button>
+    </div>
+</form>
+{% endblock %}

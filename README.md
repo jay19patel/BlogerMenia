@@ -13,74 +13,14 @@ Bloggermenia is a robust, feature-rich blogging platform built with Django. It f
 
 ---
 
-# Docker Architecture & Branching Strategy
+## Architecture
 
-We have established a limit-testing production architecture using Docker, Nginx, and PostgreSQL.
+The project has been restructured to have a dedicated `backend` directory containing the Django application and a `frontend` directory (if applicable) for the client-side code.
 
-## 1. Branching Strategy (Git Flow)
+### Directory Structure
+- `backend/`: Django project files, apps, and configuration.
+- `frontend/`: Next.js frontend application.
 
-We use two primary branches to separate "Development" from "Production".
-
-### `develop` Branch (Active Development)
-- **Purpose**: Where you write code, add features, and fix bugs.
-- **Environment**: Local machine, using `sqlite3` and `python manage.py runserver` (standard Django dev).
-- **Configuration**: `DEBUG=True`.
-- **Workflow**: You work here daily.
-
-### `main` Branch (Production)
-- **Purpose**: Stable, deployable code.
-- **Environment**: Dockerized. Uses `PostgreSQL`, `Gunicorn`, and `Nginx`.
-- **Configuration**: `DEBUG=False` (Production Mode).
-- **Workflow**:
-    1.  When a feature is done in `develop`, you merge it into `main`.
-    2.  Github Actions (optional future step) or manual commands trigger a Docker build.
-    3.  Production servers update.
-
-**How to Code & Merge:**
-- You code in `develop`.
-- When ready, you run: `git checkout main` -> `git merge develop` -> `docker-compose up --build`.
-- Config files (`Dockerfile`, `nginx.conf`) will live in `main`. Ideally, we also keep them in `develop` so they don't cause merge conflicts, but they are only *active* in the Docker setup.
-
-## 2. Docker Production Architecture
-
-We implemented a containerized setup using **Docker Compose**.
-
-### The Services (Containers)
-
-1.  **Load Balancer (Nginx)**
-    -   **Role**: The Entry Point. Accepts all traffic on Port 80.
-    -   **Function**:
-        -   Serves **Static Files** (CSS/JS) and **Media Files** (Images) directly (Fast & Efficient).
-        -   Passes traffic to the Application servers.
-    -   **Load Balancing**: We will configure Nginx to distribute traffic between the 2 App Servers.
-
-2.  **Application Servers (`web` x 2)**
-    -   **Role**: Django Application.
-    -   **Technology**: Gunicorn (Production WSGI Server).
-    -   **Scaling**: We will run **2 Replicas** of the Django container to handle concurrent requests.
-    -   **Internal Communication**: Not exposed to the internet, only accessible by Nginx.
-
-3.  **Database (PostgreSQL)**
-    -   **Role**: Production Database.
-    -   **Persistence**: Data saved in a Docker Volume (safe from container restarts).
-    -   **Why**: SQLite cannot handle multiple concurrent writes from 2 app servers. Postgres is required for this setup.
-
-### Architecture Diagram
-```mermaid
-graph LR
-    User[User User] -->|HTTP Request| Nginx[Nginx Load Balancer]
-    
-    subgraph Docker Network
-        Nginx -->|Static Files| Volume[Static/Media Volume]
-        Nginx -->|Proxy Pass| App1[Django App Container 1]
-        Nginx -->|Proxy Pass| App2[Django App Container 2]
-        
-        App1 -->|Read/Write| DB[(PostgreSQL DB)]
-        App2 -->|Read/Write| DB
-    end
-```
-
----
 
 ## Setup Instructions
 
@@ -96,43 +36,42 @@ graph LR
    cd Blogermenia-Djnago
    ```
 
-2. **Install dependencies:**
+2. **Navigate to Backend:**
+   ```bash
+   cd backend
+   ```
+
+3. **Install dependencies:**
    ```bash
    uv sync
    # OR
    pip install -r requirements.txt
    ```
 
-3. **Configure Environment:**
-   Create a `.env` file in the root directory:
+4. **Configure Environment:**
+   Create a `.env` file in the `backend/` directory:
    ```env
    SECRET_KEY=your_secret_key
    DEBUG=True
+   MISTRAL_API_KEY=your_mistral_key
    GOOGLE_CLIENT_ID=your_google_client_id
    GOOGLE_CLIENT_SECRET=your_google_client_secret
    ```
 
-4. **Run Migrations:**
+5. **Run Migrations:**
    ```bash
    uv run manage.py migrate
    ```
 
-5. **Create Superuser:**
+6. **Create Superuser:**
    ```bash
    uv run manage.py createsuperuser
    ```
 
-6. **Run the Server:**
+7. **Run the Server:**
    ```bash
    uv run manage.py runserver
    ```
-
-## Production Run (Docker)
-1.  Copy `.env.prod.example` to `.env.prod` and populate secrets.
-2.  Run:
-    ```bash
-    docker-compose up -d --build
-    ```
 
 ## API Documentation
 
@@ -147,23 +86,6 @@ graph LR
 - **Method**: `POST`
 - **Body**: `multipart/form-data`, key=`image`
 - **Response**: `{ "url": "string" }`
-
----
-
-## Database Management
-
-We use **PgAdmin 4** for managing the PostgreSQL database.
-
-**Access PgAdmin:**
-1.  Go to `http://localhost:5050`
-2.  **Login**:
-    -   Email: `admin@admin.com` (or value in `.env.prod`)
-    -   Password: `root` (or value in `.env.prod`)
-3.  **Connect to Server**:
-    -   Click "Add New Server"
-    -   Host name/address: `db` (Use the docker service name!)
-    -   Username: `hello_django` (from `.env.prod`)
-    -   Password: `hello_django` (from `.env.prod`)
 
 ---
 *Built with ❤️ by Jay Patel*
