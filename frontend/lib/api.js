@@ -145,6 +145,18 @@ export const api = {
     return handleResponse(response);
   },
 
+  async getAllCreators(searchQuery = null, skip = 0, limit = 10) {
+    let url = `${API_BASE_URL}/user/all/?skip=${skip}&limit=${limit}`;
+    if (searchQuery) {
+      url += `&search=${encodeURIComponent(searchQuery)}`;
+    }
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    return handleResponse(response);
+  },
+
 
   // Blog endpoints
   async getBlogs(searchQuery = null, skip = 0, limit = 10, filter = null, authorId = null) {
@@ -326,6 +338,34 @@ export const api = {
     return data && data.results ? data.results : (data || []);
   },
 
+  async getPlaylists(searchQuery = null, skip = 0, limit = 10, ownerId = null) {
+    let url = `${API_BASE_URL}/playlists/?is_public=true&skip=${skip}&limit=${limit}`;
+
+    if (searchQuery) {
+      url += `&search=${encodeURIComponent(searchQuery)}`;
+    }
+
+    if (ownerId) {
+      url += `&owner.$id=${encodeURIComponent(ownerId)}`;
+    }
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    const data = await handleResponse(response);
+
+    if (data.results) {
+      return {
+        total: data.total || data.count || 0,
+        playlists: data.results,
+        next: data.next,
+        previous: data.previous
+      };
+    }
+    return data;
+  },
+
   async getPopularPlaylists() {
     const response = await fetch(`${API_BASE_URL}/playlists/?is_public=true&limit=6&sort=%5B%28%22views%22%2C%20-1%29%5D`, {
       method: 'GET',
@@ -455,8 +495,8 @@ export const api = {
     return { playlists: Array.isArray(data) ? data : [] }; // Fallback
   },
 
-  async getUserPlaylistsByEmail(email, userId, token = null, isOwner = false) {
-    let url = `${API_BASE_URL}/playlists/?owner.$id=${userId}`;
+  async getUserPlaylistsByEmail(email, userId, token = null, isOwner = false, skip = 0, limit = 10) {
+    let url = `${API_BASE_URL}/playlists/?owner.$id=${userId}&skip=${skip}&limit=${limit}`;
     if (!isOwner) {
       url += '&is_public=true';
     }
@@ -478,7 +518,7 @@ export const api = {
   },
 
   async getPlaylist(playlistId, token = null) {
-    const response = await fetch(`${API_BASE_URL}/playlists/${playlistId}/`, {
+    const response = await fetch(`${API_BASE_URL}/playlists/${playlistId}`, {
       method: 'GET',
       headers: getHeaders(token),
     });
@@ -487,7 +527,7 @@ export const api = {
 
   async updatePlaylist(playlistId, playlistData, token) {
     const response = await fetch(`${API_BASE_URL}/playlists/${playlistId}/`, {
-      method: 'PUT',
+      method: 'PATCH',
       headers: getHeaders(token),
       body: JSON.stringify(playlistData),
     });
@@ -603,9 +643,14 @@ export const api = {
     return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}`;
   },
 
-  async uploadImage(file, collectionName = 'blogs', token = null) {
+  async uploadImage(file = null, collectionName = 'blogs', token = null, url = null) {
     const formData = new FormData();
-    formData.append('file', file);
+    if (file) {
+      formData.append('file', file);
+    }
+    if (url) {
+      formData.append('url', url);
+    }
     if (collectionName) {
       formData.append('collection_name', collectionName);
     }
@@ -615,25 +660,12 @@ export const api = {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_BASE_URL}/media/upload/image`, {
+    const response = await fetch(`${API_BASE_URL}/media/upload`, {
       method: 'POST',
       headers,
       body: formData,
     });
 
-    return handleResponse(response);
-  },
-
-  async uploadImageFromUrl(imageUrl, collectionName = 'blogs', token = null) {
-    const headers = { 'Content-Type': 'application/json' };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    const response = await fetch(`${API_BASE_URL}/media/upload/url`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ url: imageUrl, collection_name: collectionName }),
-    });
     return handleResponse(response);
   }
 };

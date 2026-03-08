@@ -16,9 +16,9 @@ export default function HorizontalBlogCard({ blog }) {
 
     return (
         <Link href={getBlogUrl()} className="block group">
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-xl hover:border-indigo-500 transition-all duration-300 flex flex-col md:flex-row h-full md:h-64">
-                {/* Image Section - Left side on desktop (35-40% width) */}
-                <div className="md:w-2/5 relative h-48 md:h-full overflow-hidden">
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-xl hover:border-indigo-500 transition-all duration-300 flex flex-col md:flex-row h-full md:h-40">
+                {/* Image Section - Left side on desktop */}
+                <div className="md:w-1/4 relative h-32 md:h-full overflow-hidden">
                     {imagePath ? (
                         <img
                             src={getImageUrl(imagePath)}
@@ -27,56 +27,47 @@ export default function HorizontalBlogCard({ blog }) {
                         />
                     ) : (
                         <div className="w-full h-full bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center">
-                            <p className="text-white text-2xl font-bold opacity-50">No Image</p>
+                            <p className="text-white text-xs font-bold opacity-50">Blog</p>
                         </div>
                     )}
-
-                    {/* Category Badge - Top Left */}
-                    <div className="absolute top-4 left-4">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-white/90 backdrop-blur-sm text-indigo-600 shadow-sm">
-                            {blog.category}
-                        </span>
-                    </div>
                 </div>
 
                 {/* Content Section - Right side */}
-                <div className="flex-1 p-6 flex flex-col justify-between">
+                <div className="flex-1 p-4 flex flex-col justify-between">
                     <div>
-                        <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
-                            <Calendar className="w-3.5 h-3.5" />
+                        <div className="flex items-center gap-2 text-[10px] uppercase font-bold text-gray-400 mb-1 tracking-widest">
+                            <Calendar className="w-3 h-3 text-indigo-400" />
                             <span>{blog.date}</span>
                         </div>
-
-                        <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-indigo-600 transition-colors">
+                        <h3 className="text-base md:text-lg font-bold text-gray-900 mb-1 line-clamp-1 group-hover:text-indigo-600 transition-colors">
                             {blog.title}
                         </h3>
-
-                        <p className="text-gray-600 text-sm md:text-base line-clamp-2 md:line-clamp-3 mb-4">
+                        <p className="text-gray-600 text-[11px] md:text-xs line-clamp-2 leading-relaxed opacity-80">
                             {blog.description}
                         </p>
                     </div>
 
                     {/* Footer / Stats */}
-                    <div className="flex items-center justify-between border-t border-gray-100 pt-4 mt-2">
+                    <div className="flex items-center justify-between border-t border-gray-100 pt-3 mt-1">
                         {/* Author Info */}
                         <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100">
-                                <User className="w-4 h-4" />
+                            <div className="w-6 h-6 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100">
+                                <User className="w-3.5 h-3.5" />
                             </div>
-                            <span className="text-sm font-medium text-gray-700">
+                            <span className="text-[11px] font-semibold text-gray-700 truncate max-w-[120px]">
                                 {blog.author?.full_name || blog.authorFullName || blog.authorUsername || "Author"}
                             </span>
                         </div>
 
                         {/* Stats */}
-                        <div className="flex items-center gap-4 text-xs font-medium text-gray-500">
-                            <div className="flex items-center gap-1.5">
-                                <Eye className="w-4 h-4 text-gray-400" />
-                                <span>{blog.views || 0}</span>
+                        <div className="flex items-center gap-3 text-[10px] font-bold text-gray-400">
+                            <div className="flex items-center gap-1">
+                                <Eye className="w-3.5 h-3.5" />
+                                <span>{(blog.views || 0).toLocaleString()}</span>
                             </div>
-                            <div className="flex items-center gap-1.5">
-                                <Heart className="w-4 h-4 text-gray-400" />
-                                <span>{blog.likes || 0}</span>
+                            <div className="flex items-center gap-1">
+                                <Heart className="w-3.5 h-3.5" />
+                                <span>{(blog.likes || 0).toLocaleString()}</span>
                             </div>
                         </div>
                     </div>

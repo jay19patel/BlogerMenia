@@ -71,29 +71,41 @@ export default function ProfilePage() {
     setLoading(true);
 
     try {
-      const updateData = new FormData();
+      const updateData = {};
       let hasChanges = false;
 
       // Check full_name
       if (formData.full_name !== (user?.full_name || "")) {
-        updateData.append('full_name', formData.full_name);
+        updateData.full_name = formData.full_name;
         hasChanges = true;
       }
 
       if (formData.headline !== (user?.headline || "")) {
-        updateData.append('headline', formData.headline);
+        updateData.headline = formData.headline;
         hasChanges = true;
       }
 
       if (formData.bio !== (user?.bio || "")) {
-        updateData.append('bio', formData.bio);
+        updateData.bio = formData.bio;
         hasChanges = true;
       }
 
       // Handle Image File
       if (imageFile) {
-        updateData.append('profile_image', imageFile);
-        hasChanges = true;
+        try {
+          const uploadRes = await api.uploadImage(imageFile, 'users', token);
+          if (uploadRes && uploadRes.id) {
+            updateData.profile_image = uploadRes.id;
+            hasChanges = true;
+          } else {
+            throw new Error("No ID returned from image upload");
+          }
+        } catch (uploadError) {
+          console.error("Error uploading profile picture:", uploadError);
+          toast.error("Failed to upload profile picture. Please try again.");
+          setLoading(false);
+          return;
+        }
       }
 
       if (!hasChanges) {

@@ -598,13 +598,16 @@ export default function EditBlogPage() {
         }
         // If URL was entered but not yet uploaded, import it now
         if (section.type === 'image' && section.imageUrl && !section.imageId && section.imageUrl.startsWith('http')) {
-          try {
-            const uploadRes = await api.uploadImageFromUrl(section.imageUrl, 'blogs', token);
-            const { imageFile, imagePreview, ...rest } = section;
-            return { ...rest, imageUrl: uploadRes.url, imageId: uploadRes.id };
-          } catch (uploadError) {
-            console.error("Error importing URL image for section:", uploadError);
-            // Non-fatal: keep the original URL if import fails
+          // Verify it's not an existing API media URL to prevent re-uploading
+          if (!section.imageUrl.includes('/media/')) {
+            try {
+              const uploadRes = await api.uploadImage(null, 'blogs', token, section.imageUrl);
+              const { imageFile, imagePreview, ...rest } = section;
+              return { ...rest, imageUrl: uploadRes.url, imageId: uploadRes.id };
+            } catch (uploadError) {
+              console.error("Error importing URL image for section:", uploadError);
+              // Non-fatal: keep the original URL if import fails
+            }
           }
         }
         const { id, imageFile, imagePreview, ...rest } = section;

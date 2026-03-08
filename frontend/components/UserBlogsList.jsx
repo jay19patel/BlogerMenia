@@ -11,7 +11,7 @@ import Image from "next/image";
 import LoaderCard from "@/components/ui/loader";
 import { useAuth } from "@/contexts/AuthContext";
 import CreatePlaylistDialog from "@/components/CreatePlaylistDialog";
-import { formatDate } from "@/lib/utils";
+import { formatDate, getImageUrl } from "@/lib/utils";
 
 const BLOGS_PER_PAGE = 9;
 
@@ -197,100 +197,100 @@ export default function UserBlogsList({ username }) {
                 <Breadcrumb items={breadcrumbItems} />
 
                 {/* Profile Header */}
-                <div className="mb-12 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="w-full h-32 bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-600"></div>
-
-                    <div className="px-8 py-6">
-                        <div className="flex items-center justify-center sm:justify-start mb-4 -mt-16">
-                            <div className="relative w-24 h-24">
-                                <div className="absolute inset-0 border-4 border-white rounded-full overflow-hidden shadow-lg">
+                <div className="mb-12 border border-gray-200 rounded-2xl p-8 bg-white shadow-sm overflow-hidden">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                        {/* Left Side: Avatar & Name/Details */}
+                        <div className="lg:col-span-5 flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                            <div className="relative w-28 h-28 shrink-0">
+                                <div className="absolute inset-0 border-[3px] border-indigo-50 rounded-full overflow-hidden shadow-sm">
                                     {(typeof userProfile.profile_image === 'string' ? userProfile.profile_image : userProfile.profile_image?.file_path) ? (
                                         <Image
-                                            src={typeof userProfile.profile_image === 'string' ? userProfile.profile_image : userProfile.profile_image.file_path}
+                                            src={getImageUrl(typeof userProfile.profile_image === 'string' ? userProfile.profile_image : userProfile.profile_image.file_path)}
                                             alt={userProfile.username || 'User'}
                                             fill
                                             className="object-cover"
                                         />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600">
-                                            <UserIcon className="w-12 h-12 text-white" />
+                                        <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                                            <UserIcon className="w-12 h-12 text-gray-400" />
                                         </div>
                                     )}
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="flex items-center justify-center flex-col sm:flex-row max-sm:gap-4 sm:justify-between mb-6">
-                            <div className="block">
-                                <h3 className="font-bold text-3xl text-gray-900 mb-1 max-sm:text-center">
+                            <div className="flex flex-col justify-center text-center sm:text-left">
+                                <h3 className="font-bold text-2xl text-gray-900 mb-1">
                                     {userProfile.full_name || userProfile.email?.split('@')[0] || "User"}
                                 </h3>
-                                <p className="font-normal text-base leading-6 text-gray-500 max-sm:text-center">
+                                <p className="font-medium text-sm text-indigo-600 mb-3">
                                     {userProfile.email}
-                                    {userProfile.headline && (
-                                        <span> • {userProfile.headline}</span>
-                                    )}
                                 </p>
+                                {userProfile.headline && (
+                                    <p className="font-medium text-sm text-gray-800 mb-1">
+                                        {userProfile.headline}
+                                    </p>
+                                )}
                                 {userProfile.description && (
-                                    <p className="font-normal text-sm leading-5 text-gray-600 mt-2 max-sm:text-center">
+                                    <p className="font-normal text-sm leading-relaxed text-gray-500 line-clamp-2">
                                         {userProfile.description}
                                     </p>
                                 )}
                             </div>
-
-                            {categories.length > 0 && (
-                                <div className="flex flex-wrap items-center gap-2">
-                                    {categories.map((category, index) => (
-                                        <span
-                                            key={index}
-                                            className="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold"
-                                        >
-                                            {category}
-                                        </span>
-                                    ))}
-                                </div>
-                            )}
                         </div>
 
-                        <div className="flex flex-col flex-1 gap-6 lg:gap-0 lg:flex-row lg:justify-between">
-                            <div className="w-full lg:w-1/4 border-b pb-6 lg:border-b-0 lg:pb-0 lg:border-r border-gray-100">
-                                <div className="font-bold text-3xl text-gray-900 mb-2 text-center">
-                                    {userProfile.blog_count || 0}
+                        {/* Middle/Right: Stats & Categories in a Vertical Stack */}
+                        <div className="lg:col-span-7 flex flex-col gap-6">
+                            {/* Minimal Stats Row */}
+                            <div className="flex flex-row items-center justify-between sm:justify-start sm:gap-12 border-b border-gray-100 pb-6">
+                                <div className="flex flex-col items-center sm:items-start">
+                                    <span className="font-bold text-2xl text-gray-900 leading-none">
+                                        {userProfile.blog_count || 0}
+                                    </span>
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                                        Blogs
+                                    </span>
                                 </div>
-                                <span className="text-sm text-gray-500 text-center block">
-                                    Blogs Published
-                                </span>
+                                <div className="flex flex-col items-center sm:items-start">
+                                    <span className="font-bold text-2xl text-gray-900 leading-none">
+                                        {userProfile.total_views?.toLocaleString() || 0}
+                                    </span>
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                                        Views
+                                    </span>
+                                </div>
+                                <div className="flex flex-col items-center sm:items-start">
+                                    <span className="font-bold text-2xl text-gray-900 leading-none">
+                                        {userProfile.total_likes?.toLocaleString() || 0}
+                                    </span>
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                                        Likes
+                                    </span>
+                                </div>
+                                <div className="flex flex-col items-center sm:items-start">
+                                    <span className="font-bold text-lg text-gray-900 leading-none">
+                                        {new Date(userProfile.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+                                    </span>
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                                        Joined
+                                    </span>
+                                </div>
                             </div>
 
-                            <div className="w-full lg:w-1/4 border-b pb-6 lg:border-b-0 lg:pb-0 lg:border-r border-gray-100">
-                                <div className="font-bold text-3xl text-gray-900 mb-2 text-center">
-                                    {userProfile.total_views?.toLocaleString() || 0}
+                            {/* Categories Row */}
+                            {categories.filter(c => c.toLowerCase() !== 'all').length > 0 && (
+                                <div className="flex flex-wrap gap-2">
+                                    {categories
+                                        .filter(c => c.toLowerCase() !== 'all')
+                                        .map((category, index) => (
+                                            <span
+                                                key={index}
+                                                className="px-3 py-1 text-[11px] font-semibold text-gray-600 bg-gray-50 border border-gray-100 rounded-md uppercase tracking-wider"
+                                            >
+                                                {category}
+                                            </span>
+                                        ))}
                                 </div>
-                                <span className="text-sm text-gray-500 text-center block">
-                                    Total Views
-                                </span>
-                            </div>
-
-                            <div className="w-full lg:w-1/4 border-b pb-6 lg:border-b-0 lg:pb-0 lg:border-r border-gray-100">
-                                <div className="font-bold text-3xl text-gray-900 mb-2 text-center">
-                                    {userProfile.total_likes?.toLocaleString() || 0}
-                                </div>
-                                <span className="text-sm text-gray-500 text-center block">
-                                    Total Likes
-                                </span>
-                            </div>
-
-                            <div className="w-full lg:w-1/4">
-                                <div className="font-bold text-3xl text-gray-900 mb-2 text-center">
-                                    {new Date(userProfile.created_at).toLocaleDateString(
-                                        "en-US",
-                                        { month: "short", year: "numeric" }
-                                    )}
-                                </div>
-                                <span className="text-sm text-gray-500 text-center block">
-                                    Member Since
-                                </span>
-                            </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -342,7 +342,7 @@ export default function UserBlogsList({ username }) {
                                             <div className="relative aspect-[16/9] overflow-hidden bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600">
                                                 {(typeof (playlist.cover_image || playlist.thumbnail) === 'string' ? (playlist.cover_image || playlist.thumbnail) : (playlist.cover_image?.file_path || playlist.thumbnail?.file_path)) ? (
                                                     <img
-                                                        src={typeof (playlist.cover_image || playlist.thumbnail) === 'string' ? (playlist.cover_image || playlist.thumbnail) : (playlist.cover_image?.file_path || playlist.thumbnail?.file_path)}
+                                                        src={getImageUrl(typeof (playlist.cover_image || playlist.thumbnail) === 'string' ? (playlist.cover_image || playlist.thumbnail) : (playlist.cover_image?.file_path || playlist.thumbnail?.file_path))}
                                                         alt={playlist.name}
                                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                                     />

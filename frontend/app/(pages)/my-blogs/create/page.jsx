@@ -558,7 +558,7 @@ export default function CreateBlogPage() {
         // If URL was entered but not yet uploaded, import it now
         if (section.type === 'image' && section.imageUrl && !section.imageId && section.imageUrl.startsWith('http')) {
           try {
-            const uploadRes = await api.uploadImageFromUrl(section.imageUrl, 'blogs', token);
+            const uploadRes = await api.uploadImage(null, 'blogs', token, section.imageUrl);
             const { imageFile, imagePreview, ...rest } = section;
             return { ...rest, imageUrl: uploadRes.url, imageId: uploadRes.id };
           } catch (uploadError) {

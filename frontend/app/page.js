@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import { ArrowRight, BookOpen, Users, TrendingUp, Eye, Heart } from "lucide-react";
 import BlogCard from "@/components/BlogCard";
+import HorizontalBlogCard from "@/components/HorizontalBlogCard";
 import Testimonial from "@/components/Testimonial";
 import FAQ from "@/components/FAQ";
 import { api } from "@/lib/api";
@@ -41,9 +42,10 @@ export default function Home() {
     const fetchHomeData = async () => {
       // 1. Fetch Featured Blogs
       try {
-        const blogs = await api.getFeaturedBlogs();
+        const response = await api.getFeaturedBlogs();
+        const blogs = response.results || response || [];
         setFeaturedBlogs(
-          blogs.map((blog) => ({
+          blogs.slice(0, 5).map((blog) => ({
             ...blog,
             category:
               blog.category_name ||
@@ -67,13 +69,15 @@ export default function Home() {
 
       // 3. Fetch Playlists
       api.getPublicPlaylists().then((data) => {
-        setPlaylists(data || []);
+        const results = data.results || data || [];
+        setPlaylists(results.slice(0, 5));
       }).catch((e) => console.error("Failed to fetch playlists:", e))
         .finally(() => setPlaylistsLoading(false));
 
       // 4. Fetch Top Authors
       api.getTopAuthors().then((data) => {
-        setTopAuthors(data || []);
+        const results = data.results || data || [];
+        setTopAuthors(results.slice(0, 5));
       }).catch((e) => console.error("Failed to fetch top authors:", e))
         .finally(() => setAuthorsLoading(false));
     };
@@ -224,19 +228,30 @@ export default function Home() {
 
                   {/* Search Results Dropdown */}
                   {searchResults.length > 0 && searchQuery.trim() !== "" && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
-                      {searchResults.map((blog, index) => (
-                        <Link
-                          key={blog.slug}
-                          href={blog.author_email ? `/blogs/${blog.author_email}/${blog.slug}` : (blog.authorUsername ? `/blogs/${blog.authorUsername}/${blog.slug}` : `/blogs/${blog.slug}`)}
-                          className="block px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-indigo-50 transition-colors"
-                        >
-                          <p className="text-gray-900 font-medium text-sm">{blog.title}</p>
-                          {blog.excerpt && (
-                            <p className="text-gray-500 text-xs mt-1 line-clamp-1">{blog.excerpt}</p>
-                          )}
-                        </Link>
-                      ))}
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-80 overflow-y-auto overflow-x-hidden py-2">
+                      {searchResults.map((blog) => {
+                        const authorIdentifier = blog.author?.email || blog.author_email || blog.authorUsername;
+                        const blogUrl = authorIdentifier ? `/blogs/${authorIdentifier.split('@')[0]}/${blog.slug}` : `/blogs/${blog.slug}`;
+                        const displayDate = formatDate(blog.publishedDate || blog.created_at);
+
+                        return (
+                          <Link
+                            key={blog.slug}
+                            href={blogUrl}
+                            className="block px-5 py-3 border-b border-gray-50 last:border-b-0 hover:bg-indigo-50 transition-colors group"
+                          >
+                            <div className="flex justify-between items-start gap-4">
+                              <p className="text-gray-900 font-semibold text-sm group-hover:text-indigo-600 transition-colors line-clamp-1">{blog.title}</p>
+                              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap mt-1">{displayDate}</span>
+                            </div>
+                            {blog.excerpt && (
+                              <p className="text-gray-500 text-xs mt-1 line-clamp-1 italic">
+                                {blog.excerpt}...
+                              </p>
+                            )}
+                          </Link>
+                        )
+                      })}
                     </div>
                   )}
                 </div>
@@ -507,40 +522,33 @@ export default function Home() {
       {/* Featured Blogs Section */}
       <section className="py-16 bg-white/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-12">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-                Top Viewed Blogs
-              </h2>
-              <p className="text-gray-600">
-                Check out the most popular stories from our community
-              </p>
+              <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Top Viewed Blogs</h2>
+              <p className="text-gray-500 text-sm mt-1">Our most popular stories and insights from the community.</p>
             </div>
-            <Link
-              href="/blogs"
-              className="hidden sm:flex items-center gap-2 text-indigo-600 hover:text-indigo-700 font-semibold transition-colors"
-            >
-              View All
-              <ArrowRight className="w-5 h-5" />
+            <Link href="/blogs" className="text-sm font-bold text-indigo-600 hover:text-indigo-700 inline-flex items-center gap-1 group">
+              View All Blogs <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="flex flex-col space-y-3">
-                  <Skeleton className="h-[200px] w-full rounded-xl" />
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
+            <div className="space-y-6">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="flex flex-col md:flex-row gap-6 bg-white border border-gray-200 rounded-xl p-4 animate-pulse">
+                  <div className="md:w-1/3 h-48 md:h-40 bg-gray-200 rounded-lg"></div>
+                  <div className="flex-1 space-y-4 py-2">
+                    <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-full"></div>
                   </div>
                 </div>
               ))}
             </div>
           ) : featuredBlogs.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
               {featuredBlogs.map((blog) => (
-                <BlogCard key={blog.slug} blog={blog} />
+                <HorizontalBlogCard key={blog.slug} blog={blog} />
               ))}
             </div>
           ) : (
@@ -562,64 +570,62 @@ export default function Home() {
       </section>
 
       {/* Public Playlists Section */}
-      <section className="py-16 bg-white">
+      <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-12">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-                Popular Playlists
-              </h2>
-              <p className="text-gray-600">
-                Curated collections of great reads.
-              </p>
+              <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Popular Playlists</h2>
+              <p className="text-gray-500 text-sm mt-1">Curated collections of great reads and learning paths.</p>
             </div>
+            <Link href="/playlists" className="text-sm font-bold text-indigo-600 hover:text-indigo-700 inline-flex items-center gap-1 group">
+              View All Playlists <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </Link>
           </div>
 
           {playlistsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {[...Array(6)].map((_, i) => (
-                <Skeleton key={i} className="h-48 w-full rounded-xl" />
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <Skeleton key={i} className="h-40 w-full rounded-xl" />
               ))}
             </div>
           ) : playlists.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
               {playlists.map((playlist) => (
-                <Link key={playlist.slug} href={`/playlists/${playlist.owner?.email || playlist.owner?.username}/${playlist.slug}`} className="group block bg-gray-50 rounded-xl overflow-hidden hover:shadow-lg transition-all border border-gray-100">
-                  <div className="flex h-full">
-                    <div className="w-1/3 relative h-auto min-h-[160px]">
+                <Link key={playlist.slug} href={`/playlists/${playlist.owner?.email || playlist.owner?.username}/${playlist.slug}`} className="group block bg-white rounded-xl overflow-hidden hover:shadow-xl transition-all duration-500 border border-gray-200 hover:border-indigo-500 shadow-sm relative md:h-40">
+                  <div className="flex flex-col md:flex-row h-full">
+                    {/* Full view image container */}
+                    <div className="md:w-1/4 relative overflow-hidden bg-gray-50 flex items-center justify-center shrink-0">
                       {playlist.thumbnail ? (
                         <img
                           src={getImageUrl(playlist.thumbnail?.file_path || playlist.thumbnail)}
                           alt={playlist.name}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         />
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center p-2 text-center">
-                          <p className="text-white text-sm font-bold opacity-90 line-clamp-3">
-                            {playlist.name}
-                          </p>
+                        <div className="w-full h-full bg-gradient-to-br from-indigo-600 to-purple-700 flex items-center justify-center p-4 text-center text-white font-bold text-sm rounded-lg opacity-90">
+                          {playlist.name}
                         </div>
                       )}
                     </div>
-                    <div className="w-2/3 p-6 flex flex-col justify-center">
-                      <h3 className="text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors mb-2 line-clamp-1">
+                    <div className="flex-1 p-4 flex flex-col justify-center">
+                      <h3 className="text-base md:text-lg font-bold text-gray-900 group-hover:text-indigo-600 transition-colors mb-1 line-clamp-1">
                         {playlist.name}
                       </h3>
-                      <p className="text-gray-500 text-sm line-clamp-2 mb-3">
-                        {playlist.description || "No description available."}
+                      <p className="text-gray-600 text-[11px] md:text-xs line-clamp-2 mb-4 leading-relaxed max-w-2xl opacity-80">
+                        {playlist.description || "Explore this carefully curated collection of articles focused on specific topics."}
                       </p>
-                      <div className="flex items-center gap-4 text-xs text-gray-500 font-medium mt-auto">
-                        <div className="flex items-center gap-1">
-                          <BookOpen className="w-3.5 h-3.5" />
-                          <span>{playlist.blog_count || 0} Articles</span>
+                      <div className="flex items-center gap-8">
+                        <div className="flex flex-col">
+                          <span className="text-base font-bold text-gray-900 leading-none">{playlist.blog_count || 0}</span>
+                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">Articles</span>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>{playlist.total_views || 0}</span>
+                        <div className="flex flex-col">
+                          <span className="text-base font-bold text-gray-900 leading-none">{(playlist.total_views || 0).toLocaleString()}</span>
+                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">Total Views</span>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Heart className="w-3.5 h-3.5" />
-                          <span>{playlist.total_likes || 0}</span>
+                        <div className="flex flex-col border-l border-gray-100 pl-8 hidden sm:flex">
+                          <span className="text-base font-bold text-gray-900 leading-none">{(playlist.total_likes || 0).toLocaleString()}</span>
+                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">Total Likes</span>
                         </div>
                       </div>
                     </div>
@@ -632,55 +638,101 @@ export default function Home() {
               <p className="text-gray-500">No playlists found.</p>
             </div>
           )}
+
+          <div className="mt-8 text-center sm:hidden">
+            <Link
+              href="/playlists"
+              className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 font-semibold transition-colors"
+            >
+              View All Playlists
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* Top Authors Section */}
-      <section className="py-16 bg-indigo-50/50">
+      <section className="py-16 bg-white/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-              Top Creators
-            </h2>
-            <p className="text-gray-600">
-              Meet the minds behind the most popular content.
-            </p>
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Top Creators</h2>
+              <p className="text-gray-500 text-sm mt-1">Meet the minds behind the most popular content.</p>
+            </div>
+            <Link href="/creators" className="text-sm font-bold text-indigo-600 hover:text-indigo-700 inline-flex items-center gap-1 group">
+              View All Creators <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </Link>
           </div>
 
           {authorsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[...Array(3)].map((_, i) => (
-                <Skeleton key={i} className="h-64 w-full rounded-xl" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} className="h-32 w-full rounded-xl" />
               ))}
             </div>
           ) : topAuthors.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {topAuthors.map((author) => (
-                <Link key={author.email} href={`/blogs/${author.email}`} className="block bg-white rounded-xl p-4 text-center hover:shadow-lg transition-all border border-gray-100 group">
-                  <div className="relative w-16 h-16 mx-auto mb-3 rounded-full overflow-hidden p-0.5 border-2 border-indigo-100 group-hover:border-indigo-600 transition-colors">
-                    <img
-                      src={author.profile_image || `https://ui-avatars.com/api/?name=${author.full_name || author.email}&background=random`}
-                      alt={author.full_name || author.email}
-                      className="w-full h-full rounded-full object-cover"
-                    />
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-0.5 group-hover:text-indigo-600 transition-colors">
-                    {author.full_name || author.email.split('@')[0]}
-                  </h3>
-                  <p className="text-indigo-500 font-medium text-xs mb-3">{author.email}</p>
+                <Link
+                  key={author.email}
+                  href={`/blogs/${author.email}`}
+                  className="group block bg-white border border-gray-200 rounded-3xl overflow-hidden hover:shadow-2xl hover:border-indigo-500 transition-all duration-500 shadow-sm md:h-44"
+                >
+                  <div className="flex flex-col md:flex-row h-full p-6 gap-6">
+                    {/* Left Side: Circular Avatar */}
+                    <div className="relative w-24 h-24 shrink-0 mx-auto md:mx-0">
+                      <div className="absolute inset-0 border-4 border-indigo-50 rounded-full overflow-hidden shadow-inner group-hover:border-indigo-100 transition-colors">
+                        <img
+                          src={author.profile_image ? getImageUrl(author.profile_image?.file_path || author.profile_image) : `https://ui-avatars.com/api/?name=${author.full_name || author.email}&background=random`}
+                          alt={author.full_name || author.email}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                      </div>
+                    </div>
 
-                  <div className="flex justify-center gap-4 border-t border-gray-100 pt-3">
-                    <div className="text-center">
-                      <span className="block text-base font-bold text-gray-900">{author.blog_count || 0}</span>
-                      <span className="text-[10px] text-gray-500 uppercase tracking-wide">Blogs</span>
-                    </div>
-                    <div className="text-center md:border-l md:pl-4 border-gray-100">
-                      <span className="block text-base font-bold text-gray-900">{author.total_views || 0}</span>
-                      <span className="text-[10px] text-gray-500 uppercase tracking-wide">Views</span>
-                    </div>
-                    <div className="text-center md:border-l md:pl-4 border-gray-100">
-                      <span className="block text-base font-bold text-gray-900">{author.total_likes || 0}</span>
-                      <span className="text-[10px] text-gray-500 uppercase tracking-wide">Likes</span>
+                    {/* Right Side: Content */}
+                    <div className="flex-1 flex flex-col justify-center min-w-0 text-center md:text-left">
+                      <div className="mb-3">
+                        <h3 className="font-bold text-lg text-gray-900 truncate group-hover:text-indigo-600 transition-colors">
+                          {author.full_name || author.email?.split('@')[0] || "User"}
+                        </h3>
+                        <p className="font-semibold text-[11px] text-indigo-600 truncate opacity-90 mb-1">
+                          {author.email}
+                        </p>
+                        {author.headline && (
+                          <p className="text-xs text-gray-500 line-clamp-1 italic">
+                            {author.headline}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Stats Row */}
+                      <div className="flex flex-row items-center justify-center md:justify-start gap-8 pt-3 border-t border-gray-50">
+                        <div className="flex flex-col items-center md:items-start">
+                          <span className="font-bold text-lg text-gray-900 leading-none">
+                            {author.blog_count || 0}
+                          </span>
+                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                            Blogs
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-center md:items-start border-l border-gray-100 pl-8">
+                          <span className="font-bold text-lg text-gray-900 leading-none">
+                            {(author.total_views || 0).toLocaleString()}
+                          </span>
+                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                            Views
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-center md:items-start border-l border-gray-100 pl-8">
+                          <span className="font-bold text-lg text-gray-900 leading-none">
+                            {(author.total_likes || 0).toLocaleString()}
+                          </span>
+                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                            Likes
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </Link>
@@ -691,6 +743,16 @@ export default function Home() {
               <p className="text-gray-500">No authors found.</p>
             </div>
           )}
+
+          <div className="mt-8 text-center sm:hidden">
+            <Link
+              href="/creators"
+              className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 font-semibold transition-colors"
+            >
+              View All Creators
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -699,7 +761,6 @@ export default function Home() {
 
       {/* FAQ Section */}
       <FAQ />
-
     </>
   );
 }

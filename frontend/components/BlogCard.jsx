@@ -1,19 +1,20 @@
 import Link from "next/link";
 import { Calendar, Tag, Star, Eye, Heart } from "lucide-react";
-import { getImageUrl } from "../lib/utils";
+import { getImageUrl, formatDate } from "../lib/utils";
 
 export default function BlogCard({ blog }) {
-  // If blog has author info, construct URL with username
-  // Otherwise use the simple slug route
   const getBlogUrl = () => {
-    const authorIdentifier = blog.author?.email || blog.author_email || blog.authorUsername;
-    if (authorIdentifier) {
-      return `/blogs/${authorIdentifier}/${blog.slug}`;
+    const authorIdentifier = blog.author?.email || blog.author_email || blog.authorUsername || blog.author;
+    if (authorIdentifier && typeof authorIdentifier === 'string') {
+      return `/blogs/${authorIdentifier.split('@')[0]}/${blog.slug}`.replace(/([^:]\/)\/+/g, "$1"); // Fast cleanup
     }
     return `/blogs/${blog.slug}`;
   };
 
-  const imagePath = blog.thumbnail?.file_path || blog.image;
+  const imagePath = blog.thumbnail?.file_path || blog.thumbnail || blog.image;
+  const displayDate = blog.date || formatDate(blog.publishedDate || blog.created_at || blog.added_at);
+  const displayCategory = blog.category_name || (typeof blog.category === 'string' ? blog.category : blog.category?.name) || 'Uncategorized';
+  const displayDescription = blog.description || blog.excerpt || '';
 
   return (
     <Link href={getBlogUrl()}>
@@ -33,7 +34,7 @@ export default function BlogCard({ blog }) {
           )}
           <div className="absolute top-4 left-4 flex gap-2 flex-wrap">
             <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-white text-indigo-600 shadow-sm">
-              {blog.category}
+              {displayCategory}
             </span>
             {blog.featured && (
               <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-yellow-400 text-yellow-900 shadow-sm">
@@ -49,8 +50,8 @@ export default function BlogCard({ blog }) {
           <h3 className="text-xl font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-indigo-600 transition-colors">
             {blog.title}
           </h3>
-          <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-            {blog.description}
+          <p className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed">
+            {displayDescription}
           </p>
 
           {/* Meta */}
@@ -58,7 +59,7 @@ export default function BlogCard({ blog }) {
             <div className="flex items-center gap-4 text-xs text-gray-500">
               <div className="flex items-center gap-1">
                 <Calendar className="w-4 h-4" />
-                <span>{blog.date}</span>
+                <span>{displayDate}</span>
               </div>
             </div>
 
