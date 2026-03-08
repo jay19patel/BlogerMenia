@@ -427,6 +427,15 @@ export const api = {
     }
   },
 
+  async submitTestimonial(token, data) {
+    const response = await fetch(`${API_BASE_URL}/testimonials/`, {
+      method: 'POST',
+      headers: getHeaders(token),
+      body: JSON.stringify(data),
+    });
+    return handleResponse(response);
+  },
+
 
 
   // Chat/Generation endpoints
