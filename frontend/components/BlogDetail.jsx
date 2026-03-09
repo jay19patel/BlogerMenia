@@ -425,21 +425,23 @@ export default function BlogDetailPage() {
                                 {section.title}
                             </h3>
                         )}
-                        <div className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                            <img
-                                src={section.url}
-                                alt={section.alt || section.title}
-                                className="w-full h-auto"
-                                loading="lazy"
-                            />
-                            {section.caption && (
-                                <div className="p-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 text-center italic">
-                                        {section.caption}
-                                    </p>
-                                </div>
-                            )}
-                        </div>
+                        {(section.attachment?.file_path || section.url) && (
+                            <div className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                                <img
+                                    src={getImageUrl(section.attachment?.file_path || section.url)}
+                                    alt={section.attachment?.filename || section.title || 'Section image'}
+                                    className="w-full h-auto"
+                                    loading="lazy"
+                                />
+                                {section.caption && (
+                                    <div className="p-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+                                        <p className="text-sm text-gray-600 dark:text-gray-400 text-center italic">
+                                            {section.caption}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 );
 

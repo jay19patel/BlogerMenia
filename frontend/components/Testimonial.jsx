@@ -49,7 +49,7 @@ export default function Testimonial() {
   if (testimonials.length === 0) return null;
 
   return (
-    <section className="py-24 relative overflow-hidden bg-white">
+    <section className="py-24 relative overflow-hidden">
       {/* Dynamic Background Elements */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-100/40 rounded-full blur-[120px] animate-pulse"></div>
@@ -136,7 +136,7 @@ export default function Testimonial() {
 
                 return (
                   <SwiperSlide key={index} className="h-auto">
-                    <div className="bg-white/80 backdrop-blur-xl border border-white rounded-[2.5rem] p-10 shadow-[0_20px_50px_rgba(0,0,0,0.05)] h-full flex flex-col relative group transition-all duration-500 hover:shadow-[0_20px_50px_rgba(79,70,229,0.1)] hover:-translate-y-2 border-t-2 hover:border-t-indigo-500">
+                    <div className="bg-white/80 backdrop-blur-xl border border-white rounded-2xl p-10 shadow-[0_20px_50px_rgba(0,0,0,0.05)] h-full flex flex-col relative group transition-all duration-500 hover:shadow-[0_20px_50px_rgba(79,70,229,0.1)] hover:-translate-y-2 border-t-2 hover:border-t-indigo-500">
                       <div className="absolute top-10 right-10 text-indigo-600/10 group-hover:text-indigo-600/20 transition-colors">
                         <Quote className="w-16 h-16 fill-current" />
                       </div>

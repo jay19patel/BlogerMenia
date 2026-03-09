@@ -44,7 +44,7 @@ export default function FAQ() {
   if (faqItems.length === 0) return null;
 
   return (
-    <section className="py-24 bg-white overflow-hidden">
+    <section className="py-24 overflow-hidden">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-16">
@@ -71,8 +71,8 @@ export default function FAQ() {
               <div
                 key={id}
                 className={`group rounded-2xl border transition-all duration-300 ${isOpen
-                    ? "border-indigo-600 bg-indigo-50/30 ring-4 ring-indigo-50/50"
-                    : "border-gray-200 hover:border-indigo-300 hover:bg-gray-50/50"
+                  ? "border-indigo-600 bg-indigo-50/30 ring-4 ring-indigo-50/50"
+                  : "border-gray-200 hover:border-indigo-300 hover:bg-gray-50/50"
                   }`}
               >
                 {/* Trigger */}
