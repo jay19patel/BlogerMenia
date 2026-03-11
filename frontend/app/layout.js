@@ -11,7 +11,7 @@ import { Toaster } from "sonner";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import QueryProvider from "@/components/QueryProvider";
 
-const GOOGLE_CLIENT_ID = "1041926678255-imk440263309a9h8k6u7a2b0e6g6v4b3.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
