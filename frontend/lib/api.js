@@ -645,6 +645,17 @@ export const api = {
   },
 
 
+  async googleLogin(code) {
+    const response = await fetch(`${API_BASE_URL}/auth/google/login/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ code }),
+    });
+    return handleResponse(response);
+  },
+
   getGoogleLoginUrl() {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
     const redirectUri = typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : '';

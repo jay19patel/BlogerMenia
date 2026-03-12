@@ -3,7 +3,7 @@ from typing import Optional, List, Dict, Any, Type
 from .signals import signals
 from beanie import Document, PydanticObjectId, Insert, Replace, Save, Delete, Update, before_event, after_event, Link
 from slugify import slugify
-from pydantic import Field, EmailStr, field_serializer
+from pydantic import Field, EmailStr, field_serializer, model_validator
 from pymongo import IndexModel, ASCENDING, DESCENDING
 
 class AuditDocument(Document):
@@ -79,18 +79,28 @@ class User(AuditDocument):
     hashed_password: str
     
     # Profile fields
-    profile_image: Optional[Link["Attachment"]] = None
+    profile_image: Optional[Link["Attachment"]] = Field(default=None) # We apply the BeforeValidator below using model_validator if needed, but for Beanie Links, BeforeValidator on the type is better. Let's use a standard model_validator.
+
     headline: Optional[str] = Field(default=None, max_length=255, description="A short professional headline")
     bio: Optional[str] = Field(default=None, description="Bio or about section")
+    is_google_account: bool = False
+
+    @model_validator(mode='before')
+    @classmethod
+    def clean_empty_links(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if data.get("profile_image") == "":
+                data["profile_image"] = None
+        return data
 
     @field_serializer('profile_image', when_used='json')
     def serialize_profile_image(self, profile_image: Any):
         if not profile_image: return None
-        from .settings import settings
+        from .url_utils import get_media_url
         if hasattr(profile_image, "to_ref"): return None
         path = profile_image.get("file_path") if isinstance(profile_image, dict) else getattr(profile_image, "file_path", str(profile_image))
         if path and path.startswith("/media/"):
-            return f"{settings.BACKEND_URL}{path}"
+            return get_media_url(path)
         return path
 
     class Settings:
@@ -100,7 +110,7 @@ class User(AuditDocument):
         ]
 
 class Session(AuditDocument):
-    user_id: str
+    user: Link["User"]
     refresh_token: str
     is_active: bool = True
     expires_at: datetime
@@ -110,7 +120,7 @@ class Session(AuditDocument):
     class Settings:
         name = "sessions"
         indexes = [
-            IndexModel([("user_id", ASCENDING)]),
+            IndexModel([("user.$id", ASCENDING)]),
             IndexModel([("refresh_token", ASCENDING)], unique=True)
         ]
 
@@ -170,8 +180,8 @@ class Attachment(Document):
     def serialize_file_path(self, file_path: Optional[str]):
         if not file_path: return None
         if file_path.startswith("/media/"):
-            from .settings import settings
-            return f"{settings.BACKEND_URL}{file_path}"
+            from .url_utils import get_media_url
+            return get_media_url(file_path)
         return file_path
     
     class Settings:

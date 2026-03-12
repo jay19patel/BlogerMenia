@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status, Depends, Request, Response, Form, File, UploadFile
 from ..utils import PasswordManager, TokenManager
-from ..schemas import UserOut, TokenResponse, LoginSchema, RegisterSchema, UserUpdate
+from ..schemas import UserOut, TokenResponse, LoginSchema, GoogleLoginSchema, RegisterSchema, UserUpdate
 from ..core.models import User, Session
 from ..core.dependencies import get_current_user, oauth2_scheme
 from ..core.rate_limit import RateLimit
@@ -104,6 +104,161 @@ class AuthRouter:
                     f.write(f"\n--- Login Error ---\n{traceback.format_exc()}")
                 raise e
 
+        @self.router.post("/google/login", response_model=TokenResponse)
+        async def google_login(
+            request: Request,
+            response: Response,
+            login_data: GoogleLoginSchema
+        ):
+            try:
+                import httpx
+                
+                # Retrieve configured Client ID and Secret
+                backbone_config = request.app.state.backbone_config
+                client_id = backbone_config.config.GOOGLE_CLIENT_ID
+                client_secret = backbone_config.config.GOOGLE_CLIENT_SECRET
+                
+                if not client_id or not client_secret:
+                    raise HTTPException(status_code=500, detail="Google authentication is not configured on the server.")
+
+                # Exchange auth code for access token
+                token_url = "https://oauth2.googleapis.com/token"
+                token_data = {
+                    "code": login_data.code,
+                    "client_id": client_id,
+                    "client_secret": client_secret,
+                    "redirect_uri": "postmessage",  # Usually required for frontend popup flow
+                    "grant_type": "authorization_code"
+                }
+                
+                async with httpx.AsyncClient() as client:
+                    token_res = await client.post(token_url, data=token_data)
+                    
+                    if token_res.status_code != 200:
+                        raise HTTPException(status_code=400, detail=f"Failed to verify Google code: {token_res.text}")
+                        
+                    tokens = token_res.json()
+                    access_token = tokens.get("access_token")
+                    
+                    # Fetch user info using access token
+                    user_info_url = "https://www.googleapis.com/oauth2/v2/userinfo"
+                    user_res = await client.get(user_info_url, headers={"Authorization": f"Bearer {access_token}"})
+                    
+                    if user_res.status_code != 200:
+                        raise HTTPException(status_code=400, detail="Failed to fetch user profile from Google")
+                        
+                    user_info = user_res.json()
+                    
+                email = user_info.get("email")
+                full_name = user_info.get("name")
+                picture_url = user_info.get("picture")
+                
+                if not email:
+                    raise HTTPException(status_code=400, detail="Google account has no email associated")
+                    
+                from .service import AuthService
+                auth_service = AuthService(request)
+                
+                # Check if user already exists
+                user_doc = await self.user_repository.get_one({"email": email})
+                
+                # Create user if they don't exist
+                if not user_doc:
+                    # Provide a random secure password for OAuth users because it's required by the model
+                    import secrets
+                    random_password = secrets.token_urlsafe(32)
+                    hashed_pw = PasswordManager.hash_password(random_password)
+                    
+                    new_user_data = {
+                        "email": email,
+                        "full_name": full_name,
+                        "hashed_password": hashed_pw,
+                        "is_active": True,
+                        "is_staff": False,
+                        "is_google_account": True,
+                    }
+                    user_doc = await self.user_repository.create(new_user_data)
+                    
+                # Ensure the user object is a fully hydrated Beanie Document, not a raw dict.
+                if isinstance(user_doc, dict):
+                    # Re-fetch as a proper Model since raw dict might have un-hydrated string IDs for Links
+                    try:
+                        from bson import ObjectId
+                        doc_id = user_doc.get("_id") or user_doc.get("id")
+                        user = await User.get(ObjectId(doc_id))
+                        if not user:
+                            # Fallback if get fails somehow
+                            if "profile_image" in user_doc and isinstance(user_doc["profile_image"], str):
+                                del user_doc["profile_image"] # Drop the invalid string ref
+                            user = User(**user_doc)
+                    except Exception:
+                        if "profile_image" in user_doc and isinstance(user_doc["profile_image"], str):
+                            del user_doc["profile_image"]
+                        user = User(**user_doc)
+                else:
+                    user = user_doc
+
+                # After creating/fetching user, ensure is_google_account is True and update picture if needed
+                needs_save = False
+                
+                # Ensure is_google_account is True for existing users logging in via Google
+                if getattr(user, "is_google_account", False) is False:
+                    user.is_google_account = True
+                    needs_save = True
+
+                # Handle Google profile picture
+                if picture_url and not getattr(user, "profile_image", None):
+                    from ..core.models import Attachment
+                    # Create attachment for the Google profile image
+                    attachment = Attachment(
+                        filename=f"google_profile_{user.id}.jpg",
+                        file_path=picture_url,
+                        content_type="image/jpeg",
+                        collection_name="users",
+                        document_id=str(user.id),
+                        field_name="profile_image",
+                        status="completed"
+                    )
+                    await attachment.insert()
+                    
+                    # Beanie requires Link fields to either be the raw Document or a DBRef
+                    user.profile_image = attachment
+                    needs_save = True
+                    
+                if needs_save:
+                    await user.save()
+
+                # Create Session via AuthService
+                session_data = await auth_service.create_session(
+                    user=user, 
+                    user_agent=request.headers.get("user-agent"),
+                    ip_address=request.client.host if request.client else None
+                )
+    
+                # Use environment-aware cookie settings from BackboneConfig
+                cookie_opts = backbone_config.cookie_settings
+                
+                response.set_cookie(
+                    key="refresh_token",
+                    value=session_data["refresh_token"],
+                    max_age=7 * 24 * 60 * 60,
+                    **cookie_opts
+                )
+                
+                return {
+                    "access_token": session_data["access_token"],
+                    "refresh_token": session_data["refresh_token"],
+                    "token_type": "bearer"
+                }
+
+            except HTTPException:
+                raise
+            except Exception as e:
+                import traceback
+                with open("error_trace.log", "a") as f:
+                    f.write(f"\n--- Google Login Error ---\n{traceback.format_exc()}")
+                raise HTTPException(status_code=500, detail=str(e))
+                
         @self.router.post("/refresh")
         async def refresh(
             request: Request, 
@@ -128,16 +283,64 @@ class AuthRouter:
             
             return {"access_token": new_access_token, "token_type": "bearer"}
 
+        @self.router.post("/logout")
+        async def logout(
+            request: Request,
+            response: Response
+        ):
+            await self._resolve_repos(request)
+            refresh_token = request.cookies.get("refresh_token")
+            
+            if refresh_token:
+                try:
+                    payload = TokenManager.verify_token(refresh_token)
+                    if payload:
+                        sid = payload.get("sid")
+                        if sid:
+                            from .service import AuthService
+                            auth_service = AuthService(request)
+                            await auth_service.logout(sid)
+                except Exception:
+                    pass # Ignore verification failures on logout
+                    
+            response.delete_cookie(
+                key="refresh_token",
+                httponly=True,
+                secure=request.app.state.backbone_config.config.cookie_settings.get("secure", False),
+                samesite=request.app.state.backbone_config.config.cookie_settings.get("samesite", "lax")
+            )
+            return {"detail": "Logged out successfully"}
+
         @self.router.get("/me", response_model=UserOut)
         async def get_me(
             user: User = Depends(get_current_user)
         ):
             try:
-                # await user.fetch_all_links() # Environment-specific bug with Motor/Python 3.13
-                if user.profile_image and hasattr(user.profile_image, "ref"):
+                # Manual hydration of Links since fetch_all_links triggers a Motor/Python 3.13 incompatibility
+                if user.profile_image:
                     from ..core.models import Attachment
-                    user.profile_image = await Attachment.get(user.profile_image.ref.id)
-                # Use UserOut to serialize
+                    from bson import ObjectId
+                    
+                    # Link objects have `.ref.id`
+                    if hasattr(user.profile_image, "ref"):
+                        attachment_doc = await Attachment.get(user.profile_image.ref.id)
+                        if attachment_doc:
+                            user.profile_image = attachment_doc
+                    # In case it's already an Attachment or dict
+                    elif isinstance(user.profile_image, dict) and "id" in user.profile_image:
+                        attachment_doc = await Attachment.get(ObjectId(user.profile_image["id"]))
+                        if attachment_doc:
+                            user.profile_image = attachment_doc
+                    # In case Motor returned a raw string ID for the ref
+                    elif isinstance(user.profile_image, str):
+                        try:
+                            attachment_doc = await Attachment.get(ObjectId(user.profile_image))
+                            if attachment_doc:
+                                user.profile_image = attachment_doc
+                            else:
+                                user.profile_image = None
+                        except:
+                            user.profile_image = None
                 return UserOut(**user.model_dump(by_alias=True))
             except Exception as e:
                 import traceback
@@ -169,10 +372,30 @@ class AuthRouter:
                         print(f"Failed to fetch profile image attachment: {e}")
                 
                 await user.save()
-                # await user.fetch_all_links() # Environment-specific bug with Motor/Python 3.13
-                if user.profile_image and hasattr(user.profile_image, "ref"):
+                
+                # Manual hydration of Links since fetch_all_links triggers a Motor/Python 3.13 incompatibility
+                if user.profile_image:
                     from ..core.models import Attachment
-                    user.profile_image = await Attachment.get(user.profile_image.ref.id)
+                    from bson import ObjectId
+                    
+                    if hasattr(user.profile_image, "ref"):
+                        attachment_doc = await Attachment.get(user.profile_image.ref.id)
+                        if attachment_doc:
+                            user.profile_image = attachment_doc
+                    elif isinstance(user.profile_image, dict) and "id" in user.profile_image:
+                        attachment_doc = await Attachment.get(ObjectId(user.profile_image["id"]))
+                        if attachment_doc:
+                            user.profile_image = attachment_doc
+                    elif isinstance(user.profile_image, str):
+                        try:
+                            attachment_doc = await Attachment.get(ObjectId(user.profile_image))
+                            if attachment_doc:
+                                user.profile_image = attachment_doc
+                            else:
+                                user.profile_image = None
+                        except:
+                            user.profile_image = None
+                            
                 return UserOut(**user.model_dump(by_alias=True))
             except Exception as e:
                 import traceback
