@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, BookOpen, Users, TrendingUp, Eye, Heart } from "lucide-react";
 import BlogCard from "@/components/BlogCard";
 import HorizontalBlogCard from "@/components/HorizontalBlogCard";
@@ -596,10 +597,13 @@ export default function Home() {
                     {/* Full view image container */}
                     <div className="md:w-1/4 relative overflow-hidden bg-gray-50 flex items-center justify-center shrink-0">
                       {playlist.thumbnail ? (
-                        <img
+                        <Image
                           src={getImageUrl(playlist.thumbnail?.file_path || playlist.thumbnail)}
                           alt={playlist.name}
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                          fill
+                          sizes="(max-width: 768px) 100vw, 25vw"
+                          className="object-cover transition-transform duration-700 group-hover:scale-105"
+                          unoptimized
                         />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-indigo-600 to-purple-700 flex items-center justify-center p-4 text-center text-white font-bold text-sm rounded-lg opacity-90">
@@ -682,10 +686,13 @@ export default function Home() {
                     {/* Left Side: Circular Avatar */}
                     <div className="relative w-24 h-24 shrink-0 mx-auto md:mx-0">
                       <div className="absolute inset-0 border-4 border-indigo-50 rounded-full overflow-hidden shadow-inner group-hover:border-indigo-100 transition-colors">
-                        <img
+                        <Image
                           src={author.profile_image ? getImageUrl(author.profile_image?.file_path || author.profile_image) : `https://ui-avatars.com/api/?name=${author.full_name || author.email}&background=random`}
                           alt={author.full_name || author.email}
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          fill
+                          sizes="96px"
+                          className="object-cover transition-transform duration-700 group-hover:scale-110"
+                          unoptimized
                         />
                       </div>
                     </div>
