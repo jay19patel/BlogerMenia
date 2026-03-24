@@ -174,7 +174,7 @@ export default function PlaylistsList() {
                                                         <PlayCircle className="w-4 h-4 text-indigo-600" />
                                                     </div>
                                                     <div className="flex flex-col">
-                                                        <span className="text-sm font-bold text-gray-900 leading-none">{playlist.blog_count || 0}</span>
+                                                        <span className="text-sm font-bold text-gray-900 leading-none">{playlist.blogs?.length || 0}</span>
                                                         <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Blogs</span>
                                                     </div>
                                                 </div>

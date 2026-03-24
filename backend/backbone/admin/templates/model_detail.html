@@ -138,10 +138,24 @@
                 <textarea name="{{ name }}" rows="4"
                     class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-mono text-sm">{{ value | tojson(indent=2) if value is defined and value is not none else '' }}</textarea>
                 {% else %}
+                {% if name == 'size' and value %}
+                <div class="flex items-center gap-3">
+                    <span
+                        class="inline-flex items-center px-3 py-1.5 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 text-sm font-bold font-mono">
+                        <i class="fas fa-hdd mr-2 text-indigo-400"></i>{{ value | filesize }}
+                    </span>
+                    <span class="text-xs text-slate-400 font-mono">({{ value }} bytes)</span>
+                </div>
+                {% else %}
                 <input type="text" name="{{ name }}" value="{{ value }}"
                     class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
                 {% endif %}
                 {% endif %}
+                {% endif %}
+
+                {% set field_desc = field.description if field.description else 'Enter ' ~ (name|replace('_', ' ')) %}
+                <p class="text-xs text-slate-400 mt-2"><i class="fas fa-info-circle mr-1 opacity-70"></i>{{ field_desc
+                    }}</p>
             </div>
             {% endif %}
             {% endfor %}
@@ -155,4 +169,33 @@
         </button>
     </div>
 </form>
+
+{# ── Read-only Audit / Record Info panel ── #}
+<div class="mt-6 bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="p-6 border-b border-slate-100 bg-slate-50/50">
+        <h2 class="text-sm font-bold text-slate-500 uppercase tracking-widest">
+            <i class="fas fa-info-circle mr-2 text-slate-400"></i>Record Info
+        </h2>
+    </div>
+    <div class="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for name in internal_fields %}
+        {% if item[name] is defined and item[name] is not none %}
+        <div class="bg-slate-50 rounded-xl p-4 border border-slate-100">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ name|nice_title }}</p>
+            <p class="text-sm text-slate-700 font-mono break-all">
+                {% if item[name] is sameas true %}
+                <span
+                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">Yes</span>
+                {% elif item[name] is sameas false %}
+                <span
+                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-500">No</span>
+                {% else %}
+                {{ item[name] }}
+                {% endif %}
+            </p>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+</div>
 {% endblock %}

@@ -13,6 +13,18 @@ from .site import admin_site
 # Define INTERNAL_FIELDS globally
 INTERNAL_FIELDS = ["id", "_id", "revision_id", "created_at", "created_by", "updated_at", "updated_by", "is_deleted", "deleted_at", "deleted_by"]
 
+def get_model_fields(model):
+    """
+    Returns all Pydantic model_fields including those inherited from parent classes.
+    model.model_fields only returns fields declared directly on the class.
+    """
+    all_fields = {}
+    # Walk MRO in reverse so subclass fields override parent fields
+    for cls in reversed(model.__mro__):
+        if hasattr(cls, "model_fields") and isinstance(cls.model_fields, dict):
+            all_fields.update(cls.model_fields)
+    return all_fields
+
 router = APIRouter(prefix="/admin")
 
 # Get absolute path to templates
@@ -24,7 +36,22 @@ def nice_title(value: str) -> str:
     if not value: return ""
     return value.replace("_", " ").title()
 
+def filesize(value) -> str:
+    """Format raw bytes into human-readable size (B, KB, MB, GB)."""
+    try:
+        size = float(value)
+    except (TypeError, ValueError):
+        return str(value) if value else "—"
+    for unit in ["B", "KB", "MB", "GB", "TB"]:
+        if abs(size) < 1024.0:
+            if unit == "B":
+                return f"{int(size)} {unit}"
+            return f"{size:.1f} {unit}"
+        size /= 1024.0
+    return f"{size:.1f} PB"
+
 templates.env.filters["nice_title"] = nice_title
+templates.env.filters["filesize"] = filesize
 
 # Helper to check if logged in via Cookie
 async def get_admin_user(request: Request) -> Optional[User]:
@@ -55,11 +82,78 @@ async def admin_dashboard(request: Request, user: Optional[User] = Depends(get_a
         return RedirectResponse(url="/admin/login")
     
     models = admin_site.get_registered_models()
+    
+    # Calculate Database Stats
+    db_stats = {
+        "total_models": len(models),
+        "total_documents": 0,
+        "total_size_mb": 0.0,
+        "data_size_mb": 0.0,
+        "storage_size_mb": 0.0,
+        "index_size_mb": 0.0
+    }
+    
+    # Get Global DB Stats (Official MongoDB metrics)
+    try:
+        if models:
+            db = models[0]["model"].get_settings().pymongo_db
+            db_stats_raw = await db.command("dbStats")
+            db_stats["data_size_mb"] = round(db_stats_raw.get("dataSize", 0) / (1024 * 1024), 2)
+            db_stats["storage_size_mb"] = round(db_stats_raw.get("storageSize", 0) / (1024 * 1024), 2)
+            db_stats["index_size_mb"] = round(db_stats_raw.get("indexSize", 0) / (1024 * 1024), 2)
+            
+            total_db_bytes = db_stats_raw.get("totalSize") or (db_stats_raw.get("storageSize", 0) + db_stats_raw.get("indexSize", 0)) or 0
+            db_stats["total_size_mb"] = round(total_db_bytes / (1024 * 1024), 2)
+    except Exception:
+        pass
+
+    model_stats = {}
+    for m in models:
+        try:
+            model = m["model"]
+            
+            # Safely get Count
+            try:
+                count = await model.find_all().count()
+            except Exception:
+                count = 0
+            
+            # Safely get detailed sizes
+            size_mb = 0.0
+            data_size_mb = 0.0
+            if count > 0:
+                try:
+                    db = model.get_settings().pymongo_db
+                    stats = await db.command("collStats", model.get_collection_name())
+                    
+                    # Logical/Raw Data Size
+                    raw_bytes = stats.get("size") or 0
+                    data_size_mb = raw_bytes / (1024 * 1024)
+                    
+                    # Total Footprint (Storage + Indexes)
+                    total_bytes = stats.get("totalSize") or (stats.get("storageSize", 0) + stats.get("totalIndexSize", 0)) or 0
+                    size_mb = total_bytes / (1024 * 1024)
+                except Exception:
+                    pass
+            
+            model_stats[m["name"]] = {
+                "count": count, 
+                "size_mb": round(size_mb, 4),      # Real Disk size
+                "data_size_mb": round(data_size_mb, 4) # Uncompressed Data size
+            }
+            db_stats["total_documents"] += count
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            model_stats[m["name"]] = {"count": 0, "size_mb": 0.0, "data_size_mb": 0.0}
+            
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
         "models": models,
         "user": user,
-        "now": datetime.now(timezone.utc)
+        "now": datetime.now(timezone.utc),
+        "db_stats": db_stats,
+        "model_stats": model_stats
     })
 
 @router.get("/login", response_class=HTMLResponse)
@@ -145,7 +239,288 @@ async def logout(request: Request):
                 await auth_service.logout(sid)
          except: pass
          
-    return response
+
+# ── Export ────────────────────────────────────────────────────────────────────
+
+@router.get("/export", response_class=HTMLResponse)
+async def export_page(request: Request, user: Optional[User] = Depends(get_admin_user)):
+    if not user:
+        return RedirectResponse(url="/admin/login")
+    models = admin_site.get_registered_models()
+    return templates.TemplateResponse("export.html", {
+        "request": request,
+        "models": models,
+        "user": user,
+        "now": datetime.now(timezone.utc),
+    })
+
+
+@router.post("/export")
+async def export_data(request: Request, user: Optional[User] = Depends(get_admin_user)):
+    """
+    Export selected models as a single JSON file download.
+    Body: application/x-www-form-urlencoded with field `models` (multiple values).
+    """
+    from fastapi.responses import StreamingResponse
+    import json
+
+    if not user:
+        raise HTTPException(status_code=401)
+
+    form = await request.form()
+    selected = form.getlist("models")
+
+    all_models = {m["name"]: m["model"] for m in admin_site.get_registered_models()}
+    export_payload = {}
+
+    for name in selected:
+        if name not in all_models:
+            continue
+        model = all_models[name]
+        try:
+            docs = await model.find_all().to_list()
+            export_payload[name] = [
+                json.loads(doc.model_dump_json()) for doc in docs
+            ]
+        except Exception as e:
+            export_payload[name] = {"error": str(e)}
+
+    json_bytes = json.dumps(export_payload, indent=2, default=str).encode("utf-8")
+
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    filename = f"backbone_export_{timestamp}.json"
+
+    return StreamingResponse(
+        iter([json_bytes]),
+        media_type="application/json",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+# ── Import ────────────────────────────────────────────────────────────────────
+
+@router.get("/import", response_class=HTMLResponse)
+async def import_page(request: Request, user: Optional[User] = Depends(get_admin_user)):
+    if not user:
+        return RedirectResponse(url="/admin/login")
+    models = admin_site.get_registered_models()
+    return templates.TemplateResponse("import.html", {
+        "request": request,
+        "models": models,
+        "user": user,
+        "now": datetime.now(timezone.utc),
+    })
+
+
+@router.post("/import", response_class=HTMLResponse)
+async def import_data(
+    request: Request,
+    user: Optional[User] = Depends(get_admin_user),
+    file: bytes = None,
+):
+    """
+    Import JSON exported by /admin/export.
+    Accepts multipart/form-data with a `file` field containing the JSON.
+    """
+    import json
+    from fastapi import UploadFile, File
+
+    if not user or not user.is_superuser:
+        return RedirectResponse(url="/admin/login")
+
+    form = await request.form()
+    upload = form.get("file")
+    if not upload:
+        return templates.TemplateResponse("import.html", {
+            "request": request,
+            "models": admin_site.get_registered_models(),
+            "user": user,
+            "now": datetime.now(timezone.utc),
+            "error": "No file uploaded.",
+        })
+
+    try:
+        raw = await upload.read()
+        payload: dict = json.loads(raw.decode("utf-8"))
+    except Exception as e:
+        return templates.TemplateResponse("import.html", {
+            "request": request,
+            "models": admin_site.get_registered_models(),
+            "user": user,
+            "now": datetime.now(timezone.utc),
+            "error": f"Invalid JSON: {e}",
+        })
+
+    all_models = {m["name"]: m["model"] for m in admin_site.get_registered_models()}
+    summary = {}
+
+    for model_name, docs in payload.items():
+        if model_name not in all_models:
+            summary[model_name] = {"status": "skipped", "reason": "model not registered"}
+            continue
+
+        model = all_models[model_name]
+        if not isinstance(docs, list):
+            summary[model_name] = {"status": "skipped", "reason": "expected a list of documents"}
+            continue
+
+        inserted = 0
+        skipped = 0
+        for doc_data in docs:
+            try:
+                # Use motor directly to upsert by _id to avoid duplicates
+                collection = model.get_pymongo_collection()
+                from bson import ObjectId
+                doc_id = doc_data.get("id") or doc_data.get("_id")
+                if doc_id:
+                    try:
+                        doc_data["_id"] = ObjectId(str(doc_id))
+                    except Exception:
+                        doc_data["_id"] = doc_id
+                    doc_data.pop("id", None)
+
+                await collection.replace_one(
+                    {"_id": doc_data["_id"]},
+                    doc_data,
+                    upsert=True,
+                )
+                inserted += 1
+            except Exception:
+                skipped += 1
+
+        summary[model_name] = {"inserted": inserted, "skipped": skipped}
+
+    models = admin_site.get_registered_models()
+    return templates.TemplateResponse("import.html", {
+        "request": request,
+        "models": models,
+        "user": user,
+        "now": datetime.now(timezone.utc),
+        "summary": summary,
+    })
+
+
+# ── Wipe Database ──────────────────────────────────────────────────────────────
+
+from pydantic import BaseModel
+
+class ApiWipeRequest(BaseModel):
+    email: str
+    password: str
+    create_admin_if_none: bool = False
+
+@router.get("/wipe", response_class=HTMLResponse)
+async def wipe_page(request: Request, user: Optional[User] = Depends(get_admin_user)):
+    if not user:
+        return RedirectResponse(url="/admin/login")
+    return templates.TemplateResponse("wipe.html", {
+        "request": request,
+        "models": admin_site.get_registered_models(),
+        "user": user,
+        "now": datetime.now(timezone.utc),
+        "error": None
+    })
+
+@router.post("/wipe", response_class=HTMLResponse)
+async def wipe_database(
+    request: Request,
+    password: str = Form(...),
+    user: Optional[User] = Depends(get_admin_user)
+):
+    """
+    Superuser-only: delete ALL documents from every registered model collection.
+    Re-creates the admin user.
+    """
+    if not user or not user.is_superuser:
+        return RedirectResponse(url="/admin/login")
+
+    # Verify password first
+    if not PasswordManager.verify_password(password, user.hashed_password):
+        return templates.TemplateResponse("wipe.html", {
+            "request": request,
+            "models": admin_site.get_registered_models(),
+            "user": user,
+            "now": datetime.now(timezone.utc),
+            "error": "Incorrect password. Wipe aborted."
+        })
+
+    all_models = admin_site.get_registered_models()
+    
+    for m in all_models:
+        model = m["model"]
+        try:
+            collection = model.get_pymongo_collection()
+            if m["name"] == "User":
+                # Delete all except current user
+                await collection.delete_many({"_id": {"$ne": user.id}})
+            else:
+                await collection.delete_many({})
+        except Exception as e:
+            pass
+
+    # Invalidate Cache
+    from ..core.config import BackboneConfig
+    config = BackboneConfig.get_instance()
+    if config.cache_service.enabled:
+        await config.cache_service.flush() # Wipe entire Redis cache for this DB
+
+    return RedirectResponse(url="/admin", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.post("/api/wipe")
+async def api_wipe_database(payload: ApiWipeRequest):
+    """
+    API endpoint to wipe the database.
+    Can also create an initial admin user if none exists.
+    """
+    superuser_count = await User.find(User.is_superuser == True).count()
+    
+    if superuser_count == 0 and payload.create_admin_if_none:
+        hashed_pw = PasswordManager.hash_password(payload.password)
+        new_superuser = User(
+            email=payload.email,
+            full_name="Admin",
+            hashed_password=hashed_pw,
+            is_superuser=True,
+            is_staff=True,
+            is_active=True
+        )
+        await new_superuser.insert()
+        user = new_superuser
+    else:
+        user = await User.find_one(User.email == payload.email)
+        if not user or not PasswordManager.verify_password(payload.password, user.hashed_password) or not user.is_superuser:
+            raise HTTPException(status_code=401, detail="Invalid admin credentials")
+            
+    # Do Wipe
+    all_models = admin_site.get_registered_models()
+    results = {}
+    for m in all_models:
+        model = m["model"]
+        name = m["name"]
+        try:
+            collection = model.get_pymongo_collection()
+            if name == "User":
+                 res = await collection.delete_many({"_id": {"$ne": user.id}})
+            else:
+                 res = await collection.delete_many({})
+            results[name] = res.deleted_count
+        except Exception as e:
+            results[name] = f"error: {e}"
+             
+    # Cache clear
+    from ..core.config import BackboneConfig
+    config = BackboneConfig.get_instance()
+    if config.cache_service.enabled:
+        await config.cache_service.flush()
+        
+    return {
+        "status": "success", 
+        "message": "Database wiped successfully", 
+        "preserved_admin": str(user.id),
+        "cleared": results
+    }
+
 
 @router.get("/{model_name}", response_class=HTMLResponse)
 async def model_list(
@@ -166,7 +541,7 @@ async def model_list(
     skip = (page - 1) * limit
     
     query = {}
-    if "is_deleted" in model.model_fields:
+    if "is_deleted" in get_model_fields(model):
         query["is_deleted"] = {"$ne": True}
         
     total_count = await model.find(query).count()
@@ -176,8 +551,8 @@ async def model_list(
     repo.document_class = model
     populate_fields = BeanieRepository.detect_populate_fields(model)
     
-    sort_query = [("created_at", -1)] if "created_at" in model.model_fields else None
-    items = await repo.get_all(query, skip=skip, limit=limit, sort=sort_query, populate_fields=populate_fields)
+    sort_query = [("created_at", -1)] if "created_at" in get_model_fields(model) else None
+    items, _ = await repo.get_all(query, skip=skip, limit=limit, sort=sort_query, populate_fields=populate_fields)
     total_pages = math.ceil(total_count / limit) if limit > 0 else 1
     
     field_links = {}
@@ -202,7 +577,7 @@ async def model_list(
         "user": user,
         "now": datetime.now(timezone.utc),
         "field_links": field_links,
-        "model_fields": model.model_fields,
+        "model_fields": get_model_fields(model),
         "internal_fields": INTERNAL_FIELDS
     })
 
@@ -220,14 +595,51 @@ async def model_create_page(
         raise HTTPException(status_code=404, detail="Model not found")
     
     model = config["model"]
+    
+    from ..core.repository import BeanieRepository
+    populate_fields = BeanieRepository.detect_populate_fields(model)
+    
+    link_options = {}
+    field_links = {}
+    field_choices = {}
+    
+    if populate_fields:
+        for fname, fconfig in populate_fields.items():
+            if isinstance(fconfig, dict) and "collection" in fconfig:
+                coll = fconfig["collection"]
+                for m_config in admin_site.get_registered_models():
+                    if hasattr(m_config["model"], "Settings") and getattr(m_config["model"].Settings, "name", None) == coll:
+                        target_model_name = m_config["name"]
+                        target_model = m_config["model"]
+                        field_links[fname] = target_model_name
+                        
+                        # Fetch choices (Top 100 for performance)
+                        try:
+                            # Use a simple find to get recent items
+                            items = await target_model.find_all().limit(20).to_list()
+                            choices = []
+                            for item in items:
+                                # Try to find a good label
+                                label = str(getattr(item, "name", getattr(item, "title", getattr(item, "slug", item.id))))
+                                choices.append({
+                                    "id": str(item.id),
+                                    "label": label
+                                })
+                            field_choices[fname] = choices
+                        except:
+                            pass
+                        break
+                        
     return templates.TemplateResponse("model_create.html", {
         "request": request,
         "model_name": model_name,
-        "model_fields": model.model_fields,
-        "internal_fields": INTERNAL_FIELDS, # Added internal_fields
+        "model_fields": get_model_fields(model),
+        "internal_fields": INTERNAL_FIELDS, 
         "models": admin_site.get_registered_models(),
         "user": user,
-        "now": datetime.now(timezone.utc)
+        "now": datetime.now(timezone.utc),
+        "field_links": field_links,
+        "field_choices": field_choices
     })
 
 @router.post("/{model_name}/create")
@@ -249,24 +661,57 @@ async def model_create_handle(
     # Filter and cast form data
     data = {}
     
-    for key, field in model.model_fields.items():
-        if key in INTERNAL_FIELDS: # Used INTERNAL_FIELDS
+    for key, field in get_model_fields(model).items():
+        if key in INTERNAL_FIELDS:
             continue
             
-        if key in form_data and form_data[key]:
-            val = form_data[key]
+        is_list = "list" in str(field.annotation).lower()
+        is_link = "link" in str(field.annotation).lower()
+        
+        if key in form_data:
+            val = form_data.getlist(key) if is_list else form_data[key]
+            
+            if is_list:
+                if not val or (len(val) == 1 and not val[0]):
+                    val = []
+            elif not val and field.annotation != bool:
+                continue
+                
             # Simple type casting
             if field.annotation == bool:
-                val = val.lower() == "true"
-            elif field.annotation == int:
-                val = int(val)
-            elif field.annotation == float:
-                val = float(val)
+                val = val.lower() == "true" if isinstance(val, str) else bool(val)
+            elif field.annotation == int and not is_list:
+                try: val = int(val)
+                except: pass
+            elif field.annotation == float and not is_list:
+                try: val = float(val)
+                except: pass
                 
-            if model_name == "User" and key == "hashed_password":
+            if model_name == "User" and key == "hashed_password" and val:
                 from ..utils import PasswordManager
-                if not val.startswith("$argon2"):
+                if isinstance(val, str) and not val.startswith("$argon2"):
                     val = PasswordManager.hash_password(val)
+                    
+            if is_link and val:
+                from ..core.repository import BeanieRepository
+                from bson import ObjectId
+                from bson.dbref import DBRef
+                populate_fields = BeanieRepository.detect_populate_fields(model)
+                if key in populate_fields:
+                    collection_name = populate_fields[key].get("collection")
+                    if collection_name:
+                        if is_list and isinstance(val, list):
+                            new_val = []
+                            for item_id in val:
+                                try:
+                                    if len(str(item_id)) == 24:
+                                        new_val.append(DBRef(collection=collection_name, id=ObjectId(item_id)))
+                                except: pass
+                            val = new_val
+                        elif isinstance(val, str) and len(val) == 24:
+                            try:
+                                val = DBRef(collection=collection_name, id=ObjectId(val))
+                            except: pass
                     
             data[key] = val
             
@@ -336,25 +781,65 @@ async def model_detail(
         raise HTTPException(status_code=404, detail="Record not found")
 
     field_links = {}
+    link_options = {}
     if populate_fields:
         for fname, fconfig in populate_fields.items():
             if isinstance(fconfig, dict) and "collection" in fconfig:
                 coll = fconfig["collection"]
                 for m_config in admin_site.get_registered_models():
                     if hasattr(m_config["model"], "Settings") and getattr(m_config["model"].Settings, "name", None) == coll:
-                        field_links[fname] = m_config["name"]
+                        target_model_name = m_config["name"]
+                        target_model = m_config["model"]
+                        field_links[fname] = target_model_name
+                        
+                        # Fetch ONLY the selected items to pre-populate the dropdown
+                        try:
+                            val = item_dict.get(fname)
+                            if not val:
+                                break
+                                
+                            val_list = val if isinstance(val, list) else [val]
+                            val_list = [v for v in val_list if v]
+                            
+                            if not val_list:
+                                break
+                                
+                            from bson import ObjectId
+                            ids_to_fetch = []
+                            for v in val_list:
+                                vid = v.id if hasattr(v, "id") else v.get("id") if isinstance(v, dict) else v
+                                try:
+                                    if isinstance(vid, (str, ObjectId)):
+                                        ids_to_fetch.append(ObjectId(str(vid)))
+                                except: pass
+                                
+                            items = await target_model.find({"_id": {"$in": ids_to_fetch}}).to_list()
+                            
+                            options = []
+                            for it in items:
+                                label = str(it.id)
+                                for display_field in ["name", "title", "full_name", "username", "email", "filename", "question"]:
+                                    test_val = getattr(it, display_field, None)
+                                    if test_val:
+                                        label = f"{test_val} ({it.id})"
+                                        break
+                                options.append({"id": str(it.id), "label": label})
+                            link_options[fname] = options
+                        except:
+                            pass
                         break
 
     return templates.TemplateResponse("model_detail.html", {
         "request": request,
         "model_name": model_name,
         "item": item_dict,
-        "model_fields": model.model_fields,
+        "model_fields": get_model_fields(model),
         "models": admin_site.get_registered_models(),
         "user": user,
         "now": datetime.now(timezone.utc),
         "field_links": field_links,
-        "internal_fields": INTERNAL_FIELDS # Added internal_fields
+        "link_options": link_options,
+        "internal_fields": INTERNAL_FIELDS
     })
 
 @router.post("/{model_name}/{pk}")
@@ -385,47 +870,56 @@ async def model_update_handle(
     form_data = await request.form()
     update_data = {}
     
-    for key, field in model.model_fields.items():
-        if key in INTERNAL_FIELDS: # Used INTERNAL_FIELDS
+    for key, field in get_model_fields(model).items():
+        if key in INTERNAL_FIELDS:
             continue
             
+        is_list = "list" in str(field.annotation).lower()
+        is_link = "link" in str(field.annotation).lower()
+
         if key in form_data:
-            val = form_data[key]
-            if field.annotation == bool:
-                val = val.lower() == "true"
-            elif field.annotation == int:
-                val = int(val)
-            elif field.annotation == float:
-                val = float(val)
+            val = form_data.getlist(key) if is_list else form_data[key]
             
-            # If the user submitted a JSON string for a Link field, extract ID
-            if "Link" in str(field.annotation) and isinstance(val, str) and val.startswith("{"):
-                import json
-                try:
-                    parsed = json.loads(val)
-                    if isinstance(parsed, dict) and "id" in parsed:
-                        val = parsed["id"]
-                except:
-                    pass
-            elif "Link" in str(field.annotation) and isinstance(val, str) and val.startswith("["):
-                import json
-                try:
-                    parsed = json.loads(val)
-                    if isinstance(parsed, list):
-                        new_val = []
-                        for el in parsed:
-                            if isinstance(el, dict) and "id" in el:
-                                new_val.append(el["id"])
-                            else:
-                                new_val.append(el)
-                        val = new_val
-                except:
-                    pass
+            if is_list:
+                if not val or (len(val) == 1 and not val[0]):
+                    val = []
+            elif not val and field.annotation != bool:
+                continue
+
+            if field.annotation == bool:
+                val = val.lower() == "true" if isinstance(val, str) else bool(val)
+            elif field.annotation == int and not is_list:
+                try: val = int(val)
+                except: pass
+            elif field.annotation == float and not is_list:
+                try: val = float(val)
+                except: pass
 
             if model_name == "User" and key == "hashed_password" and val:
                 from ..utils import PasswordManager
-                if not val.startswith("$argon2"):
+                if isinstance(val, str) and not val.startswith("$argon2"):
                     val = PasswordManager.hash_password(val)
+
+            if is_link and val:
+                from ..core.repository import BeanieRepository
+                from bson import ObjectId
+                from bson.dbref import DBRef
+                populate_fields = BeanieRepository.detect_populate_fields(model)
+                if key in populate_fields:
+                    collection_name = populate_fields[key].get("collection")
+                    if collection_name:
+                        if is_list and isinstance(val, list):
+                            new_val = []
+                            for item_id in val:
+                                try:
+                                    if len(str(item_id)) == 24:
+                                        new_val.append(DBRef(collection=collection_name, id=ObjectId(item_id)))
+                                except: pass
+                            val = new_val
+                        elif isinstance(val, str) and len(val) == 24:
+                            try:
+                                val = DBRef(collection=collection_name, id=ObjectId(val))
+                            except: pass
 
             update_data[key] = val
 
@@ -474,4 +968,60 @@ async def model_delete_handle(
             
     return RedirectResponse(url=f"/admin/{model_name}", status_code=status.HTTP_303_SEE_OTHER)
 
+@router.get("/api/search/{target_model}")
+async def admin_api_search(
+    request: Request,
+    target_model: str,
+    q: Optional[str] = "",
+    page: int = 1,
+    user: Optional[User] = Depends(get_admin_user)
+):
+    """
+    Generic AJAX endpoint that returns Select2 formatted options manually paginated.
+    """
+    if not user:
+         raise HTTPException(status_code=401)
+         
+    config = admin_site.get_model_config(target_model)
+    if not config: return {"results": [], "pagination": {"more": False}}
+    
+    model = config["model"]
+    limit = 10
+    skip = (page - 1) * limit
+    
+    query = {}
+    if "is_deleted" in get_model_fields(model):
+        query["is_deleted"] = {"$ne": True}
+        
+    if q:
+        search_params = []
+        for field_name in ["name", "title", "full_name", "username", "email", "filename", "question", "subject"]:
+            if field_name in get_model_fields(model):
+                search_params.append({field_name: {"$regex": q, "$options": "i"}})
+        if search_params:
+            if "is_deleted" in query:
+                query = {"$and": [{"is_deleted": {"$ne": True}}, {"$or": search_params}]}
+            else:
+                query = {"$or": search_params}
+            
+    items = await model.find(query).skip(skip).limit(limit).to_list()
+    total = await model.find(query).count()
+    
+    results = []
+    for it in items:
+        label = str(it.id)
+        for display_field in ["name", "title", "full_name", "username", "email", "filename", "question"]:
+            val = getattr(it, display_field, None)
+            if val:
+                label = f"{val} ({it.id})"
+                break
+        results.append({"id": str(it.id), "text": label})
+        
+    return {
+        "results": results,
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "total_pages": math.ceil(total / limit)
+    }
 
