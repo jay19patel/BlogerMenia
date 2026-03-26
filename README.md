@@ -1,91 +1,154 @@
-# Bloggermenia - Advanced Django Blogging Platform
+# Blogermenia
 
-## Overview
-Bloggermenia is a robust, feature-rich blogging platform built with Django. It features a modern UI, AI-generated content support, playlist management for blog series, and a secure, optimized backend.
+Blogermenia is a full-stack blogging platform built with a Next.js frontend and a FastAPI backend. The backend includes a reusable framework layer called `Backbone`, designed to help developers build APIs, admin panels, authentication flows, and content systems quickly on top of MongoDB and Redis.
 
-## Key Features
-- **User Authentication**: Secure signup/login with Email and Google OAuth (Allauth).
-- **Blog Management**: Create, Edit, Delete, and View blogs with rich text content.
-- **AI Integration**: Experimental API for generating blog content using AI models.
-- **Playlists**: Organize blogs into playlists (series) for better content consumption.
-- **Interactive Elements**: Like blogs, view counts, and read-time estimates.
-- **Optimized Backend**: efficient database queries, caching, and clean architecture.
+This repository currently contains two things:
 
----
+- the Blogermenia application
+- the evolving `Backbone` framework that powers the backend
 
-## Architecture
+## Stack
 
-The project has been restructured to have a dedicated `backend` directory containing the Django application and a `frontend` directory (if applicable) for the client-side code.
+### Frontend
 
-### Directory Structure
-- `backend/`: Django project files, apps, and configuration.
-- `frontend/`: Next.js frontend application.
+- Next.js 15
+- React 19
+- Tailwind CSS 4
+- TanStack Query
 
+### Backend
 
-## Setup Instructions
+- FastAPI
+- Beanie ODM
+- MongoDB
+- Redis
+- Pydantic v2
+- Uvicorn
+
+## Repository Structure
+
+```text
+.
+├── backend/
+│   ├── api/                  # App-specific API routers
+│   ├── backbone/             # Reusable framework layer
+│   ├── schemas/              # App-specific Beanie models
+│   ├── test/                 # API/manual test assets
+│   ├── main.py               # FastAPI app entrypoint
+│   ├── pyproject.toml
+│   └── README.md             # Backbone framework guide
+├── frontend/
+│   ├── app/                  # Next.js app router pages
+│   ├── components/           # UI components
+│   ├── contexts/
+│   ├── lib/
+│   └── package.json
+└── README.md
+```
+
+## What The System Already Supports
+
+### Application features
+
+- user registration and login
+- Google login flow
+- blog CRUD APIs
+- category APIs
+- playlists
+- creator and user listing flows
+- likes and view-tracking support
+- media upload handling
+- admin dashboard pages for model management
+
+### Framework features through Backbone
+
+- class-based generic CRUD views
+- repository abstraction for Beanie documents
+- permission system with object-level checks
+- admin site registry
+- session-based auth support
+- Redis-backed cache service
+- Redis-backed background task queue
+- signal/event hooks
+- rate limiting
+- attachment/media model support
+
+## Current State
+
+The backend is functional and the framework direction is strong, but the framework is still in the middle of becoming production-grade. The main improvement areas identified during the audit are:
+
+- framework and app code need clearer boundaries
+- repository return types should be standardized
+- silent exception handling should be reduced
+- auth and admin flows need more production hardening
+- observability and tests need to be expanded
+- documentation needed to be corrected from old Django wording
+
+A detailed architecture review is available at [backend/BACKBONE_ARCHITECTURE_AUDIT.md](/Users/jaypatel/Desktop/Development/Jay/Blogermenia-Djnago/backend/BACKBONE_ARCHITECTURE_AUDIT.md).
+
+## Local Development
 
 ### Prerequisites
-- Python 3.9+
-- UV (Python package manager) or Pip
 
-### Installation
+- Python 3.13+
+- Node.js 20+
+- MongoDB
+- Redis
+- `uv` recommended for Python environment management
 
-1. **Clone the repository:**
-   ```bash
-   git clone <repository-url>
-   cd Blogermenia-Djnago
-   ```
+### Backend setup
 
-2. **Navigate to Backend:**
-   ```bash
-   cd backend
-   ```
+```bash
+cd backend
+uv sync
+uv run uvicorn main:app --reload
+```
 
-3. **Install dependencies:**
-   ```bash
-   uv sync
-   # OR
-   pip install -r requirements.txt
-   ```
+### Frontend setup
 
-4. **Configure Environment:**
-   Create a `.env` file in the `backend/` directory:
-   ```env
-   SECRET_KEY=your_secret_key
-   DEBUG=True
-   MISTRAL_API_KEY=your_mistral_key
-   GOOGLE_CLIENT_ID=your_google_client_id
-   GOOGLE_CLIENT_SECRET=your_google_client_secret
-   ```
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-5. **Run Migrations:**
-   ```bash
-   uv run manage.py migrate
-   ```
+### Suggested environment variables for backend
 
-6. **Create Superuser:**
-   ```bash
-   uv run manage.py createsuperuser
-   ```
+Create `backend/.env`:
 
-7. **Run the Server:**
-   ```bash
-   uv run manage.py runserver
-   ```
+```env
+SECRET_KEY=replace_with_a_real_secret
+ENVIRONMENT=develop
+MONGODB_URL=mongodb://localhost:27017
+DATABASE_NAME=backbone_app
+CACHE_ENABLED=true
+REDIS_URL=redis://localhost:6379/0
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+CLOUDINARY_URL=
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+```
 
-## API Documentation
+## Backend Entry Points
 
-### Blog Like Toggle
-- **URL**: `/api/blogs/<slug>/like/`
-- **Method**: `POST`
-- **Response**: `{ "liked": boolean, "total_likes": int }`
-- **Optimization**: Updates counts using `F()` expressions for atomic updates.
+- app entry: [`backend/main.py`](/Users/jaypatel/Desktop/Development/Jay/Blogermenia-Djnago/backend/main.py)
+- framework package: [`backend/backbone/__init__.py`](/Users/jaypatel/Desktop/Development/Jay/Blogermenia-Djnago/backend/backbone/__init__.py)
+- framework guide: [`backend/README.md`](/Users/jaypatel/Desktop/Development/Jay/Blogermenia-Djnago/backend/README.md)
 
-### Upload Image
-- **URL**: `/api/upload-image/`
-- **Method**: `POST`
-- **Body**: `multipart/form-data`, key=`image`
-- **Response**: `{ "url": "string" }`
+## Recommended Next Work
 
----
-*Built with ❤️ by Jay Patel*
+The next implementation phase should focus on framework maturity instead of adding more app-specific features first.
+
+1. Clean the framework and app boundaries.
+2. Standardize repository and service return contracts.
+3. Introduce a proper app factory and plugin-style registration model.
+4. Extract business logic from routers into services.
+5. Harden auth, admin auth, configuration, and background jobs.
+6. Add framework-level tests and operational documentation.
+
+## Notes For Developers
+
+- This project is not Django-based anymore. The current backend is FastAPI + Beanie.
+- `Backbone` is the most important reusable layer in the backend and should be treated as a framework package, not just app code.
+- New features should prefer clean extension points over putting more logic directly into routers.
+
