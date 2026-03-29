@@ -13,6 +13,32 @@ import { getImageUrl, formatDate } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthorTooltip from '@/components/AuthorTooltip';
 
+const toLikeCount = (value) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+};
+
+const normalizeReferenceUrl = (raw) => {
+    const value = String(raw || '').trim();
+    if (!value) return '#';
+
+    const duplicatedAbsolute = value.match(/^(https?:\/\/\S+?)(https?:\/\/\S+)$/i);
+    if (duplicatedAbsolute && duplicatedAbsolute[1] === duplicatedAbsolute[2]) {
+        return duplicatedAbsolute[1];
+    }
+
+    if (/^https?:\/\//i.test(value) || value.startsWith('/')) {
+        return value;
+    }
+    if (value.startsWith('www.')) {
+        return `https://${value}`;
+    }
+    if (value.startsWith('localhost:')) {
+        return `http://${value}`;
+    }
+    return value;
+};
+
 export default function BlogDetailPage() {
     const { token } = useAuth();
     const params = useParams();
@@ -49,12 +75,34 @@ export default function BlogDetailPage() {
                 if (!data) throw new Error('Blog not found');
 
                 // Normalize content structure
+                const normalizedContent = data.content || {
+                    introduction: data.introduction,
+                    sections: data.sections || [],
+                    conclusion: data.conclusion
+                };
+                if (Array.isArray(normalizedContent.sections)) {
+                    normalizedContent.sections = normalizedContent.sections.map((section) => {
+                        if (section?.type !== 'links' || !Array.isArray(section.links)) {
+                            return section;
+                        }
+                        return {
+                            ...section,
+                            links: section.links.map((link) => ({
+                                ...link,
+                                url: normalizeReferenceUrl(link?.url),
+                            })),
+                        };
+                    });
+                }
+
                 setBlog({
                     ...data,
+                    likes: toLikeCount(data.likes),
+                    is_liked: Boolean(data.is_liked),
                     content: data.content || {
-                        introduction: data.introduction,
-                        sections: data.sections || [],
-                        conclusion: data.conclusion
+                        introduction: normalizedContent.introduction,
+                        sections: normalizedContent.sections || [],
+                        conclusion: normalizedContent.conclusion
                     }
                 });
             } catch (err) {
@@ -148,15 +196,18 @@ export default function BlogDetailPage() {
     // 3. Local state sync for likes
     useEffect(() => {
         if (blog) {
-            setIsLikedState(blog.is_liked);
-            setLikesCount(blog.likes || 0);
+            setIsLikedState(Boolean(blog.is_liked));
+            setLikesCount(toLikeCount(blog.likes));
         }
     }, [blog]);
 
     // 4. Handle Redirects
     useEffect(() => {
-        if (blog && username && authorIdentifier && username !== authorIdentifier) {
-            router.replace(`/blogs/${authorIdentifier}/${slug}`);
+        const normalizedUsername = decodeURIComponent(String(username || '')).toLowerCase();
+        const normalizedAuthor = String(authorIdentifier || '').toLowerCase();
+        const authorLocalPart = normalizedAuthor.split('@')[0];
+        if (blog && normalizedUsername && normalizedAuthor && normalizedUsername !== normalizedAuthor && normalizedUsername !== authorLocalPart) {
+            router.replace(`/blogs/${encodeURIComponent(authorIdentifier)}/${slug}`);
         }
     }, [blog, username, slug, router, authorIdentifier]);
 
@@ -246,13 +297,19 @@ export default function BlogDetailPage() {
 
             // Update local state based on response or toggle
             if (response && response.status) {
-                setIsLikedState(response.status === 'liked');
-                setLikesCount(response.total_likes);
+                const nextIsLiked = response.status === 'liked';
+                const nextLikeCount = toLikeCount(response.total_likes);
+                setIsLikedState(nextIsLiked);
+                setLikesCount(nextLikeCount);
+                setBlog((prev) => prev ? { ...prev, is_liked: nextIsLiked, likes: nextLikeCount } : prev);
                 toast.success(response.status === 'liked' ? 'Blog liked! ❤️' : 'Blog unliked');
             } else {
                 // Fallback toggle
-                setIsLikedState(!isLikedState);
-                setLikesCount(prev => isLikedState ? prev - 1 : prev + 1);
+                const nextIsLiked = !isLikedState;
+                const nextLikeCount = Math.max(0, isLikedState ? likesCount - 1 : likesCount + 1);
+                setIsLikedState(nextIsLiked);
+                setLikesCount(nextLikeCount);
+                setBlog((prev) => prev ? { ...prev, is_liked: nextIsLiked, likes: nextLikeCount } : prev);
             }
 
         } catch (error) {
@@ -395,7 +452,7 @@ export default function BlogDetailPage() {
                             {section.links?.map((link, linkIndex) => (
                                 <a
                                     key={linkIndex}
-                                    href={link.url}
+                                    href={normalizeReferenceUrl(link.url)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="block p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 transition-colors group"
@@ -686,7 +743,7 @@ export default function BlogDetailPage() {
                                 </div>
                                 <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                                     <User className="w-5 h-5" />
-                                    <Link href={authorIdentifier ? `/blogs/${authorIdentifier}` : `/blogs`}>
+                                    <Link href={authorIdentifier ? `/blogs/${encodeURIComponent(authorIdentifier)}` : `/blogs`}>
                                         <AuthorTooltip userId={blog.author?.id || blog.user_id}>
                                             <span className="text-sm cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                                                 {typeof blog.author === 'object' ? (blog.author.full_name || blog.author_email || blog.author.username || blog.authorUsername) : blog.author}
@@ -780,7 +837,7 @@ export default function BlogDetailPage() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                             {suggestedBlogs.map((item, idx) => (
                                 <div key={idx}>
-                                    <Link href={(item.author?.email || item.author_email || item.authorUsername) ? `/blogs/${(item.author?.email || item.author_email || item.authorUsername)}/${item.slug}` : `/blogs/${item.slug}`}>
+                                    <Link href={(item.author?.email || item.author_email || item.authorUsername) ? `/blogs/${encodeURIComponent(item.author?.email || item.author_email || item.authorUsername)}/${item.slug}` : `/blogs/${item.slug}`}>
                                         <div className="group bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-200 hover:border-indigo-500 dark:hover:border-indigo-400 hover:shadow-md">
                                             <div className="relative aspect-[16/9] sm:aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-gray-700">
                                                 {(item.thumbnail?.file_path || item.image) ? (

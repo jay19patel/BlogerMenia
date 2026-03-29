@@ -7,7 +7,7 @@ export default function HorizontalBlogCard({ blog }) {
     const getBlogUrl = () => {
         const authorIdentifier = blog.author?.email || blog.authorEmail || blog.authorUsername;
         if (authorIdentifier) {
-            return `/blogs/${authorIdentifier}/${blog.slug}`;
+            return `/blogs/${encodeURIComponent(authorIdentifier)}/${blog.slug}`;
         }
         return `/blogs/${blog.slug}`;
     };

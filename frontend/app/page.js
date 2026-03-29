@@ -232,7 +232,7 @@ export default function Home() {
                     <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-80 overflow-y-auto overflow-x-hidden py-2">
                       {searchResults.map((blog) => {
                         const authorIdentifier = blog.author?.email || blog.author_email || blog.authorUsername;
-                        const blogUrl = authorIdentifier ? `/blogs/${authorIdentifier.split('@')[0]}/${blog.slug}` : `/blogs/${blog.slug}`;
+                        const blogUrl = authorIdentifier ? `/blogs/${encodeURIComponent(authorIdentifier)}/${blog.slug}` : `/blogs/${blog.slug}`;
                         const displayDate = formatDate(blog.publishedDate || blog.created_at);
 
                         return (

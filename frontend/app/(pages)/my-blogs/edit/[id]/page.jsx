@@ -37,6 +37,27 @@ const generateSlug = (text) => {
     .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
 };
 
+const normalizeLinkUrl = (raw) => {
+  const value = String(raw || "").trim();
+  if (!value) return "";
+
+  const duplicatedAbsolute = value.match(/^(https?:\/\/\S+?)(https?:\/\/\S+)$/i);
+  if (duplicatedAbsolute && duplicatedAbsolute[1] === duplicatedAbsolute[2]) {
+    return duplicatedAbsolute[1];
+  }
+
+  if (/^https?:\/\//i.test(value) || value.startsWith("/")) {
+    return value;
+  }
+  if (value.startsWith("www.")) {
+    return `https://${value}`;
+  }
+  if (value.startsWith("localhost:")) {
+    return `http://${value}`;
+  }
+  return value;
+};
+
 export default function EditBlogPage() {
   const router = useRouter();
   const params = useParams();
@@ -612,6 +633,12 @@ export default function EditBlogPage() {
           }
         }
         const { id, imageFile, imagePreview, imageUrl, imageId, ...rest } = section;
+        if (rest.type === "links" && Array.isArray(rest.links)) {
+          rest.links = rest.links.map((link) => ({
+            ...link,
+            url: normalizeLinkUrl(link?.url),
+          }));
+        }
         return rest;
       }));
 
@@ -1252,6 +1279,9 @@ export default function EditBlogPage() {
                           onChange={(e) =>
                             updateLink(section.id, linkIndex, "url", e.target.value)
                           }
+                          onBlur={(e) =>
+                            updateLink(section.id, linkIndex, "url", normalizeLinkUrl(e.target.value))
+                          }
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           placeholder="URL"
                         />
@@ -1408,4 +1438,3 @@ export default function EditBlogPage() {
     </div >
   );
 }
-
