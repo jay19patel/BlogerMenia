@@ -1159,7 +1159,7 @@ export default function CreateBlogPage() {
                   </label>
                   <input
                     type="text"
-                    value={section.title}
+                    value={section.title || ""}
                     onChange={(e) =>
                       updateSection(section.id, "title", e.target.value)
                     }
