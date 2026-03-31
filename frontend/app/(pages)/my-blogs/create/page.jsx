@@ -7,7 +7,7 @@ import { api } from "@/lib/api";
 import { toast } from "sonner";
 import {
   Plus, Trash2, ChevronUp, ChevronDown, Save, ArrowLeft,
-  Type, List, Code, Table, Youtube, FileText, Link as LinkIcon, Image as ImageIcon, Upload, Send, Bot, User
+  Type, List, Code, Table, Youtube, FileText, Link as LinkIcon, Image as ImageIcon, Upload, Send, Bot, User, GitBranch, Palette
 } from "lucide-react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
@@ -25,6 +25,7 @@ const SECTION_TYPES = [
   { value: "note", label: "Note/Callout", icon: FileText },
   { value: "links", label: "Links", icon: LinkIcon },
   { value: "image", label: "Image", icon: ImageIcon },
+  { value: "flowchart", label: "Flowchart", icon: GitBranch },
 ];
 
 // Function to convert title to URL-safe slug
@@ -127,29 +128,47 @@ export default function CreateBlogPage() {
         if (blogData.subtitle) setSubtitle(blogData.subtitle);
         if (blogData.excerpt) setExcerpt(blogData.excerpt);
         if (blogData.image) setImage(blogData.image);
-        if (blogData.category) setCategory(blogData.category);
+        if (blogData.category_name) setCategory(blogData.category_name);
+        else if (blogData.category) setCategory(blogData.category);
+        
         if (blogData.featured !== undefined) setFeatured(blogData.featured);
-        if (blogData.tags && Array.isArray(blogData.tags)) {
-          setTags(blogData.tags.join(", "));
+        
+        // Handle tags (array or comma string)
+        if (blogData.tags) {
+          if (Array.isArray(blogData.tags)) setTags(blogData.tags.join(", "));
+          else setTags(blogData.tags);
         }
 
         // Fill content
-        if (blogData.content) {
-          if (blogData.content.introduction) setIntroduction(blogData.content.introduction);
-          if (blogData.content.conclusion) setConclusion(blogData.content.conclusion);
+        const contentSource = blogData.content || blogData;
+        if (contentSource.introduction) setIntroduction(contentSource.introduction);
+        if (contentSource.conclusion) setConclusion(contentSource.conclusion);
 
-          // Load sections
-          if (blogData.content.sections && Array.isArray(blogData.content.sections)) {
-            const loadedSections = blogData.content.sections.map((section, index) => ({
+        // Load and map sections
+        const rawSections = contentSource.sections || blogData.sections;
+        if (rawSections && Array.isArray(rawSections)) {
+          const mappedSections = rawSections.map((section, index) => {
+            const base = {
               id: Date.now() + index,
               ...section
-            }));
-            setSections(loadedSections);
-          }
+            };
+            
+            // Special mapping for Image sections from blog.json
+            if (section.type === "image") {
+              return {
+                ...base,
+                imageUrl: section.content || section.imageUrl || "",
+                description: section.caption || section.description || ""
+              };
+            }
+            
+            return base;
+          });
+          setSections(mappedSections);
         }
 
         toast.success("JSON loaded successfully!", {
-          description: "All fields have been populated from the JSON file.",
+          description: "All fields have been populated and mapped from the JSON file.",
           duration: 3000,
         });
       } catch (error) {
@@ -332,6 +351,7 @@ export default function CreateBlogPage() {
       links: type === "links" ? [{ text: "", url: "", description: "" }] : undefined,
       imageUrl: type === "image" ? "" : undefined,
       attachment: type === "image" ? null : undefined,
+      steps: type === "flowchart" ? [{ id: `step-${Date.now()}`, title: "Initial Step", description: "", color: "blue", branches: [] }] : undefined,
     };
     setSections([...sections, newSection]);
   };
@@ -505,6 +525,102 @@ export default function CreateBlogPage() {
             return link;
           });
           return { ...section, links };
+        }
+        return section;
+      })
+    );
+  };
+
+  const addFlowchartStep = (sectionId) => {
+    setSections(
+      sections.map((section) => {
+        if (section.id === sectionId) {
+          return {
+            ...section,
+            steps: [...(section.steps || []), {
+              id: `step-${Date.now()}`,
+              title: "",
+              description: "",
+              color: "blue",
+              branches: []
+            }],
+          };
+        }
+        return section;
+      })
+    );
+  };
+
+  const removeFlowchartStep = (sectionId, stepIndex) => {
+    setSections(
+      sections.map((section) => {
+        if (section.id === sectionId) {
+          return {
+            ...section,
+            steps: section.steps.filter((_, i) => i !== stepIndex),
+          };
+        }
+        return section;
+      })
+    );
+  };
+
+  const updateFlowchartStep = (sectionId, stepIndex, field, value) => {
+    setSections(
+      sections.map((section) => {
+        if (section.id === sectionId) {
+          const steps = [...(section.steps || [])];
+          steps[stepIndex] = { ...steps[stepIndex], [field]: value };
+          return { ...section, steps };
+        }
+        return section;
+      })
+    );
+  };
+
+  const addFlowchartBranch = (sectionId, stepIndex) => {
+    setSections(
+      sections.map((section) => {
+        if (section.id === sectionId) {
+          const steps = [...(section.steps || [])];
+          const branches = [...(steps[stepIndex].branches || [])];
+          branches.push({
+            id: `branch-${Date.now()}`,
+            title: "",
+            description: "",
+            color: "indigo"
+          });
+          steps[stepIndex] = { ...steps[stepIndex], branches };
+          return { ...section, steps };
+        }
+        return section;
+      })
+    );
+  };
+
+  const removeFlowchartBranch = (sectionId, stepIndex, branchIndex) => {
+    setSections(
+      sections.map((section) => {
+        if (section.id === sectionId) {
+          const steps = [...(section.steps || [])];
+          const branches = steps[stepIndex].branches.filter((_, i) => i !== branchIndex);
+          steps[stepIndex] = { ...steps[stepIndex], branches };
+          return { ...section, steps };
+        }
+        return section;
+      })
+    );
+  };
+
+  const updateFlowchartBranch = (sectionId, stepIndex, branchIndex, field, value) => {
+    setSections(
+      sections.map((section) => {
+        if (section.id === sectionId) {
+          const steps = [...(section.steps || [])];
+          const branches = [...(steps[stepIndex].branches || [])];
+          branches[branchIndex] = { ...branches[branchIndex], [field]: value };
+          steps[stepIndex] = { ...steps[stepIndex], branches };
+          return { ...section, steps };
         }
         return section;
       })
@@ -1354,6 +1470,113 @@ export default function CreateBlogPage() {
                       rows="2"
                       placeholder="Image description or caption"
                     />
+                  </div>
+                )}
+
+                {section.type === "flowchart" && (
+                  <div className="space-y-6">
+                    <div className="space-y-4">
+                      {section.steps?.map((step, sIdx) => (
+                        <div key={step.id} className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                          <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-200">
+                            <span className="text-xs font-black uppercase tracking-widest text-indigo-600">Main Step {sIdx + 1}</span>
+                            <button
+                              onClick={() => removeFlowchartStep(section.id, sIdx)}
+                              className="text-red-500 hover:text-red-700 p-1"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                            <input
+                              type="text"
+                              value={step.title}
+                              onChange={(e) => updateFlowchartStep(section.id, sIdx, "title", e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              placeholder="Step title"
+                            />
+                            <select
+                              value={step.color}
+                              onChange={(e) => updateFlowchartStep(section.id, sIdx, "color", e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            >
+                              <option value="blue">Blue</option>
+                              <option value="indigo">Indigo</option>
+                              <option value="violet">Violet</option>
+                              <option value="purple">Purple</option>
+                              <option value="pink">Pink</option>
+                              <option value="gray">Gray</option>
+                            </select>
+                          </div>
+                          <textarea
+                            value={step.description}
+                            onChange={(e) => updateFlowchartStep(section.id, sIdx, "description", e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3"
+                            rows="2"
+                            placeholder="Step description"
+                          />
+
+                          {/* Branches for this step */}
+                          <div className="pl-4 border-l-2 border-dashed border-gray-300 space-y-3 mt-4">
+                            {step.branches?.map((branch, bIdx) => (
+                              <div key={branch.id} className="bg-white rounded-lg p-3 border border-gray-100 shadow-sm">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-[10px] font-bold text-gray-500 uppercase">Parallel Option {bIdx + 1}</span>
+                                  <button
+                                    onClick={() => removeFlowchartBranch(section.id, sIdx, bIdx)}
+                                    className="text-red-400 hover:text-red-600"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </button>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 mb-2">
+                                  <input
+                                    type="text"
+                                    value={branch.title}
+                                    onChange={(e) => updateFlowchartBranch(section.id, sIdx, bIdx, "title", e.target.value)}
+                                    className="px-2 py-1.5 border border-gray-200 rounded text-xs focus:ring-1 focus:ring-indigo-500"
+                                    placeholder="Branch title"
+                                  />
+                                  <select
+                                    value={branch.color}
+                                    onChange={(e) => updateFlowchartBranch(section.id, sIdx, bIdx, "color", e.target.value)}
+                                    className="px-2 py-1.5 border border-gray-200 rounded text-xs"
+                                  >
+                                    <option value="blue">Blue</option>
+                                    <option value="indigo">Indigo</option>
+                                    <option value="violet">Violet</option>
+                                    <option value="purple">Purple</option>
+                                    <option value="pink">Pink</option>
+                                  </select>
+                                </div>
+                                <textarea
+                                  value={branch.description}
+                                  onChange={(e) => updateFlowchartBranch(section.id, sIdx, bIdx, "description", e.target.value)}
+                                  className="w-full px-2 py-1.5 border border-gray-200 rounded text-xs"
+                                  rows="1"
+                                  placeholder="Branch description"
+                                />
+                              </div>
+                            ))}
+                            <button
+                              onClick={() => addFlowchartBranch(section.id, sIdx)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors"
+                            >
+                              <Plus className="w-3 h-3" />
+                              Add Parallel Branch
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => addFlowchartStep(section.id)}
+                      className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-gray-200 rounded-xl text-sm font-bold text-gray-500 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Main Flow Step
+                    </button>
                   </div>
                 )}
               </div>
