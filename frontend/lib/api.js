@@ -339,7 +339,8 @@ export const api = {
   },
 
   async getPlaylists(searchQuery = null, skip = 0, limit = 10, ownerId = null) {
-    let url = `${API_BASE_URL}/playlists/?is_public=true&skip=${skip}&limit=${limit}`;
+    const page = Math.floor(skip / limit) + 1;
+    let url = `${API_BASE_URL}/playlists/?is_public=true&page=${page}&page_size=${limit}`;
 
     if (searchQuery) {
       url += `&search=${encodeURIComponent(searchQuery)}`;
@@ -505,7 +506,8 @@ export const api = {
   },
 
   async getUserPlaylistsByEmail(email, userId, token = null, isOwner = false, skip = 0, limit = 10) {
-    let url = `${API_BASE_URL}/playlists/?owner.$id=${userId}&skip=${skip}&limit=${limit}`;
+    const page = Math.floor(skip / limit) + 1;
+    let url = `${API_BASE_URL}/playlists/?owner.$id=${userId}&page=${page}&page_size=${limit}`;
     if (!isOwner) {
       url += '&is_public=true';
     }

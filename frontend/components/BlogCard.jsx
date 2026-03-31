@@ -6,7 +6,7 @@ export default function BlogCard({ blog }) {
   const getBlogUrl = () => {
     const authorIdentifier = blog.author?.email || blog.author_email || blog.authorUsername || blog.author;
     if (authorIdentifier && typeof authorIdentifier === 'string') {
-      return `/blogs/${authorIdentifier.split('@')[0]}/${blog.slug}`.replace(/([^:]\/)\/+/g, "$1"); // Fast cleanup
+      return `/blogs/${encodeURIComponent(authorIdentifier)}/${blog.slug}`.replace(/([^:]\/)\/+/g, "$1");
     }
     return `/blogs/${blog.slug}`;
   };

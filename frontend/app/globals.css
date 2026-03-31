@@ -42,6 +42,38 @@
   --radius-xl: calc(var(--radius) + 4px);
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-shimmer: shimmer 2s linear infinite;
+  --animate-flow-trace: flow-trace 3s ease-in-out infinite;
+
+  @keyframes shimmer {
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+
+  @keyframes flow-trace {
+    0% {
+      left: 0;
+      opacity: 0;
+      width: 0;
+    }
+    20% {
+      opacity: 1;
+      width: 20%;
+    }
+    80% {
+      opacity: 1;
+      width: 20%;
+    }
+    100% {
+      left: 100%;
+      opacity: 0;
+      width: 0;
+    }
+  }
 
   @keyframes accordion-down {
     from {

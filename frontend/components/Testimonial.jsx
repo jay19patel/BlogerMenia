@@ -129,10 +129,10 @@ export default function Testimonial() {
                 }
               `}</style>
               {testimonials.map((testimonial, index) => {
-                const name = testimonial.author || testimonial.name || "Anonymous";
-                const designation = testimonial.designation || testimonial.role || "Creator";
+                const name = testimonial.user?.full_name || testimonial.author || testimonial.name || "Anonymous";
+                const designation = testimonial.user?.headline || testimonial.designation || testimonial.role || "Creator";
                 const content = testimonial.content || testimonial.text || "";
-                const image = testimonial.image || testimonial.profile_image;
+                const image = testimonial.user?.profile_image || testimonial.image || testimonial.profile_image;
 
                 return (
                   <SwiperSlide key={index} className="h-auto">

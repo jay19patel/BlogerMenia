@@ -5,13 +5,107 @@ import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { ExternalLink, AlertCircle, Copy, Check, Menu, ArrowLeft, Calendar, User, Eye, Heart } from 'lucide-react';
+import { ExternalLink, AlertCircle, Copy, Check, Menu, ArrowLeft, Calendar, User, Eye, Heart, ArrowRight, ArrowDown, Layers, Zap, Cloud, Cpu, Database, RefreshCw } from 'lucide-react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { api } from '@/lib/api';
 import { getImageUrl, formatDate } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthorTooltip from '@/components/AuthorTooltip';
+import React from 'react';
+
+const Flowchart = ({ section }) => {
+    const getStepColor = (color) => {
+        switch (color) {
+            case 'blue': return 'bg-blue-50 text-blue-600 dark:bg-blue-900/10 dark:text-blue-400';
+            case 'indigo': return 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/10 dark:text-indigo-400';
+            case 'violet': return 'bg-violet-50 text-violet-600 dark:bg-violet-900/10 dark:text-violet-400';
+            case 'purple': return 'bg-purple-50 text-purple-600 dark:bg-purple-900/10 dark:text-purple-400';
+            case 'pink': return 'bg-pink-50 text-pink-600 dark:bg-pink-900/10 dark:text-pink-400';
+            default: return 'bg-gray-50 text-gray-600 dark:bg-gray-900/10 dark:text-gray-400';
+        }
+    };
+
+    const renderStep = (step, stepIndex, isBranch = false, totalInFlow = 1) => {
+        const hasBranches = step.branches && step.branches.length > 0;
+
+        return (
+            <div key={step.id} className={`relative flex flex-col ${isBranch ? 'flex-1' : 'w-full'}`}>
+                <div className="relative flex gap-4 group">
+                    {/* Minimal Connector Line */}
+                    {!isBranch && stepIndex < totalInFlow - 1 && (
+                        <div className="absolute top-10 bottom-[-1.5rem] left-5 w-[1px] bg-gray-200 dark:bg-gray-700" />
+                    )}
+
+                    {/* Node - Clean Circle with Number or Dot */}
+                    <div className={`relative z-10 ${isBranch ? 'w-8 h-8' : 'w-10 h-10'} rounded-full border border-gray-100 dark:border-gray-800 flex items-center justify-center shrink-0 transition-all duration-300 group-hover:scale-105 group-hover:shadow-sm ${getStepColor(step.color)}`}>
+                        {!isBranch ? (
+                            <span className="text-sm font-bold tracking-tight">{(stepIndex + 1).toString().padStart(2, '0')}</span>
+                        ) : (
+                            <div className="w-1.5 h-1.5 rounded-full bg-current opacity-80" />
+                        )}
+                    </div>
+
+                    {/* Content Area */}
+                    <div className="flex-1 pt-1 ml-1">
+                        <div className="flex items-center gap-2">
+                            <h4 className={`${isBranch ? 'text-[13px]' : 'text-sm'} font-bold text-gray-900 dark:text-white group-hover:text-indigo-600 transition-colors`}>
+                                {step.title}
+                            </h4>
+                        </div>
+                        <p className={`${isBranch ? 'text-[11px]' : 'text-[13px]'} text-gray-500 dark:text-gray-400 leading-snug mt-1 font-normal opacity-90 group-hover:opacity-100 transition-opacity`}>
+                            {step.description}
+                        </p>
+
+                        {/* Minimal Branching UI */}
+                        {hasBranches && (
+                            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+                                <div className="flex flex-col sm:flex-row gap-4">
+                                    {step.branches.map((branch, bIdx) => renderStep(branch, bIdx, true))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+                {!isBranch && stepIndex < totalInFlow - 1 && <div className="h-6" />}
+            </div>
+        );
+    };
+
+    return (
+        <div className="relative p-6 bg-white dark:bg-[#0d1117] rounded-xl border border-gray-100/50 dark:border-gray-800/50 mt-4 mb-8">
+            <div className="relative flex flex-col">
+                {section.steps?.map((step, stepIndex) => renderStep(step, stepIndex, false, section.steps.length))}
+            </div>
+        </div>
+    );
+};
+
+const toLikeCount = (value) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+};
+
+const normalizeReferenceUrl = (raw) => {
+    const value = String(raw || '').trim();
+    if (!value) return '#';
+
+    const duplicatedAbsolute = value.match(/^(https?:\/\/\S+?)(https?:\/\/\S+)$/i);
+    if (duplicatedAbsolute && duplicatedAbsolute[1] === duplicatedAbsolute[2]) {
+        return duplicatedAbsolute[1];
+    }
+
+    if (/^https?:\/\//i.test(value) || value.startsWith('/')) {
+        return value;
+    }
+    if (value.startsWith('www.')) {
+        return `https://${value}`;
+    }
+    if (value.startsWith('localhost:')) {
+        return `http://${value}`;
+    }
+    return value;
+};
 
 export default function BlogDetailPage() {
     const { token } = useAuth();
@@ -49,12 +143,34 @@ export default function BlogDetailPage() {
                 if (!data) throw new Error('Blog not found');
 
                 // Normalize content structure
+                const normalizedContent = data.content || {
+                    introduction: data.introduction,
+                    sections: data.sections || [],
+                    conclusion: data.conclusion
+                };
+                if (Array.isArray(normalizedContent.sections)) {
+                    normalizedContent.sections = normalizedContent.sections.map((section) => {
+                        if (section?.type !== 'links' || !Array.isArray(section.links)) {
+                            return section;
+                        }
+                        return {
+                            ...section,
+                            links: section.links.map((link) => ({
+                                ...link,
+                                url: normalizeReferenceUrl(link?.url),
+                            })),
+                        };
+                    });
+                }
+
                 setBlog({
                     ...data,
+                    likes: toLikeCount(data.likes),
+                    is_liked: Boolean(data.is_liked),
                     content: data.content || {
-                        introduction: data.introduction,
-                        sections: data.sections || [],
-                        conclusion: data.conclusion
+                        introduction: normalizedContent.introduction,
+                        sections: normalizedContent.sections || [],
+                        conclusion: normalizedContent.conclusion
                     }
                 });
             } catch (err) {
@@ -148,15 +264,18 @@ export default function BlogDetailPage() {
     // 3. Local state sync for likes
     useEffect(() => {
         if (blog) {
-            setIsLikedState(blog.is_liked);
-            setLikesCount(blog.likes || 0);
+            setIsLikedState(Boolean(blog.is_liked));
+            setLikesCount(toLikeCount(blog.likes));
         }
     }, [blog]);
 
     // 4. Handle Redirects
     useEffect(() => {
-        if (blog && username && authorIdentifier && username !== authorIdentifier) {
-            router.replace(`/blogs/${authorIdentifier}/${slug}`);
+        const normalizedUsername = decodeURIComponent(String(username || '')).toLowerCase();
+        const normalizedAuthor = String(authorIdentifier || '').toLowerCase();
+        const authorLocalPart = normalizedAuthor.split('@')[0];
+        if (blog && normalizedUsername && normalizedAuthor && normalizedUsername !== normalizedAuthor && normalizedUsername !== authorLocalPart) {
+            router.replace(`/blogs/${encodeURIComponent(authorIdentifier)}/${slug}`);
         }
     }, [blog, username, slug, router, authorIdentifier]);
 
@@ -246,13 +365,19 @@ export default function BlogDetailPage() {
 
             // Update local state based on response or toggle
             if (response && response.status) {
-                setIsLikedState(response.status === 'liked');
-                setLikesCount(response.total_likes);
+                const nextIsLiked = response.status === 'liked';
+                const nextLikeCount = toLikeCount(response.total_likes);
+                setIsLikedState(nextIsLiked);
+                setLikesCount(nextLikeCount);
+                setBlog((prev) => prev ? { ...prev, is_liked: nextIsLiked, likes: nextLikeCount } : prev);
                 toast.success(response.status === 'liked' ? 'Blog liked! ❤️' : 'Blog unliked');
             } else {
                 // Fallback toggle
-                setIsLikedState(!isLikedState);
-                setLikesCount(prev => isLikedState ? prev - 1 : prev + 1);
+                const nextIsLiked = !isLikedState;
+                const nextLikeCount = Math.max(0, isLikedState ? likesCount - 1 : likesCount + 1);
+                setIsLikedState(nextIsLiked);
+                setLikesCount(nextLikeCount);
+                setBlog((prev) => prev ? { ...prev, is_liked: nextIsLiked, likes: nextLikeCount } : prev);
             }
 
         } catch (error) {
@@ -395,7 +520,7 @@ export default function BlogDetailPage() {
                             {section.links?.map((link, linkIndex) => (
                                 <a
                                     key={linkIndex}
-                                    href={link.url}
+                                    href={normalizeReferenceUrl(link.url)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="block p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 transition-colors group"
@@ -533,6 +658,22 @@ export default function BlogDetailPage() {
                                 {section.description}
                             </p>
                         )}
+                    </div>
+                );
+
+            case 'flowchart':
+                return (
+                    <div key={index} id={`section-${index}`} className="mb-12">
+                        {section.title && (
+                            <div className="flex items-center justify-between mb-8">
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <span className="w-2 h-6 bg-indigo-600 rounded-full" />
+                                    {section.title}
+                                </h3>
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-500 bg-indigo-500/10 px-2 py-1 rounded">Interactive Flow</span>
+                            </div>
+                        )}
+                        <Flowchart section={section} />
                     </div>
                 );
 
@@ -686,7 +827,7 @@ export default function BlogDetailPage() {
                                 </div>
                                 <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                                     <User className="w-5 h-5" />
-                                    <Link href={authorIdentifier ? `/blogs/${authorIdentifier}` : `/blogs`}>
+                                    <Link href={authorIdentifier ? `/blogs/${encodeURIComponent(authorIdentifier)}` : `/blogs`}>
                                         <AuthorTooltip userId={blog.author?.id || blog.user_id}>
                                             <span className="text-sm cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                                                 {typeof blog.author === 'object' ? (blog.author.full_name || blog.author_email || blog.author.username || blog.authorUsername) : blog.author}
@@ -780,7 +921,7 @@ export default function BlogDetailPage() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                             {suggestedBlogs.map((item, idx) => (
                                 <div key={idx}>
-                                    <Link href={(item.author?.email || item.author_email || item.authorUsername) ? `/blogs/${(item.author?.email || item.author_email || item.authorUsername)}/${item.slug}` : `/blogs/${item.slug}`}>
+                                    <Link href={(item.author?.email || item.author_email || item.authorUsername) ? `/blogs/${encodeURIComponent(item.author?.email || item.author_email || item.authorUsername)}/${item.slug}` : `/blogs/${item.slug}`}>
                                         <div className="group bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-200 hover:border-indigo-500 dark:hover:border-indigo-400 hover:shadow-md">
                                             <div className="relative aspect-[16/9] sm:aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-gray-700">
                                                 {(item.thumbnail?.file_path || item.image) ? (
