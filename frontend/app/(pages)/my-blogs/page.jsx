@@ -27,6 +27,7 @@ export default function MyBlogsPage() {
   const [userProfile, setUserProfile] = useState(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [deletingPlaylistId, setDeletingPlaylistId] = useState(null);
+  const [deletingBlogId, setDeletingBlogId] = useState(null);
 
   const [categories, setCategories] = useState(["All"]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
@@ -152,6 +153,23 @@ export default function MyBlogsPage() {
       toast.error("Failed to toggle featured status");
       // Revert optimism
       fetchBlogs();
+    }
+  };
+
+  const handleDeleteBlog = async (blogSlug, blogTitle) => {
+    if (!confirm(`Are you sure you want to delete "${blogTitle}"? This action cannot be undone.`)) {
+      return;
+    }
+    setDeletingBlogId(blogSlug);
+    try {
+      await api.deleteBlog(token, blogSlug);
+      toast.success('Blog deleted successfully');
+      fetchBlogs();
+    } catch (error) {
+      console.error('Error deleting blog:', error);
+      toast.error(error.message || 'Failed to delete blog');
+    } finally {
+      setDeletingBlogId(null);
     }
   };
 
@@ -494,6 +512,13 @@ export default function MyBlogsPage() {
                             >
                               Playlist
                             </button>
+                            <button
+                               onClick={() => handleDeleteBlog(blog.slug || blog.id, blog.title)}
+                               disabled={deletingBlogId === (blog.slug || blog.id)}
+                               className="text-red-600 hover:text-red-700 font-medium text-sm disabled:opacity-50"
+                             >
+                               {deletingBlogId === (blog.slug || blog.id) ? '...' : 'Delete'}
+                             </button>
                           </div>
                         </td>
                       </tr>

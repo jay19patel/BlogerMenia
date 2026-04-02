@@ -268,6 +268,18 @@ export const api = {
     return handleResponse(response);
   },
 
+  async deleteBlog(token, slugOrId) {
+    const response = await fetch(`${API_BASE_URL}/blogs/${slugOrId}/`, {
+      method: 'DELETE',
+      headers: getHeaders(token),
+    });
+    // DELETE returns 204 No Content typically
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return { success: true };
+  },
+
   async likeBlog(blogId, token) {
     const response = await fetch(`${API_BASE_URL}/blogs/${blogId}/like/`, {
       method: 'POST',
