@@ -1,6 +1,7 @@
 from __future__ import annotations
 import operator
 import os
+import urllib.parse
 from typing import TypedDict, List, Optional, Literal, Annotated, Dict, Any, Tuple
 
 from pydantic import BaseModel, Field
@@ -12,15 +13,18 @@ from langchain_core.messages import SystemMessage, HumanMessage
 from schemas.blogs import (
     BlogSection, BlogSectionText, BlogSectionBullets, BlogSectionTable,
     BlogSectionNote, BlogSectionLinks, BlogSectionImage, BlogSectionCode,
-    BlogSectionYoutube, BlogSectionFlowchart, BlogSectionFlowchartStep
+    BlogSectionYoutube, BlogSectionFlowchart, BlogSectionFlowchartStep,
+    BlogPromptState
 )
-from api.chat import BlogPromptState
-from dotenv import load_dotenv
-load_dotenv()
+from backbone.core.settings import settings
 
 # Instantiated lazily to prevent uvicorn boot crash if API key is missing
 def get_llm():
-    return ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.7)
+    return ChatGoogleGenerativeAI(
+        model=settings.PRODUCTION_LLM_MODEL,
+        google_api_key=settings.GOOGLE_API_KEY,
+        temperature=0.7
+    )
 
 # --- 1. Schemas ---
 
@@ -170,11 +174,76 @@ def fanout(state: WorkflowState):
 
 
 WORKER_SYSTEM = """You are a technical writer generating ONE specific block/task of a blog post.
-You must output a List of valid BlogSection Pydantic models.
-Use rich media sections like 'text', 'bullets', 'code', 'note', 'flowchart' depending on what is most effective for the task.
+You must output a List of valid JSON objects corresponding to BlogSection types.
+Use a diverse mix of rich media sections. You MUST prioritize 'text', 'table', and 'flowchart' sections.
 
-For example, you could return a Text section followed by a Code section or a Flowchart.
-Use high-quality technical formatting.
+Strict JSON Output Format Requirements:
+Each section MUST be a JSON object containing a "type" key mapping to one of the allowed types.
+Here are the exact expected schemas for the sections:
+
+1. Text Section:
+{
+  "title": "Optional Heading (can be omitted)",
+  "type": "text",
+  "content": "Detailed paragraphs of markdown text explaining the topic clearly."
+}
+
+2. Bullets Section:
+{
+  "title": "Optional Heading",
+  "type": "bullets",
+  "items": ["First key point", "Second key point", "Third key point"]
+}
+
+3. Code Section:
+{
+  "title": "Optional Heading",
+  "type": "code",
+  "language": "python",
+  "content": "def example():\n    pass"
+}
+
+4. Note/Callout Section:
+{
+  "title": "Optional Heading",
+  "type": "note",
+  "content": "Important warning, tip, or callout text goes here."
+}
+
+5. Table Section:
+{
+  "title": "Comparison of Systems",
+  "type": "table",
+  "headers": ["Feature", "Option A", "Option B"],
+  "rows": [
+      ["Speed", "Fast", "Slow"],
+      ["Cost", "Free", "Paid"]
+  ]
+}
+
+6. Flowchart Section:
+{
+  "title": "Architecture Flow",
+  "type": "flowchart",
+  "steps": [
+    {
+      "id": "step1",
+      "title": "Start Process",
+      "description": "Initialization phase description",
+      "color": "blue",
+      "branches": []
+    }
+  ]
+}
+
+CRITICAL INSTRUCTIONS: 
+1. DO NOT ever use or output the 'image' type. It is strictly forbidden.
+2. You MUST strictly use the exact JSON structures listed above. Do not hallucinate random properties.
+3. You MUST explicitly include the "type" key string in every section object.
+4. Completely fill out the content. Never output empty strings, empty arrays, or blank sections.
+
+For example, if explaining a comparison, output an object with type='text' followed by an object with type='table'. 
+Be creative, accurate, and ensure high-quality technical formatting and explicit code snippets.
 """
 
 def worker_node(payload: dict) -> dict:
@@ -208,13 +277,18 @@ def reducer_node(state: WorkflowState) -> dict:
     for s_list in ordered_sections:
         flat_sections.extend(s_list)
         
+    import uuid
+    # Using picsum.photos for a stable, high-quality placeholder image instead of fragile AI generation
+    seed = urllib.parse.quote(plan.title.replace(" ", "")[:15] or str(uuid.uuid4())[:8])
+    dynamic_cover = f"https://picsum.photos/seed/{seed}/1280/720"
+
     final_state = BlogPromptStateStructured(
         title=plan.title,
         subtitle=plan.subtitle,
         excerpt=plan.excerpt,
         category=plan.category,
         tags=plan.tags,
-        image="https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=2072", # Placeholder or call Gemini here
+        image=dynamic_cover,
         content=BlogContentSchema(
             introduction=plan.introduction,
             sections=flat_sections,

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, BookOpen, Users, TrendingUp, Eye, Heart } from "lucide-react";
@@ -18,6 +19,7 @@ import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/pris
 import { getImageUrl, formatDate } from "@/lib/utils";
 
 export default function Home() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -109,23 +111,33 @@ export default function Home() {
     }
   }, [displayedMessages, currentTypingIndex, typingProgress]);
 
+  const fetchSuggestions = async (query) => {
+    if (!query.trim() || query.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    try {
+      const response = await api.getBlogs(query, 0, 4);
+      setSearchResults(response.blogs || []);
+    } catch (error) {
+      console.error("Error fetching suggestions:", error);
+      setSearchResults([]);
+    }
+  };
+
+  const handleSearchChange = (e) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+    fetchSuggestions(val);
+  };
+
   const handleSearchBlogs = async (e) => {
     e.preventDefault();
     if (!searchQuery.trim()) {
       return;
     }
-
     setIsSearching(true);
-    try {
-      const response = await api.getBlogs(searchQuery, 0, 3);
-      const blogs = response.blogs || [];
-      setSearchResults(blogs);
-    } catch (error) {
-      console.error("Error searching blogs:", error);
-      setSearchResults([]);
-    } finally {
-      setIsSearching(false);
-    }
+    router.push(`/blogs?search=${encodeURIComponent(searchQuery.trim())}`);
   };
 
 
@@ -213,7 +225,7 @@ export default function Home() {
                         type="text"
                         name="search"
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={handleSearchChange}
                         placeholder="Type anything you want to know..."
                         className="text-base rounded-full text-gray-900 flex-1 py-4 px-6 shadow-[0px_15px_30px_-4px_rgba(16,24,40,0.03)] md:shadow-none bg-white md:bg-transparent placeholder:text-gray-400 focus:outline-none md:w-fit w-full"
                       />

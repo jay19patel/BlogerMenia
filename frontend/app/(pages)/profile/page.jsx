@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Camera, User, Mail, FileText, Save, MessageSquare, Sparkles } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import TestimonialModal from "@/components/TestimonialModal";
+import { getImageUrl } from "@/lib/utils";
 
 export default function ProfilePage() {
   const { user, token, updateProfile } = useAuth();
@@ -160,7 +161,7 @@ export default function ProfilePage() {
                 <div className="relative group">
                   <div className="absolute inset-0 bg-indigo-500 rounded-full blur-xl opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
                   <Avatar className="w-32 h-32 border-4 border-white shadow-xl relative z-10">
-                    <AvatarImage src={formData.profile_image} alt={user?.full_name || user?.email} />
+                    <AvatarImage src={getImageUrl(formData.profile_image)} alt={user?.full_name || user?.email} />
                     <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-violet-600 text-white text-3xl font-bold">
                       {user?.full_name?.[0] || user?.email?.[0] || "U"}
                     </AvatarFallback>

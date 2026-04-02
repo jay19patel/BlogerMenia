@@ -15,6 +15,7 @@ import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 import CategorySelect from "@/components/CategorySelect";
+import { getImageUrl } from "@/lib/utils";
 
 const SECTION_TYPES = [
   { value: "text", label: "Text", icon: Type },
@@ -146,17 +147,16 @@ export default function EditBlogPage() {
         }
 
         // Populate content
-        if (blogData.content) {
-          setIntroduction(blogData.content.introduction || "");
-          setConclusion(blogData.content.conclusion || "");
+        setIntroduction(blogData.introduction || blogData.content?.introduction || "");
+        setConclusion(blogData.conclusion || blogData.content?.conclusion || "");
 
-          if (blogData.content.sections && Array.isArray(blogData.content.sections)) {
-            const loadedSections = blogData.content.sections.map((section, index) => ({
-              id: Date.now() + index,
-              ...section
-            }));
-            setSections(loadedSections);
-          }
+        const blogSections = blogData.sections || blogData.content?.sections || [];
+        if (Array.isArray(blogSections)) {
+          const loadedSections = blogSections.map((section, index) => ({
+            id: Date.now() + index,
+            ...section
+          }));
+          setSections(loadedSections);
         }
       } catch (error) {
         console.error("Error fetching blog:", error);
@@ -203,18 +203,20 @@ export default function EditBlogPage() {
         }
 
         // Fill content
-        if (blogData.content) {
-          if (blogData.content.introduction) setIntroduction(blogData.content.introduction);
-          if (blogData.content.conclusion) setConclusion(blogData.content.conclusion);
+        const intro = blogData.introduction || blogData.content?.introduction;
+        if (intro) setIntroduction(intro);
 
-          // Load sections
-          if (blogData.content.sections && Array.isArray(blogData.content.sections)) {
-            const loadedSections = blogData.content.sections.map((section, index) => ({
-              id: Date.now() + index,
-              ...section
-            }));
-            setSections(loadedSections);
-          }
+        const conc = blogData.conclusion || blogData.content?.conclusion;
+        if (conc) setConclusion(conc);
+
+        // Load sections
+        const jsonSections = blogData.sections || blogData.content?.sections;
+        if (jsonSections && Array.isArray(jsonSections)) {
+          const loadedSections = jsonSections.map((section, index) => ({
+            id: Date.now() + index,
+            ...section
+          }));
+          setSections(loadedSections);
         }
 
         toast.success("JSON loaded successfully!", {
@@ -942,7 +944,7 @@ export default function EditBlogPage() {
                   {imagePreview || image ? (
                     <>
                       <img
-                        src={imagePreview || image}
+                        src={getImageUrl(imagePreview || image)}
                         alt="Preview"
                         className="w-full h-full object-cover"
                       />
@@ -1329,7 +1331,7 @@ export default function EditBlogPage() {
                         {section.imagePreview || section.imageUrl || section.attachment?.file_path ? (
                           <>
                             <img
-                              src={section.imagePreview || section.imageUrl || section.attachment?.file_path}
+                              src={getImageUrl(section.imagePreview || section.imageUrl || section.attachment?.file_path)}
                               alt="Preview"
                               className="w-full h-full object-cover"
                             />

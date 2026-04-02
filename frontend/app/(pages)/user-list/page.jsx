@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Users, Eye, UserCheck, ArrowLeft, Check, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
+import { getImageUrl } from "@/lib/utils";
 
 export default function UserListPage() {
   const { user, token, isAuthenticated } = useAuth();
@@ -149,7 +150,7 @@ export default function UserListPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-3">
                           <Avatar className="w-10 h-10">
-                            <AvatarImage src={u.profile_image} />
+                            <AvatarImage src={getImageUrl(u.profile_image)} />
                             <AvatarFallback className="bg-indigo-100 text-indigo-600">
                               {u.full_name?.[0] || u.email?.[0] || "U"}
                             </AvatarFallback>
