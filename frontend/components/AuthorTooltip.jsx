@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { User, Mail, Calendar, FileText, MapPin, Briefcase } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useRouter } from 'next/navigation';
+import { getImageUrl } from '@/lib/utils';
 
 export default function AuthorTooltip({ userId, children }) {
   const router = useRouter();
@@ -109,7 +110,7 @@ export default function AuthorTooltip({ userId, children }) {
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-lg flex-shrink-0">
                   {userInfo.profile_image ? (
                     <img
-                      src={userInfo.profile_image}
+                      src={getImageUrl(userInfo.profile_image)}
                       alt={userInfo.full_name || userInfo.username}
                       className="w-full h-full rounded-full object-cover"
                     />

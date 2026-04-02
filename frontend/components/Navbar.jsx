@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getImageUrl } from "@/lib/utils";
 
 export default function Navbar() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -88,7 +89,7 @@ export default function Navbar() {
                   className="flex items-center gap-2 text-gray-700 hover:text-indigo-600 transition-colors font-medium"
                 >
                   <Avatar className="w-8 h-8">
-                    <AvatarImage src={user?.profile_image} alt={user?.full_name || user?.username} />
+                    <AvatarImage src={getImageUrl(user?.profile_image)} alt={user?.full_name || user?.username} />
                     <AvatarFallback className="bg-indigo-600 text-white">
                       {user?.full_name?.[0] || user?.username?.[0] || user?.email?.[0] || "U"}
                     </AvatarFallback>
@@ -221,7 +222,7 @@ export default function Navbar() {
                     <div className="pt-4 pb-4 border-t border-gray-200">
                       <div className="flex items-center gap-3 px-2 pb-4">
                         <Avatar className="w-12 h-12">
-                          <AvatarImage src={user?.profile_image} alt={user?.full_name || user?.username} />
+                          <AvatarImage src={getImageUrl(user?.profile_image)} alt={user?.full_name || user?.username} />
                           <AvatarFallback className="bg-indigo-600 text-white">
                             {user?.full_name?.[0] || user?.username?.[0] || user?.email?.[0] || "U"}
                           </AvatarFallback>

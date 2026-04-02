@@ -6,13 +6,30 @@ export function cn(...inputs) {
 }
 
 export function getImageUrl(path) {
-  if (!path || typeof path !== 'string') return null;
-  if (path.startsWith('http://') || path.startsWith('https://')) {
-    return path;
+  if (!path) return null;
+
+  let finalPath = path;
+  // If path is an object (like an Attachment), extract a string path
+  if (typeof path === 'object' && path !== null) {
+    finalPath = path.file_path || path.url || path.thumbnail || path.id || null;
   }
+
+  if (!finalPath || typeof finalPath !== 'string') return null;
+
+  if (finalPath.startsWith('http://') || finalPath.startsWith('https://') || finalPath.startsWith('data:')) {
+    return finalPath;
+  }
+
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
   const serverUrl = baseUrl.replace(/\/api\/?$/, '');
-  return `${serverUrl}${path.startsWith('/') ? '' : '/'}${path}`;
+  const cleanPath = finalPath.startsWith('/') ? finalPath : `/${finalPath}`;
+
+  // If the path doesn't already contain /media/ and isn't an absolute URL, prepend /media/
+  if (!cleanPath.startsWith('/media/') && !cleanPath.includes('://')) {
+    return `${serverUrl}/media${cleanPath}`;
+  }
+
+  return `${serverUrl}${cleanPath}`;
 }
 
 export function formatDate(dateString, fallback = "N/A") {

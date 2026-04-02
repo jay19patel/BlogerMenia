@@ -15,6 +15,7 @@ import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 import CategorySelect from "@/components/CategorySelect";
+import { getImageUrl } from "@/lib/utils";
 
 const SECTION_TYPES = [
   { value: "text", label: "Text", icon: Type },
@@ -1026,7 +1027,7 @@ export default function CreateBlogPage() {
                   {imagePreview || image ? (
                     <>
                       <img
-                        src={imagePreview || image}
+                        src={getImageUrl(imagePreview || image)}
                         alt="Preview"
                         className="w-full h-full object-cover"
                       />
@@ -1413,7 +1414,7 @@ export default function CreateBlogPage() {
                         {section.imagePreview || section.imageUrl || section.attachment?.file_path ? (
                           <>
                             <img
-                              src={section.imagePreview || section.imageUrl || section.attachment?.file_path}
+                              src={getImageUrl(section.imagePreview || section.imageUrl || section.attachment?.file_path)}
                               alt="Preview"
                               className="w-full h-full object-cover"
                             />
