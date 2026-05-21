@@ -284,7 +284,7 @@ export default function Home() {
               <div className="w-full lg:col-span-6 flex justify-center lg:justify-end">
                 <div className="relative w-full max-w-xl">
                   {/* Terminal Style Card */}
-                  <div className="relative border-2 border-foreground bg-foreground p-0 shadow-[8px_8px_0px_0px_rgba(13,17,23,1)]">
+                  <div className="relative border-2 border-foreground bg-foreground p-0 shadow-[8px_8px_0px_0px_rgba(88,28,135,1)]">
                     {/* Terminal Header */}
                     <div className="flex items-center gap-2.5 px-4 py-3 border-b border-gray-700 bg-gray-900">
                       <div className="w-3 h-3 rounded-full bg-red-500"></div>

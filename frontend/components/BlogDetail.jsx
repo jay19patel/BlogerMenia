@@ -780,7 +780,7 @@ export default function BlogDetailPage() {
                     </Link>
 
                     {/* Blog Article */}
-                    <article className="bg-background border-2 border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)] overflow-hidden">
+                    <article className="bg-background border-2 border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)]">
                         {/* Featured Image */}
                         <div className="relative h-[400px] w-full border-b-2 border-foreground bg-indigo-50">
                             {(blog.thumbnail?.file_path || blog.image) ? (
@@ -796,33 +796,32 @@ export default function BlogDetailPage() {
                                     <p className="text-6xl font-mono font-bold uppercase tracking-widest opacity-50">SYS.NO_IMG</p>
                                 </div>
                             )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-90" />
+                            <div className="absolute inset-0 bg-black/60" />
 
                             {/* Overlay Content */}
-                            <div className="absolute -bottom-6 left-6 right-6 md:left-10 md:right-10 z-20 max-w-4xl">
-                                <div className="bg-background border-2 border-foreground p-6 md:p-8 shadow-[8px_8px_0px_0px_rgba(13,17,23,1)] text-foreground">
+                            <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10 z-20">
+                                <div className="max-w-4xl">
                                     <div className="flex flex-wrap gap-2 mb-4">
-                                        <span className="px-3 py-1 bg-foreground text-background text-[10px] uppercase font-mono font-bold tracking-widest">
+                                        <span className="px-3 py-1 bg-white text-black text-[10px] uppercase font-mono font-bold tracking-widest">
                                             {typeof blog.category === 'object' ? blog.category.name : blog.category}
                                         </span>
                                         {blog.featured && (
-                                            <span className="px-3 py-1 border-2 border-foreground text-foreground text-[10px] uppercase font-mono font-bold tracking-widest bg-purple-100">
+                                            <span className="px-3 py-1 border-2 border-white text-white text-[10px] uppercase font-mono font-bold tracking-widest bg-purple-900/50">
                                                 Featured
                                             </span>
                                         )}
                                     </div>
-                                    <h1 className="text-4xl md:text-5xl font-extrabold mb-4 uppercase tracking-tight leading-tight">
+                                    <h1 className="text-4xl md:text-5xl font-extrabold mb-4 uppercase tracking-tight leading-tight text-white drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
                                         {blog.title}
                                     </h1>
-                                    <p className="text-sm font-mono text-gray-700 line-clamp-2">
+                                    <p className="text-sm font-mono text-gray-200 line-clamp-2 drop-shadow-[1px_1px_0px_rgba(0,0,0,1)]">
                                         {blog.subtitle || blog.description || blog.excerpt}
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Article Spacer for Overlapping Header */}
-                        <div className="h-12 md:h-16" />
+
 
                         {/* Article Content */}
                         <div className="p-6 md:p-10">

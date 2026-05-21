@@ -146,23 +146,23 @@ export default function CreatePlaylistPage() {
     };
 
     return (
-        <div className="min-h-screen py-10 bg-gray-50/50">
+        <div className="min-h-screen py-10 bg-background">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header Section */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 border-b-2 border-foreground pb-4">
                     <div>
                         <Link
                             href="/my-blogs"
-                            className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 mb-4 font-semibold transition-colors"
+                            className="inline-flex items-center gap-2 text-foreground hover:text-purple-900 mb-4 font-mono font-bold uppercase tracking-widest text-sm hover:translate-x-[-4px] transition-all"
                         >
                             <ArrowLeft className="w-4 h-4" />
-                            Back to Dashboard
+                            BACK TO MY BLOGS
                         </Link>
-                        <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
-                            <span className="p-2 bg-indigo-50 rounded-xl">
-                                <Plus className="w-8 h-8 text-indigo-600" />
+                        <h1 className="text-4xl font-extrabold text-foreground tracking-tighter flex items-center gap-3 uppercase">
+                            <span className="p-2 border-2 border-foreground bg-purple-900 text-white shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]">
+                                <Plus className="w-8 h-8" />
                             </span>
-                            Create Playlist
+                            CREATE PLAYLIST
                         </h1>
                     </div>
                 </div>
@@ -170,297 +170,275 @@ export default function CreatePlaylistPage() {
                 <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
                     {/* Left Column: Metadata Editor */}
                     <div className="xl:col-span-4 space-y-8">
-                        <div className="bg-white rounded-3xl border border-gray-200 shadow-xl shadow-gray-200/50 overflow-hidden sticky top-8">
-                            <div className="h-1 bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-600"></div>
-                            <div className="p-8">
-                                <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                                    Playlist Details
-                                </h2>
+                        <div className="bg-background border-2 border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)] overflow-hidden sticky top-8 p-8">
+                            <h2 className="text-2xl font-extrabold text-foreground mb-6 flex items-center gap-2 uppercase tracking-tighter border-b-2 border-foreground pb-2">
+                                Playlist Details
+                            </h2>
 
-                                <form onSubmit={handleCreatePlaylist} className="space-y-6">
-                                    {/* Cover Image Upload */}
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-[0.2em] mb-3">
-                                            Cover Image
-                                        </label>
-                                        <div
-                                            onClick={() => document.getElementById('playlist-image-upload').click()}
-                                            className="relative group rounded-2xl overflow-hidden mb-4 aspect-video bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center cursor-pointer hover:border-indigo-300 transition-all"
-                                        >
-                                            {imagePreview ? (
-                                                <img
-                                                    src={imagePreview}
-                                                    alt="Preview"
-                                                    className="w-full h-full object-cover"
-                                                />
-                                            ) : (
-                                                <div className="text-center">
-                                                    <Upload className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Click to Upload</p>
-                                                </div>
-                                            )}
-                                            <div className="absolute inset-0 bg-indigo-600/0 group-hover:bg-indigo-600/10 transition-all flex items-center justify-center">
-                                                <Upload className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-all" />
+                            <form onSubmit={handleCreatePlaylist} className="space-y-6">
+                                {/* Cover Image Upload */}
+                                <div>
+                                    <label className="block text-xs font-mono font-bold text-foreground uppercase tracking-widest mb-3">
+                                        Cover Image
+                                    </label>
+                                    <div
+                                        onClick={() => document.getElementById('playlist-image-upload').click()}
+                                        className="relative group overflow-hidden mb-4 aspect-video bg-background border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] flex items-center justify-center cursor-pointer hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
+                                    >
+                                        {imagePreview ? (
+                                            <img
+                                                src={imagePreview}
+                                                alt="Preview"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="text-center">
+                                                <Upload className="w-10 h-10 text-foreground mx-auto mb-2" />
+                                                <p className="text-[10px] font-mono font-bold text-foreground uppercase tracking-wider">CLICK TO UPLOAD</p>
                                             </div>
-                                        </div>
-                                        <input
-                                            id="playlist-image-upload"
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={handleImageChange}
-                                            className="hidden"
-                                        />
-                                    </div>
-
-                                    {/* Name */}
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">
-                                            Playlist Title <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={name}
-                                            onChange={(e) => setName(e.target.value)}
-                                            placeholder="e.g., My Favorite Stories"
-                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold"
-                                        />
-                                    </div>
-
-                                    {/* Slug Control */}
-                                    <div className="space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <label className="block text-xs font-bold text-gray-400 uppercase tracking-[0.2em]">
-                                                Custom Slug
-                                            </label>
-                                            <button
-                                                type="button"
-                                                onClick={() => setAutoSlug(!autoSlug)}
-                                                className={`text-[10px] font-bold px-2 py-1 rounded-md transition-all ${autoSlug ? 'bg-indigo-50 text-indigo-600' : 'bg-orange-50 text-orange-600'}`}
-                                            >
-                                                {autoSlug ? 'AUTO-GENERATING' : 'MANUAL'}
-                                            </button>
-                                        </div>
-                                        <input
-                                            type="text"
-                                            value={slug}
-                                            onChange={(e) => {
-                                                setSlug(generateSlug(e.target.value));
-                                                setAutoSlug(false);
-                                            }}
-                                            disabled={autoSlug}
-                                            placeholder="playlist-url-slug"
-                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all text-sm font-mono"
-                                        />
-                                        {autoSlug && name && (
-                                            <p className="text-[10px] text-gray-400 pl-1">
-                                                URL: /playlists/{user?.email}/<span className="text-indigo-500">{slug}</span>
-                                            </p>
                                         )}
                                     </div>
-
-                                    {/* Description */}
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">
-                                            Description
-                                        </label>
-                                        <textarea
-                                            value={description}
-                                            onChange={(e) => setDescription(e.target.value)}
-                                            rows={3}
-                                            placeholder="What is this collection about?"
-                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all resize-none text-sm leading-relaxed"
-                                        />
-                                    </div>
-
-                                    {/* Privacy */}
-                                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
-                                        <div>
-                                            <p className="text-sm font-bold text-gray-900">Visibility</p>
-                                            <p className="text-xs text-gray-500">{isPublic ? 'Public' : 'Private'}</p>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsPublic(!isPublic)}
-                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isPublic ? 'bg-indigo-600' : 'bg-gray-200'}`}
-                                        >
-                                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isPublic ? 'translate-x-6' : 'translate-x-1'}`} />
-                                        </button>
-                                    </div>
-
-                                    <button
-                                        type="submit"
-                                        disabled={isSubmitting || !name.trim()}
-                                        className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-100"
-                                    >
-                                        {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                                        Save Playlist
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Right Column: Blogs Selection */}
-                    <div className="xl:col-span-8 space-y-8">
-
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-
-                            {/* CURRENT BLOGS */}
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between mb-2">
-                                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                                        Included Blogs
-                                        <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full text-xs">{selectedBlogs.length}</span>
-                                    </h2>
-                                </div>
-
-                                <div className="space-y-4 max-h-[800px] overflow-y-auto pr-2 custom-scrollbar min-h-[300px]">
-                                    {selectedBlogs.length > 0 ? (
-                                        selectedBlogs.map((blog, idx) => (
-                                            <div
-                                                key={blog.id}
-                                                className="group bg-white p-4 rounded-2xl border border-gray-100 shadow-sm hover:border-indigo-200 transition-all flex items-center gap-4"
-                                            >
-                                                <div className="w-16 h-16 rounded-xl bg-gray-50 overflow-hidden shrink-0 border border-gray-100">
-                                                    <img src={getImageUrl(blog.thumbnail?.file_path || blog.thumbnail)} className="w-full h-full object-cover" alt="" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-1">Step {idx + 1}</p>
-                                                    <h4 className="text-sm font-bold text-gray-900 truncate">{blog.title}</h4>
-                                                </div>
-                                                <button
-                                                    onClick={() => toggleSelectBlog(blog)}
-                                                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                                                    title="Remove from playlist"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <div className="text-center py-20 bg-gray-50/50 rounded-3xl border-2 border-dashed border-gray-200">
-                                            <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                                            <p className="text-sm text-gray-400 font-medium px-6">Select articles from the list on the right to add them to your new playlist.</p>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* AVAILABLE BLOGS (Search & Add) */}
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between mb-2">
-                                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                                        Add Content
-                                        <span className="text-gray-300 font-normal">| {totalBlogs} total</span>
-                                    </h2>
-                                </div>
-
-                                {/* Search Box */}
-                                <div className="relative">
-                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                     <input
-                                        type="text"
-                                        placeholder="Search your library..."
-                                        value={searchQuery}
-                                        onChange={(e) => {
-                                            setSearchQuery(e.target.value);
-                                            setCurrentPage(1);
-                                        }}
-                                        className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none transition-all text-sm shadow-sm"
+                                        id="playlist-image-upload"
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageChange}
+                                        className="hidden"
                                     />
                                 </div>
 
-                                {/* Available List */}
-                                <div className="space-y-3 min-h-[400px]">
-                                    {loadingBlogs ? (
-                                        [...Array(5)].map((_, i) => (
-                                            <div key={i} className="animate-pulse bg-white p-4 rounded-2xl border border-gray-100 flex items-center gap-4">
-                                                <div className="w-12 h-12 bg-gray-100 rounded-xl"></div>
-                                                <div className="flex-1 space-y-2">
-                                                    <div className="h-3 bg-gray-100 rounded w-1/3"></div>
-                                                    <div className="h-3 bg-gray-100 rounded w-2/3"></div>
-                                                </div>
-                                            </div>
-                                        ))
-                                    ) : availableBlogs.length > 0 ? (
-                                        availableBlogs.map((blog) => (
-                                            <div
-                                                key={blog.id}
-                                                onClick={() => toggleSelectBlog(blog)}
-                                                className={`bg-white p-4 rounded-2xl border transition-all flex items-center gap-4 cursor-pointer ${blog.isAdded
-                                                    ? 'border-indigo-600 bg-indigo-50/10'
-                                                    : 'border-gray-100 hover:border-indigo-200 shadow-sm'
-                                                    }`}
-                                            >
-                                                <div className="w-12 h-12 rounded-xl bg-gray-50 overflow-hidden shrink-0 border border-gray-100">
-                                                    <img src={getImageUrl(blog.thumbnail?.file_path || blog.thumbnail)} className="w-full h-full object-cover" alt="" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <h4 className="text-xs font-bold text-gray-900 truncate">{blog.title}</h4>
-                                                    <p className="text-[10px] text-gray-400 mt-1">{formatDate(blog.created_at)}</p>
-                                                </div>
-                                                <div className={`p-2 rounded-lg transition-all ${blog.isAdded
-                                                    ? 'bg-indigo-600 text-white'
-                                                    : 'bg-indigo-50 text-indigo-600'
-                                                    }`}>
-                                                    {blog.isAdded ? <ChevronRight className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                                                </div>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <div className="text-center py-20 bg-white rounded-3xl border border-gray-100">
-                                            <Search className="w-8 h-8 text-gray-200 mx-auto mb-3" />
-                                            <p className="text-xs text-gray-400 font-medium">No articles found matching your search.</p>
-                                        </div>
+                                {/* Name */}
+                                <div>
+                                    <label className="block text-xs font-mono font-bold text-foreground uppercase tracking-widest mb-2">
+                                        Playlist Title <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        placeholder="e.g., MY FAVORITE STORIES"
+                                        className="w-full px-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all font-mono font-bold text-sm"
+                                    />
+                                </div>
+
+                                {/* Slug Control */}
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <label className="block text-xs font-mono font-bold text-foreground uppercase tracking-widest">
+                                            Custom Slug
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={() => setAutoSlug(!autoSlug)}
+                                            className={`text-[10px] font-mono font-bold px-2 py-1 border-2 border-foreground transition-all shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] ${autoSlug ? 'bg-purple-900 text-white' : 'bg-background text-foreground'}`}
+                                        >
+                                            {autoSlug ? 'AUTO-GENERATING' : 'MANUAL'}
+                                        </button>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={slug}
+                                        onChange={(e) => {
+                                            setSlug(generateSlug(e.target.value));
+                                            setAutoSlug(false);
+                                        }}
+                                        disabled={autoSlug}
+                                        placeholder="playlist-url-slug"
+                                        className="w-full px-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all text-sm font-mono"
+                                    />
+                                    {autoSlug && name && (
+                                        <p className="text-[10px] font-mono font-bold text-foreground pl-1 uppercase tracking-widest">
+                                            URL: /playlists/{user?.email}/<span className="text-purple-900">{slug}</span>
+                                        </p>
                                     )}
                                 </div>
 
-                                {/* Available Pagination */}
-                                {Math.ceil(totalBlogs / BLOGS_PER_PAGE) > 1 && (
-                                    <div className="flex items-center justify-between pt-4">
-                                        <button
-                                            disabled={currentPage === 1 || loadingBlogs}
-                                            onClick={() => setCurrentPage(prev => prev - 1)}
-                                            className="p-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 disabled:opacity-50 transition-all font-bold text-xs flex items-center gap-1"
+                                {/* Description */}
+                                <div>
+                                    <label className="block text-xs font-mono font-bold text-foreground uppercase tracking-widest mb-2">
+                                        Description
+                                    </label>
+                                    <textarea
+                                        value={description}
+                                        onChange={(e) => setDescription(e.target.value)}
+                                        rows={3}
+                                        placeholder="What is this collection about?"
+                                        className="w-full px-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all resize-none text-sm font-mono"
+                                    />
+                                </div>
+
+                                {/* Privacy */}
+                                <div className="flex items-center justify-between p-4 bg-background border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]">
+                                    <div>
+                                        <p className="text-sm font-mono font-bold text-foreground uppercase tracking-widest">Visibility</p>
+                                        <p className="text-xs font-mono text-foreground">{isPublic ? 'PUBLIC' : 'PRIVATE'}</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsPublic(!isPublic)}
+                                        className={`relative inline-flex h-6 w-11 items-center transition-colors border-2 border-foreground ${isPublic ? 'bg-green-400' : 'bg-background'}`}
+                                    >
+                                        <span className={`inline-block h-4 w-4 transform bg-foreground transition-transform ${isPublic ? 'translate-x-5' : 'translate-x-1'}`} />
+                                    </button>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting || !name.trim()}
+                                    className="w-full py-4 bg-foreground text-background border-2 border-foreground font-mono font-bold uppercase tracking-widest hover:bg-purple-900 transition-all shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 flex items-center justify-center gap-2"
+                                >
+                                    {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                                    SAVE PLAYLIST
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Column: Blogs Selection */}
+                <div className="xl:col-span-8 space-y-8">
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+
+                        {/* CURRENT BLOGS */}
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between mb-2">
+                                <h2 className="text-xl font-extrabold text-foreground flex items-center gap-2 uppercase tracking-tighter">
+                                    Included Blogs
+                                    <span className="px-3 py-1 bg-foreground text-background border-2 border-foreground font-mono font-bold text-xs">{selectedBlogs.length}</span>
+                                </h2>
+                            </div>
+
+                            <div className="space-y-4 max-h-[800px] overflow-y-auto pr-2 custom-scrollbar min-h-[300px]">
+                                {selectedBlogs.length > 0 ? (
+                                    selectedBlogs.map((blog, idx) => (
+                                        <div
+                                            key={blog.id}
+                                            className="group bg-background p-4 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex items-center gap-4"
                                         >
-                                            <ChevronLeft className="w-4 h-4" />
-                                            Prev
-                                        </button>
-                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                                            {currentPage} / {Math.ceil(totalBlogs / BLOGS_PER_PAGE)}
-                                        </span>
-                                        <button
-                                            disabled={currentPage === Math.ceil(totalBlogs / BLOGS_PER_PAGE) || loadingBlogs}
-                                            onClick={() => setCurrentPage(prev => prev + 1)}
-                                            className="p-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 disabled:opacity-50 transition-all font-bold text-xs flex items-center gap-1"
-                                        >
-                                            Next
-                                            <ChevronRight className="w-4 h-4" />
-                                        </button>
+                                            <div className="w-16 h-16 bg-background overflow-hidden shrink-0 border-2 border-foreground">
+                                                <img src={getImageUrl(blog.thumbnail?.file_path || blog.thumbnail)} className="w-full h-full object-cover" alt="" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-[10px] font-mono font-bold text-foreground uppercase tracking-widest mb-1 border-b-2 border-foreground pb-1 inline-block">Step {idx + 1}</p>
+                                                <h4 className="text-sm font-bold text-foreground truncate">{blog.title}</h4>
+                                            </div>
+                                            <button
+                                                onClick={() => toggleSelectBlog(blog)}
+                                                className="p-2 border-2 border-foreground bg-background text-foreground hover:bg-red-500 hover:text-white transition-all shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
+                                                title="Remove from playlist"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-20 bg-background border-2 border-dashed border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)]">
+                                        <BookOpen className="w-12 h-12 text-foreground mx-auto mb-3" />
+                                        <p className="text-sm font-mono font-bold text-foreground px-6 uppercase tracking-widest">SELECT ARTICLES FROM THE LIST ON THE RIGHT TO ADD THEM TO YOUR NEW PLAYLIST.</p>
                                     </div>
                                 )}
                             </div>
                         </div>
+
+                        {/* AVAILABLE BLOGS (Search & Add) */}
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between mb-2">
+                                <h2 className="text-xl font-extrabold text-foreground flex items-center gap-2 uppercase tracking-tighter">
+                                    Add Content
+                                    <span className="font-mono text-xs border-l-2 border-foreground pl-2 ml-2">| {totalBlogs} TOTAL</span>
+                                </h2>
+                            </div>
+
+                            {/* Search Box */}
+                            <div className="relative">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground" />
+                                <input
+                                    type="text"
+                                    placeholder="SEARCH YOUR LIBRARY..."
+                                    value={searchQuery}
+                                    onChange={(e) => {
+                                        setSearchQuery(e.target.value);
+                                        setCurrentPage(1);
+                                    }}
+                                    className="w-full pl-11 pr-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all font-mono font-bold text-sm uppercase tracking-widest"
+                                />
+                            </div>
+
+                            {/* Available List */}
+                            <div className="space-y-3 min-h-[400px]">
+                                {loadingBlogs ? (
+                                    [...Array(5)].map((_, i) => (
+                                        <div key={i} className="animate-pulse bg-background p-4 border-2 border-foreground flex items-center gap-4">
+                                            <div className="w-12 h-12 bg-gray-200 border-2 border-foreground"></div>
+                                            <div className="flex-1 space-y-2">
+                                                <div className="h-3 bg-gray-200 border-2 border-foreground w-1/3"></div>
+                                                <div className="h-3 bg-gray-200 border-2 border-foreground w-2/3"></div>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : availableBlogs.length > 0 ? (
+                                    availableBlogs.map((blog) => (
+                                        <div
+                                            key={blog.id}
+                                            onClick={() => toggleSelectBlog(blog)}
+                                            className={`bg-background p-4 border-2 transition-all flex items-center gap-4 cursor-pointer shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 ${blog.isAdded
+                                                ? 'border-purple-900 bg-purple-50'
+                                                : 'border-foreground'
+                                                }`}
+                                        >
+                                            <div className="w-12 h-12 bg-background overflow-hidden shrink-0 border-2 border-foreground">
+                                                <img src={getImageUrl(blog.thumbnail?.file_path || blog.thumbnail)} className="w-full h-full object-cover" alt="" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="text-xs font-extrabold text-foreground truncate uppercase">{blog.title}</h4>
+                                                <p className="text-[10px] font-mono text-foreground mt-1 font-bold">{formatDate(blog.created_at)}</p>
+                                            </div>
+                                            <div className={`p-2 border-2 border-foreground transition-all shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] ${blog.isAdded
+                                                ? 'bg-purple-900 text-white'
+                                                : 'bg-background text-foreground hover:bg-purple-900 hover:text-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none'
+                                                }`}>
+                                                {blog.isAdded ? <ChevronRight className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-20 bg-background border-2 border-dashed border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)]">
+                                        <Search className="w-8 h-8 text-foreground mx-auto mb-3" />
+                                        <p className="text-xs font-mono font-bold text-foreground uppercase tracking-widest">NO ARTICLES FOUND MATCHING YOUR SEARCH.</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Available Pagination */}
+                            {Math.ceil(totalBlogs / BLOGS_PER_PAGE) > 1 && (
+                                <div className="flex items-center justify-between pt-4">
+                                    <button
+                                        disabled={currentPage === 1 || loadingBlogs}
+                                        onClick={() => setCurrentPage(prev => prev - 1)}
+                                        className="p-2 border-2 border-foreground bg-background text-foreground shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-purple-900 hover:text-white disabled:opacity-50 transition-all font-mono font-bold text-[10px] uppercase tracking-widest flex items-center gap-1"
+                                    >
+                                        <ChevronLeft className="w-4 h-4" />
+                                        PREV
+                                    </button>
+                                    <span className="text-[10px] font-mono font-bold text-foreground uppercase tracking-widest border-2 border-foreground px-3 py-1 shadow-[2px_2px_0px_0px_rgba(13,17,23,1)]">
+                                        {currentPage} / {Math.ceil(totalBlogs / BLOGS_PER_PAGE)}
+                                    </span>
+                                    <button
+                                        disabled={currentPage === Math.ceil(totalBlogs / BLOGS_PER_PAGE) || loadingBlogs}
+                                        onClick={() => setCurrentPage(prev => prev + 1)}
+                                        className="p-2 border-2 border-foreground bg-background text-foreground shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-purple-900 hover:text-white disabled:opacity-50 transition-all font-mono font-bold text-[10px] uppercase tracking-widest flex items-center gap-1"
+                                    >
+                                        NEXT
+                                        <ChevronRight className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
-
-            <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #e2e8f0;
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #cbd5e1;
-        }
-      `}</style>
         </div>
     );
 }

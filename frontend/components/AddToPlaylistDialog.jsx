@@ -107,38 +107,38 @@ export default function AddToPlaylistDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg mx-auto max-h-[85vh] overflow-hidden flex flex-col border border-gray-100 dark:border-gray-700">
+      <div className="bg-background border-2 border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)] w-full max-w-lg mx-auto max-h-[85vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
+        <div className="flex items-center justify-between px-6 py-5 border-b-2 border-foreground bg-background">
           <div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-extrabold text-foreground uppercase tracking-tighter">
               Add to Playlist
             </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-              Select a playlist or create a new one
+            <p className="text-[10px] font-mono font-bold text-foreground mt-0.5 uppercase tracking-widest">
+              SELECT A PLAYLIST OR CREATE A NEW ONE
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors text-gray-500"
+            className="p-1 border-2 border-transparent hover:border-foreground hover:bg-foreground hover:text-background transition-all"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
+        <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-foreground">
           {fetching ? (
             <div className="flex flex-col items-center justify-center py-12 space-y-3">
-              <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-              <p className="text-sm text-gray-500">Loading playlists...</p>
+              <Loader2 className="w-8 h-8 animate-spin text-foreground" />
+              <p className="text-xs font-mono font-bold text-foreground uppercase tracking-widest">LOADING PLAYLISTS...</p>
             </div>
           ) : (
             <>
               {/* Playlists List */}
-              <div className="space-y-3 mb-6">
+              <div className="space-y-4 mb-6">
                 {playlists.length > 0 && (
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                  <p className="text-xs font-mono font-extrabold text-foreground uppercase tracking-widest border-b-2 border-foreground pb-1">
                     Your Playlists
                   </p>
                 )}
@@ -148,28 +148,28 @@ export default function AddToPlaylistDialog({
                     key={playlist.id}
                     onClick={() => handleAddToPlaylist(playlist.slug)}
                     disabled={loading}
-                    className="group w-full p-4 text-left bg-white dark:bg-gray-750 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-indigo-500 dark:hover:border-indigo-400 hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
+                    className="group w-full p-4 text-left bg-background border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-50 to-transparent dark:from-indigo-900/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute inset-0 bg-purple-900/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div className="relative flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                        <div className="w-10 h-10 border-2 border-foreground bg-purple-900 flex items-center justify-center text-white font-mono font-bold text-sm shadow-[2px_2px_0px_0px_rgba(13,17,23,1)]">
                           {playlist.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                          <h3 className="font-extrabold text-foreground uppercase">
                             {playlist.name}
                           </h3>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {playlist.blog_count || 0} items
+                          <p className="text-[10px] font-mono font-bold text-foreground tracking-widest">
+                            {playlist.blog_count || 0} ITEMS
                           </p>
                         </div>
                       </div>
                       {loading && selectedPlaylistId === playlist.id ? (
-                        <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
+                        <Loader2 className="w-5 h-5 animate-spin text-foreground" />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-0 translate-x-2">
-                          <Plus className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                        <div className="w-8 h-8 border-2 border-foreground bg-background flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-0 translate-x-2 shadow-[2px_2px_0px_0px_rgba(13,17,23,1)]">
+                          <Plus className="w-4 h-4 text-foreground" />
                         </div>
                       )}
                     </div>
@@ -177,25 +177,25 @@ export default function AddToPlaylistDialog({
                 ))}
 
                 {playlists.length === 0 && !showCreateForm && (
-                  <div className="text-center py-8 px-4 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
-                    <p className="text-gray-500 dark:text-gray-400">You don't have any playlists yet.</p>
+                  <div className="text-center py-8 px-4 border-2 border-dashed border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]">
+                    <p className="text-xs font-mono font-bold text-foreground uppercase tracking-widest">YOU DON'T HAVE ANY PLAYLISTS YET.</p>
                   </div>
                 )}
               </div>
 
               {/* Create New Form */}
               {showCreateForm ? (
-                <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-5 border border-indigo-100 dark:border-indigo-900/50 animate-in slide-in-from-bottom-2">
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                    <Plus className="w-4 h-4 text-indigo-600" />
-                    New Playlist
+                <div className="bg-background border-2 border-foreground p-5 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] animate-in slide-in-from-bottom-2">
+                  <h3 className="text-xs font-mono font-extrabold text-foreground mb-3 flex items-center gap-2 uppercase tracking-widest">
+                    <Plus className="w-4 h-4" />
+                    NEW PLAYLIST
                   </h3>
                   <input
                     type="text"
                     value={newPlaylistName}
                     onChange={(e) => setNewPlaylistName(e.target.value)}
-                    placeholder="e.g. 'Python Mastery'"
-                    className="w-full px-4 py-2.5 mb-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                    placeholder="e.g. 'PYTHON MASTERY'"
+                    className="w-full px-4 py-2.5 mb-4 border-2 border-foreground bg-background text-foreground focus:outline-none focus:ring-0 focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm uppercase transition-all"
                     autoFocus
                   />
                   <div className="flex gap-3">
@@ -204,19 +204,19 @@ export default function AddToPlaylistDialog({
                         setShowCreateForm(false);
                         setNewPlaylistName('');
                       }}
-                      className="flex-1 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm font-medium transition-colors"
+                      className="flex-1 px-4 py-2 bg-background border-2 border-foreground text-foreground font-mono font-bold uppercase tracking-widest hover:bg-purple-900 hover:text-white shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] text-[10px] transition-all"
                     >
-                      Cancel
+                      CANCEL
                     </button>
                     <button
                       onClick={handleCreateAndAdd}
                       disabled={creating || !newPlaylistName.trim()}
-                      className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow text-sm font-medium transition-all flex items-center justify-center gap-2"
+                      className="flex-1 px-4 py-2 bg-foreground border-2 border-foreground text-background font-mono font-bold uppercase tracking-widest hover:bg-purple-900 hover:text-white disabled:opacity-50 disabled:shadow-none shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] text-[10px] transition-all flex items-center justify-center gap-2"
                     >
                       {creating ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
-                        'Create & Add'
+                        'CREATE & ADD'
                       )}
                     </button>
                   </div>
@@ -224,10 +224,10 @@ export default function AddToPlaylistDialog({
               ) : (
                 <button
                   onClick={() => setShowCreateForm(true)}
-                  className="w-full py-3 flex items-center justify-center gap-2 text-indigo-600 font-medium hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-xl transition-colors border border-transparent hover:border-indigo-100"
+                  className="w-full py-4 flex items-center justify-center gap-2 text-foreground font-mono font-bold uppercase tracking-widest border-2 border-foreground bg-background shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 hover:bg-purple-900 hover:text-white transition-all text-xs"
                 >
-                  <Plus className="w-5 h-5" />
-                  Create New Playlist
+                  <Plus className="w-4 h-4" />
+                  CREATE NEW PLAYLIST
                 </button>
               )}
             </>

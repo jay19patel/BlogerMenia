@@ -784,10 +784,10 @@ export default function CreateBlogPage() {
   };
 
   return (
-    <div className="py-8 bg-gray-50">
+    <div className="py-8 bg-background min-h-screen border-t-2 border-foreground">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Chat Section */}
-        <div className="mb-6 bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+        <div className="mb-6 bg-background border-2 border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)] p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
@@ -905,19 +905,19 @@ export default function CreateBlogPage() {
         </div>
 
         {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-8 flex items-center justify-between border-b-2 border-foreground pb-4">
           <div>
             <Link
               href="/my-blogs"
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-2"
+              className="flex items-center gap-2 text-foreground font-mono font-bold uppercase tracking-widest text-sm hover:text-purple-900 hover:translate-x-[-4px] transition-all mb-2"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back to My Blogs
+              BACK TO MY BLOGS
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900">Create New Blog</h1>
+            <h1 className="text-4xl font-extrabold text-foreground uppercase tracking-tighter">CREATE NEW BLOG</h1>
           </div>
           <div className="flex items-center gap-3">
-            <label className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-lg shadow-purple-500/30 cursor-pointer">
+            <label className="flex items-center gap-2 px-6 py-3 border-2 border-foreground bg-purple-900 text-white font-mono font-bold uppercase tracking-widest text-sm shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all cursor-pointer">
               <Upload className="w-5 h-5" />
               Load JSON
               <input
@@ -930,17 +930,17 @@ export default function CreateBlogPage() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-lg font-medium hover:from-indigo-700 hover:to-violet-700 transition-all duration-300 shadow-lg shadow-indigo-500/30 disabled:opacity-50"
+              className="flex items-center gap-2 px-6 py-3 border-2 border-foreground bg-background text-foreground font-mono font-bold uppercase tracking-widest text-sm shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 hover:bg-purple-900 hover:text-white transition-all disabled:opacity-50"
             >
               <Save className="w-5 h-5" />
-              {saving ? "Saving..." : "Save Blog"}
+              {saving ? "SAVING..." : "SAVE BLOG"}
             </button>
           </div>
         </div>
 
         {/* Basic Information */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Basic Information</h2>
+        <div className="bg-background border-2 border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)] p-6 mb-8">
+          <h2 className="text-2xl font-extrabold text-foreground mb-6 uppercase tracking-tighter border-b-2 border-foreground pb-2">Basic Information</h2>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">

@@ -3,7 +3,7 @@ import { readDB } from '@/lib/db';
 
 export async function GET(request, { params }) {
   try {
-    const { userId } = params;
+    const { userId } = await params;
     const db = readDB();
 
     const user = db.users.find(u => u.id === userId);

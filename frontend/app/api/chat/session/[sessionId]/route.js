@@ -13,7 +13,7 @@ export async function GET(request, { params }) {
       );
     }
 
-    const { sessionId } = params;
+    const { sessionId } = await params;
     const db = readDB();
 
     if (!db.chatSessions) {
@@ -48,7 +48,7 @@ export async function DELETE(request, { params }) {
       );
     }
 
-    const { sessionId } = params;
+    const { sessionId } = await params;
     const db = readDB();
 
     if (!db.chatSessions) return NextResponse.json({ detail: 'Deleted' }, { status: 200 });
