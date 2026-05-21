@@ -11,7 +11,6 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { api } from '@/lib/api';
 import { getImageUrl, formatDate } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
-import AuthorTooltip from '@/components/AuthorTooltip';
 import React from 'react';
 
 const Flowchart = ({ section }) => {
@@ -685,20 +684,25 @@ export default function BlogDetailPage() {
     if (isLoading) {
         return (
             <div className="w-full h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <div className="flex items-center justify-center gap-3 bg-background px-6 py-4 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]">
+                    <span className="h-5 w-5 border-2 border-foreground border-r-transparent animate-spin"></span>
+                    <span className="font-mono font-bold text-sm uppercase tracking-widest text-foreground">Loading System...</span>
+                </div>
             </div>
         );
     }
 
     if (isError || !blog) {
         return (
-            <div className="max-w-4xl mx-auto px-4 py-16 text-center">
-                <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">Blog Post Not Found</h1>
-                <p className="text-gray-600 dark:text-gray-400 mb-8">The blog post you're looking for doesn't exist.</p>
-                <Link href="/blogs" className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                    <ArrowLeft className="w-4 h-4" />
-                    Back to Blogs
-                </Link>
+            <div className="min-h-[80vh] flex items-center justify-center px-4">
+                <div className="bg-background border-2 border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)] p-12 text-center max-w-2xl w-full">
+                    <h1 className="text-4xl font-extrabold text-foreground mb-4 uppercase tracking-tight">SYSTEM.404_NOT_FOUND</h1>
+                    <p className="font-mono text-sm uppercase tracking-widest text-gray-600 mb-8">The requested blog post doesn't exist or is corrupted.</p>
+                    <Link href="/blogs" className="inline-flex items-center gap-2 px-6 py-3 bg-foreground text-background font-mono font-bold uppercase tracking-widest text-xs hover:bg-purple-900 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all">
+                        <ArrowLeft className="w-4 h-4" />
+                        Return to Directory
+                    </Link>
+                </div>
             </div>
         );
     }
@@ -710,10 +714,10 @@ export default function BlogDetailPage() {
                 {tableOfContents.length > 0 && (
                     <button
                         onClick={() => setShowTOC(true)}
-                        className="fixed bottom-6 left-6 z-40 bg-white border border-gray-300 hover:border-indigo-500 hover:text-indigo-600 text-gray-700 px-5 py-2 rounded-lg font-medium transition-all duration-300 flex items-center gap-2 shadow-sm"
+                        className="fixed bottom-6 left-6 z-40 bg-background border-2 border-foreground hover:bg-gray-100 text-foreground px-5 py-2 font-mono font-bold uppercase tracking-widest transition-all duration-300 flex items-center gap-2 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1"
                     >
                         <Menu className="w-5 h-5" />
-                        <span className="hidden md:inline">Table of Contents</span>
+                        <span className="hidden md:inline">TOC</span>
                     </button>
                 )}
 
@@ -721,20 +725,20 @@ export default function BlogDetailPage() {
                 {showTOC && (
                     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" onClick={() => setShowTOC(false)}>
                         <div
-                            className="absolute left-0 top-0 bottom-0 w-full sm:w-96 bg-white border-r border-gray-200 overflow-y-auto transform transition-transform duration-300 ease-out shadow-2xl"
+                            className="absolute left-0 top-0 bottom-0 w-full sm:w-96 bg-background border-r-2 border-foreground overflow-y-auto transform transition-transform duration-300 ease-out shadow-2xl"
                             onClick={e => e.stopPropagation()}
                         >
                             <div className="p-6">
-                                <div className="flex items-center justify-between mb-6">
-                                    <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                                        <Menu className="w-6 h-6 text-white" />
-                                        Table of Contents
+                                <div className="flex items-center justify-between mb-6 pb-4 border-b-2 border-foreground">
+                                    <h3 className="text-xl font-extrabold text-foreground flex items-center gap-2 uppercase tracking-tight">
+                                        <Menu className="w-6 h-6 text-foreground" />
+                                        Index
                                     </h3>
                                     <button
                                         onClick={() => setShowTOC(false)}
-                                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                        className="p-2 hover:bg-gray-100 transition-colors border-2 border-transparent hover:border-foreground"
                                     >
-                                        <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <svg className="w-5 h-5 text-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                         </svg>
                                     </button>
@@ -745,9 +749,9 @@ export default function BlogDetailPage() {
                                         <button
                                             key={item.id}
                                             onClick={() => scrollToSection(item.id)}
-                                            className={`w-full text-left px-4 py-3 rounded-lg text-sm transition-all duration-300 ${activeSection === item.id
-                                                ? 'bg-gradient-to-r from-indigo-500/10 to-violet-500/10 text-indigo-600 border-l-2 border-indigo-500'
-                                                : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
+                                            className={`w-full text-left px-4 py-3 text-sm transition-all duration-300 border-2 ${activeSection === item.id
+                                                ? 'bg-foreground text-background border-foreground font-bold'
+                                                : 'text-foreground border-transparent hover:border-foreground hover:bg-gray-50 font-medium'
                                                 }`}
                                         >
                                             <div className="flex items-start gap-3">
@@ -769,76 +773,77 @@ export default function BlogDetailPage() {
                     {/* Back Button */}
                     <Link
                         href={backUrl}
-                        className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 mb-6 transition-colors"
+                        className="inline-flex items-center gap-2 font-mono font-bold uppercase tracking-widest text-foreground hover:text-indigo-600 mb-6 transition-colors"
                     >
                         <ArrowLeft className="w-4 h-4" />
-                        Back to Blogs
+                        Return
                     </Link>
 
                     {/* Blog Article */}
-                    <article className="bg-white border border-gray-300 rounded-xl shadow-lg overflow-hidden">
+                    <article className="bg-background border-2 border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)] overflow-hidden">
                         {/* Featured Image */}
-                        <div className="relative h-[400px] w-full">
+                        <div className="relative h-[400px] w-full border-b-2 border-foreground bg-indigo-50">
                             {(blog.thumbnail?.file_path || blog.image) ? (
                                 <Image
                                     src={getImageUrl(blog.thumbnail?.file_path || blog.image)}
                                     alt={blog.title}
                                     fill
-                                    className="object-cover"
+                                    className="object-cover grayscale hover:grayscale-0 transition-all duration-500"
                                     priority
                                 />
                             ) : (
-                                <div className="w-full h-full bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center">
-                                    <div className="text-center text-white">
-                                        <p className="text-6xl font-bold opacity-50">Blog Image</p>
-                                    </div>
+                                <div className="w-full h-full bg-foreground flex items-center justify-center text-background">
+                                    <p className="text-6xl font-mono font-bold uppercase tracking-widest opacity-50">SYS.NO_IMG</p>
                                 </div>
                             )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-90" />
 
                             {/* Overlay Content */}
-                            <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                                <div className="flex flex-wrap gap-2 mb-4">
-                                    <span className="px-3 py-1 bg-blue-600/80 backdrop-blur-sm rounded-lg text-sm font-medium">
-                                        {typeof blog.category === 'object' ? blog.category.name : blog.category}
-                                    </span>
-                                    {blog.featured && (
-                                        <span className="px-3 py-1 bg-yellow-500/80 backdrop-blur-sm rounded-lg text-sm font-medium">
-                                            Featured
+                            <div className="absolute -bottom-6 left-6 right-6 md:left-10 md:right-10 z-20 max-w-4xl">
+                                <div className="bg-background border-2 border-foreground p-6 md:p-8 shadow-[8px_8px_0px_0px_rgba(13,17,23,1)] text-foreground">
+                                    <div className="flex flex-wrap gap-2 mb-4">
+                                        <span className="px-3 py-1 bg-foreground text-background text-[10px] uppercase font-mono font-bold tracking-widest">
+                                            {typeof blog.category === 'object' ? blog.category.name : blog.category}
                                         </span>
-                                    )}
+                                        {blog.featured && (
+                                            <span className="px-3 py-1 border-2 border-foreground text-foreground text-[10px] uppercase font-mono font-bold tracking-widest bg-purple-100">
+                                                Featured
+                                            </span>
+                                        )}
+                                    </div>
+                                    <h1 className="text-4xl md:text-5xl font-extrabold mb-4 uppercase tracking-tight leading-tight">
+                                        {blog.title}
+                                    </h1>
+                                    <p className="text-sm font-mono text-gray-700 line-clamp-2">
+                                        {blog.subtitle || blog.description || blog.excerpt}
+                                    </p>
                                 </div>
-                                <h1 className="text-3xl md:text-4xl font-bold mb-2">
-                                    {blog.title}
-                                </h1>
-                                <p className="text-lg text-gray-200">
-                                    {blog.subtitle}
-                                </p>
                             </div>
                         </div>
+
+                        {/* Article Spacer for Overlapping Header */}
+                        <div className="h-12 md:h-16" />
 
                         {/* Article Content */}
                         <div className="p-6 md:p-10">
                             {/* Meta Information */}
-                            <div className="flex flex-wrap gap-6 py-4 mb-6 border-y border-gray-200 dark:border-gray-700">
-                                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                                    <Calendar className="w-5 h-5" />
-                                    <span className="text-sm">{formatDate(blog.publishedDate || blog.created_at)}</span>
+                            <div className="flex flex-wrap gap-6 py-4 mb-8 border-y-2 border-foreground bg-gray-50/50 px-4">
+                                <div className="flex items-center gap-2 text-foreground font-mono uppercase text-xs font-bold tracking-widest">
+                                    <Calendar className="w-4 h-4" />
+                                    <span>{formatDate(blog.publishedDate || blog.created_at)}</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                                    <User className="w-5 h-5" />
+                                <div className="flex items-center gap-2 text-foreground font-mono uppercase text-xs font-bold tracking-widest">
+                                    <User className="w-4 h-4" />
                                     <Link href={authorIdentifier ? `/blogs/${encodeURIComponent(authorIdentifier)}` : `/blogs`}>
-                                        <AuthorTooltip userId={blog.author?.id || blog.user_id}>
-                                            <span className="text-sm cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                                                {typeof blog.author === 'object' ? (blog.author.full_name || blog.author_email || blog.author.username || blog.authorUsername) : blog.author}
-                                            </span>
-                                        </AuthorTooltip>
+                                        <span className="cursor-pointer hover:underline hover:text-indigo-600 transition-colors">
+                                            {typeof blog.author === 'object' ? (blog.author.full_name || blog.author_email || blog.author.username || blog.authorUsername) : blog.author}
+                                        </span>
                                     </Link>
                                 </div>
                                 {blog.views !== undefined && (
-                                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                                        <Eye className="w-5 h-5" />
-                                        <span className="text-sm">{blog.views.toLocaleString()}</span>
+                                    <div className="flex items-center gap-2 text-foreground font-mono uppercase text-xs font-bold tracking-widest">
+                                        <Eye className="w-4 h-4" />
+                                        <span>{blog.views.toLocaleString()}</span>
                                     </div>
                                 )}
                                 {likesCount !== undefined && (
@@ -866,7 +871,7 @@ export default function BlogDetailPage() {
                                     {blog.tags.map((tag, index) => (
                                         <span
                                             key={index}
-                                            className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium"
+                                            className="px-2 py-1 border border-foreground text-foreground text-[10px] font-mono font-bold uppercase tracking-widest"
                                         >
                                             #{tag}
                                         </span>
@@ -876,8 +881,8 @@ export default function BlogDetailPage() {
 
                             {/* Excerpt */}
                             {blog.excerpt && (
-                                <div className="mb-8 p-4 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded-r-lg">
-                                    <p className="text-gray-700 dark:text-gray-300 italic">
+                                <div className="mb-8 p-6 bg-gray-50 border-l-4 border-foreground">
+                                    <p className="text-foreground font-mono text-sm leading-relaxed">
                                         {blog.excerpt}
                                     </p>
                                 </div>
@@ -916,34 +921,34 @@ export default function BlogDetailPage() {
                     </article>
 
                     {/* Related Blogs Section */}
-                    <div className="mt-10 mb-8">
-                        <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Related Blogs</h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                    <div className="mt-16 mb-8 pt-8 border-t-2 border-foreground">
+                        <h2 className="text-2xl font-extrabold mb-6 text-foreground uppercase tracking-tight">Related Queries</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0 border-2 border-foreground bg-foreground">
                             {suggestedBlogs.map((item, idx) => (
-                                <div key={idx}>
-                                    <Link href={(item.author?.email || item.author_email || item.authorUsername) ? `/blogs/${encodeURIComponent(item.author?.email || item.author_email || item.authorUsername)}/${item.slug}` : `/blogs/${item.slug}`}>
-                                        <div className="group bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-200 hover:border-indigo-500 dark:hover:border-indigo-400 hover:shadow-md">
-                                            <div className="relative aspect-[16/9] sm:aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-gray-700">
+                                <div key={idx} className="bg-background border-r-2 last:border-r-0 border-foreground hover:bg-gray-50 transition-colors">
+                                    <Link href={(item.author?.email || item.author_email || item.authorUsername) ? `/blogs/${encodeURIComponent(item.author?.email || item.author_email || item.authorUsername)}/${item.slug}` : `/blogs/${item.slug}`} className="block h-full group">
+                                        <div className="flex flex-col h-full">
+                                            <div className="relative aspect-video overflow-hidden bg-indigo-50 border-b-2 border-foreground">
                                                 {(item.thumbnail?.file_path || item.image) ? (
-                                                    <img src={getImageUrl(item.thumbnail?.file_path || item.image)} alt={item.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                                                    <img src={getImageUrl(item.thumbnail?.file_path || item.image)} alt={item.title} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300" />
                                                 ) : (
-                                                    <div className="w-full h-full bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center">
-                                                        <p className="text-white text-xs font-medium opacity-50">No Image</p>
+                                                    <div className="w-full h-full bg-foreground flex items-center justify-center">
+                                                        <p className="text-background text-[10px] font-mono font-bold uppercase tracking-widest opacity-50">Sys-Log</p>
                                                     </div>
                                                 )}
 
                                                 {item.category && (
-                                                    <div className="absolute top-1.5 left-1.5">
-                                                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm">
+                                                    <div className="absolute top-2 left-2">
+                                                        <span className="inline-flex items-center px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-widest bg-foreground text-background">
                                                             {typeof item.category === 'object' ? item.category?.name : item.category}
                                                         </span>
                                                     </div>
                                                 )}
                                             </div>
-                                            <div className="p-2 sm:p-2.5">
-                                                <h3 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white mb-0.5 sm:mb-1 line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{item.title}</h3>
+                                            <div className="p-4 flex-1 flex flex-col">
+                                                <h3 className="text-sm font-extrabold text-foreground mb-2 line-clamp-2 uppercase tracking-tight group-hover:underline transition-all">{item.title}</h3>
                                                 {item.excerpt && (
-                                                    <p className="text-gray-600 dark:text-gray-400 text-[10px] sm:text-xs line-clamp-2">{item.excerpt}</p>
+                                                    <p className="text-gray-600 font-mono text-[10px] line-clamp-2 leading-relaxed mt-auto">{item.excerpt}</p>
                                                 )}
                                             </div>
                                         </div>

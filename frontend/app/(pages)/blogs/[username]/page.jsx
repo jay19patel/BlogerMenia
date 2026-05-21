@@ -11,7 +11,8 @@ async function getProfile(username) {
 }
 
 export async function generateMetadata({ params }) {
-  const { username } = await params;
+  const { username: rawUsername } = await params;
+  const username = decodeURIComponent(rawUsername);
   const profile = await getProfile(username);
 
   if (!profile) {
@@ -28,7 +29,8 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function UserBlogsPage({ params }) {
-  const { username } = await params;
+  const { username: rawUsername } = await params;
+  const username = decodeURIComponent(rawUsername);
 
   return (
     <Suspense fallback={<div className="flex justify-center items-center min-h-screen"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div></div>}>

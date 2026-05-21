@@ -200,48 +200,48 @@ export default function Home() {
   return (
     <>
       {/* Hero Section */}
-      <section className="pt-0 lg:pt-8 lg:px-8 h-full overflow-visible">
-        <div className="rounded-2xl bg-indigo-50 py-10 overflow-visible m-5 lg:m-0 2xl:py-16 xl:py-8 lg:rounded-tl-2xl lg:rounded-bl-2xl relative">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 overflow-visible">
-            <div className="grid grid-cols-1 gap-14 items-center lg:grid-cols-12 lg:gap-32 overflow-visible">
-              <div className="w-full xl:col-span-5 lg:col-span-6 2xl:-mx-5 xl:-mx-0 overflow-visible">
-                <div className="flex items-center text-sm font-medium text-gray-500 justify-center lg:justify-start">
-                  <span className="bg-indigo-600 py-1 px-3 rounded-2xl text-xs font-medium text-white mr-3">
-                    #1
+      <section className="pt-0 lg:pt-12 lg:px-8 h-full overflow-visible border-b border-border">
+        <div className="bg-background border border-border py-12 lg:py-20 mx-5 lg:mx-0 relative">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 gap-14 items-center lg:grid-cols-12 lg:gap-24">
+              <div className="w-full xl:col-span-6 lg:col-span-6">
+                <div className="flex items-center text-sm font-mono text-gray-500 justify-center lg:justify-start mb-6">
+                  <span className="bg-foreground text-background py-1 px-3 text-xs font-semibold uppercase tracking-widest border border-foreground mr-4">
+                    SYS-01
                   </span>
-                  AI-Powered Blog Platform
+                  AI-Powered Technical Publishing
                 </div>
-                <h1 className="py-8 text-center text-gray-900 font-bold text-5xl lg:text-left leading-[70px]">
-                  Transform ideas into{" "}
-                  <span className="text-indigo-600">engaging blogs</span> with AI
+                <h1 className="py-4 text-center text-foreground font-extrabold text-5xl lg:text-left leading-tight font-sans tracking-tight">
+                  Transform ideas into <br />
+                  <span className="text-gray-500 font-serif italic">robust tech blogs</span> with AI
                 </h1>
-                <p className="text-gray-500 text-lg text-center lg:text-left">
-                  Create professional, insightful blogs powered by AI. Share your knowledge and discover meaningful content from a vibrant community of writers and readers.
+                <p className="text-gray-600 text-lg text-center lg:text-left mt-4 mb-8 font-mono text-sm leading-relaxed max-w-lg">
+                  Deploy professional, insightful blogs powered by specialized AI. Scale your knowledge distribution with zero fuss and instant rendering.
                 </p>
-                <div className="relative my-10">
+                <div className="relative my-8">
                   <form onSubmit={handleSearchBlogs}>
-                    <div className="relative p-1.5 flex items-center gap-y-4 h-auto md:h-16 flex-col md:flex-row justify-between rounded-full md:shadow-[0px_15px_30px_-4px_rgba(16,24,40,0.03)] border border-transparent md:bg-white transition-all duration-500 hover:border-indigo-600 focus-within:border-indigo-600">
+                    <div className="relative flex items-center h-auto md:h-14 flex-col md:flex-row justify-between border-2 border-foreground bg-background focus-within:ring-2 focus-within:ring-foreground transition-all">
                       <input
                         type="text"
                         name="search"
                         value={searchQuery}
                         onChange={handleSearchChange}
-                        placeholder="Type anything you want to know..."
-                        className="text-base rounded-full text-gray-900 flex-1 py-4 px-6 shadow-[0px_15px_30px_-4px_rgba(16,24,40,0.03)] md:shadow-none bg-white md:bg-transparent placeholder:text-gray-400 focus:outline-none md:w-fit w-full"
+                        placeholder="query search index..."
+                        className="text-sm font-mono flex-1 py-4 px-6 bg-transparent placeholder:text-gray-400 focus:outline-none w-full text-foreground"
                       />
                       <button
                         type="submit"
                         disabled={isSearching}
-                        className="bg-indigo-600 rounded-full py-3 px-7 text-base font-semibold text-white hover:bg-indigo-700 cursor-pointer transition-all duration-500 md:w-fit w-full text-center disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="bg-foreground py-4 px-8 text-sm font-bold text-background hover:bg-gray-800 transition-colors w-full md:w-auto uppercase tracking-wider font-mono disabled:opacity-50"
                       >
-                        {isSearching ? "Searching..." : "Find Blogs"}
+                        {isSearching ? "Exec..." : "Exec"}
                       </button>
                     </div>
                   </form>
 
                   {/* Search Results Dropdown */}
                   {searchResults.length > 0 && searchQuery.trim() !== "" && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-80 overflow-y-auto overflow-x-hidden py-2">
+                    <div className="absolute top-full left-0 right-0 mt-0 bg-background border-2 border-t-0 border-foreground shadow-sm z-50 max-h-80 overflow-y-auto">
                       {searchResults.map((blog) => {
                         const authorIdentifier = blog.author?.email || blog.author_email || blog.authorUsername;
                         const blogUrl = authorIdentifier ? `/blogs/${encodeURIComponent(authorIdentifier)}/${blog.slug}` : `/blogs/${blog.slug}`;
@@ -251,397 +251,249 @@ export default function Home() {
                           <Link
                             key={blog.slug}
                             href={blogUrl}
-                            className="block px-5 py-3 border-b border-gray-50 last:border-b-0 hover:bg-indigo-50 transition-colors group"
+                            className="block px-5 py-3 border-b border-border last:border-b-0 hover:bg-gray-100 transition-colors group"
                           >
                             <div className="flex justify-between items-start gap-4">
-                              <p className="text-gray-900 font-semibold text-sm group-hover:text-indigo-600 transition-colors line-clamp-1">{blog.title}</p>
-                              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap mt-1">{displayDate}</span>
+                              <p className="text-foreground font-semibold text-sm group-hover:underline transition-all line-clamp-1">{blog.title}</p>
+                              <span className="text-[10px] font-mono text-gray-500 uppercase whitespace-nowrap mt-1">{displayDate}</span>
                             </div>
-                            {blog.excerpt && (
-                              <p className="text-gray-500 text-xs mt-1 line-clamp-1 italic">
-                                {blog.excerpt}...
-                              </p>
-                            )}
                           </Link>
                         )
                       })}
                     </div>
                   )}
                 </div>
-                <div className="flex items-center gap-6 mt-6">
-                  <div className="flex items-center gap-2.5">
-                    <div className="p-2.5 bg-indigo-100 rounded-lg">
-                      <Users className="w-5 h-5 text-indigo-600" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">Active Users</p>
-                      <p className="text-lg font-bold text-gray-900">{stats.active_users > 0 ? stats.active_users.toLocaleString() : '0'}</p>
-                    </div>
+                <div className="flex items-center gap-6 mt-10 border-t border-border pt-8">
+                  <div className="flex flex-col gap-1">
+                    <p className="text-[10px] text-gray-500 font-mono uppercase tracking-widest">Active Users</p>
+                    <p className="text-xl font-bold text-foreground font-mono">{stats.active_users > 0 ? stats.active_users.toLocaleString() : '0'}</p>
                   </div>
-                  <div className="h-10 w-px bg-gray-300"></div>
-                  <div className="flex items-center gap-2.5">
-                    <div className="p-2.5 bg-purple-100 rounded-lg">
-                      <BookOpen className="w-5 h-5 text-purple-600" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">Blogs Published</p>
-                      <p className="text-lg font-bold text-gray-900">{stats.blogs_published > 0 ? stats.blogs_published.toLocaleString() : '0'}</p>
-                    </div>
+                  <div className="h-8 w-px bg-border"></div>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-[10px] text-gray-500 font-mono uppercase tracking-widest">Deployments</p>
+                    <p className="text-xl font-bold text-foreground font-mono">{stats.blogs_published > 0 ? stats.blogs_published.toLocaleString() : '0'}</p>
                   </div>
-                  <div className="h-10 w-px bg-gray-300"></div>
-                  <div className="flex items-center gap-2.5">
-                    <div className="p-2.5 bg-green-100 rounded-lg">
-                      <TrendingUp className="w-5 h-5 text-green-600" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">Total Views</p>
-                      <p className="text-lg font-bold text-gray-900">{stats.total_views > 0 ? stats.total_views.toLocaleString() : '0'}</p>
-                    </div>
+                  <div className="h-8 w-px bg-border"></div>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-[10px] text-gray-500 font-mono uppercase tracking-widest">Total Hits</p>
+                    <p className="text-xl font-bold text-foreground font-mono">{stats.total_views > 0 ? stats.total_views.toLocaleString() : '0'}</p>
                   </div>
                 </div>
               </div>
-
-
 
               <div className="w-full lg:col-span-6 flex justify-center lg:justify-end">
-                <div className="relative w-full max-w-2xl">
-                  {/* Floating elements */}
-                  <div className="absolute -top-6 -left-6 w-20 h-20 bg-indigo-400/20 rounded-full blur-2xl animate-pulse"></div>
-                  <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-purple-400/20 rounded-full blur-2xl animate-pulse delay-1000"></div>
-
-                  {/* Main Card */}
-                  <div className="relative rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 p-1 shadow-2xl">
-                    <div className="bg-white rounded-3xl p-8 shadow-inner">
-                      {/* Browser Header */}
-                      <div className="flex items-center gap-2.5 mb-6 pb-4 border-b border-gray-200">
-                        <div className="w-3.5 h-3.5 rounded-full bg-red-500 shadow-sm"></div>
-                        <div className="w-3.5 h-3.5 rounded-full bg-yellow-500 shadow-sm"></div>
-                        <div className="w-3.5 h-3.5 rounded-full bg-green-500 shadow-sm"></div>
-                        <div className="flex-1 ml-4 bg-gray-100 rounded-lg px-4 py-1.5">
-                          <p className="text-xs text-gray-400">blogermenia.com/blog-create-chat</p>
-                        </div>
+                <div className="relative w-full max-w-xl">
+                  {/* Terminal Style Card */}
+                  <div className="relative border-2 border-foreground bg-foreground p-0 shadow-[8px_8px_0px_0px_rgba(13,17,23,1)]">
+                    {/* Terminal Header */}
+                    <div className="flex items-center gap-2.5 px-4 py-3 border-b border-gray-700 bg-gray-900">
+                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                      <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                      <div className="flex-1 ml-4 text-center">
+                        <p className="text-[10px] text-gray-400 font-mono">root@blogermenia:~</p>
                       </div>
+                    </div>
 
-                      {/* Chat-like generator */}
-                      <div className="flex flex-col gap-4">
-                        {/* Messages */}
-                        <div ref={messagesRef} className="bg-gray-50 rounded-xl p-4 border-2 border-indigo-100 h-[280px] overflow-y-auto flex flex-col gap-3">
-                          {displayedMessages.map((m, idx) => {
-                            // Determine what to display
-                            let displayText = m.displayedContent;
-                            const isTypingThisMessage = idx === currentTypingIndex && m.isTyping;
-                            if (isTypingThisMessage) {
-                              displayText = typingProgress;
-                            }
+                    {/* Chat-like generator inside terminal */}
+                    <div className="flex flex-col gap-4 bg-[#0D1117] p-4 h-[320px] overflow-y-auto">
+                      <div ref={messagesRef} className="flex flex-col gap-4 font-mono text-xs">
+                        {displayedMessages.map((m, idx) => {
+                          let displayText = m.displayedContent;
+                          const isTypingThisMessage = idx === currentTypingIndex && m.isTyping;
+                          if (isTypingThisMessage) {
+                            displayText = typingProgress;
+                          }
 
-                            return (
-                              <div key={idx} className={m.align === "right" ? "flex justify-end" : "flex justify-start"}>
-                                <div className={
-                                  m.align === "right"
-                                    ? "max-w-[85%] bg-indigo-600 text-white rounded-2xl rounded-br-sm px-3 py-2 text-sm"
-                                    : "max-w-[85%] bg-white text-gray-800 border border-gray-200 rounded-2xl rounded-bl-sm px-3 py-2 text-sm"
-                                }>
-                                  {m.pending ? (
-                                    <span className="inline-flex items-center gap-1">
-                                      Creating
-                                      <span className="inline-flex gap-1">
-                                        <span className="w-1 h-1 bg-current rounded-full animate-bounce [animation-delay:-0.2s]"></span>
-                                        <span className="w-1 h-1 bg-current rounded-full animate-bounce"></span>
-                                        <span className="w-1 h-1 bg-current rounded-full animate-bounce [animation-delay:0.2s]"></span>
-                                      </span>
+                          return (
+                            <div key={idx} className={m.align === "right" ? "flex justify-end" : "flex justify-start"}>
+                              <div className={
+                                m.align === "right"
+                                  ? "max-w-[90%] text-green-400 px-0 py-1"
+                                  : "max-w-[90%] text-gray-300 px-0 py-1"
+                              }>
+                                <span className="text-gray-500 mr-2">{m.align === "right" ? ">" : "$"}</span>
+                                {m.pending ? (
+                                  <span className="inline-flex items-center gap-1">
+                                    processing
+                                    <span className="inline-flex gap-1">
+                                      <span className="w-1 h-1 bg-current animate-pulse"></span>
+                                      <span className="w-1 h-1 bg-current animate-pulse delay-75"></span>
+                                      <span className="w-1 h-1 bg-current animate-pulse delay-150"></span>
                                     </span>
-                                  ) : (
-                                    <div className="prose prose-sm max-w-none">
-                                      <ReactMarkdown
-                                        remarkPlugins={[remarkGfm]}
-                                        components={{
-                                          code({ node, inline, className, children, ...props }) {
-                                            const match = /language-(\w+)/.exec(className || "");
-                                            const language = match ? match[1] : "";
-                                            return !inline && match ? (
-                                              <SyntaxHighlighter
-                                                style={oneDark}
-                                                language={language}
-                                                PreTag="div"
-                                                className="rounded-lg text-xs"
-                                                {...props}
-                                              >
-                                                {String(children).replace(/\n$/, "")}
-                                              </SyntaxHighlighter>
-                                            ) : (
-                                              <code className={className} {...props}>
-                                                {children}
-                                              </code>
-                                            );
-                                          },
-                                        }}
-                                      >
-                                        {displayText}
-                                      </ReactMarkdown>
-                                      {isTypingThisMessage && displayText.length < m.content.length && (
-                                        <span className="inline-block w-0.5 h-4 bg-current ml-1 animate-pulse"></span>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
+                                  </span>
+                                ) : (
+                                  <div className="inline-block whitespace-pre-wrap">
+                                    {displayText}
+                                    {isTypingThisMessage && displayText.length < m.content.length && (
+                                      <span className="inline-block w-2 h-3 bg-gray-400 ml-1 animate-pulse"></span>
+                                    )}
+                                  </div>
+                                )}
                               </div>
-                            );
-                          })}
-                        </div>
-
-                        {/* No input — pure simulation */}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-
-
             </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-24">
+      <section className="py-24 border-b border-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-14 text-center">
-            <h2 className="text-4xl text-center font-bold text-gray-900 leading-[3.25rem] mb-6 max-w-max lg:max-w-3xl lg:mx-auto">
-              Built for creators, powered by AI intelligence
+          <div className="mb-14 border-b-2 border-foreground pb-8">
+            <h2 className="text-4xl font-extrabold text-foreground tracking-tight mb-4 uppercase">
+              Engineered for Scale
             </h2>
-            <p className="text-base font-normal text-gray-500 lg:max-w-2xl lg:mx-auto mb-8">
-              Transform your thoughts into well-crafted blogs effortlessly. Share knowledge, engage with readers, and build your digital presence.
+            <p className="text-base font-mono text-gray-500 max-w-2xl">
+              Transform your thoughts into well-crafted blogs effortlessly. Share knowledge, engage with readers, and build your digital presence on a platform that respects developers.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-lg mx-auto md:max-w-2xl lg:max-w-full">
-            <div className="relative w-full md:col-span-2 flex">
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl flex justify-between flex-row flex-wrap flex-1">
-                <div className="p-5 xl:p-8 w-full md:w-1/2 flex flex-col">
-                  <div className="block">
-                    <svg
-                      width="30"
-                      height="30"
-                      viewBox="0 0 30 30"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M15 12.5V18.75M18.75 2.5L11.25 2.5M15 28.75C8.7868 28.75 3.75 23.7132 3.75 17.5C3.75 11.2868 8.7868 6.25 15 6.25C21.2132 6.25 26.25 11.2868 26.25 17.5C26.25 23.7132 21.2132 28.75 15 28.75Z"
-                        stroke="white"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-bold xl:text-2xl text-white py-5 w-full xl:w-64">
-                    Generate blogs instantly with AI assistance.
-                  </h3>
-                  <p className="text-sm font-normal text-gray-300 w-full mb-8 xl:w-64 flex-grow">
-                    Create engaging, well-structured blogs in minutes. No more staring at blank pages or struggling with writer&#39;s block.
-                  </p>
-                </div>
-                <div className="relative hidden md:w-1/2 md:flex overflow-hidden">
-                  <div className="w-full bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center">
-                    <svg
-                      width="100"
-                      height="100"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M12 2L2 7L12 12L22 7L12 2Z"
-                        stroke="white"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M2 17L12 22L22 17"
-                        stroke="white"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M2 12L12 17L22 12"
-                        stroke="white"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </div>
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border-2 border-foreground bg-foreground">
+            <div className="bg-background border-r-2 border-b-2 md:border-b-0 border-foreground p-8 flex flex-col hover:bg-indigo-50 transition-colors">
+              <div className="text-indigo-600 mb-6 border-2 border-foreground p-3 w-fit shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] bg-white">
+                <BookOpen className="w-8 h-8" strokeWidth={1.5} />
               </div>
+              <h3 className="text-xl font-bold text-foreground mb-4 uppercase">
+                AI Generation
+              </h3>
+              <p className="text-sm font-mono text-gray-600 flex-grow leading-relaxed">
+                Create engaging, well-structured blogs in minutes. Leverage our LLM pipelines to banish writer's block.
+              </p>
             </div>
-            <div className="relative w-full flex">
-              <div className="bg-indigo-500 rounded-2xl p-5 xl:p-8 w-full flex flex-col">
-                <div className="block">
-                  <svg
-                    width="30"
-                    height="30"
-                    viewBox="0 0 30 30"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M24.6429 11.4286C24.6429 14.3872 20.2457 16.7857 14.8214 16.7857C9.3972 16.7857 5 14.3872 5 11.4286M24.6429 16.7857C24.6429 19.7444 20.2457 22.1429 14.8214 22.1429C9.3972 22.1429 5 19.7444 5 16.7857M24.6429 22.1429C24.6429 25.1015 20.2457 27.5 14.8214 27.5C9.3972 27.5 5 25.1015 5 22.1429M24.6429 6.96429C24.6429 9.42984 20.2457 11.4286 14.8214 11.4286C9.3972 11.4286 5 9.42984 5 6.96429C5 4.49873 9.3972 2.5 14.8214 2.5C20.2457 2.5 24.6429 4.49873 24.6429 6.96429Z"
-                      stroke="white"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </div>
-                <h3 className="py-5 text-white text-xl font-bold xl:text-2xl">
-                  Share knowledge with your audience
-                </h3>
-                <p className="text-sm font-normal text-white mb-8 flex-grow">
-                  Reach and engage with readers worldwide. Build your thought leadership through quality content sharing.
-                </p>
+            
+            <div className="bg-background border-r-2 border-b-2 md:border-b-0 border-foreground p-8 flex flex-col hover:bg-purple-50 transition-colors">
+              <div className="text-purple-600 mb-6 border-2 border-foreground p-3 w-fit shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] bg-white">
+                <Users className="w-8 h-8" strokeWidth={1.5} />
               </div>
+              <h3 className="text-xl font-bold text-foreground mb-4 uppercase">
+                Audience Distribution
+              </h3>
+              <p className="text-sm font-mono text-gray-600 flex-grow leading-relaxed">
+                Reach and engage with readers worldwide. Build your thought leadership through precision content sharing.
+              </p>
             </div>
-            <div className="relative w-full flex">
-              <div className="bg-violet-500 rounded-2xl p-5 xl:p-8 w-full flex flex-col">
-                <div className="block">
-                  <svg
-                    width="30"
-                    height="30"
-                    viewBox="0 0 30 30"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M26.7301 15.661C26.7301 22.1995 21.306 27.5 14.6151 27.5C7.9241 27.5 2.5 22.1995 2.5 15.661C2.5 9.1225 7.9241 3.822 14.6151 3.822M18.1313 10.1507L18.1313 4.85383C18.1313 3.22503 19.6455 2.00299 21.1519 2.70013C23.7608 3.90751 26.6177 6.25557 27.456 10.2563C27.7542 11.6798 26.4931 12.8563 25.0064 12.8368L20.7873 12.7814C19.3147 12.762 18.1313 11.5899 18.1313 10.1507Z"
-                      stroke="white"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </div>
-                <h3 className="py-5 text-white text-xl font-bold xl:text-2xl">
-                  Discover inspiring content daily
-                </h3>
-                <p className="text-sm font-normal text-white mb-8 flex-grow">
-                  Explore trending blogs from creative minds. Learn, get inspired, and stay updated with fresh perspectives across diverse topics.
-                </p>
+            
+            <div className="bg-background p-8 flex flex-col hover:bg-pink-50 transition-colors">
+              <div className="text-pink-600 mb-6 border-2 border-foreground p-3 w-fit shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] bg-white">
+                <TrendingUp className="w-8 h-8" strokeWidth={1.5} />
               </div>
+              <h3 className="text-xl font-bold text-foreground mb-4 uppercase">
+                Curated Feeds
+              </h3>
+              <p className="text-sm font-mono text-gray-600 flex-grow leading-relaxed">
+                Explore trending tech blogs. Learn, get inspired, and stay updated with fresh architectural perspectives.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Featured Blogs Section */}
-      <section className="py-16 bg-white/50">
+      <section className="py-20 border-b border-border bg-gray-50/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 border-b-2 border-foreground pb-6">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Top Viewed Blogs</h2>
-              <p className="text-gray-500 text-sm mt-1">Our most popular stories and insights from the community.</p>
+              <h2 className="text-3xl font-extrabold text-foreground uppercase tracking-tight">Top Queries</h2>
+              <p className="text-gray-500 font-mono text-sm mt-2">Highest throughput reads from the cluster.</p>
             </div>
-            <Link href="/blogs" className="text-sm font-bold text-indigo-600 hover:text-indigo-700 inline-flex items-center gap-1 group">
-              View All Blogs <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            <Link href="/blogs" className="text-sm font-bold text-background bg-foreground px-4 py-2 hover:bg-gray-800 uppercase tracking-widest inline-flex items-center gap-2 transition-all shadow-[4px_4px_0px_0px_rgba(200,200,200,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1">
+              View All Logs <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
 
           {loading ? (
             <div className="space-y-6">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="flex flex-col md:flex-row gap-6 bg-white border border-gray-200 rounded-xl p-4 animate-pulse">
-                  <div className="md:w-1/3 h-48 md:h-40 bg-gray-200 rounded-lg"></div>
+                <div key={i} className="flex flex-col md:flex-row gap-6 bg-background border-2 border-foreground p-4 animate-pulse">
+                  <div className="md:w-1/3 h-48 md:h-40 bg-gray-200"></div>
                   <div className="flex-1 space-y-4 py-2">
-                    <div className="h-6 bg-gray-200 rounded w-3/4"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                    <div className="h-4 bg-gray-200 rounded w-full"></div>
+                    <div className="h-6 bg-gray-200 w-3/4"></div>
+                    <div className="h-4 bg-gray-200 w-1/2"></div>
+                    <div className="h-4 bg-gray-200 w-full"></div>
                   </div>
                 </div>
               ))}
             </div>
           ) : featuredBlogs.length > 0 ? (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {featuredBlogs.map((blog) => (
                 <HorizontalBlogCard key={blog.slug} blog={blog} />
               ))}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <p className="text-gray-600">No popular blogs available at the moment.</p>
+            <div className="text-center py-12 border-2 border-dashed border-gray-300">
+              <p className="text-gray-500 font-mono">No telemetry data available.</p>
             </div>
           )}
-
-          <div className="mt-8 text-center sm:hidden">
-            <Link
-              href="/blogs"
-              className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 font-semibold transition-colors"
-            >
-              View All Blogs
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-          </div>
         </div>
       </section>
 
       {/* Public Playlists Section */}
-      <section className="py-16">
+      <section className="py-20 border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 border-b-2 border-foreground pb-6">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Popular Playlists</h2>
-              <p className="text-gray-500 text-sm mt-1">Curated collections of great reads and learning paths.</p>
+              <h2 className="text-3xl font-extrabold text-foreground uppercase tracking-tight">System Tracks</h2>
+              <p className="text-gray-500 font-mono text-sm mt-2">Curated sequential documentation series.</p>
             </div>
-            <Link href="/playlists" className="text-sm font-bold text-indigo-600 hover:text-indigo-700 inline-flex items-center gap-1 group">
-              View All Playlists <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            <Link href="/playlists" className="text-sm font-bold text-foreground border-2 border-foreground px-4 py-2 hover:bg-foreground hover:text-background uppercase tracking-widest inline-flex items-center gap-2 transition-all">
+              List Tracks <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
 
           {playlistsLoading ? (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {[...Array(3)].map((_, i) => (
-                <Skeleton key={i} className="h-40 w-full rounded-xl" />
+                <Skeleton key={i} className="h-40 w-full border-2 border-foreground rounded-none" />
               ))}
             </div>
           ) : playlists.length > 0 ? (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {playlists.map((playlist) => (
-                <Link key={playlist.slug} href={`/playlists/${playlist.owner?.email || playlist.owner?.username}/${playlist.slug}`} className="group block bg-white rounded-xl overflow-hidden hover:shadow-xl transition-all duration-500 border border-gray-200 hover:border-indigo-500 shadow-sm relative md:h-40">
+                <Link key={playlist.slug} href={`/playlists/${playlist.owner?.email || playlist.owner?.username}/${playlist.slug}`} className="group block bg-background border-2 border-foreground overflow-hidden hover:shadow-[8px_8px_0px_0px_rgba(13,17,23,1)] transition-all md:h-48 relative">
                   <div className="flex flex-col md:flex-row h-full">
-                    {/* Full view image container */}
-                    <div className="md:w-1/4 relative overflow-hidden bg-gray-50 flex items-center justify-center shrink-0">
+                    <div className="md:w-1/3 relative border-b-2 md:border-b-0 md:border-r-2 border-foreground bg-gray-100 flex items-center justify-center shrink-0">
                       {playlist.thumbnail ? (
                         <Image
                           src={getImageUrl(playlist.thumbnail?.file_path || playlist.thumbnail)}
                           alt={playlist.name}
                           fill
-                          sizes="(max-width: 768px) 100vw, 25vw"
-                          className="object-cover transition-transform duration-700 group-hover:scale-105"
+                          sizes="(max-width: 768px) 100vw, 33vw"
+                          className="object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
                           unoptimized
                         />
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-indigo-600 to-purple-700 flex items-center justify-center p-4 text-center text-white font-bold text-sm rounded-lg opacity-90">
+                        <div className="w-full h-full bg-foreground flex items-center justify-center p-4 text-center text-background font-mono font-bold text-sm">
                           {playlist.name}
                         </div>
                       )}
                     </div>
-                    <div className="flex-1 p-4 flex flex-col justify-center">
-                      <h3 className="text-base md:text-lg font-bold text-gray-900 group-hover:text-indigo-600 transition-colors mb-1 line-clamp-1">
+                    <div className="flex-1 p-6 md:p-8 flex flex-col justify-center">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="bg-indigo-100 text-indigo-800 text-[10px] font-mono px-2 py-0.5 border border-indigo-200">TRACK</span>
+                      </div>
+                      <h3 className="text-xl font-extrabold text-foreground group-hover:text-indigo-600 transition-colors mb-2 uppercase tracking-tight">
                         {playlist.name}
                       </h3>
-                      <p className="text-gray-600 text-[11px] md:text-xs line-clamp-2 mb-4 leading-relaxed max-w-2xl opacity-80">
+                      <p className="text-gray-600 font-mono text-xs line-clamp-2 mb-6 leading-relaxed max-w-2xl">
                         {playlist.description || "Explore this carefully curated collection of articles focused on specific topics."}
                       </p>
-                      <div className="flex items-center gap-8">
+                      <div className="flex items-center gap-8 mt-auto border-t border-gray-200 pt-4">
                         <div className="flex flex-col">
-                          <span className="text-base font-bold text-gray-900 leading-none">{playlist.blog_count || 0}</span>
-                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">Articles</span>
+                          <span className="text-base font-bold text-foreground font-mono">{playlist.blog_count || 0}</span>
+                          <span className="text-[10px] text-gray-400 uppercase tracking-widest font-mono mt-1">Articles</span>
                         </div>
+                        <div className="h-8 w-px bg-gray-200"></div>
                         <div className="flex flex-col">
-                          <span className="text-base font-bold text-gray-900 leading-none">{(playlist.total_views || 0).toLocaleString()}</span>
-                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">Total Views</span>
-                        </div>
-                        <div className="flex flex-col border-l border-gray-100 pl-8 hidden sm:flex">
-                          <span className="text-base font-bold text-gray-900 leading-none">{(playlist.total_likes || 0).toLocaleString()}</span>
-                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">Total Likes</span>
+                          <span className="text-base font-bold text-foreground font-mono">{(playlist.total_views || 0).toLocaleString()}</span>
+                          <span className="text-[10px] text-gray-400 uppercase tracking-widest font-mono mt-1">Total Views</span>
                         </div>
                       </div>
                     </div>
@@ -650,105 +502,96 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 bg-gray-50 rounded-xl">
-              <p className="text-gray-500">No playlists found.</p>
+            <div className="text-center py-12 border-2 border-dashed border-gray-300">
+              <p className="text-gray-500 font-mono">No tracks found.</p>
             </div>
           )}
-
-          <div className="mt-8 text-center sm:hidden">
-            <Link
-              href="/playlists"
-              className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 font-semibold transition-colors"
-            >
-              View All Playlists
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-          </div>
         </div>
       </section>
 
       {/* Top Authors Section */}
-      <section className="py-16 bg-white/50">
+      <section className="py-20 bg-gray-50/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 border-b-2 border-foreground pb-6">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Top Creators</h2>
-              <p className="text-gray-500 text-sm mt-1">Meet the minds behind the most popular content.</p>
+              <h2 className="text-3xl font-extrabold text-foreground uppercase tracking-tight">System Architects</h2>
+              <p className="text-gray-500 font-mono text-sm mt-2">The engineers behind the documentation.</p>
             </div>
-            <Link href="/creators" className="text-sm font-bold text-indigo-600 hover:text-indigo-700 inline-flex items-center gap-1 group">
-              View All Creators <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            <Link href="/creators" className="text-sm font-bold text-background bg-foreground px-4 py-2 hover:bg-gray-800 uppercase tracking-widest inline-flex items-center gap-2 transition-all shadow-[4px_4px_0px_0px_rgba(200,200,200,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1">
+              All Architects <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
 
           {authorsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[...Array(4)].map((_, i) => (
-                <Skeleton key={i} className="h-32 w-full rounded-xl" />
+                <Skeleton key={i} className="h-40 w-full border-2 border-foreground rounded-none" />
               ))}
             </div>
           ) : topAuthors.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {topAuthors.map((author) => (
                 <Link
                   key={author.email}
                   href={`/blogs/${author.email}`}
-                  className="group block bg-white border border-gray-200 rounded-3xl overflow-hidden hover:shadow-2xl hover:border-indigo-500 transition-all duration-500 shadow-sm md:h-44"
+                  className="group block bg-background border-2 border-foreground hover:shadow-[6px_6px_0px_0px_rgba(13,17,23,1)] transition-all md:h-48"
                 >
-                  <div className="flex flex-col md:flex-row h-full p-6 gap-6">
-                    {/* Left Side: Circular Avatar */}
-                    <div className="relative w-24 h-24 shrink-0 mx-auto md:mx-0">
-                      <div className="absolute inset-0 border-4 border-indigo-50 rounded-full overflow-hidden shadow-inner group-hover:border-indigo-100 transition-colors">
-                        <Image
-                          src={author.profile_image ? getImageUrl(author.profile_image?.file_path || author.profile_image) : `https://ui-avatars.com/api/?name=${author.full_name || author.email}&background=random`}
-                          alt={author.full_name || author.email}
-                          fill
-                          sizes="96px"
-                          className="object-cover transition-transform duration-700 group-hover:scale-110"
-                          unoptimized
-                        />
+                  <div className="flex flex-col sm:flex-row h-full">
+                    {/* Left Side: Avatar */}
+                    <div className="relative w-full sm:w-1/3 shrink-0 border-b-2 sm:border-b-0 sm:border-r-2 border-foreground bg-indigo-50 flex flex-col justify-center items-center p-6">
+                       <div className="w-20 h-20 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] bg-white overflow-hidden relative">
+                        {author.profile_image ? (
+                          <Image
+                            src={getImageUrl(author.profile_image?.file_path || author.profile_image)}
+                            alt={author.full_name || author.email}
+                            fill
+                            sizes="80px"
+                            className="object-cover grayscale group-hover:grayscale-0 transition-all"
+                            unoptimized
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-foreground flex items-center justify-center text-background">
+                            <span className="font-mono font-bold text-4xl uppercase tracking-widest">
+                              {(author.full_name?.[0] || author.email?.[0] || 'U')}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     {/* Right Side: Content */}
-                    <div className="flex-1 flex flex-col justify-center min-w-0 text-center md:text-left">
-                      <div className="mb-3">
-                        <h3 className="font-bold text-lg text-gray-900 truncate group-hover:text-indigo-600 transition-colors">
+                    <div className="flex-1 flex flex-col justify-center p-6">
+                      <div className="mb-4 border-b border-gray-200 pb-4">
+                        <h3 className="font-extrabold text-xl text-foreground uppercase truncate group-hover:text-indigo-600 transition-colors tracking-tight">
                           {author.full_name || author.email?.split('@')[0] || "User"}
                         </h3>
-                        <p className="font-semibold text-[11px] text-indigo-600 truncate opacity-90 mb-1">
+                        <p className="font-mono text-[10px] text-gray-500 truncate mb-2 uppercase">
                           {author.email}
                         </p>
                         {author.headline && (
-                          <p className="text-xs text-gray-500 line-clamp-1 italic">
-                            {author.headline}
+                          <p className="text-xs text-gray-600 line-clamp-1 italic font-serif">
+                            "{author.headline}"
                           </p>
                         )}
                       </div>
 
                       {/* Stats Row */}
-                      <div className="flex flex-row items-center justify-center md:justify-start gap-8 pt-3 border-t border-gray-50">
-                        <div className="flex flex-col items-center md:items-start">
-                          <span className="font-bold text-lg text-gray-900 leading-none">
+                      <div className="flex flex-row items-center gap-6">
+                        <div className="flex flex-col">
+                          <span className="font-bold text-lg text-foreground font-mono leading-none">
                             {author.blog_count || 0}
                           </span>
-                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">
-                            Blogs
+                          <span className="text-[9px] text-gray-400 uppercase tracking-widest font-mono mt-1">
+                            Deployments
                           </span>
                         </div>
-                        <div className="flex flex-col items-center md:items-start border-l border-gray-100 pl-8">
-                          <span className="font-bold text-lg text-gray-900 leading-none">
+                        <div className="h-6 w-px bg-gray-200"></div>
+                        <div className="flex flex-col">
+                          <span className="font-bold text-lg text-foreground font-mono leading-none">
                             {(author.total_views || 0).toLocaleString()}
                           </span>
-                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">
-                            Views
-                          </span>
-                        </div>
-                        <div className="flex flex-col items-center md:items-start border-l border-gray-100 pl-8">
-                          <span className="font-bold text-lg text-gray-900 leading-none">
-                            {(author.total_likes || 0).toLocaleString()}
-                          </span>
-                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">
-                            Likes
+                          <span className="text-[9px] text-gray-400 uppercase tracking-widest font-mono mt-1">
+                            Hits
                           </span>
                         </div>
                       </div>
@@ -758,20 +601,10 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <p className="text-gray-500">No authors found.</p>
+            <div className="text-center py-12 border-2 border-dashed border-gray-300">
+              <p className="text-gray-500 font-mono">No authors found.</p>
             </div>
           )}
-
-          <div className="mt-8 text-center sm:hidden">
-            <Link
-              href="/creators"
-              className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 font-semibold transition-colors"
-            >
-              View All Creators
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-          </div>
         </div>
       </section>
 

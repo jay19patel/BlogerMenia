@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
@@ -108,6 +108,7 @@ export default function BlogsList() {
 
     const handleSearchKeyPress = (e) => {
         if (e.key === "Enter") {
+            e.preventDefault();
             handleSearch();
         }
     };
@@ -121,28 +122,16 @@ export default function BlogsList() {
 
     const breadcrumbItems = [
         { label: "Home", href: "/" },
-        { label: "Blogs", href: null },
+        { label: "System Logs", href: null },
     ];
 
-    // Derived state for layout
-    // Note: using transformedBlogs here
-    // Latest 3 blogs logic
-    const isDefaultView =
-        currentPage === 1 && !submittedSearch && selectedCategory === "All";
-    const latestBlogs = isDefaultView ? transformedBlogs.slice(0, 3) : [];
-    const [latestBlog, ...otherLatestBlogs] = latestBlogs;
-    const remainingBlogs =
-        latestBlogs.length > 0 ? transformedBlogs.slice(3) : transformedBlogs;
-
-    // Loading state
-    // We only show full loader if it's the very first load and we have no data
     if (isLoading) {
         return (
-            <div className="py-12">
+            <div className="py-12 border-b border-border">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="relative h-40 sm:h-48 lg:h-56">
                         <div className="absolute inset-0 flex items-center justify-center">
-                            <LoaderCard message="Loading blogs…" />
+                            <LoaderCard message="Fetching logs…" />
                         </div>
                     </div>
                 </div>
@@ -151,36 +140,38 @@ export default function BlogsList() {
     }
 
     return (
-        <div className="py-12">
+        <div className="py-12 border-b border-border">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <Breadcrumb items={breadcrumbItems} />
 
-                <div className="mb-12">
-                    <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                        Explore Our Blogs
+                <div className="mb-12 border-b-2 border-foreground pb-8 mt-8">
+                    <h1 className="text-4xl md:text-5xl font-extrabold text-foreground mb-4 uppercase tracking-tight">
+                        System Logs
                     </h1>
-                    <p className="text-lg text-gray-600">
-                        Discover stories, thinking, and expertise from writers on any topic.
+                    <p className="text-lg text-gray-600 font-mono">
+                        Query the cluster for engineering insights and technical documentation.
                     </p>
                 </div>
 
                 {/* Search and Filter */}
-                <div className="mb-12 space-y-4">
-                    <div className="relative">
-                        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <div className="mb-12 space-y-6">
+                    <div className="relative border-2 border-foreground bg-background focus-within:ring-2 focus-within:ring-foreground transition-all flex h-14">
+                        <div className="flex items-center justify-center pl-4 bg-background">
+                            <Search className="text-foreground w-5 h-5" />
+                        </div>
                         <input
                             type="text"
-                            placeholder="Search blogs by title or content..."
+                            placeholder="QUERY INDEX..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             onKeyDown={handleSearchKeyPress}
-                            className="w-full pl-12 pr-24 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            className="w-full px-4 py-3 bg-transparent text-foreground placeholder-gray-400 focus:outline-none font-mono uppercase text-sm"
                         />
                         <button
                             onClick={handleSearch}
-                            className="absolute right-2 top-1/2 transform -translate-y-1/2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+                            className="px-8 py-3 bg-foreground text-background font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors border-l-2 border-foreground"
                         >
-                            Search
+                            Exec
                         </button>
                     </div>
 
@@ -189,9 +180,9 @@ export default function BlogsList() {
                             <button
                                 key={category}
                                 onClick={() => handleCategoryChange(category)}
-                                className={`px-5 py-2 rounded-lg font-medium transition-all duration-300 ${selectedCategory === category
-                                    ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/30"
-                                    : "bg-white text-gray-700 border border-gray-300 hover:border-indigo-500 hover:text-indigo-600"
+                                className={`px-4 py-2 font-mono text-xs uppercase tracking-widest font-bold transition-all border-2 border-foreground ${selectedCategory === category
+                                    ? "bg-foreground text-background shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]"
+                                    : "bg-background text-foreground hover:bg-gray-100"
                                     }`}
                             >
                                 {category}
@@ -200,10 +191,9 @@ export default function BlogsList() {
                     </div>
                 </div>
 
-                <div className="mb-8">
-                    <p className="text-gray-600">
-                        Showing {transformedBlogs.length} of {totalBlogs} blog
-                        {totalBlogs !== 1 ? "s" : ""}
+                <div className="mb-8 flex items-center justify-between border-b border-border pb-4">
+                    <p className="text-foreground font-mono text-sm uppercase tracking-widest">
+                        Results: {totalBlogs} {totalBlogs !== 1 ? "Logs" : "Log"} Found
                     </p>
                 </div>
 
@@ -220,41 +210,32 @@ export default function BlogsList() {
 
                         {/* Pagination */}
                         {totalPages > 1 && (
-                            <div className="flex items-center justify-center gap-2 mt-12 pb-8">
+                            <div className="flex items-center justify-center gap-4 mt-16 pb-8 font-mono">
                                 <button
                                     onClick={() =>
                                         setCurrentPage((prev) => Math.max(prev - 1, 1))
                                     }
                                     disabled={currentPage === 1 || isFetchingBlogs}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                                    className="flex items-center justify-center w-10 h-10 bg-background border-2 border-foreground text-foreground hover:bg-gray-100 hover:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none transition-all"
                                 >
                                     <ChevronLeft className="w-5 h-5" />
-                                    Previous
                                 </button>
 
                                 <div className="flex items-center gap-2">
                                     {(() => {
-                                        // Helper to generate pagination range
                                         const getPaginationRange = (current, total) => {
                                             if (total <= 7) {
                                                 return Array.from({ length: total }, (_, i) => i + 1);
                                             }
 
-                                            // Always show first 3
                                             let pages = [1, 2, 3];
-
-                                            // Always show last 3
                                             pages.push(total - 2, total - 1, total);
-
-                                            // Show current and neighbors
                                             if (current > 1 && current < total) {
                                                 pages.push(current - 1, current, current + 1);
                                             }
 
-                                            // Filter out-of-bounds and sort, then unique
                                             pages = [...new Set(pages)].filter(p => p > 0 && p <= total).sort((a, b) => a - b);
 
-                                            // Insert ellipses
                                             const result = [];
                                             for (let i = 0; i < pages.length; i++) {
                                                 if (i > 0 && pages[i] - pages[i - 1] > 1) {
@@ -271,7 +252,7 @@ export default function BlogsList() {
                                         return paginationRange.map((page, index) => {
                                             if (page === '...') {
                                                 return (
-                                                    <span key={`dots-${index}`} className="px-2 text-gray-400">
+                                                    <span key={`dots-${index}`} className="px-2 text-foreground font-bold">
                                                         ...
                                                     </span>
                                                 );
@@ -282,9 +263,9 @@ export default function BlogsList() {
                                                     key={page}
                                                     onClick={() => setCurrentPage(page)}
                                                     disabled={isFetchingBlogs}
-                                                    className={`w-10 h-10 rounded-lg font-medium transition-all duration-300 ${currentPage === page
-                                                        ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/30"
-                                                        : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-indigo-500"
+                                                    className={`w-10 h-10 flex items-center justify-center font-bold text-sm uppercase transition-all border-2 border-foreground ${currentPage === page
+                                                        ? "bg-foreground text-background shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]"
+                                                        : "bg-background text-foreground hover:bg-gray-100"
                                                         }`}
                                                 >
                                                     {page}
@@ -299,19 +280,18 @@ export default function BlogsList() {
                                         setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                                     }
                                     disabled={currentPage === totalPages || isFetchingBlogs}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                                    className="flex items-center justify-center w-10 h-10 bg-background border-2 border-foreground text-foreground hover:bg-gray-100 hover:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none transition-all"
                                 >
-                                    Next
                                     <ChevronRight className="w-5 h-5" />
                                 </button>
                             </div>
                         )}
                     </>
                 ) : (
-                    <div className="text-center py-16">
-                        <p className="text-xl text-gray-600 mb-4">No blogs found</p>
-                        <p className="text-gray-500">
-                            Try adjusting your search or filter to find what you're looking for.
+                    <div className="text-center py-16 border-2 border-dashed border-gray-300">
+                        <p className="text-xl text-foreground font-mono font-bold uppercase tracking-widest mb-4">No logs matched query</p>
+                        <p className="text-gray-500 font-mono text-sm">
+                            Try adjusting your search criteria.
                         </p>
                     </div>
                 )}

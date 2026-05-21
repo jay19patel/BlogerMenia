@@ -60,25 +60,28 @@ export default function PlaylistDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      <div className="min-h-[80vh] flex items-center justify-center bg-background">
+        <div className="flex items-center justify-center gap-3 bg-background px-6 py-4 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]">
+            <span className="h-5 w-5 border-2 border-foreground border-r-transparent animate-spin"></span>
+            <span className="font-mono font-bold text-sm uppercase tracking-widest text-foreground">Loading Collection...</span>
+        </div>
       </div>
     );
   }
 
   if (!playlist) {
     return (
-      <div className="min-h-screen py-8 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Playlist Not Found
+      <div className="min-h-screen py-16 px-4 bg-background">
+        <div className="max-w-4xl mx-auto text-center border-2 border-foreground p-12 shadow-[8px_8px_0px_0px_rgba(13,17,23,1)]">
+          <h1 className="text-3xl font-extrabold text-foreground mb-6 uppercase tracking-tight">
+            SYSTEM.404_PLAYLIST
           </h1>
           <Link
             href={`/blogs/${username}`}
-            className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-foreground text-background font-mono font-bold uppercase tracking-widest text-xs hover:bg-purple-900 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to {username}'s Articles
+            Return to Directory
           </Link>
         </div>
       </div>
@@ -91,28 +94,28 @@ export default function PlaylistDetailPage() {
         {/* Back Button */}
         <Link
           href={`/blogs/${username}`}
-          className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 mb-6 transition-colors"
+          className="inline-flex items-center gap-2 text-foreground hover:bg-foreground hover:text-background border-2 border-transparent hover:border-foreground px-3 py-1 font-mono font-bold uppercase tracking-widest text-xs transition-all mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to {playlist?.owner?.full_name || username}'s Articles
         </Link>
 
         {/* Playlist Profile Section */}
-        <div className="relative mb-12 border border-gray-200 rounded-2xl p-8 bg-white shadow-sm overflow-hidden min-h-[16rem]">
+        <div className="relative mb-12 border-2 border-foreground p-8 bg-background shadow-[8px_8px_0px_0px_rgba(13,17,23,1)] min-h-[16rem]">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-stretch">
             {/* Left Column: Cover Image */}
             <div className="lg:col-span-5 relative">
-              <div className="relative w-full h-full min-h-[12rem] rounded-xl overflow-hidden bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-600 shadow-inner">
+              <div className="relative w-full h-full min-h-[12rem] border-2 border-foreground bg-purple-900 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] overflow-hidden">
                 {(typeof (playlist.cover_image || playlist.thumbnail) === 'string' ? (playlist.cover_image || playlist.thumbnail) : (playlist.cover_image?.file_path || playlist.thumbnail?.file_path)) ? (
                   <Image
                     src={getImageUrl(typeof (playlist.cover_image || playlist.thumbnail) === 'string' ? (playlist.cover_image || playlist.thumbnail) : (playlist.cover_image?.file_path || playlist.thumbnail?.file_path))}
                     alt={playlist.name}
                     fill
-                    className="object-cover transition-transform duration-500 hover:scale-105"
+                    className="object-cover grayscale hover:grayscale-0 mix-blend-luminosity hover:mix-blend-normal transition-all duration-500"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <BookOpen className="w-16 h-16 text-white opacity-20" />
+                  <div className="w-full h-full flex items-center justify-center bg-foreground text-background">
+                    <p className="font-mono font-bold uppercase tracking-widest text-6xl opacity-50">SYS.NO_IMG</p>
                   </div>
                 )}
               </div>
@@ -121,44 +124,44 @@ export default function PlaylistDetailPage() {
             {/* Right Column: Name, Description & Stats Cluster */}
             <div className="lg:col-span-7 flex flex-col justify-between py-1">
               <div>
-                <h3 className="font-bold text-3xl text-gray-900 mb-2">
+                <h3 className="font-extrabold text-4xl text-foreground mb-2 uppercase tracking-tighter">
                   {playlist.name}
                 </h3>
-                <p className="font-medium text-base text-indigo-600 mb-6 transition-colors hover:text-indigo-700">
+                <p className="font-mono font-bold text-xs uppercase tracking-widest text-purple-900 border-b-2 border-foreground inline-block pb-1 mb-6 hover:text-foreground transition-colors">
                   <Link href={`/blogs/${playlist.owner?.email || username}`}>
                     Playlist by {playlist.owner?.full_name || playlist.owner?.email || username}
                   </Link>
                 </p>
                 {playlist.description && (
-                  <p className="font-normal text-sm leading-relaxed text-gray-500 line-clamp-3">
+                  <p className="font-mono text-sm leading-relaxed text-gray-700 line-clamp-3">
                     {playlist.description}
                   </p>
                 )}
               </div>
 
               {/* Minimalism Stats Cluster */}
-              <div className="flex flex-row items-center gap-10 mt-8 pt-6 border-t border-gray-100">
+              <div className="flex flex-row items-center gap-10 mt-8 pt-6 border-t-2 border-foreground">
                 <div className="flex flex-col">
-                  <span className="font-bold text-2xl text-gray-900 leading-none">
+                  <span className="font-extrabold text-3xl text-foreground leading-none">
                     {playlist.blog_count || 0}
                   </span>
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                  <span className="text-[10px] font-mono font-bold text-foreground uppercase tracking-widest mt-2">
                     Blogs
                   </span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-bold text-2xl text-gray-900 leading-none">
+                  <span className="font-extrabold text-3xl text-foreground leading-none">
                     {(playlist.total_views || 0).toLocaleString()}
                   </span>
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                  <span className="text-[10px] font-mono font-bold text-foreground uppercase tracking-widest mt-2">
                     Views
                   </span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-bold text-2xl text-gray-900 leading-none">
+                  <span className="font-extrabold text-3xl text-foreground leading-none">
                     {(playlist.total_likes || 0).toLocaleString()}
                   </span>
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                  <span className="text-[10px] font-mono font-bold text-foreground uppercase tracking-widest mt-2">
                     Likes
                   </span>
                 </div>
@@ -170,8 +173,8 @@ export default function PlaylistDetailPage() {
         {/* Blogs Grid */}
         {playlist.blogs && playlist.blogs.length > 0 ? (
           <div>
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">
-              Blogs in this Playlist ({playlist.blogs.length})
+            <h2 className="text-2xl md:text-3xl font-extrabold text-foreground mb-6 uppercase tracking-tight">
+              SYSTEM.RECORDS [{playlist.blogs.length}]
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[400px]">
               {playlist.blogs
@@ -180,7 +183,7 @@ export default function PlaylistDetailPage() {
                   const globalIndex = (currentPage - 1) * BLOGS_PER_PAGE + idx;
                   return (
                     <div key={blog.id} className="relative group">
-                      <div className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center bg-indigo-600 text-white rounded-full font-bold text-sm shadow-lg">
+                      <div className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center bg-foreground text-background border-2 border-background font-mono font-bold text-sm shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]">
                         {globalIndex + 1}
                       </div>
                       <div className="relative">
@@ -200,9 +203,9 @@ export default function PlaylistDetailPage() {
                     window.scrollTo({ top: 400, behavior: 'smooth' });
                   }}
                   disabled={currentPage === 1}
-                  className="p-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-all shadow-sm"
+                  className="flex items-center gap-1 px-3 py-2 bg-background border-2 border-foreground text-foreground font-mono font-bold uppercase tracking-widest text-[10px] hover:bg-purple-900 hover:text-white shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
-                  <ArrowLeft className="w-5 h-5" />
+                  <ArrowLeft className="w-4 h-4" />
                 </button>
 
                 <div className="flex items-center gap-2">
@@ -213,9 +216,9 @@ export default function PlaylistDetailPage() {
                         setCurrentPage(i + 1);
                         window.scrollTo({ top: 400, behavior: 'smooth' });
                       }}
-                      className={`w-10 h-10 rounded-lg font-bold transition-all ${currentPage === i + 1
-                        ? 'bg-indigo-600 text-white shadow-md'
-                        : 'bg-white border border-gray-200 text-gray-600 hover:border-indigo-500'
+                      className={`w-9 h-9 border-2 border-foreground font-mono font-bold text-xs transition-all ${currentPage === i + 1
+                        ? "bg-foreground text-background shadow-[2px_2px_0px_0px_rgba(13,17,23,1)]"
+                        : "bg-background text-foreground hover:bg-purple-900 hover:text-white shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5"
                         }`}
                     >
                       {i + 1}
@@ -229,26 +232,26 @@ export default function PlaylistDetailPage() {
                     window.scrollTo({ top: 400, behavior: 'smooth' });
                   }}
                   disabled={currentPage === Math.ceil(playlist.blogs.length / BLOGS_PER_PAGE)}
-                  className="p-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-all font-bold flex items-center gap-2 shadow-sm"
+                  className="flex items-center gap-1 px-3 py-2 bg-background border-2 border-foreground text-foreground font-mono font-bold uppercase tracking-widest text-[10px] hover:bg-purple-900 hover:text-white shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
                   <span className="text-sm">Next</span>
-                  <ChevronRight className="w-5 h-5" />
+                  <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
             )}
           </div>
         ) : (
-          <div className="text-center py-16 bg-white rounded-lg border border-gray-200">
-            <BookOpen className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              No blogs yet
+          <div className="text-center py-16 bg-background border-2 border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)]">
+            <BookOpen className="w-16 h-16 mx-auto text-foreground mb-4 opacity-50" />
+            <h3 className="text-2xl font-extrabold text-foreground mb-2 uppercase tracking-tight">
+              SYSTEM.EMPTY
             </h3>
-            <p className="text-gray-600 mb-6">
-              There are no blogs in this playlist.
+            <p className="text-gray-600 mb-6 font-mono text-sm">
+              No records found in this collection.
             </p>
             <Link
               href={`/blogs/${username}`}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 font-bold"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-foreground text-background font-mono font-bold uppercase tracking-widest text-xs hover:bg-purple-900 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
             >
               Go to Articles
             </Link>

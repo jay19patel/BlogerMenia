@@ -9,16 +9,16 @@ export default function Breadcrumb({ items }) {
           <li key={index} className={index === 0 ? "inline-flex items-center" : ""}>
             {index === 0 && (
               <div className="inline-flex items-center">
-                <LayoutGrid className="w-5 h-5 mr-2 text-gray-900" />
+                <LayoutGrid className="w-4 h-4 mr-2 text-foreground" strokeWidth={2.5} />
                 {item.href ? (
                   <Link
                     href={item.href}
-                    className="inline-flex items-center text-base font-medium text-gray-900 hover:text-indigo-600 whitespace-nowrap transition-colors"
+                    className="inline-flex items-center font-mono font-bold uppercase tracking-widest text-[10px] text-foreground hover:bg-foreground hover:text-background border-2 border-transparent hover:border-foreground px-2 py-1 transition-all whitespace-nowrap"
                   >
                     {item.label}
                   </Link>
                 ) : (
-                  <span className="inline-flex items-center text-base font-medium text-indigo-600 whitespace-nowrap">
+                  <span className="inline-flex items-center font-mono font-bold uppercase tracking-widest text-[10px] text-background bg-foreground border-2 border-foreground px-2 py-1 whitespace-nowrap shadow-[2px_2px_0px_0px_rgba(13,17,23,1)]">
                     {item.label}
                   </span>
                 )}
@@ -27,28 +27,16 @@ export default function Breadcrumb({ items }) {
 
             {index > 0 && (
               <div className="flex items-center">
-                <svg
-                  className="mx-1 w-5 h-5"
-                  viewBox="0 0 5 20"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M4.12561 1.13672L0.999943 18.8633"
-                    stroke="#E5E7EB"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                  />
-                </svg>
+                <span className="mx-2 font-mono font-bold text-foreground">/</span>
                 {item.href ? (
                   <Link
                     href={item.href}
-                    className="ml-1 text-base font-medium text-gray-900 hover:text-indigo-600 md:ml-2 whitespace-nowrap transition-colors"
+                    className="ml-1 inline-flex items-center font-mono font-bold uppercase tracking-widest text-[10px] text-foreground hover:bg-foreground hover:text-background border-2 border-transparent hover:border-foreground px-2 py-1 transition-all whitespace-nowrap md:ml-2"
                   >
                     {item.label}
                   </Link>
                 ) : (
-                  <span className="ml-1 text-base font-medium text-indigo-600 md:ml-2 whitespace-nowrap">
+                  <span className="ml-1 inline-flex items-center font-mono font-bold uppercase tracking-widest text-[10px] text-background bg-foreground border-2 border-foreground px-2 py-1 whitespace-nowrap shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] md:ml-2">
                     {item.label}
                   </span>
                 )}
