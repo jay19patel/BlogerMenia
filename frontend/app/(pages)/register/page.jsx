@@ -323,7 +323,7 @@ export default function RegisterPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-foreground text-background py-3 border-2 border-foreground hover:bg-gray-800 transition-all font-mono font-bold uppercase tracking-widest text-xs disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 mt-4"
+                  className="w-full bg-foreground text-background py-3 border-2 border-foreground hover:bg-gray-800 transition-all font-mono font-bold uppercase tracking-widest text-xs disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-[6px_6px_0px_0px_rgba(88,28,135,1)] hover:-translate-x-1 hover:-translate-y-1 mt-4"
                 >
                   {loading ? "Provisioning..." : "Provision Node"}
                 </button>
@@ -343,7 +343,7 @@ export default function RegisterPage() {
               <button
                 type="button"
                 onClick={handleGoogleLogin}
-                className="w-full bg-background text-foreground py-3 border-2 border-foreground hover:bg-gray-100 transition-all font-mono font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1"
+                className="w-full bg-background text-foreground py-3 border-2 border-foreground hover:bg-gray-100 transition-all font-mono font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-[6px_6px_0px_0px_rgba(88,28,135,1)] hover:-translate-x-1 hover:-translate-y-1"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24">
                   <path

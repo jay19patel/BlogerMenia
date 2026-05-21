@@ -97,7 +97,7 @@ export default function ContactPage() {
                             </div>
                         </div>
 
-                        <div className="bg-foreground p-8 border-2 border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)] text-background">
+                        <div className="bg-foreground p-8 border-2 border-foreground shadow-[8px_8px_0px_0px_rgba(88,28,135,1)] text-background hover:-translate-y-1 hover:shadow-[12px_12px_0px_0px_rgba(88,28,135,1)] transition-all">
                             <Clock className="w-8 h-8 mb-4 text-background" />
                             <h3 className="text-lg font-extrabold mb-2 uppercase tracking-tight">Latency Specs</h3>
                             <p className="text-gray-300 text-sm font-mono leading-relaxed">
@@ -163,7 +163,7 @@ export default function ContactPage() {
                                     <button
                                         type="submit"
                                         disabled={isLoading}
-                                        className="w-full sm:w-auto px-10 py-3 bg-foreground text-background border-2 border-foreground font-mono font-bold uppercase tracking-widest text-xs hover:bg-gray-800 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                        className="w-full sm:w-auto px-10 py-3 bg-foreground text-background border-2 border-foreground font-mono font-bold uppercase tracking-widest text-xs hover:bg-gray-800 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-[6px_6px_0px_0px_rgba(88,28,135,1)] hover:-translate-x-1 hover:-translate-y-1 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                                     >
                                         {isLoading ? (
                                             <>

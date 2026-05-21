@@ -10,7 +10,6 @@ import Link from "next/link";
 import Image from "next/image";
 import LoaderCard from "@/components/ui/loader";
 import { useAuth } from "@/contexts/AuthContext";
-import CreatePlaylistDialog from "@/components/CreatePlaylistDialog";
 import { formatDate, getImageUrl } from "@/lib/utils";
 
 const BLOGS_PER_PAGE = 9;
@@ -30,7 +29,6 @@ export default function UserBlogsList({ username }) {
     const [submittedSearch, setSubmittedSearch] = useState(initialSearch);
     const [selectedCategory, setSelectedCategory] = useState(initialCategory);
     const [currentPage, setCurrentPage] = useState(initialPage);
-    const [isCreatePlaylistOpen, setIsCreatePlaylistOpen] = useState(false);
 
     const isOwner = user?.email === username;
 
@@ -306,25 +304,6 @@ export default function UserBlogsList({ username }) {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {/* Create New Playlist Card (For Owner) */}
-                            {isOwner && (
-                                <button
-                                    onClick={() => setIsCreatePlaylistOpen(true)}
-                                    className="group relative block w-full h-full min-h-[280px] border-2 border-dashed border-foreground bg-background hover:bg-purple-900 hover:text-white transition-all duration-300 flex flex-col items-center justify-center gap-4 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1"
-                                >
-                                    <div className="w-16 h-16 border-2 border-foreground bg-background text-foreground flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] group-hover:shadow-none">
-                                        <Plus className="w-8 h-8" strokeWidth={3} />
-                                    </div>
-                                    <div className="text-center text-foreground group-hover:text-white">
-                                        <h3 className="font-extrabold text-xl mb-1 uppercase tracking-tight">
-                                            Create Playlist
-                                        </h3>
-                                        <p className="text-xs font-mono font-bold tracking-widest opacity-80 uppercase">
-                                            INIT.NEW_COLLECTION
-                                        </p>
-                                    </div>
-                                </button>
-                            )}
 
                             {playlists.map((playlist, index) => (
                                 <Link
@@ -385,13 +364,6 @@ export default function UserBlogsList({ username }) {
                     </div>
                 )}
 
-                <CreatePlaylistDialog
-                    isOpen={isCreatePlaylistOpen}
-                    onClose={() => setIsCreatePlaylistOpen(false)}
-                    onSuccess={() => {
-                        fetchPlaylists();
-                    }}
-                />
 
                 {/* Blogs List */}
                 <div className="mb-8">

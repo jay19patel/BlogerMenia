@@ -105,7 +105,7 @@ export default function PlaylistDetailPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-stretch">
             {/* Left Column: Cover Image */}
             <div className="lg:col-span-5 relative">
-              <div className="relative w-full h-full min-h-[12rem] border-2 border-foreground bg-purple-900 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] overflow-hidden">
+              <div className="relative w-full h-full min-h-[12rem] border-2 border-foreground bg-purple-900 overflow-hidden">
                 {(typeof (playlist.cover_image || playlist.thumbnail) === 'string' ? (playlist.cover_image || playlist.thumbnail) : (playlist.cover_image?.file_path || playlist.thumbnail?.file_path)) ? (
                   <Image
                     src={getImageUrl(typeof (playlist.cover_image || playlist.thumbnail) === 'string' ? (playlist.cover_image || playlist.thumbnail) : (playlist.cover_image?.file_path || playlist.thumbnail?.file_path))}
@@ -183,7 +183,7 @@ export default function PlaylistDetailPage() {
                   const globalIndex = (currentPage - 1) * BLOGS_PER_PAGE + idx;
                   return (
                     <div key={blog.id} className="relative group">
-                      <div className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center bg-foreground text-background border-2 border-background font-mono font-bold text-sm shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]">
+                      <div className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center bg-foreground text-background border-2 border-background rounded-full font-mono font-bold text-sm">
                         {globalIndex + 1}
                       </div>
                       <div className="relative">

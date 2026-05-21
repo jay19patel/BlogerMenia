@@ -167,9 +167,9 @@ export default function CreatePlaylistPage() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     {/* Left Column: Metadata Editor */}
-                    <div className="xl:col-span-4 space-y-8">
+                    <div className="lg:col-span-4 space-y-8">
                         <div className="bg-background border-2 border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)] overflow-hidden sticky top-8 p-8">
                             <h2 className="text-2xl font-extrabold text-foreground mb-6 flex items-center gap-2 uppercase tracking-tighter border-b-2 border-foreground pb-2">
                                 Playlist Details
@@ -294,10 +294,9 @@ export default function CreatePlaylistPage() {
                             </form>
                         </div>
                     </div>
-                </div>
 
                 {/* Right Column: Blogs Selection */}
-                <div className="xl:col-span-8 space-y-8">
+                <div className="lg:col-span-8 space-y-8">
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
 
@@ -437,6 +436,7 @@ export default function CreatePlaylistPage() {
                             )}
                         </div>
                     </div>
+                </div>
                 </div>
             </div>
         </div>

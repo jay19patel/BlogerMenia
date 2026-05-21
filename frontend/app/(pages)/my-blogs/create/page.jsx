@@ -888,7 +888,7 @@ export default function CreateBlogPage() {
                   onChange={(e) => setChatMessage(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && handleChatSend()}
                   placeholder="Type your blog idea or description..."
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="flex-1 px-4 py-3 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   disabled={isGenerating}
                 />
                 <button
@@ -943,21 +943,21 @@ export default function CreateBlogPage() {
           <h2 className="text-2xl font-extrabold text-foreground mb-6 uppercase tracking-tighter border-b-2 border-foreground pb-2">Basic Information</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-mono font-bold uppercase tracking-widest text-foreground mb-1">
                 Title *
               </label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all font-mono text-sm"
                 placeholder="Enter blog title"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-xs font-mono font-bold uppercase tracking-widest text-foreground">
                     Slug *
                   </label>
                   {autoSlug && (
@@ -971,12 +971,12 @@ export default function CreateBlogPage() {
                     setSlug(e.target.value);
                     setAutoSlug(false); // Disable auto-generation when manually edited
                   }}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all font-mono text-sm"
                   placeholder="blog-slug-url"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-mono font-bold uppercase tracking-widest text-foreground mb-1">
                   Category *
                 </label>
                 <CategorySelect
@@ -989,31 +989,31 @@ export default function CreateBlogPage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-mono font-bold uppercase tracking-widest text-foreground mb-1">
                 Subtitle
               </label>
               <input
                 type="text"
                 value={subtitle}
                 onChange={(e) => setSubtitle(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all font-mono text-sm"
                 placeholder="Enter subtitle"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-mono font-bold uppercase tracking-widest text-foreground mb-1">
                 Excerpt
               </label>
               <textarea
                 value={excerpt}
                 onChange={(e) => setExcerpt(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all font-mono text-sm"
                 rows="3"
                 placeholder="Short description"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-mono font-bold uppercase tracking-widest text-foreground mb-1">
                 Featured Image *
               </label>
               <div className="flex flex-col gap-4">
@@ -1069,34 +1069,45 @@ export default function CreateBlogPage() {
                       setImageFile(null);
                       setImagePreview(url || null); // show preview instantly
                     }}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                    className="w-full pl-10 pr-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all font-mono text-sm"
                     placeholder="Or paste image URL to preview"
                   />
                 </div>
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-mono font-bold uppercase tracking-widest text-foreground mb-1">
                 Tags (comma separated)
               </label>
               <input
                 type="text"
                 value={tags}
                 onChange={(e) => setTags(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all font-mono text-sm"
                 placeholder="JavaScript, React, Next.js"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="featured"
-                checked={featured}
-                onChange={(e) => setFeatured(e.target.checked)}
-                className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-              />
-              <label htmlFor="featured" className="text-sm font-medium text-gray-700">
-                Feature this blog
+            <div className="flex items-center gap-2 mt-4 mb-2">
+              <label className="flex items-center cursor-pointer group">
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    id="featured"
+                    checked={featured}
+                    onChange={(e) => setFeatured(e.target.checked)}
+                    className="sr-only"
+                  />
+                  <div className={`w-5 h-5 border-2 border-foreground transition-all ${featured ? 'bg-purple-900 shadow-[2px_2px_0px_0px_rgba(13,17,23,1)]' : 'bg-background group-hover:bg-gray-100 shadow-[2px_2px_0px_0px_rgba(13,17,23,1)]'}`}>
+                    {featured && (
+                      <svg className="w-4 h-4 text-white mx-auto mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                </div>
+                <span className="ml-3 text-xs font-mono font-bold uppercase tracking-widest text-foreground">
+                  Feature this blog
+                </span>
               </label>
             </div>
           </div>
@@ -1108,7 +1119,7 @@ export default function CreateBlogPage() {
           <textarea
             value={introduction}
             onChange={(e) => setIntroduction(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all font-mono text-sm"
             rows="4"
             placeholder="Write the introduction for your blog..."
           />
@@ -1124,7 +1135,7 @@ export default function CreateBlogPage() {
             {sections.map((section, index) => (
               <div
                 key={section.id}
-                className="border border-gray-300 rounded-lg p-4 space-y-4"
+                className="bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all p-4 space-y-4"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -1155,7 +1166,7 @@ export default function CreateBlogPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-mono font-bold uppercase tracking-widest text-foreground mb-1">
                     Section Title
                   </label>
                   <input
@@ -1164,7 +1175,7 @@ export default function CreateBlogPage() {
                     onChange={(e) =>
                       updateSection(section.id, "title", e.target.value)
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     placeholder="Section title"
                   />
                 </div>
@@ -1176,7 +1187,7 @@ export default function CreateBlogPage() {
                     onChange={(e) =>
                       updateSection(section.id, "content", e.target.value)
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     rows="4"
                     placeholder="Write your content..."
                   />
@@ -1192,7 +1203,7 @@ export default function CreateBlogPage() {
                           onChange={(e) =>
                             updateBulletItem(section.id, itemIndex, e.target.value)
                           }
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          className="flex-1 px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           placeholder="Bullet point"
                         />
                         <button
@@ -1205,7 +1216,7 @@ export default function CreateBlogPage() {
                     ))}
                     <button
                       onClick={() => addBulletItem(section.id)}
-                      className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+                      className="flex items-center gap-2 px-3 py-2 text-sm bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all hover:bg-gray-50"
                     >
                       <Plus className="w-4 h-4" />
                       Add Bullet Point
@@ -1221,7 +1232,7 @@ export default function CreateBlogPage() {
                       onChange={(e) =>
                         updateSection(section.id, "language", e.target.value)
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       placeholder="Language (e.g., javascript, python)"
                     />
                     <textarea
@@ -1229,7 +1240,7 @@ export default function CreateBlogPage() {
                       onChange={(e) =>
                         updateSection(section.id, "content", e.target.value)
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm"
+                      className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm"
                       rows="8"
                       placeholder="Paste your code here..."
                     />
@@ -1239,7 +1250,7 @@ export default function CreateBlogPage() {
                 {section.type === "table" && (
                   <div className="space-y-2">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-xs font-mono font-bold uppercase tracking-widest text-foreground mb-1">
                         Headers
                       </label>
                       <div className="flex gap-2">
@@ -1251,14 +1262,14 @@ export default function CreateBlogPage() {
                             onChange={(e) =>
                               updateTableHeader(section.id, headerIndex, e.target.value)
                             }
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="flex-1 px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             placeholder={`Header ${headerIndex + 1}`}
                           />
                         ))}
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-xs font-mono font-bold uppercase tracking-widest text-foreground mb-1">
                         Rows
                       </label>
                       <div className="space-y-2">
@@ -1277,7 +1288,7 @@ export default function CreateBlogPage() {
                                     e.target.value
                                   )
                                 }
-                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="flex-1 px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                 placeholder={`Cell ${rowIndex + 1}-${colIndex + 1}`}
                               />
                             ))}
@@ -1292,7 +1303,7 @@ export default function CreateBlogPage() {
                       </div>
                       <button
                         onClick={() => addTableRow(section.id)}
-                        className="mt-2 flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+                        className="mt-2 flex items-center gap-2 px-3 py-2 text-sm bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all hover:bg-gray-50"
                       >
                         <Plus className="w-4 h-4" />
                         Add Row
@@ -1309,7 +1320,7 @@ export default function CreateBlogPage() {
                       onChange={(e) =>
                         updateSection(section.id, "videoId", e.target.value)
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       placeholder="YouTube Video ID"
                     />
                     <input
@@ -1318,7 +1329,7 @@ export default function CreateBlogPage() {
                       onChange={(e) =>
                         updateSection(section.id, "videoTitle", e.target.value)
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       placeholder="Video Title"
                     />
                     <textarea
@@ -1326,7 +1337,7 @@ export default function CreateBlogPage() {
                       onChange={(e) =>
                         updateSection(section.id, "description", e.target.value)
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       rows="2"
                       placeholder="Video description"
                     />
@@ -1339,7 +1350,7 @@ export default function CreateBlogPage() {
                     onChange={(e) =>
                       updateSection(section.id, "content", e.target.value)
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     rows="3"
                     placeholder="Write your note or callout..."
                   />
@@ -1355,7 +1366,7 @@ export default function CreateBlogPage() {
                           onChange={(e) =>
                             updateLink(section.id, linkIndex, "text", e.target.value)
                           }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           placeholder="Link text"
                         />
                         <input
@@ -1367,7 +1378,7 @@ export default function CreateBlogPage() {
                           onBlur={(e) =>
                             updateLink(section.id, linkIndex, "url", normalizeLinkUrl(e.target.value))
                           }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           placeholder="URL"
                         />
                         <input
@@ -1376,7 +1387,7 @@ export default function CreateBlogPage() {
                           onChange={(e) =>
                             updateLink(section.id, linkIndex, "description", e.target.value)
                           }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           placeholder="Description"
                         />
                         <button
@@ -1390,7 +1401,7 @@ export default function CreateBlogPage() {
                     ))}
                     <button
                       onClick={() => addLink(section.id)}
-                      className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+                      className="flex items-center gap-2 px-3 py-2 text-sm bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all hover:bg-gray-50"
                     >
                       <Plus className="w-4 h-4" />
                       Add Link
@@ -1401,7 +1412,7 @@ export default function CreateBlogPage() {
                 {section.type === "image" && (
                   <div className="space-y-4">
                     <div className="flex flex-col gap-3">
-                      <label className="block text-sm font-medium text-gray-700">
+                      <label className="block text-xs font-mono font-bold uppercase tracking-widest text-foreground">
                         Section Image
                       </label>
                       <div
@@ -1456,7 +1467,7 @@ export default function CreateBlogPage() {
                                 : s
                             ));
                           }}
-                          className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                          className="w-full pl-9 pr-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
                           placeholder="Or paste image URL to preview"
                         />
                       </div>
@@ -1467,7 +1478,7 @@ export default function CreateBlogPage() {
                       onChange={(e) =>
                         updateSection(section.id, "description", e.target.value)
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       rows="2"
                       placeholder="Image description or caption"
                     />
@@ -1494,13 +1505,13 @@ export default function CreateBlogPage() {
                               type="text"
                               value={step.title}
                               onChange={(e) => updateFlowchartStep(section.id, sIdx, "title", e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                               placeholder="Step title"
                             />
                             <select
                               value={step.color}
                               onChange={(e) => updateFlowchartStep(section.id, sIdx, "color", e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             >
                               <option value="blue">Blue</option>
                               <option value="indigo">Indigo</option>
@@ -1513,7 +1524,7 @@ export default function CreateBlogPage() {
                           <textarea
                             value={step.description}
                             onChange={(e) => updateFlowchartStep(section.id, sIdx, "description", e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3"
+                            className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3"
                             rows="2"
                             placeholder="Step description"
                           />
@@ -1593,7 +1604,7 @@ export default function CreateBlogPage() {
                   <button
                     key={sectionType.value}
                     onClick={() => addSection(sectionType.value)}
-                    className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 text-sm bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all hover:bg-gray-50 transition-colors"
                   >
                     <Icon className="w-4 h-4" />
                     {sectionType.label}
@@ -1610,7 +1621,7 @@ export default function CreateBlogPage() {
           <textarea
             value={conclusion}
             onChange={(e) => setConclusion(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all font-mono text-sm"
             rows="4"
             placeholder="Write the conclusion for your blog..."
           />

@@ -169,7 +169,7 @@ export default function BlogsList() {
                         />
                         <button
                             onClick={handleSearch}
-                            className="px-8 py-3 bg-foreground text-background font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors border-l-2 border-foreground"
+                            className="px-8 py-3 bg-foreground text-background font-bold uppercase tracking-widest hover:bg-gray-800 transition-all border-l-2 border-foreground hover:shadow-[6px_6px_0px_0px_rgba(88,28,135,1)] hover:-translate-x-1 hover:-translate-y-1"
                         >
                             Exec
                         </button>
@@ -181,8 +181,8 @@ export default function BlogsList() {
                                 key={category}
                                 onClick={() => handleCategoryChange(category)}
                                 className={`px-4 py-2 font-mono text-xs uppercase tracking-widest font-bold transition-all border-2 border-foreground ${selectedCategory === category
-                                    ? "bg-foreground text-background shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]"
-                                    : "bg-background text-foreground hover:bg-gray-100"
+                                    ? "bg-foreground text-background shadow-[4px_4px_0px_0px_rgba(88,28,135,1)]"
+                                    : "bg-background text-foreground hover:bg-gray-100 hover:shadow-[4px_4px_0px_0px_rgba(88,28,135,1)] hover:-translate-y-1"
                                     }`}
                             >
                                 {category}
