@@ -101,7 +101,7 @@ export default function PlaylistDetailPage() {
         </Link>
 
         {/* Playlist Profile Section */}
-        <div className="relative mb-12 border-2 border-foreground p-8 bg-background shadow-[8px_8px_0px_0px_rgba(13,17,23,1)] min-h-[16rem]">
+        <div className="relative mb-12 border-2 border-foreground p-8 bg-background shadow-[8px_8px_0px_0px_#581c87] min-h-[16rem]">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-stretch">
             {/* Left Column: Cover Image */}
             <div className="lg:col-span-5 relative">

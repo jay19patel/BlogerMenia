@@ -195,7 +195,7 @@ export default function UserBlogsList({ username }) {
                 <Breadcrumb items={breadcrumbItems} />
 
                 {/* Profile Header */}
-                <div className="mb-12 border-2 border-foreground p-8 bg-background shadow-[8px_8px_0px_0px_rgba(13,17,23,1)]">
+                <div className="mb-12 border-2 border-foreground p-8 bg-background shadow-[8px_8px_0px_0px_#581c87]">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                         {/* Left Side: Avatar & Name/Details */}
                         <div className="lg:col-span-5 flex flex-col sm:flex-row items-center sm:items-start gap-6">
@@ -266,7 +266,7 @@ export default function UserBlogsList({ username }) {
                                 </div>
                                 <div className="flex flex-col items-center sm:items-start">
                                     <span className="font-bold font-mono text-lg text-foreground leading-none mt-1">
-                                        {new Date(userProfile.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+                                        {userProfile.created_at ? new Date(userProfile.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : '—'}
                                     </span>
                                     <span className="text-[10px] font-mono font-bold text-foreground uppercase tracking-widest mt-2">
                                         Joined

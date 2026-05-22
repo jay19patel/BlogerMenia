@@ -216,7 +216,7 @@ export default function MyBlogsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Profile Header */}
         {userProfile ? (
-          <div className="mb-12 border-2 border-foreground p-8 bg-background shadow-[8px_8px_0px_0px_rgba(13,17,23,1)]">
+          <div className="mb-12 border-2 border-foreground p-8 bg-background shadow-[8px_8px_0px_0px_#581c87]">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               {/* Left Side: Avatar & Name/Details */}
               <div className="lg:col-span-5 flex flex-col sm:flex-row items-center sm:items-start gap-6">
