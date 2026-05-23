@@ -373,7 +373,7 @@ export default function Home() {
                 Create engaging, well-structured blogs in minutes. Leverage our LLM pipelines to banish writer&apos;s block.
               </p>
             </div>
-            
+
             <div className="bg-background border-r-2 border-b-2 md:border-b-0 border-foreground p-8 flex flex-col hover:bg-purple-50 transition-colors">
               <div className="text-purple-600 mb-6 border-2 border-foreground p-3 w-fit shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] bg-white">
                 <Users className="w-8 h-8" strokeWidth={1.5} />
@@ -385,7 +385,7 @@ export default function Home() {
                 Reach and engage with readers worldwide. Build your thought leadership through precision content sharing.
               </p>
             </div>
-            
+
             <div className="bg-background p-8 flex flex-col hover:bg-pink-50 transition-colors">
               <div className="text-pink-600 mb-6 border-2 border-foreground p-3 w-fit shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] bg-white">
                 <TrendingUp className="w-8 h-8" strokeWidth={1.5} />
@@ -446,7 +446,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 border-b-2 border-foreground pb-6">
             <div>
-              <h2 className="text-3xl font-extrabold text-foreground uppercase tracking-tight">System Tracks</h2>
+              <h2 className="text-3xl font-extrabold text-foreground uppercase tracking-tight">Tracks</h2>
               <p className="text-gray-500 font-mono text-sm mt-2">Curated sequential documentation series.</p>
             </div>
             <Link href="/playlists" className="text-sm font-bold text-background bg-foreground px-4 py-2 hover:bg-gray-800 uppercase tracking-widest inline-flex items-center gap-2 transition-all shadow-[4px_4px_0px_0px_rgba(200,200,200,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1">
@@ -466,13 +466,13 @@ export default function Home() {
                 <Link key={playlist.slug} href={`/playlists/${playlist.owner?.email || playlist.owner?.username}/${playlist.slug}`} className="group block bg-background border-2 border-foreground overflow-hidden hover:shadow-[8px_8px_0px_0px_rgba(88,28,135,1)] transition-all md:h-48 relative">
                   <div className="flex flex-col md:flex-row h-full">
                     <div className="md:w-1/3 relative border-b-2 md:border-b-0 md:border-r-2 border-foreground bg-gray-100 flex items-center justify-center shrink-0">
-                      {playlist.thumbnail ? (
+                      {playlist.cover_image || playlist.thumbnail ? (
                         <Image
-                          src={getImageUrl(playlist.thumbnail?.file_path || playlist.thumbnail)}
+                          src={getImageUrl((playlist.cover_image || playlist.thumbnail)?.file_path || (playlist.cover_image || playlist.thumbnail))}
                           alt={playlist.name}
                           fill
                           sizes="(max-width: 768px) 100vw, 33vw"
-                          className="object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                          className="object-cover transition-all duration-500"
                           unoptimized
                         />
                       ) : (
@@ -520,7 +520,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 border-b-2 border-foreground pb-6">
             <div>
-              <h2 className="text-3xl font-extrabold text-foreground uppercase tracking-tight">System Architects</h2>
+              <h2 className="text-3xl font-extrabold text-foreground uppercase tracking-tight">Architects</h2>
               <p className="text-gray-500 font-mono text-sm mt-2">The engineers behind the documentation.</p>
             </div>
             <Link href="/creators" className="text-sm font-bold text-background bg-foreground px-4 py-2 hover:bg-gray-800 uppercase tracking-widest inline-flex items-center gap-2 transition-all shadow-[4px_4px_0px_0px_rgba(200,200,200,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1">
@@ -545,14 +545,14 @@ export default function Home() {
                   <div className="flex flex-col sm:flex-row h-full">
                     {/* Left Side: Avatar */}
                     <div className="relative w-full sm:w-1/3 shrink-0 border-b-2 sm:border-b-0 sm:border-r-2 border-foreground bg-indigo-50 flex flex-col justify-center items-center p-6">
-                       <div className="w-20 h-20 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(88,28,135,1)] bg-white overflow-hidden relative">
+                      <div className="w-20 h-20 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(88,28,135,1)] bg-white overflow-hidden relative">
                         {author.profile_image ? (
                           <Image
                             src={getImageUrl(author.profile_image?.file_path || author.profile_image)}
                             alt={author.full_name || author.email}
                             fill
                             sizes="80px"
-                            className="object-cover grayscale group-hover:grayscale-0 transition-all"
+                            className="object-cover transition-all"
                             unoptimized
                           />
                         ) : (

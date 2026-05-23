@@ -8,10 +8,13 @@ echo ""
 
 echo "[1/2] Generating dummy_data.json..."
 node generate_data.mjs
-echo "✓ dummy_data.json created successfully."
+echo "[2/2] Setting up local images..."
+mkdir -p ../frontend/public/uploads
+cp blog.png playlist.png profile.png ../frontend/public/uploads/
+echo "✓ Images copied to frontend/public/uploads."
 echo ""
 
-echo "[2/2] Seeding data into MongoDB..."
+echo "[3/3] Seeding data into MongoDB..."
 node seed.js
 echo ""
 

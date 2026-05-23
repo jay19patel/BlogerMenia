@@ -20,11 +20,9 @@ export function getImageUrl(path) {
     return finalPath;
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
-  const serverUrl = baseUrl.replace(/\/api\/?$/, '');
   const cleanPath = finalPath.startsWith('/') ? finalPath : `/${finalPath}`;
 
-  // If it's a local upload via Next.js public directory, return it directly so the frontend serves it
+  // If it's a local upload via Next.js public directory, return it directly
   if (cleanPath.startsWith('/uploads/')) {
     return cleanPath;
   }
@@ -39,12 +37,7 @@ export function getImageUrl(path) {
     }
   }
 
-  // If the path doesn't already contain /media/ and isn't an absolute URL, prepend /media/
-  if (!cleanPath.startsWith('/media/') && !cleanPath.includes('://')) {
-    return `${serverUrl}/media${cleanPath}`;
-  }
-
-  return `${serverUrl}${cleanPath}`;
+  return cleanPath;
 }
 
 export function formatDate(dateString, fallback = "N/A") {

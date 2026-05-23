@@ -20,12 +20,12 @@ export default function BlogCard({ blog }) {
     <Link href={getBlogUrl()} className="block h-full">
       <div className="group bg-background border-2 border-foreground h-full flex flex-col hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[6px_6px_0px_0px_rgba(88,28,135,1)] transition-all duration-300">
         {/* Image */}
-        <div className="relative aspect-video overflow-hidden bg-purple-900 border-b-2 border-foreground">
+        <div className="relative aspect-video overflow-hidden bg-background border-b-2 border-foreground">
           {imagePath ? (
             <img
               src={getImageUrl(imagePath)}
               alt={blog.title}
-              className="w-full h-full object-cover grayscale opacity-90 mix-blend-luminosity group-hover:grayscale-0 group-hover:mix-blend-normal group-hover:opacity-100 transition-all duration-500"
+              className="w-full h-full object-cover transition-all duration-500 hover:scale-105"
             />
           ) : (
             <div className="w-full h-full bg-foreground flex items-center justify-center text-background">
