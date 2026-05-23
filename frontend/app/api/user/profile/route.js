@@ -18,7 +18,7 @@ export async function PATCH(req) {
     delete data.role;
     delete data._id;
 
-    const updatedUser = await User.findByIdAndUpdate(session.user.id, { $set: data }, { new: true })
+    const updatedUser = await User.findByIdAndUpdate(session.user.id, { $set: data }, { returnDocument: 'after' })
       .select('-password');
 
     return NextResponse.json(updatedUser);

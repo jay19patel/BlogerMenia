@@ -109,7 +109,7 @@ export async function PATCH(req, { params }) {
     const updated = await Playlist.findByIdAndUpdate(
       playlist._id,
       { $set: updatePayload },
-      { new: true }
+      { returnDocument: 'after' }
     )
       .populate('owner', 'full_name username profile_image')
       .populate('blogs', 'title slug thumbnail views');
