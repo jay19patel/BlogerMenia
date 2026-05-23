@@ -63,6 +63,24 @@ export default function Navbar() {
               Blogs
             </Link>
             <Link
+              href="/playlists"
+              className={`transition-all duration-200 font-mono text-xs uppercase tracking-widest font-bold px-3 py-1 ${pathname?.startsWith("/playlists")
+                ? "bg-foreground text-background"
+                : "text-foreground hover:bg-gray-100"
+                }`}
+            >
+              Tracks
+            </Link>
+            <Link
+              href="/creators"
+              className={`transition-all duration-200 font-mono text-xs uppercase tracking-widest font-bold px-3 py-1 ${pathname?.startsWith("/creators")
+                ? "bg-foreground text-background"
+                : "text-foreground hover:bg-gray-100"
+                }`}
+            >
+              Architects
+            </Link>
+            <Link
               href="/contact"
               className={`transition-all duration-200 font-mono text-xs uppercase tracking-widest font-bold px-3 py-1 ${pathname === "/contact"
                 ? "bg-foreground text-background"
@@ -186,6 +204,26 @@ export default function Navbar() {
                     }`}
                 >
                   Blogs
+                </Link>
+                <Link
+                  href="/playlists"
+                  onClick={() => setIsSheetOpen(false)}
+                  className={`block py-3 px-4 font-mono font-bold uppercase tracking-widest text-xs transition-colors border-2 ${pathname?.startsWith("/playlists")
+                    ? "bg-foreground text-background border-foreground"
+                    : "text-foreground border-transparent hover:border-foreground"
+                    }`}
+                >
+                  Tracks
+                </Link>
+                <Link
+                  href="/creators"
+                  onClick={() => setIsSheetOpen(false)}
+                  className={`block py-3 px-4 font-mono font-bold uppercase tracking-widest text-xs transition-colors border-2 ${pathname?.startsWith("/creators")
+                    ? "bg-foreground text-background border-foreground"
+                    : "text-foreground border-transparent hover:border-foreground"
+                    }`}
+                >
+                  Architects
                 </Link>
                 <Link
                   href="/contact"

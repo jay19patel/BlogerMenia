@@ -1,7 +1,7 @@
 {
   "users": [
     {
-      "_id": "53e61bbeae35f3460345c77f",
+      "_id": "8cf80ccc7d432ae7dbc08ee1",
       "email": "user1@example.com",
       "password": "password1",
       "full_name": "Architect User 1",
@@ -13,11 +13,11 @@
       "role": "Creator",
       "is_active": true,
       "blog_count": 5,
-      "total_views": 383,
-      "total_likes": 491
+      "total_views": 587,
+      "total_likes": 371
     },
     {
-      "_id": "f947cbbb03113a2c2157aec3",
+      "_id": "f7ca4b972419fe0bae5b3086",
       "email": "user2@example.com",
       "password": "password2",
       "full_name": "Architect User 2",
@@ -29,11 +29,11 @@
       "role": "Creator",
       "is_active": true,
       "blog_count": 5,
-      "total_views": 1030,
-      "total_likes": 269
+      "total_views": 810,
+      "total_likes": 69
     },
     {
-      "_id": "a56463c942872c4281297c36",
+      "_id": "4e769a4a8c5db797c88bdb7e",
       "email": "user3@example.com",
       "password": "password3",
       "full_name": "Architect User 3",
@@ -45,11 +45,11 @@
       "role": "Creator",
       "is_active": true,
       "blog_count": 5,
-      "total_views": 787,
-      "total_likes": 137
+      "total_views": 218,
+      "total_likes": 180
     },
     {
-      "_id": "be72140b4be77c3785d32ef4",
+      "_id": "abbefc590e4029a99acf1a72",
       "email": "user4@example.com",
       "password": "password4",
       "full_name": "Architect User 4",
@@ -61,11 +61,11 @@
       "role": "Creator",
       "is_active": true,
       "blog_count": 5,
-      "total_views": 184,
-      "total_likes": 222
+      "total_views": 915,
+      "total_likes": 324
     },
     {
-      "_id": "330d21d57ef2a73fcc587cab",
+      "_id": "5228ba8c553bd1f82821e554",
       "email": "user5@example.com",
       "password": "password5",
       "full_name": "Architect User 5",
@@ -77,11 +77,11 @@
       "role": "Creator",
       "is_active": true,
       "blog_count": 5,
-      "total_views": 193,
-      "total_likes": 302
+      "total_views": 504,
+      "total_likes": 270
     },
     {
-      "_id": "c3e519e593ddc29563edcec9",
+      "_id": "964aa25246960060cd09e6a8",
       "email": "user6@example.com",
       "password": "password6",
       "full_name": "Architect User 6",
@@ -93,11 +93,11 @@
       "role": "Creator",
       "is_active": true,
       "blog_count": 5,
-      "total_views": 603,
-      "total_likes": 82
+      "total_views": 655,
+      "total_likes": 70
     },
     {
-      "_id": "839d8045ae1e2261dc0d63b7",
+      "_id": "25d46ad024e7d0c63027dc29",
       "email": "user7@example.com",
       "password": "password7",
       "full_name": "Architect User 7",
@@ -109,11 +109,11 @@
       "role": "Creator",
       "is_active": true,
       "blog_count": 5,
-      "total_views": 355,
-      "total_likes": 305
+      "total_views": 971,
+      "total_likes": 545
     },
     {
-      "_id": "61c708fc0bc4953c39213af7",
+      "_id": "fc7325695a9b1a04e59381a1",
       "email": "user8@example.com",
       "password": "password8",
       "full_name": "Architect User 8",
@@ -125,11 +125,11 @@
       "role": "Creator",
       "is_active": true,
       "blog_count": 5,
-      "total_views": 220,
-      "total_likes": 407
+      "total_views": 1018,
+      "total_likes": 480
     },
     {
-      "_id": "c3daa28c86a9a35f43b7473d",
+      "_id": "fe8140546824b6e3aa1bf504",
       "email": "user9@example.com",
       "password": "password9",
       "full_name": "Architect User 9",
@@ -141,11 +141,11 @@
       "role": "Creator",
       "is_active": true,
       "blog_count": 5,
-      "total_views": 906,
-      "total_likes": 537
+      "total_views": 614,
+      "total_likes": 190
     },
     {
-      "_id": "36751ccc44ac5f59881024e1",
+      "_id": "7d5777cd9743e1a66e14ac47",
       "email": "user10@example.com",
       "password": "password10",
       "full_name": "Architect User 10",
@@ -157,8 +157,8 @@
       "role": "Creator",
       "is_active": true,
       "blog_count": 5,
-      "total_views": 589,
-      "total_likes": 405
+      "total_views": 901,
+      "total_likes": 403
     }
   ],
   "blogs": [
@@ -176,7 +176,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -300,12 +300,13 @@
           ]
         }
       ],
-      "_id": "7e417db8c5eeedb3f7228d48",
-      "author": "53e61bbeae35f3460345c77f",
+      "_id": "002f76431ba5ceef644eb3c4",
+      "author": "8cf80ccc7d432ae7dbc08ee1",
       "is_published": true,
-      "views": 184,
-      "likes": 65,
-      "publishedDate": "2026-05-23T10:36:45.548Z"
+      "views": 521,
+      "likes": 62,
+      "publishedDate": "2026-05-23T10:51:15.827Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 2",
@@ -321,7 +322,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -445,12 +446,13 @@
           ]
         }
       ],
-      "_id": "1ccb43b56ea2d730b37f4360",
-      "author": "f947cbbb03113a2c2157aec3",
+      "_id": "e072e12e59cd3ae0eccc4138",
+      "author": "f7ca4b972419fe0bae5b3086",
       "is_published": true,
-      "views": 494,
-      "likes": 170,
-      "publishedDate": "2026-05-23T10:36:45.549Z"
+      "views": 177,
+      "likes": 189,
+      "publishedDate": "2026-05-23T10:51:15.828Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 3",
@@ -466,7 +468,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -590,12 +592,13 @@
           ]
         }
       ],
-      "_id": "08f71892b2e86b88f3a8edab",
-      "author": "a56463c942872c4281297c36",
+      "_id": "a2fb20906252991570e97ac2",
+      "author": "4e769a4a8c5db797c88bdb7e",
       "is_published": true,
-      "views": 279,
-      "likes": 21,
-      "publishedDate": "2026-05-23T10:36:45.549Z"
+      "views": 537,
+      "likes": 146,
+      "publishedDate": "2026-05-23T10:51:15.828Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 4",
@@ -611,7 +614,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -735,12 +738,13 @@
           ]
         }
       ],
-      "_id": "e41eb4f92643568a81a514c8",
-      "author": "be72140b4be77c3785d32ef4",
+      "_id": "ff1133f61b2288b640db234e",
+      "author": "abbefc590e4029a99acf1a72",
       "is_published": true,
-      "views": 479,
-      "likes": 130,
-      "publishedDate": "2026-05-23T10:36:45.549Z"
+      "views": 529,
+      "likes": 123,
+      "publishedDate": "2026-05-23T10:51:15.828Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 5",
@@ -756,7 +760,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -880,12 +884,13 @@
           ]
         }
       ],
-      "_id": "214a1f4bf213dcb92eac9ff6",
-      "author": "330d21d57ef2a73fcc587cab",
+      "_id": "30436fc0068c051de0957dd6",
+      "author": "5228ba8c553bd1f82821e554",
       "is_published": true,
-      "views": 455,
-      "likes": 48,
-      "publishedDate": "2026-05-23T10:36:45.549Z"
+      "views": 449,
+      "likes": 192,
+      "publishedDate": "2026-05-23T10:51:15.828Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 6",
@@ -901,7 +906,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -1025,12 +1030,13 @@
           ]
         }
       ],
-      "_id": "5844f03b865acf9dbb9d8723",
-      "author": "c3e519e593ddc29563edcec9",
+      "_id": "0b41356602d8d8582426813f",
+      "author": "964aa25246960060cd09e6a8",
       "is_published": true,
-      "views": 468,
-      "likes": 114,
-      "publishedDate": "2026-05-23T10:36:45.549Z"
+      "views": 313,
+      "likes": 204,
+      "publishedDate": "2026-05-23T10:51:15.828Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 7",
@@ -1046,7 +1052,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -1170,12 +1176,13 @@
           ]
         }
       ],
-      "_id": "7b920276d06e7281690daec8",
-      "author": "839d8045ae1e2261dc0d63b7",
+      "_id": "26db24d04ee7e8bdaf6a5f6f",
+      "author": "25d46ad024e7d0c63027dc29",
       "is_published": true,
-      "views": 414,
-      "likes": 214,
-      "publishedDate": "2026-05-23T10:36:45.549Z"
+      "views": 360,
+      "likes": 111,
+      "publishedDate": "2026-05-23T10:51:15.828Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 8",
@@ -1191,7 +1198,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -1315,12 +1322,13 @@
           ]
         }
       ],
-      "_id": "4f8239f2aa69adc5bf153494",
-      "author": "61c708fc0bc4953c39213af7",
+      "_id": "fc8359bf81a10547a58981ab",
+      "author": "fc7325695a9b1a04e59381a1",
       "is_published": true,
-      "views": 501,
-      "likes": 48,
-      "publishedDate": "2026-05-23T10:36:45.549Z"
+      "views": 192,
+      "likes": 74,
+      "publishedDate": "2026-05-23T10:51:15.828Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 9",
@@ -1336,7 +1344,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -1460,12 +1468,13 @@
           ]
         }
       ],
-      "_id": "db20b65275a7bcf56ba6b06a",
-      "author": "c3daa28c86a9a35f43b7473d",
+      "_id": "d0d7a730aa169ddfd3f5ce31",
+      "author": "fe8140546824b6e3aa1bf504",
       "is_published": true,
-      "views": 334,
-      "likes": 176,
-      "publishedDate": "2026-05-23T10:36:45.549Z"
+      "views": 407,
+      "likes": 112,
+      "publishedDate": "2026-05-23T10:51:15.828Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 10",
@@ -1481,7 +1490,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -1605,12 +1614,13 @@
           ]
         }
       ],
-      "_id": "966c24bbf7254b5f5f39bafa",
-      "author": "36751ccc44ac5f59881024e1",
+      "_id": "04c1be1fb9542d672a4b0e79",
+      "author": "7d5777cd9743e1a66e14ac47",
       "is_published": true,
-      "views": 444,
-      "likes": 78,
-      "publishedDate": "2026-05-23T10:36:45.549Z"
+      "views": 396,
+      "likes": 143,
+      "publishedDate": "2026-05-23T10:51:15.828Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 11",
@@ -1626,7 +1636,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -1750,12 +1760,13 @@
           ]
         }
       ],
-      "_id": "7e300d3c3e2915fe5bbde8db",
-      "author": "53e61bbeae35f3460345c77f",
+      "_id": "79941fe371bee5d476e47e0c",
+      "author": "8cf80ccc7d432ae7dbc08ee1",
       "is_published": true,
-      "views": 484,
-      "likes": 210,
-      "publishedDate": "2026-05-23T10:36:45.549Z"
+      "views": 73,
+      "likes": 175,
+      "publishedDate": "2026-05-23T10:51:15.828Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 12",
@@ -1771,7 +1782,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -1895,12 +1906,13 @@
           ]
         }
       ],
-      "_id": "a96367d62fcfaee517cfef61",
-      "author": "f947cbbb03113a2c2157aec3",
+      "_id": "eeccabea8bf6a94ace86eb31",
+      "author": "f7ca4b972419fe0bae5b3086",
       "is_published": true,
-      "views": 53,
-      "likes": 196,
-      "publishedDate": "2026-05-23T10:36:45.549Z"
+      "views": 489,
+      "likes": 182,
+      "publishedDate": "2026-05-23T10:51:15.828Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 13",
@@ -1916,7 +1928,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -2040,12 +2052,13 @@
           ]
         }
       ],
-      "_id": "de5d510cdc49ace851a8bf81",
-      "author": "a56463c942872c4281297c36",
+      "_id": "e86fe892105b7cda5fd86124",
+      "author": "4e769a4a8c5db797c88bdb7e",
       "is_published": true,
-      "views": 437,
-      "likes": 145,
-      "publishedDate": "2026-05-23T10:36:45.549Z"
+      "views": 244,
+      "likes": 132,
+      "publishedDate": "2026-05-23T10:51:15.828Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 14",
@@ -2061,7 +2074,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -2185,12 +2198,13 @@
           ]
         }
       ],
-      "_id": "6026d11f9d242b73d1301b7e",
-      "author": "be72140b4be77c3785d32ef4",
+      "_id": "7cc1148e287275a23dfda167",
+      "author": "abbefc590e4029a99acf1a72",
       "is_published": true,
-      "views": 331,
-      "likes": 170,
-      "publishedDate": "2026-05-23T10:36:45.550Z"
+      "views": 518,
+      "likes": 33,
+      "publishedDate": "2026-05-23T10:51:15.828Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 15",
@@ -2206,7 +2220,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -2330,12 +2344,13 @@
           ]
         }
       ],
-      "_id": "bae87821c971f77d47c02c0e",
-      "author": "330d21d57ef2a73fcc587cab",
+      "_id": "0b559ba62f44c82e1dc2f478",
+      "author": "5228ba8c553bd1f82821e554",
       "is_published": true,
-      "views": 205,
-      "likes": 141,
-      "publishedDate": "2026-05-23T10:36:45.550Z"
+      "views": 478,
+      "likes": 219,
+      "publishedDate": "2026-05-23T10:51:15.828Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 16",
@@ -2351,7 +2366,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -2475,12 +2490,13 @@
           ]
         }
       ],
-      "_id": "cf54d62d439208579e062185",
-      "author": "c3e519e593ddc29563edcec9",
+      "_id": "e8c7f9f615ba9b4920252343",
+      "author": "964aa25246960060cd09e6a8",
       "is_published": true,
-      "views": 198,
-      "likes": 152,
-      "publishedDate": "2026-05-23T10:36:45.550Z"
+      "views": 546,
+      "likes": 87,
+      "publishedDate": "2026-05-23T10:51:15.828Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 17",
@@ -2496,7 +2512,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -2620,12 +2636,13 @@
           ]
         }
       ],
-      "_id": "72299ac9c2ad3e1f082e0608",
-      "author": "839d8045ae1e2261dc0d63b7",
+      "_id": "7dc6eefa539ff3e3e90963eb",
+      "author": "25d46ad024e7d0c63027dc29",
       "is_published": true,
-      "views": 146,
-      "likes": 62,
-      "publishedDate": "2026-05-23T10:36:45.550Z"
+      "views": 66,
+      "likes": 124,
+      "publishedDate": "2026-05-23T10:51:15.828Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 18",
@@ -2641,7 +2658,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -2765,12 +2782,13 @@
           ]
         }
       ],
-      "_id": "b9a9d2fd108dac58ec71f31c",
-      "author": "61c708fc0bc4953c39213af7",
+      "_id": "27bd80821408bde6a133d920",
+      "author": "fc7325695a9b1a04e59381a1",
       "is_published": true,
-      "views": 422,
-      "likes": 207,
-      "publishedDate": "2026-05-23T10:36:45.550Z"
+      "views": 239,
+      "likes": 127,
+      "publishedDate": "2026-05-23T10:51:15.828Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 19",
@@ -2786,7 +2804,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -2910,12 +2928,13 @@
           ]
         }
       ],
-      "_id": "e61908c723d3d5749154609f",
-      "author": "c3daa28c86a9a35f43b7473d",
+      "_id": "be24df5d3082be2bc35f9cb3",
+      "author": "fe8140546824b6e3aa1bf504",
       "is_published": true,
-      "views": 532,
-      "likes": 85,
-      "publishedDate": "2026-05-23T10:36:45.550Z"
+      "views": 209,
+      "likes": 173,
+      "publishedDate": "2026-05-23T10:51:15.828Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 20",
@@ -2931,7 +2950,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -3055,12 +3074,13 @@
           ]
         }
       ],
-      "_id": "6cc607891008983b66ffe555",
-      "author": "36751ccc44ac5f59881024e1",
+      "_id": "042182f8519db3627831f39c",
+      "author": "7d5777cd9743e1a66e14ac47",
       "is_published": true,
-      "views": 365,
-      "likes": 44,
-      "publishedDate": "2026-05-23T10:36:45.550Z"
+      "views": 113,
+      "likes": 117,
+      "publishedDate": "2026-05-23T10:51:15.828Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 21",
@@ -3076,7 +3096,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -3200,12 +3220,13 @@
           ]
         }
       ],
-      "_id": "a72d9ac938496d7cf9233b74",
-      "author": "53e61bbeae35f3460345c77f",
+      "_id": "40613fde2f7e34e9dbca9395",
+      "author": "8cf80ccc7d432ae7dbc08ee1",
       "is_published": true,
-      "views": 74,
-      "likes": 44,
-      "publishedDate": "2026-05-23T10:36:45.550Z"
+      "views": 535,
+      "likes": 133,
+      "publishedDate": "2026-05-23T10:51:15.828Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 22",
@@ -3221,7 +3242,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -3345,12 +3366,13 @@
           ]
         }
       ],
-      "_id": "584994bcc5db4e557b62e951",
-      "author": "f947cbbb03113a2c2157aec3",
+      "_id": "674296f4ad44c499687af46d",
+      "author": "f7ca4b972419fe0bae5b3086",
       "is_published": true,
-      "views": 64,
-      "likes": 198,
-      "publishedDate": "2026-05-23T10:36:45.550Z"
+      "views": 484,
+      "likes": 55,
+      "publishedDate": "2026-05-23T10:51:15.828Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 23",
@@ -3366,7 +3388,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -3490,12 +3512,13 @@
           ]
         }
       ],
-      "_id": "30fc72f8f81814d9667c4a53",
-      "author": "a56463c942872c4281297c36",
+      "_id": "102a608e231df221073bf964",
+      "author": "4e769a4a8c5db797c88bdb7e",
       "is_published": true,
-      "views": 251,
-      "likes": 62,
-      "publishedDate": "2026-05-23T10:36:45.550Z"
+      "views": 332,
+      "likes": 182,
+      "publishedDate": "2026-05-23T10:51:15.828Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 24",
@@ -3511,7 +3534,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -3635,12 +3658,13 @@
           ]
         }
       ],
-      "_id": "37c889a252a1d4cc83f8e310",
-      "author": "be72140b4be77c3785d32ef4",
+      "_id": "7adb7acbc2d17f41d11cc535",
+      "author": "abbefc590e4029a99acf1a72",
       "is_published": true,
-      "views": 389,
-      "likes": 96,
-      "publishedDate": "2026-05-23T10:36:45.550Z"
+      "views": 425,
+      "likes": 196,
+      "publishedDate": "2026-05-23T10:51:15.828Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 25",
@@ -3656,7 +3680,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -3780,12 +3804,13 @@
           ]
         }
       ],
-      "_id": "ea737d5de83026aac8a332e5",
-      "author": "330d21d57ef2a73fcc587cab",
+      "_id": "3cf30fcea012ea530637cbac",
+      "author": "5228ba8c553bd1f82821e554",
       "is_published": true,
-      "views": 252,
-      "likes": 20,
-      "publishedDate": "2026-05-23T10:36:45.550Z"
+      "views": 73,
+      "likes": 62,
+      "publishedDate": "2026-05-23T10:51:15.828Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 26",
@@ -3801,7 +3826,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -3925,12 +3950,13 @@
           ]
         }
       ],
-      "_id": "03b108da8885385119587d36",
-      "author": "c3e519e593ddc29563edcec9",
+      "_id": "aedd6130f6d6b9be9b161230",
+      "author": "964aa25246960060cd09e6a8",
       "is_published": true,
-      "views": 458,
-      "likes": 132,
-      "publishedDate": "2026-05-23T10:36:45.550Z"
+      "views": 112,
+      "likes": 45,
+      "publishedDate": "2026-05-23T10:51:15.828Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 27",
@@ -3946,7 +3972,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -4070,12 +4096,13 @@
           ]
         }
       ],
-      "_id": "68e525a2f620083a6108131a",
-      "author": "839d8045ae1e2261dc0d63b7",
+      "_id": "ada7ea21192b2be0cc16aa20",
+      "author": "25d46ad024e7d0c63027dc29",
       "is_published": true,
-      "views": 168,
-      "likes": 128,
-      "publishedDate": "2026-05-23T10:36:45.550Z"
+      "views": 116,
+      "likes": 145,
+      "publishedDate": "2026-05-23T10:51:15.828Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 28",
@@ -4091,7 +4118,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -4215,12 +4242,13 @@
           ]
         }
       ],
-      "_id": "ef37e58c84de034a0422a019",
-      "author": "61c708fc0bc4953c39213af7",
+      "_id": "1198d1aec59f8dadbfb31700",
+      "author": "fc7325695a9b1a04e59381a1",
       "is_published": true,
-      "views": 417,
-      "likes": 32,
-      "publishedDate": "2026-05-23T10:36:45.550Z"
+      "views": 50,
+      "likes": 100,
+      "publishedDate": "2026-05-23T10:51:15.828Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 29",
@@ -4236,7 +4264,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -4360,12 +4388,13 @@
           ]
         }
       ],
-      "_id": "f9892335182e13b25cd82edf",
-      "author": "c3daa28c86a9a35f43b7473d",
+      "_id": "1e3aa944e254de0d6d57576d",
+      "author": "fe8140546824b6e3aa1bf504",
       "is_published": true,
-      "views": 122,
-      "likes": 180,
-      "publishedDate": "2026-05-23T10:36:45.550Z"
+      "views": 357,
+      "likes": 68,
+      "publishedDate": "2026-05-23T10:51:15.828Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 30",
@@ -4381,7 +4410,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -4505,12 +4534,13 @@
           ]
         }
       ],
-      "_id": "54231cd6f0438e175fed0b18",
-      "author": "36751ccc44ac5f59881024e1",
+      "_id": "beca9e1f484dda68e68bfc83",
+      "author": "7d5777cd9743e1a66e14ac47",
       "is_published": true,
-      "views": 501,
-      "likes": 166,
-      "publishedDate": "2026-05-23T10:36:45.550Z"
+      "views": 202,
+      "likes": 161,
+      "publishedDate": "2026-05-23T10:51:15.828Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 31",
@@ -4526,7 +4556,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -4650,12 +4680,13 @@
           ]
         }
       ],
-      "_id": "13716d4688975dbaac2ab6aa",
-      "author": "53e61bbeae35f3460345c77f",
+      "_id": "264040c32c4c3b26cae19f41",
+      "author": "8cf80ccc7d432ae7dbc08ee1",
       "is_published": true,
-      "views": 69,
-      "likes": 182,
-      "publishedDate": "2026-05-23T10:36:45.550Z"
+      "views": 188,
+      "likes": 73,
+      "publishedDate": "2026-05-23T10:51:15.829Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 32",
@@ -4671,7 +4702,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -4795,12 +4826,13 @@
           ]
         }
       ],
-      "_id": "a045300c0ca3a7e1a0463ea5",
-      "author": "f947cbbb03113a2c2157aec3",
+      "_id": "cc104112aec5c652788eb190",
+      "author": "f7ca4b972419fe0bae5b3086",
       "is_published": true,
-      "views": 273,
-      "likes": 39,
-      "publishedDate": "2026-05-23T10:36:45.550Z"
+      "views": 236,
+      "likes": 45,
+      "publishedDate": "2026-05-23T10:51:15.829Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 33",
@@ -4816,7 +4848,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -4940,12 +4972,13 @@
           ]
         }
       ],
-      "_id": "bf380cc28ceac61112350666",
-      "author": "a56463c942872c4281297c36",
+      "_id": "a8249fd6cee57f8ea48a5c23",
+      "author": "4e769a4a8c5db797c88bdb7e",
       "is_published": true,
-      "views": 540,
-      "likes": 39,
-      "publishedDate": "2026-05-23T10:36:45.550Z"
+      "views": 117,
+      "likes": 29,
+      "publishedDate": "2026-05-23T10:51:15.829Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 34",
@@ -4961,7 +4994,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -5085,12 +5118,13 @@
           ]
         }
       ],
-      "_id": "2bce22c66280c1c4dc4114da",
-      "author": "be72140b4be77c3785d32ef4",
+      "_id": "6a6e792d9101f9978010282d",
+      "author": "abbefc590e4029a99acf1a72",
       "is_published": true,
-      "views": 440,
-      "likes": 47,
-      "publishedDate": "2026-05-23T10:36:45.550Z"
+      "views": 320,
+      "likes": 147,
+      "publishedDate": "2026-05-23T10:51:15.829Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 35",
@@ -5106,7 +5140,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -5230,12 +5264,13 @@
           ]
         }
       ],
-      "_id": "0460f5bb6cf426336234de5c",
-      "author": "330d21d57ef2a73fcc587cab",
+      "_id": "392264da1e199c54ceb691b5",
+      "author": "5228ba8c553bd1f82821e554",
       "is_published": true,
-      "views": 236,
-      "likes": 147,
-      "publishedDate": "2026-05-23T10:36:45.550Z"
+      "views": 222,
+      "likes": 201,
+      "publishedDate": "2026-05-23T10:51:15.829Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 36",
@@ -5251,7 +5286,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -5375,12 +5410,13 @@
           ]
         }
       ],
-      "_id": "44c41dae4e4c3c643df5fe65",
-      "author": "c3e519e593ddc29563edcec9",
+      "_id": "cb30b52a31e4b73697c6bd91",
+      "author": "964aa25246960060cd09e6a8",
       "is_published": true,
-      "views": 245,
-      "likes": 80,
-      "publishedDate": "2026-05-23T10:36:45.550Z"
+      "views": 422,
+      "likes": 213,
+      "publishedDate": "2026-05-23T10:51:15.829Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 37",
@@ -5396,7 +5432,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -5520,12 +5556,13 @@
           ]
         }
       ],
-      "_id": "b59b20ceba6d236f1a790029",
-      "author": "839d8045ae1e2261dc0d63b7",
+      "_id": "7d800425a700743bc1214fdb",
+      "author": "25d46ad024e7d0c63027dc29",
       "is_published": true,
-      "views": 184,
-      "likes": 85,
-      "publishedDate": "2026-05-23T10:36:45.550Z"
+      "views": 472,
+      "likes": 108,
+      "publishedDate": "2026-05-23T10:51:15.829Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 38",
@@ -5541,7 +5578,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -5665,12 +5702,13 @@
           ]
         }
       ],
-      "_id": "14b3d0d6aab82bc6b5a41b32",
-      "author": "61c708fc0bc4953c39213af7",
+      "_id": "eb9281c9c2ebd3d8b6340902",
+      "author": "fc7325695a9b1a04e59381a1",
       "is_published": true,
-      "views": 295,
-      "likes": 198,
-      "publishedDate": "2026-05-23T10:36:45.550Z"
+      "views": 97,
+      "likes": 92,
+      "publishedDate": "2026-05-23T10:51:15.829Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 39",
@@ -5686,7 +5724,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -5810,12 +5848,13 @@
           ]
         }
       ],
-      "_id": "bf1cc0c2c1c89f4a44708d84",
-      "author": "c3daa28c86a9a35f43b7473d",
+      "_id": "5633b859dfd5c269e8abcd0b",
+      "author": "fe8140546824b6e3aa1bf504",
       "is_published": true,
-      "views": 66,
-      "likes": 126,
-      "publishedDate": "2026-05-23T10:36:45.550Z"
+      "views": 443,
+      "likes": 52,
+      "publishedDate": "2026-05-23T10:51:15.829Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 40",
@@ -5831,7 +5870,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -5955,12 +5994,13 @@
           ]
         }
       ],
-      "_id": "30c7d007afdc4adc991dd8cc",
-      "author": "36751ccc44ac5f59881024e1",
+      "_id": "fef4e45a8dcd27100c3331ac",
+      "author": "7d5777cd9743e1a66e14ac47",
       "is_published": true,
-      "views": 491,
-      "likes": 132,
-      "publishedDate": "2026-05-23T10:36:45.550Z"
+      "views": 236,
+      "likes": 201,
+      "publishedDate": "2026-05-23T10:51:15.829Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 41",
@@ -5976,7 +6016,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -6100,12 +6140,13 @@
           ]
         }
       ],
-      "_id": "893dca9a62469cc84c1c630a",
-      "author": "53e61bbeae35f3460345c77f",
+      "_id": "5e8bf38dfde608db1d811faa",
+      "author": "8cf80ccc7d432ae7dbc08ee1",
       "is_published": true,
-      "views": 136,
-      "likes": 200,
-      "publishedDate": "2026-05-23T10:36:45.550Z"
+      "views": 488,
+      "likes": 50,
+      "publishedDate": "2026-05-23T10:51:15.829Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 42",
@@ -6121,7 +6162,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -6245,12 +6286,13 @@
           ]
         }
       ],
-      "_id": "9ffd66083fbaa1090272e9e3",
-      "author": "f947cbbb03113a2c2157aec3",
+      "_id": "ed50b5ecf97f687c12ad9cee",
+      "author": "f7ca4b972419fe0bae5b3086",
       "is_published": true,
-      "views": 329,
-      "likes": 159,
-      "publishedDate": "2026-05-23T10:36:45.550Z"
+      "views": 476,
+      "likes": 85,
+      "publishedDate": "2026-05-23T10:51:15.829Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 43",
@@ -6266,7 +6308,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -6390,12 +6432,13 @@
           ]
         }
       ],
-      "_id": "dca7bf27f585e59928784a3f",
-      "author": "a56463c942872c4281297c36",
+      "_id": "59f9e3b572ecb3b72bf41d3c",
+      "author": "4e769a4a8c5db797c88bdb7e",
       "is_published": true,
-      "views": 532,
-      "likes": 190,
-      "publishedDate": "2026-05-23T10:36:45.551Z"
+      "views": 64,
+      "likes": 39,
+      "publishedDate": "2026-05-23T10:51:15.829Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 44",
@@ -6411,7 +6454,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -6535,12 +6578,13 @@
           ]
         }
       ],
-      "_id": "627e33eac991037dc6cdb48d",
-      "author": "be72140b4be77c3785d32ef4",
+      "_id": "010e61cc004912e8eb145b53",
+      "author": "abbefc590e4029a99acf1a72",
       "is_published": true,
-      "views": 169,
-      "likes": 196,
-      "publishedDate": "2026-05-23T10:36:45.551Z"
+      "views": 136,
+      "likes": 85,
+      "publishedDate": "2026-05-23T10:51:15.829Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 45",
@@ -6556,7 +6600,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -6680,12 +6724,13 @@
           ]
         }
       ],
-      "_id": "387d9131f4c8e3470fc2c2ef",
-      "author": "330d21d57ef2a73fcc587cab",
+      "_id": "586e42c1a78865d0a0e67654",
+      "author": "5228ba8c553bd1f82821e554",
       "is_published": true,
-      "views": 206,
-      "likes": 151,
-      "publishedDate": "2026-05-23T10:36:45.551Z"
+      "views": 337,
+      "likes": 107,
+      "publishedDate": "2026-05-23T10:51:15.829Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 46",
@@ -6701,7 +6746,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -6825,12 +6870,13 @@
           ]
         }
       ],
-      "_id": "d260666f0447e7944e60945f",
-      "author": "c3e519e593ddc29563edcec9",
+      "_id": "dde6cbf95ca36720f31e3e96",
+      "author": "964aa25246960060cd09e6a8",
       "is_published": true,
-      "views": 465,
-      "likes": 63,
-      "publishedDate": "2026-05-23T10:36:45.551Z"
+      "views": 500,
+      "likes": 104,
+      "publishedDate": "2026-05-23T10:51:15.829Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 47",
@@ -6846,7 +6892,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -6970,12 +7016,13 @@
           ]
         }
       ],
-      "_id": "c39382dbf6c1e61163bf96d2",
-      "author": "839d8045ae1e2261dc0d63b7",
+      "_id": "5759efda9b4250879b083054",
+      "author": "25d46ad024e7d0c63027dc29",
       "is_published": true,
-      "views": 534,
-      "likes": 98,
-      "publishedDate": "2026-05-23T10:36:45.551Z"
+      "views": 447,
+      "likes": 80,
+      "publishedDate": "2026-05-23T10:51:15.829Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 48",
@@ -6991,7 +7038,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -7115,12 +7162,13 @@
           ]
         }
       ],
-      "_id": "098d3411a5702f50ffd2749d",
-      "author": "61c708fc0bc4953c39213af7",
+      "_id": "2e2d88be4bb8c86419cc543c",
+      "author": "fc7325695a9b1a04e59381a1",
       "is_published": true,
-      "views": 131,
-      "likes": 122,
-      "publishedDate": "2026-05-23T10:36:45.551Z"
+      "views": 496,
+      "likes": 84,
+      "publishedDate": "2026-05-23T10:51:15.829Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 49",
@@ -7136,7 +7184,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -7260,12 +7308,13 @@
           ]
         }
       ],
-      "_id": "ae4ba3ff171c7755d6419755",
-      "author": "c3daa28c86a9a35f43b7473d",
+      "_id": "891816fd3b9f718e28e0f77e",
+      "author": "fe8140546824b6e3aa1bf504",
       "is_published": true,
-      "views": 540,
-      "likes": 176,
-      "publishedDate": "2026-05-23T10:36:45.551Z"
+      "views": 333,
+      "likes": 35,
+      "publishedDate": "2026-05-23T10:51:15.829Z",
+      "thumbnail": "/uploads/blog.png"
     },
     {
       "title": "Mastering Google Cloud Platform: A Complete Guide Part 50",
@@ -7281,7 +7330,7 @@
         "devops",
         "infrastructure"
       ],
-      "image": "https://storage.googleapis.com/learning_by_jay/blogermenia/default-gcp-banner.png",
+      "image": "/uploads/blog.png",
       "introduction": "Google Cloud Platform (GCP) has rapidly emerged as a powerhouse in the cloud computing industry, offering enterprise-grade infrastructure and cutting-edge machine learning capabilities. Whether you're a startup looking to scale quickly or an established enterprise modernizing your architecture, understanding GCP's core services is essential.",
       "conclusion": "Google Cloud Platform provides a robust, scalable, and highly innovative environment for modern applications. By mastering its core services—Compute Engine, Cloud Storage, BigQuery, and Kubernetes Engine—you can build resilient architectures that power the future of your business.",
       "sections": [
@@ -7405,352 +7454,465 @@
           ]
         }
       ],
-      "_id": "16f14cf8ece8646031d0f32d",
-      "author": "36751ccc44ac5f59881024e1",
+      "_id": "71145a4e572610f1c2d49f1f",
+      "author": "7d5777cd9743e1a66e14ac47",
       "is_published": true,
-      "views": 169,
-      "likes": 130,
-      "publishedDate": "2026-05-23T10:36:45.551Z"
+      "views": 391,
+      "likes": 122,
+      "publishedDate": "2026-05-23T10:51:15.829Z",
+      "thumbnail": "/uploads/blog.png"
     }
   ],
   "playlists": [
     {
-      "_id": "1f23af1df4bb8f1758a902e4",
+      "_id": "1aff66745be37328918d5f14",
       "name": "Master Playlist 1",
       "slug": "master-playlist-1",
       "description": "A master collection of system engineering topics 1.",
-      "cover_image": "/playlist.png",
-      "owner": "53e61bbeae35f3460345c77f",
+      "cover_image": "/uploads/playlist.png",
+      "owner": "8cf80ccc7d432ae7dbc08ee1",
       "is_public": true,
       "blogs": [
-        "d260666f0447e7944e60945f",
-        "a96367d62fcfaee517cfef61",
-        "7e417db8c5eeedb3f7228d48"
+        "7adb7acbc2d17f41d11cc535",
+        "30436fc0068c051de0957dd6",
+        "71145a4e572610f1c2d49f1f"
       ],
-      "total_views": 330,
-      "total_likes": 22,
+      "total_views": 540,
+      "total_likes": 99,
       "blog_count": 3
     },
     {
-      "_id": "00ee247fc13a498ed68bff86",
+      "_id": "10cceb13944667abd59e0456",
       "name": "Master Playlist 2",
       "slug": "master-playlist-2",
       "description": "A master collection of system engineering topics 2.",
-      "cover_image": "/playlist.png",
-      "owner": "f947cbbb03113a2c2157aec3",
+      "cover_image": "/uploads/playlist.png",
+      "owner": "f7ca4b972419fe0bae5b3086",
       "is_public": true,
       "blogs": [
-        "0460f5bb6cf426336234de5c",
-        "7b920276d06e7281690daec8",
-        "6026d11f9d242b73d1301b7e"
+        "5633b859dfd5c269e8abcd0b",
+        "26db24d04ee7e8bdaf6a5f6f",
+        "cb30b52a31e4b73697c6bd91"
       ],
-      "total_views": 92,
-      "total_likes": 177,
+      "total_views": 158,
+      "total_likes": 154,
       "blog_count": 3
     },
     {
-      "_id": "aec0d6001c0c3cdc15c414a8",
+      "_id": "91386587cc113b87a23b1b89",
       "name": "Master Playlist 3",
       "slug": "master-playlist-3",
       "description": "A master collection of system engineering topics 3.",
-      "cover_image": "/playlist.png",
-      "owner": "a56463c942872c4281297c36",
+      "cover_image": "/uploads/playlist.png",
+      "owner": "4e769a4a8c5db797c88bdb7e",
       "is_public": true,
       "blogs": [
-        "44c41dae4e4c3c643df5fe65",
-        "bf1cc0c2c1c89f4a44708d84"
+        "5e8bf38dfde608db1d811faa",
+        "d0d7a730aa169ddfd3f5ce31",
+        "fc8359bf81a10547a58981ab"
       ],
-      "total_views": 426,
-      "total_likes": 42,
-      "blog_count": 2
+      "total_views": 291,
+      "total_likes": 110,
+      "blog_count": 3
     },
     {
-      "_id": "cca22a56d2fe4b9032c0b199",
+      "_id": "5847fca9bcff51451e32c245",
       "name": "Master Playlist 4",
       "slug": "master-playlist-4",
       "description": "A master collection of system engineering topics 4.",
-      "cover_image": "/playlist.png",
-      "owner": "be72140b4be77c3785d32ef4",
+      "cover_image": "/uploads/playlist.png",
+      "owner": "abbefc590e4029a99acf1a72",
       "is_public": true,
       "blogs": [
-        "4f8239f2aa69adc5bf153494",
-        "cf54d62d439208579e062185",
-        "db20b65275a7bcf56ba6b06a"
+        "7adb7acbc2d17f41d11cc535",
+        "be24df5d3082be2bc35f9cb3",
+        "1e3aa944e254de0d6d57576d"
       ],
-      "total_views": 481,
-      "total_likes": 46,
+      "total_views": 393,
+      "total_likes": 122,
       "blog_count": 3
     },
     {
-      "_id": "02cb89ae07fd1d6b4e2acf94",
+      "_id": "c406da3d95f554fbab9f8002",
       "name": "Master Playlist 5",
       "slug": "master-playlist-5",
       "description": "A master collection of system engineering topics 5.",
-      "cover_image": "/playlist.png",
-      "owner": "330d21d57ef2a73fcc587cab",
+      "cover_image": "/uploads/playlist.png",
+      "owner": "5228ba8c553bd1f82821e554",
       "is_public": true,
       "blogs": [
-        "13716d4688975dbaac2ab6aa",
-        "e41eb4f92643568a81a514c8",
-        "bae87821c971f77d47c02c0e"
+        "cc104112aec5c652788eb190",
+        "40613fde2f7e34e9dbca9395",
+        "ada7ea21192b2be0cc16aa20"
       ],
-      "total_views": 434,
-      "total_likes": 36,
+      "total_views": 530,
+      "total_likes": 69,
       "blog_count": 3
     },
     {
-      "_id": "a62b85454b528b5ec751e746",
+      "_id": "6301d25ac156c655f985bb67",
       "name": "Master Playlist 6",
       "slug": "master-playlist-6",
       "description": "A master collection of system engineering topics 6.",
-      "cover_image": "/playlist.png",
-      "owner": "c3e519e593ddc29563edcec9",
+      "cover_image": "/uploads/playlist.png",
+      "owner": "964aa25246960060cd09e6a8",
       "is_public": true,
       "blogs": [
-        "14b3d0d6aab82bc6b5a41b32",
-        "30c7d007afdc4adc991dd8cc",
-        "cf54d62d439208579e062185"
+        "002f76431ba5ceef644eb3c4",
+        "ff1133f61b2288b640db234e",
+        "26db24d04ee7e8bdaf6a5f6f"
       ],
-      "total_views": 483,
-      "total_likes": 115,
+      "total_views": 547,
+      "total_likes": 166,
       "blog_count": 3
     },
     {
-      "_id": "098baacd72fc2de133e1ab8c",
+      "_id": "a0d259ff252d353a20bee39a",
       "name": "Master Playlist 7",
       "slug": "master-playlist-7",
       "description": "A master collection of system engineering topics 7.",
-      "cover_image": "/playlist.png",
-      "owner": "839d8045ae1e2261dc0d63b7",
+      "cover_image": "/uploads/playlist.png",
+      "owner": "25d46ad024e7d0c63027dc29",
       "is_public": true,
       "blogs": [
-        "ef37e58c84de034a0422a019",
-        "f9892335182e13b25cd82edf",
-        "a72d9ac938496d7cf9233b74"
+        "7adb7acbc2d17f41d11cc535",
+        "a2fb20906252991570e97ac2",
+        "392264da1e199c54ceb691b5"
       ],
-      "total_views": 207,
+      "total_views": 291,
+      "total_likes": 159,
+      "blog_count": 3
+    },
+    {
+      "_id": "d8e38561205558088d256ca1",
+      "name": "Master Playlist 8",
+      "slug": "master-playlist-8",
+      "description": "A master collection of system engineering topics 8.",
+      "cover_image": "/uploads/playlist.png",
+      "owner": "fc7325695a9b1a04e59381a1",
+      "is_public": true,
+      "blogs": [
+        "ada7ea21192b2be0cc16aa20",
+        "fef4e45a8dcd27100c3331ac",
+        "e072e12e59cd3ae0eccc4138"
+      ],
+      "total_views": 530,
+      "total_likes": 114,
+      "blog_count": 3
+    },
+    {
+      "_id": "e01921454db14d99f346678c",
+      "name": "Master Playlist 9",
+      "slug": "master-playlist-9",
+      "description": "A master collection of system engineering topics 9.",
+      "cover_image": "/uploads/playlist.png",
+      "owner": "fe8140546824b6e3aa1bf504",
+      "is_public": true,
+      "blogs": [
+        "fc8359bf81a10547a58981ab",
+        "0b41356602d8d8582426813f"
+      ],
+      "total_views": 332,
+      "total_likes": 204,
+      "blog_count": 2
+    },
+    {
+      "_id": "0562b75d17b81f6c3913f4c9",
+      "name": "Master Playlist 10",
+      "slug": "master-playlist-10",
+      "description": "A master collection of system engineering topics 10.",
+      "cover_image": "/uploads/playlist.png",
+      "owner": "7d5777cd9743e1a66e14ac47",
+      "is_public": true,
+      "blogs": [
+        "2e2d88be4bb8c86419cc543c",
+        "27bd80821408bde6a133d920",
+        "042182f8519db3627831f39c"
+      ],
+      "total_views": 547,
+      "total_likes": 161,
+      "blog_count": 3
+    },
+    {
+      "_id": "578b72b36c24b3145b9b04f2",
+      "name": "Master Playlist 11",
+      "slug": "master-playlist-11",
+      "description": "A master collection of system engineering topics 11.",
+      "cover_image": "/uploads/playlist.png",
+      "owner": "8cf80ccc7d432ae7dbc08ee1",
+      "is_public": true,
+      "blogs": [
+        "dde6cbf95ca36720f31e3e96",
+        "d0d7a730aa169ddfd3f5ce31",
+        "e8c7f9f615ba9b4920252343"
+      ],
+      "total_views": 417,
+      "total_likes": 64,
+      "blog_count": 3
+    },
+    {
+      "_id": "ad4847700772fd1f63b48338",
+      "name": "Master Playlist 12",
+      "slug": "master-playlist-12",
+      "description": "A master collection of system engineering topics 12.",
+      "cover_image": "/uploads/playlist.png",
+      "owner": "f7ca4b972419fe0bae5b3086",
+      "is_public": true,
+      "blogs": [
+        "5759efda9b4250879b083054",
+        "dde6cbf95ca36720f31e3e96",
+        "71145a4e572610f1c2d49f1f"
+      ],
+      "total_views": 112,
+      "total_likes": 91,
+      "blog_count": 3
+    },
+    {
+      "_id": "63a1c11d0dc9c9f9e4a284fd",
+      "name": "Master Playlist 13",
+      "slug": "master-playlist-13",
+      "description": "A master collection of system engineering topics 13.",
+      "cover_image": "/uploads/playlist.png",
+      "owner": "4e769a4a8c5db797c88bdb7e",
+      "is_public": true,
+      "blogs": [
+        "eeccabea8bf6a94ace86eb31",
+        "59f9e3b572ecb3b72bf41d3c",
+        "a8249fd6cee57f8ea48a5c23"
+      ],
+      "total_views": 465,
+      "total_likes": 41,
+      "blog_count": 3
+    },
+    {
+      "_id": "a117380ac1dfef53f204dd24",
+      "name": "Master Playlist 14",
+      "slug": "master-playlist-14",
+      "description": "A master collection of system engineering topics 14.",
+      "cover_image": "/uploads/playlist.png",
+      "owner": "abbefc590e4029a99acf1a72",
+      "is_public": true,
+      "blogs": [
+        "ed50b5ecf97f687c12ad9cee",
+        "a2fb20906252991570e97ac2",
+        "26db24d04ee7e8bdaf6a5f6f"
+      ],
+      "total_views": 81,
+      "total_likes": 148,
+      "blog_count": 3
+    },
+    {
+      "_id": "ff76f0c2f119feee2a0e3431",
+      "name": "Master Playlist 15",
+      "slug": "master-playlist-15",
+      "description": "A master collection of system engineering topics 15.",
+      "cover_image": "/uploads/playlist.png",
+      "owner": "5228ba8c553bd1f82821e554",
+      "is_public": true,
+      "blogs": [
+        "59f9e3b572ecb3b72bf41d3c",
+        "674296f4ad44c499687af46d",
+        "102a608e231df221073bf964"
+      ],
+      "total_views": 386,
       "total_likes": 116,
       "blog_count": 3
     },
     {
-      "_id": "49c8b14eb3602c653befb63a",
-      "name": "Master Playlist 8",
-      "slug": "master-playlist-8",
-      "description": "A master collection of system engineering topics 8.",
-      "cover_image": "/playlist.png",
-      "owner": "61c708fc0bc4953c39213af7",
-      "is_public": true,
-      "blogs": [
-        "7b920276d06e7281690daec8",
-        "14b3d0d6aab82bc6b5a41b32",
-        "08f71892b2e86b88f3a8edab"
-      ],
-      "total_views": 479,
-      "total_likes": 120,
-      "blog_count": 3
-    },
-    {
-      "_id": "628f0bb48d8005aa7230e213",
-      "name": "Master Playlist 9",
-      "slug": "master-playlist-9",
-      "description": "A master collection of system engineering topics 9.",
-      "cover_image": "/playlist.png",
-      "owner": "c3daa28c86a9a35f43b7473d",
-      "is_public": true,
-      "blogs": [
-        "68e525a2f620083a6108131a",
-        "ef37e58c84de034a0422a019",
-        "7e417db8c5eeedb3f7228d48"
-      ],
-      "total_views": 175,
-      "total_likes": 149,
-      "blog_count": 3
-    },
-    {
-      "_id": "3293d1034c5c1d805ea34318",
-      "name": "Master Playlist 10",
-      "slug": "master-playlist-10",
-      "description": "A master collection of system engineering topics 10.",
-      "cover_image": "/playlist.png",
-      "owner": "36751ccc44ac5f59881024e1",
-      "is_public": true,
-      "blogs": [
-        "387d9131f4c8e3470fc2c2ef",
-        "ef37e58c84de034a0422a019",
-        "0460f5bb6cf426336234de5c"
-      ],
-      "total_views": 315,
-      "total_likes": 169,
-      "blog_count": 3
-    },
-    {
-      "_id": "1b9a7b048ec4673d9ed72f08",
-      "name": "Master Playlist 11",
-      "slug": "master-playlist-11",
-      "description": "A master collection of system engineering topics 11.",
-      "cover_image": "/playlist.png",
-      "owner": "53e61bbeae35f3460345c77f",
-      "is_public": true,
-      "blogs": [
-        "cf54d62d439208579e062185",
-        "893dca9a62469cc84c1c630a",
-        "dca7bf27f585e59928784a3f"
-      ],
-      "total_views": 275,
-      "total_likes": 162,
-      "blog_count": 3
-    },
-    {
-      "_id": "8cb85a6cfc25eff55e652df4",
-      "name": "Master Playlist 12",
-      "slug": "master-playlist-12",
-      "description": "A master collection of system engineering topics 12.",
-      "cover_image": "/playlist.png",
-      "owner": "f947cbbb03113a2c2157aec3",
-      "is_public": true,
-      "blogs": [
-        "c39382dbf6c1e61163bf96d2",
-        "68e525a2f620083a6108131a",
-        "dca7bf27f585e59928784a3f"
-      ],
-      "total_views": 541,
-      "total_likes": 25,
-      "blog_count": 3
-    },
-    {
-      "_id": "c4326bf1d0eab54678c7f265",
-      "name": "Master Playlist 13",
-      "slug": "master-playlist-13",
-      "description": "A master collection of system engineering topics 13.",
-      "cover_image": "/playlist.png",
-      "owner": "a56463c942872c4281297c36",
-      "is_public": true,
-      "blogs": [
-        "a72d9ac938496d7cf9233b74",
-        "0460f5bb6cf426336234de5c"
-      ],
-      "total_views": 356,
-      "total_likes": 121,
-      "blog_count": 2
-    },
-    {
-      "_id": "1ff0c65bfa8663c7642456ed",
-      "name": "Master Playlist 14",
-      "slug": "master-playlist-14",
-      "description": "A master collection of system engineering topics 14.",
-      "cover_image": "/playlist.png",
-      "owner": "be72140b4be77c3785d32ef4",
-      "is_public": true,
-      "blogs": [
-        "b59b20ceba6d236f1a790029",
-        "bf1cc0c2c1c89f4a44708d84",
-        "08f71892b2e86b88f3a8edab"
-      ],
-      "total_views": 182,
-      "total_likes": 193,
-      "blog_count": 3
-    },
-    {
-      "_id": "a008a1bef81ec563cfe99610",
-      "name": "Master Playlist 15",
-      "slug": "master-playlist-15",
-      "description": "A master collection of system engineering topics 15.",
-      "cover_image": "/playlist.png",
-      "owner": "330d21d57ef2a73fcc587cab",
-      "is_public": true,
-      "blogs": [
-        "584994bcc5db4e557b62e951",
-        "13716d4688975dbaac2ab6aa",
-        "893dca9a62469cc84c1c630a"
-      ],
-      "total_views": 302,
-      "total_likes": 178,
-      "blog_count": 3
-    },
-    {
-      "_id": "11619b65c920ff5370c66e35",
+      "_id": "47a844e7ada4dd455a7ba013",
       "name": "Master Playlist 16",
       "slug": "master-playlist-16",
       "description": "A master collection of system engineering topics 16.",
-      "cover_image": "/playlist.png",
-      "owner": "c3e519e593ddc29563edcec9",
+      "cover_image": "/uploads/playlist.png",
+      "owner": "964aa25246960060cd09e6a8",
       "is_public": true,
       "blogs": [
-        "a045300c0ca3a7e1a0463ea5",
-        "6026d11f9d242b73d1301b7e",
-        "ef37e58c84de034a0422a019"
+        "beca9e1f484dda68e68bfc83",
+        "3cf30fcea012ea530637cbac",
+        "1e3aa944e254de0d6d57576d"
       ],
-      "total_views": 510,
-      "total_likes": 43,
+      "total_views": 205,
+      "total_likes": 65,
       "blog_count": 3
     },
     {
-      "_id": "713875339b90db1d7c16b68a",
+      "_id": "f5a6a8b86bbd9fc4af34001b",
       "name": "Master Playlist 17",
       "slug": "master-playlist-17",
       "description": "A master collection of system engineering topics 17.",
-      "cover_image": "/playlist.png",
-      "owner": "839d8045ae1e2261dc0d63b7",
+      "cover_image": "/uploads/playlist.png",
+      "owner": "25d46ad024e7d0c63027dc29",
       "is_public": true,
       "blogs": [
-        "214a1f4bf213dcb92eac9ff6",
-        "bf380cc28ceac61112350666",
-        "893dca9a62469cc84c1c630a"
+        "7adb7acbc2d17f41d11cc535",
+        "264040c32c4c3b26cae19f41",
+        "002f76431ba5ceef644eb3c4"
       ],
-      "total_views": 147,
-      "total_likes": 133,
+      "total_views": 319,
+      "total_likes": 40,
       "blog_count": 3
     },
     {
-      "_id": "2d47fe3b7ea68cadad162f77",
+      "_id": "f97b28a5b02f986d955a799e",
       "name": "Master Playlist 18",
       "slug": "master-playlist-18",
       "description": "A master collection of system engineering topics 18.",
-      "cover_image": "/playlist.png",
-      "owner": "61c708fc0bc4953c39213af7",
+      "cover_image": "/uploads/playlist.png",
+      "owner": "fc7325695a9b1a04e59381a1",
       "is_public": true,
       "blogs": [
-        "dca7bf27f585e59928784a3f",
-        "bf1cc0c2c1c89f4a44708d84",
-        "7b920276d06e7281690daec8"
+        "a2fb20906252991570e97ac2",
+        "010e61cc004912e8eb145b53",
+        "eb9281c9c2ebd3d8b6340902"
       ],
-      "total_views": 377,
-      "total_likes": 107,
+      "total_views": 203,
+      "total_likes": 175,
       "blog_count": 3
     },
     {
-      "_id": "5258b5697d507123447a492a",
+      "_id": "07b10699ec5dd0d91f0b0a90",
       "name": "Master Playlist 19",
       "slug": "master-playlist-19",
       "description": "A master collection of system engineering topics 19.",
-      "cover_image": "/playlist.png",
-      "owner": "c3daa28c86a9a35f43b7473d",
+      "cover_image": "/uploads/playlist.png",
+      "owner": "fe8140546824b6e3aa1bf504",
       "is_public": true,
       "blogs": [
-        "ea737d5de83026aac8a332e5",
-        "2bce22c66280c1c4dc4114da",
-        "db20b65275a7bcf56ba6b06a"
+        "5e8bf38dfde608db1d811faa",
+        "beca9e1f484dda68e68bfc83",
+        "04c1be1fb9542d672a4b0e79"
       ],
-      "total_views": 69,
-      "total_likes": 27,
+      "total_views": 145,
+      "total_likes": 147,
       "blog_count": 3
     },
     {
-      "_id": "08ae78a40f578c3c62f829f8",
+      "_id": "b356186c65d40db1c2a2b206",
       "name": "Master Playlist 20",
       "slug": "master-playlist-20",
       "description": "A master collection of system engineering topics 20.",
-      "cover_image": "/playlist.png",
-      "owner": "36751ccc44ac5f59881024e1",
+      "cover_image": "/uploads/playlist.png",
+      "owner": "7d5777cd9743e1a66e14ac47",
       "is_public": true,
       "blogs": [
-        "7e417db8c5eeedb3f7228d48",
-        "6026d11f9d242b73d1301b7e",
-        "37c889a252a1d4cc83f8e310"
+        "010e61cc004912e8eb145b53",
+        "5759efda9b4250879b083054",
+        "7dc6eefa539ff3e3e90963eb"
       ],
-      "total_views": 263,
-      "total_likes": 40,
+      "total_views": 517,
+      "total_likes": 79,
       "blog_count": 3
+    }
+  ],
+  "faqs": [
+    {
+      "_id": "87fd3fcf2e72671fb4d870ea",
+      "question": "How do I start writing technical blogs?",
+      "answer": "Simply sign up, click on \"New Blog\", and start drafting your architectural insights using our AI-assisted editor.",
+      "is_active": true,
+      "order": 1
+    },
+    {
+      "_id": "2a173b16cd1df28989bce212",
+      "question": "What is Blogermenia?",
+      "answer": "Blogermenia is an AI-powered technical publishing platform designed for developers and system architects.",
+      "is_active": true,
+      "order": 2
+    },
+    {
+      "_id": "d13d4aed2d67860153d07a27",
+      "question": "Can I monetize my blogs?",
+      "answer": "Yes, we are introducing monetization features soon for our top creators.",
+      "is_active": true,
+      "order": 3
+    },
+    {
+      "_id": "d66eb0725c99822719ae4519",
+      "question": "Is there a limit to how many blogs I can write?",
+      "answer": "No, there are no limits. Write as much as you want.",
+      "is_active": true,
+      "order": 4
+    },
+    {
+      "_id": "7d4c2246fe319bad3727aa4d",
+      "question": "How does AI help in writing?",
+      "answer": "Our AI suggests structural improvements, generates excerpts, and helps overcome writer's block.",
+      "is_active": true,
+      "order": 5
+    }
+  ],
+  "testimonials": [
+    {
+      "_id": "2df0d3d1628d6c17cfcdb682",
+      "name": "Tech Leader 1",
+      "role": "Senior Developer",
+      "content": "Blogermenia has completely transformed how our engineering team shares knowledge. The AI tools are incredibly precise and helpful!",
+      "rating": 5,
+      "is_approved": true,
+      "user": "f7ca4b972419fe0bae5b3086"
+    },
+    {
+      "_id": "e7de257b05f07ac2d019cb45",
+      "name": "Tech Leader 2",
+      "role": "DevOps Engineer",
+      "content": "Blogermenia has completely transformed how our engineering team shares knowledge. The AI tools are incredibly precise and helpful!",
+      "rating": 5,
+      "is_approved": true,
+      "user": "4e769a4a8c5db797c88bdb7e"
+    },
+    {
+      "_id": "494adbe162446ff966cb7227",
+      "name": "Tech Leader 3",
+      "role": "CTO",
+      "content": "Blogermenia has completely transformed how our engineering team shares knowledge. The AI tools are incredibly precise and helpful!",
+      "rating": 5,
+      "is_approved": true,
+      "user": "abbefc590e4029a99acf1a72"
+    },
+    {
+      "_id": "6bdb4f93bb6a736ca6861b28",
+      "name": "Tech Leader 4",
+      "role": "Frontend Engineer",
+      "content": "Blogermenia has completely transformed how our engineering team shares knowledge. The AI tools are incredibly precise and helpful!",
+      "rating": 5,
+      "is_approved": true,
+      "user": "5228ba8c553bd1f82821e554"
+    },
+    {
+      "_id": "1b98a7c5adbf9ac7e7c6fde2",
+      "name": "Tech Leader 5",
+      "role": "System Architect",
+      "content": "Blogermenia has completely transformed how our engineering team shares knowledge. The AI tools are incredibly precise and helpful!",
+      "rating": 5,
+      "is_approved": true,
+      "user": "964aa25246960060cd09e6a8"
+    },
+    {
+      "_id": "0ccdb78a54dde45ecb481c42",
+      "name": "Tech Leader 6",
+      "role": "Senior Developer",
+      "content": "Blogermenia has completely transformed how our engineering team shares knowledge. The AI tools are incredibly precise and helpful!",
+      "rating": 5,
+      "is_approved": true,
+      "user": "25d46ad024e7d0c63027dc29"
+    },
+    {
+      "_id": "839e2cda1c8bce3198a5906e",
+      "name": "Tech Leader 7",
+      "role": "DevOps Engineer",
+      "content": "Blogermenia has completely transformed how our engineering team shares knowledge. The AI tools are incredibly precise and helpful!",
+      "rating": 5,
+      "is_approved": true,
+      "user": "fc7325695a9b1a04e59381a1"
+    },
+    {
+      "_id": "1f3cca7c2b81ccdf37ff4a3d",
+      "name": "Tech Leader 8",
+      "role": "CTO",
+      "content": "Blogermenia has completely transformed how our engineering team shares knowledge. The AI tools are incredibly precise and helpful!",
+      "rating": 5,
+      "is_approved": true,
+      "user": "fe8140546824b6e3aa1bf504"
     }
   ]
 }

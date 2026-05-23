@@ -48,13 +48,30 @@ async function seed() {
     updatedAt: new Date(),
   }));
 
+  const faqs = data.faqs.map(f => ({
+    ...f,
+    _id: new mongoose.Types.ObjectId(f._id),
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }));
+
+  const testimonials = data.testimonials.map(t => ({
+    ...t,
+    _id: new mongoose.Types.ObjectId(t._id),
+    user: new mongoose.Types.ObjectId(t.user),
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }));
+
   // Direct insertions bypassing mongoose schema validation to avoid import issues
   const db = mongoose.connection.db;
 
-  console.log("Clearing existing users, blogs, and playlists...");
+  console.log("Clearing existing users, blogs, playlists, faqs, and testimonials...");
   await db.collection('users').deleteMany({});
   await db.collection('blogs').deleteMany({});
   await db.collection('playlists').deleteMany({});
+  await db.collection('faqs').deleteMany({});
+  await db.collection('testimonials').deleteMany({});
 
   console.log("Inserting users...");
   await db.collection('users').insertMany(users);
@@ -64,6 +81,12 @@ async function seed() {
   
   console.log("Inserting playlists...");
   await db.collection('playlists').insertMany(playlists);
+
+  console.log("Inserting FAQs...");
+  await db.collection('faqs').insertMany(faqs);
+
+  console.log("Inserting Testimonials...");
+  await db.collection('testimonials').insertMany(testimonials);
 
   console.log("Database seeded successfully!");
   process.exit(0);

@@ -49,7 +49,9 @@ for (let i = 1; i <= 50; i++) {
     featured: i <= 5, // first 5 are featured
     views: Math.floor(Math.random() * 500) + 50,
     likes: Math.floor(Math.random() * 200) + 20,
-    publishedDate: new Date().toISOString()
+    publishedDate: new Date().toISOString(),
+    image: '/uploads/blog.png',
+    thumbnail: '/uploads/blog.png'
   });
 }
 
@@ -70,7 +72,7 @@ for (let i = 1; i <= 20; i++) {
     name: `Master Playlist ${i}`,
     slug: `master-playlist-${i}`,
     description: `A master collection of system engineering topics ${i}.`,
-    cover_image: '/playlist.png',
+    cover_image: '/uploads/playlist.png',
     owner: owner,
     is_public: true,
     blogs: playlistBlogs,
@@ -80,10 +82,46 @@ for (let i = 1; i <= 20; i++) {
   });
 }
 
+const faqs = [];
+const faqData = [
+  { question: 'How do I start writing technical blogs?', answer: 'Simply sign up, click on "New Blog", and start drafting your architectural insights using our AI-assisted editor.' },
+  { question: 'What is Blogermenia?', answer: 'Blogermenia is an AI-powered technical publishing platform designed for developers and system architects.' },
+  { question: 'Can I monetize my blogs?', answer: 'Yes, we are introducing monetization features soon for our top creators.' },
+  { question: 'Is there a limit to how many blogs I can write?', answer: 'No, there are no limits. Write as much as you want.' },
+  { question: 'How does AI help in writing?', answer: "Our AI suggests structural improvements, generates excerpts, and helps overcome writer's block." }
+];
+
+faqData.forEach((item, i) => {
+  faqs.push({
+    _id: generateObjectId(),
+    question: item.question,
+    answer: item.answer,
+    is_active: true,
+    order: i + 1
+  });
+});
+
+const testimonials = [];
+const roles = ['System Architect', 'Senior Developer', 'DevOps Engineer', 'CTO', 'Frontend Engineer'];
+
+for (let i = 1; i <= 8; i++) {
+  testimonials.push({
+    _id: generateObjectId(),
+    name: `Tech Leader ${i}`,
+    role: roles[i % roles.length],
+    content: `Blogermenia has completely transformed how our engineering team shares knowledge. The AI tools are incredibly precise and helpful!`,
+    rating: 5,
+    is_approved: true,
+    user: users[i % users.length]._id
+  });
+}
+
 const dummyData = {
   users,
   blogs,
-  playlists
+  playlists,
+  faqs,
+  testimonials
 };
 
 fs.writeFileSync(

@@ -18,12 +18,12 @@ export default function HorizontalBlogCard({ blog }) {
         <Link href={getBlogUrl()} className="block group h-full">
             <div className="bg-background border-2 border-foreground hover:shadow-[8px_8px_0px_0px_rgba(88,28,135,1)] hover:-translate-y-1 hover:-translate-x-1 transition-all duration-300 flex flex-col md:flex-row h-full">
                 {/* Image Section - Left side on desktop */}
-                <div className="md:w-1/3 relative min-h-[200px] border-b-2 md:border-b-0 md:border-r-2 border-foreground bg-purple-900 flex-shrink-0">
+                <div className="md:w-1/3 relative min-h-[200px] border-b-2 md:border-b-0 md:border-r-2 border-foreground bg-background flex-shrink-0 overflow-hidden">
                     {imagePath ? (
                         <img
                             src={getImageUrl(imagePath)}
                             alt={blog.title}
-                            className="absolute inset-0 w-full h-full object-cover grayscale opacity-90 mix-blend-luminosity group-hover:grayscale-0 group-hover:mix-blend-normal group-hover:opacity-100 transition-all duration-500"
+                            className="absolute inset-0 w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
                         />
                     ) : (
                         <div className="w-full h-full bg-foreground flex items-center justify-center text-background">
