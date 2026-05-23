@@ -105,13 +105,13 @@ export default function PlaylistDetailPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-stretch">
             {/* Left Column: Cover Image */}
             <div className="lg:col-span-5 relative">
-              <div className="relative w-full h-full min-h-[12rem] border-2 border-foreground bg-purple-900 overflow-hidden">
+              <div className="relative w-full h-full min-h-[12rem] border-2 border-foreground bg-zinc-100 overflow-hidden">
                 {(typeof (playlist.cover_image || playlist.thumbnail) === 'string' ? (playlist.cover_image || playlist.thumbnail) : (playlist.cover_image?.file_path || playlist.thumbnail?.file_path)) ? (
                   <Image
                     src={getImageUrl(typeof (playlist.cover_image || playlist.thumbnail) === 'string' ? (playlist.cover_image || playlist.thumbnail) : (playlist.cover_image?.file_path || playlist.thumbnail?.file_path))}
                     alt={playlist.name}
                     fill
-                    className="object-cover grayscale hover:grayscale-0 mix-blend-luminosity hover:mix-blend-normal transition-all duration-500"
+                    className="object-cover transition-all duration-500"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-foreground text-background">

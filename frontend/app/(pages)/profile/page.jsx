@@ -176,12 +176,12 @@ export default function ProfilePage() {
                 [ Profile Display ]
               </label>
               <div className="flex flex-col md:flex-row items-center gap-8">
-                <div className="relative group w-32 h-32 border-2 border-foreground bg-purple-900 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] overflow-hidden shrink-0">
+                <div className="relative group w-32 h-32 border-2 border-foreground bg-zinc-100 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] overflow-hidden shrink-0">
                     {formData.profile_image ? (
                         <img 
                             src={getImageUrl(formData.profile_image)} 
                             alt={user?.full_name || user?.email} 
-                            className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                            className="w-full h-full object-cover transition-all duration-500"
                         />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center bg-foreground text-background">
