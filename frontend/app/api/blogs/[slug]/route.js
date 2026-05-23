@@ -93,7 +93,7 @@ export async function PATCH(req, { params }) {
       delete data.sections;
     }
 
-    const updatedBlog = await Blog.findByIdAndUpdate(blog._id, { $set: data }, { new: true })
+    const updatedBlog = await Blog.findByIdAndUpdate(blog._id, { $set: data }, { returnDocument: 'after' })
       .populate('author', 'full_name username email profile_image')
       .populate('category', 'name slug');
 

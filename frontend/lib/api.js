@@ -1,5 +1,38 @@
+import imageCompression from 'browser-image-compression';
+
 // API base URL - Internal Next.js API Routes
 const API_BASE_URL = '/api';
+
+// Helper function to compress images client-side before upload to prevent Vercel payload limits
+async function compressImage(file) {
+  if (typeof window === 'undefined' || !file || !file.type || !file.type.startsWith('image/')) {
+    return file;
+  }
+
+  // Skip compression for GIFs to preserve animation
+  if (file.type === 'image/gif') {
+    return file;
+  }
+
+  const options = {
+    maxSizeMB: 1,            // Target file size under 1MB (super safe for Vercel 4.5MB limit)
+    maxWidthOrHeight: 1920,   // Standard HD resolution limit to preserve image quality
+    useWebWorker: true,      // Compress in a separate background thread so UI doesn't stutter!
+    fileType: file.type || 'image/jpeg'
+  };
+
+  try {
+    const compressedBlob = await imageCompression(file, options);
+    // Convert the compressed Blob back to a File object with its original name and metadata
+    return new File([compressedBlob], file.name, {
+      type: compressedBlob.type || file.type,
+      lastModified: Date.now(),
+    });
+  } catch (error) {
+    console.error("Image compression failed, uploading original file instead:", error);
+    return file;
+  }
+}
 
 // Helper function to handle API responses
 async function handleResponse(response) {
@@ -336,7 +369,10 @@ export const api = {
 
   async uploadImage(file = null, collectionName = 'blogs', token = null, url = null) {
     const formData = new FormData();
-    if (file) formData.append('file', file);
+    if (file) {
+      const compressedFile = await compressImage(file);
+      formData.append('file', compressedFile);
+    }
     if (url) formData.append('url', url);
     if (collectionName) formData.append('folder', collectionName);
     const response = await fetch(`${API_BASE_URL}/media/upload`, { method: 'POST', body: formData });

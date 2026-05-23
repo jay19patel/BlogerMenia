@@ -14,8 +14,9 @@ export async function POST(req) {
     }
 
     const isDevelopment = process.env.NODE_ENV === 'development';
+    const useGCS = process.env.USE_GCS === 'true' || (!isDevelopment && bucket);
 
-    if (!isDevelopment && !bucket) {
+    if (useGCS && !bucket) {
       return NextResponse.json({ detail: "Google Cloud Storage is not configured properly." }, { status: 500 });
     }
 
@@ -43,7 +44,7 @@ export async function POST(req) {
 
     let publicUrl = '';
 
-    if (isDevelopment) {
+    if (!useGCS) {
       // Local Upload
       const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'blogermenia', folder);
       
@@ -65,6 +66,7 @@ export async function POST(req) {
         const blobStream = blob.createWriteStream({
           resumable: false,
           contentType: file.type,
+          validation: false,
         });
 
         blobStream.on('error', (err) => reject(err));
