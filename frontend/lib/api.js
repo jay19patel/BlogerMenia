@@ -1,5 +1,3 @@
-import imageCompression from 'browser-image-compression';
-
 // API base URL - Internal Next.js API Routes
 const API_BASE_URL = '/api';
 
@@ -14,14 +12,17 @@ async function compressImage(file) {
     return file;
   }
 
-  const options = {
-    maxSizeMB: 1,            // Target file size under 1MB (super safe for Vercel 4.5MB limit)
-    maxWidthOrHeight: 1920,   // Standard HD resolution limit to preserve image quality
-    useWebWorker: true,      // Compress in a separate background thread so UI doesn't stutter!
-    fileType: file.type || 'image/jpeg'
-  };
-
   try {
+    // Dynamic import to prevent SSR/Next.js pre-rendering issues during build
+    const imageCompression = (await import('browser-image-compression')).default;
+
+    const options = {
+      maxSizeMB: 0.4,          // Target file size under 500KB (400KB limit is perfect!)
+      maxWidthOrHeight: 720,    // Optimized HD resolution for blogs, playlists, and profiles
+      useWebWorker: true,      // Compress in a separate background thread so UI doesn't stutter!
+      fileType: file.type || 'image/jpeg'
+    };
+
     const compressedBlob = await imageCompression(file, options);
     // Convert the compressed Blob back to a File object with its original name and metadata
     return new File([compressedBlob], file.name, {

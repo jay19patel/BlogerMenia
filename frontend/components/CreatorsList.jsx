@@ -146,7 +146,7 @@ export default function CreatorsList() {
                                                     <img
                                                         src={getImageUrl(author.profile_image?.file_path || author.profile_image)}
                                                         alt={author.full_name || author.email}
-                                                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all"
+                                                        className="w-full h-full object-cover transition-all"
                                                     />
                                                 ) : (
                                                     <div className="w-full h-full bg-foreground flex items-center justify-center text-background">

@@ -145,7 +145,7 @@ export default function PlaylistsList() {
                                                 <img
                                                     src={getImageUrl(playlist.thumbnail?.file_path || playlist.thumbnail)}
                                                     alt={playlist.name}
-                                                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                                                    className="w-full h-full object-cover transition-all duration-500"
                                                 />
                                             ) : (
                                                 <div className="w-full h-full bg-foreground flex items-center justify-center p-4 text-center text-background font-mono font-bold text-sm">

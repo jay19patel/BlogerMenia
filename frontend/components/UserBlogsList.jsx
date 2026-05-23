@@ -200,13 +200,13 @@ export default function UserBlogsList({ username }) {
                         {/* Left Side: Avatar & Name/Details */}
                         <div className="lg:col-span-5 flex flex-col sm:flex-row items-center sm:items-start gap-6">
                             <div className="relative w-28 h-28 shrink-0">
-                                <div className="absolute inset-0 border-2 border-foreground bg-purple-900 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] overflow-hidden">
+                                <div className="absolute inset-0 border-2 border-foreground bg-zinc-100 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] overflow-hidden">
                                     {(typeof userProfile.profile_image === 'string' ? userProfile.profile_image : userProfile.profile_image?.file_path) ? (
                                         <Image
                                             src={getImageUrl(typeof userProfile.profile_image === 'string' ? userProfile.profile_image : userProfile.profile_image.file_path)}
                                             alt={userProfile.username || 'User'}
                                             fill
-                                            className="object-cover grayscale hover:grayscale-0 mix-blend-luminosity hover:mix-blend-normal transition-all duration-500"
+                                            className="object-cover transition-all duration-500"
                                         />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center bg-foreground text-background">
@@ -316,12 +316,12 @@ export default function UserBlogsList({ username }) {
                                         <div className="absolute inset-0 bg-foreground transform translate-x-2 translate-y-2 opacity-100 transition-all duration-300"></div>
 
                                         <div className="relative h-full flex flex-col bg-background border-2 border-foreground overflow-hidden hover:shadow-[4px_4px_0px_0px_rgba(88,28,135,1)] hover:-translate-y-1 hover:-translate-x-1 transition-all duration-300">
-                                            <div className="relative aspect-video overflow-hidden bg-purple-900 border-b-2 border-foreground">
+                                            <div className="relative aspect-video overflow-hidden bg-zinc-100 border-b-2 border-foreground">
                                                 {(typeof (playlist.cover_image || playlist.thumbnail) === 'string' ? (playlist.cover_image || playlist.thumbnail) : (playlist.cover_image?.file_path || playlist.thumbnail?.file_path)) ? (
                                                     <img
                                                         src={getImageUrl(typeof (playlist.cover_image || playlist.thumbnail) === 'string' ? (playlist.cover_image || playlist.thumbnail) : (playlist.cover_image?.file_path || playlist.thumbnail?.file_path))}
                                                         alt={playlist.name}
-                                                        className="w-full h-full object-cover grayscale opacity-90 mix-blend-luminosity group-hover:grayscale-0 group-hover:mix-blend-normal group-hover:opacity-100 transition-all duration-500"
+                                                        className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-all duration-500"
                                                     />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center bg-foreground text-background">
