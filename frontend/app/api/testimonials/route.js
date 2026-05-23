@@ -1,73 +1,45 @@
 import { NextResponse } from 'next/server';
-import { readDB, writeDB, verifyToken } from '@/lib/db';
+import connectToDatabase from '@/lib/mongodb';
+import Testimonial from '@/models/Testimonial';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
-export async function GET(request) {
+export async function GET() {
   try {
-    const db = readDB();
-    // Return all testimonials
-    return NextResponse.json(db.testimonials || []);
+    await connectToDatabase();
+    
+    // Only return approved testimonials
+    const testimonials = await Testimonial.find({ is_approved: true }).sort({ createdAt: -1 });
+
+    return NextResponse.json({
+      count: testimonials.length,
+      testimonials
+    });
   } catch (error) {
-    console.error('Fetch testimonials API error:', error);
-    return NextResponse.json(
-      { detail: 'Internal server error occurred.' },
-      { status: 500 }
-    );
+    console.error("GET Testimonials error:", error);
+    return NextResponse.json({ detail: "Failed to fetch testimonials" }, { status: 500 });
   }
 }
 
-export async function POST(request) {
+export async function POST(req) {
   try {
-    const authHeader = request.headers.get('Authorization');
-    const decoded = verifyToken(authHeader);
-
-    if (!decoded) {
-      return NextResponse.json(
-        { detail: 'Given token not valid or expired.' },
-        { status: 401 }
-      );
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
     }
 
-    const db = readDB();
-    const user = db.users.find(u => u.id === decoded.id);
+    await connectToDatabase();
+    const data = await req.json();
 
-    if (!user) {
-      return NextResponse.json(
-        { detail: 'User session not found.' },
-        { status: 401 }
-      );
-    }
-
-    const { content, rating } = await request.json();
-
-    if (!content) {
-      return NextResponse.json(
-        { detail: 'Content is required.' },
-        { status: 400 }
-      );
-    }
-
-    const newTestimonial = {
-      id: `test_${Date.now()}`,
-      name: user.full_name,
-      role: user.headline || 'User',
-      avatar: user.profile_image || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name)}&background=random`,
-      content: content,
-      rating: rating || 5
-    };
-
-    if (!db.testimonials) {
-      db.testimonials = [];
-    }
-    
-    db.testimonials.push(newTestimonial);
-    writeDB(db);
+    const newTestimonial = await Testimonial.create({
+      ...data,
+      user: session.user.id,
+      is_approved: false // Default to false until admin approves
+    });
 
     return NextResponse.json(newTestimonial, { status: 201 });
   } catch (error) {
-    console.error('Create testimonial API error:', error);
-    return NextResponse.json(
-      { detail: 'Internal server error occurred.' },
-      { status: 500 }
-    );
+    console.error("POST Testimonial error:", error);
+    return NextResponse.json({ detail: "Failed to submit testimonial. " + error.message }, { status: 500 });
   }
 }

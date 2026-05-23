@@ -182,7 +182,7 @@ export default function PlaylistDetailPage() {
                 .map((blog, idx) => {
                   const globalIndex = (currentPage - 1) * BLOGS_PER_PAGE + idx;
                   return (
-                    <div key={blog.id} className="relative group">
+                    <div key={blog._id || blog.id || blog.slug || idx} className="relative group">
                       <div className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center bg-foreground text-background border-2 border-background rounded-full font-mono font-bold text-sm">
                         {globalIndex + 1}
                       </div>

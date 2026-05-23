@@ -12,9 +12,7 @@ import {
     Upload,
     Search,
     Loader2,
-    ListMusic,
     BookOpen,
-    Eye,
     ChevronRight,
     ChevronLeft
 } from 'lucide-react';
@@ -24,7 +22,7 @@ import { formatDate, getImageUrl } from '@/lib/utils';
 
 export default function CreatePlaylistPage() {
     const router = useRouter();
-    const { token, user } = useAuth();
+    const { user, isAuthenticated, loading } = useAuth();
 
     // Form State
     const [name, setName] = useState('');
@@ -47,6 +45,13 @@ export default function CreatePlaylistPage() {
     const [totalBlogs, setTotalBlogs] = useState(0);
     const BLOGS_PER_PAGE = 5;
 
+    // Redirect unauthenticated users to login
+    useEffect(() => {
+        if (!loading && !isAuthenticated) {
+            router.push('/login');
+        }
+    }, [isAuthenticated, loading, router]);
+
     const generateSlug = (text) => {
         return text
             .toLowerCase()
@@ -61,50 +66,55 @@ export default function CreatePlaylistPage() {
         }
     }, [name, autoSlug]);
 
+    const getBlogId = (blog) => blog.id || blog._id?.toString?.() || String(blog._id);
+
     const fetchAvailableBlogs = useCallback(async () => {
-        if (!user) return;
+        if (!isAuthenticated || !user) return;
+        const userId = user.id || user._id;
+        if (!userId) return;
+
         try {
             setLoadingBlogs(true);
             const skip = (currentPage - 1) * BLOGS_PER_PAGE;
-            const data = await api.getMyBlogs(token, user.id || user._id, searchQuery || null, skip, BLOGS_PER_PAGE);
+            const data = await api.getMyBlogs(null, userId, searchQuery || null, skip, BLOGS_PER_PAGE);
 
-            // Mark blogs as selected if they are in the selectedBlogs array
-            const selectedIds = selectedBlogs.map(b => b.id);
-            const filtered = (data?.blogs || []).map(blog => ({
+            const selectedIds = new Set(selectedBlogs.map(getBlogId));
+            const mapped = (data?.blogs || []).map(blog => ({
                 ...blog,
-                isAdded: selectedIds.includes(blog.id)
+                id: getBlogId(blog),
+                isAdded: selectedIds.has(getBlogId(blog)),
             }));
 
-            setAvailableBlogs(filtered);
+            setAvailableBlogs(mapped);
             setTotalBlogs(data?.total || 0);
         } catch (error) {
             console.error('Error fetching available blogs:', error);
+            toast.error('Failed to load your blogs');
         } finally {
             setLoadingBlogs(false);
         }
-    }, [user, token, searchQuery, currentPage, selectedBlogs]);
+    }, [isAuthenticated, user, searchQuery, currentPage, selectedBlogs]);
 
     useEffect(() => {
-        if (token && user) fetchAvailableBlogs();
+        if (isAuthenticated && user) fetchAvailableBlogs();
     }, [fetchAvailableBlogs]);
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
-        if (file) {
-            setImageFile(file);
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreview(reader.result);
-            };
-            reader.readAsDataURL(file);
-        }
+        if (!file) return;
+        setImageFile(file);
+        const reader = new FileReader();
+        reader.onloadend = () => setImagePreview(reader.result);
+        reader.readAsDataURL(file);
     };
 
     const toggleSelectBlog = (blog) => {
-        if (selectedBlogs.some(b => b.id === blog.id)) {
-            setSelectedBlogs(selectedBlogs.filter(b => b.id !== blog.id));
+        const blogId = getBlogId(blog);
+        const normalised = { ...blog, id: blogId };
+        if (selectedBlogs.some(b => getBlogId(b) === blogId)) {
+            setSelectedBlogs(prev => prev.filter(b => getBlogId(b) !== blogId));
         } else {
-            setSelectedBlogs([...selectedBlogs, blog]);
+            setSelectedBlogs(prev => [...prev, normalised]);
         }
     };
 
@@ -118,25 +128,26 @@ export default function CreatePlaylistPage() {
         try {
             setIsSubmitting(true);
 
-            let finalThumbnailId = null;
+            let coverImage = '';
             if (imageFile) {
-                const uploadRes = await api.uploadImage(imageFile, 'playlists', token);
-                finalThumbnailId = uploadRes.id;
+                const uploadRes = await api.uploadImage(imageFile, 'playlists', null);
+                coverImage = uploadRes.file_path || uploadRes.url || '';
             }
 
             const playlistData = {
                 name: name.trim(),
                 slug: slug.trim() || generateSlug(name),
                 description: description.trim(),
-                thumbnail: finalThumbnailId,
+                cover_image: coverImage,
                 is_public: isPublic,
-                blogs: selectedBlogs.map(b => b.id) // Bulk save
+                blogs: selectedBlogs.map(getBlogId).filter(Boolean),
             };
 
-            const result = await api.createPlaylist(playlistData, token);
+            const result = await api.createPlaylist(playlistData, null);
 
             toast.success('Playlist created successfully!');
-            router.push(`/playlists/${user?.email}/${result.slug || result.id}`);
+            const ownerIdentifier = user?.username || user?.email?.split('@')[0] || user?.email;
+            router.push(`/playlists/${ownerIdentifier}/${result.slug || result._id?.toString()}`);
         } catch (error) {
             console.error('Error creating playlist:', error);
             toast.error(error.message || 'Failed to create playlist');
@@ -145,10 +156,21 @@ export default function CreatePlaylistPage() {
         }
     };
 
+    if (loading || (!isAuthenticated && !loading)) {
+        return (
+            <div className="w-full h-screen flex items-center justify-center">
+                <div className="flex items-center justify-center gap-3 bg-background px-6 py-4 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]">
+                    <span className="h-5 w-5 border-2 border-foreground border-r-transparent animate-spin"></span>
+                    <span className="font-mono font-bold text-sm uppercase tracking-widest text-foreground">Loading...</span>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen py-10 bg-background">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Header Section */}
+                {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 border-b-2 border-foreground pb-4">
                     <div>
                         <Link
@@ -168,7 +190,7 @@ export default function CreatePlaylistPage() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    {/* Left Column: Metadata Editor */}
+                    {/* Left Column: Playlist Details */}
                     <div className="lg:col-span-4 space-y-8">
                         <div className="bg-background border-2 border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)] overflow-hidden sticky top-8 p-8">
                             <h2 className="text-2xl font-extrabold text-foreground mb-6 flex items-center gap-2 uppercase tracking-tighter border-b-2 border-foreground pb-2">
@@ -186,11 +208,7 @@ export default function CreatePlaylistPage() {
                                         className="relative group overflow-hidden mb-4 aspect-video bg-background border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] flex items-center justify-center cursor-pointer hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
                                     >
                                         {imagePreview ? (
-                                            <img
-                                                src={imagePreview}
-                                                alt="Preview"
-                                                className="w-full h-full object-cover"
-                                            />
+                                            <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                                         ) : (
                                             <div className="text-center">
                                                 <Upload className="w-10 h-10 text-foreground mx-auto mb-2" />
@@ -245,11 +263,11 @@ export default function CreatePlaylistPage() {
                                         }}
                                         disabled={autoSlug}
                                         placeholder="playlist-url-slug"
-                                        className="w-full px-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all text-sm font-mono"
+                                        className="w-full px-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all text-sm font-mono disabled:opacity-60"
                                     />
                                     {autoSlug && name && (
                                         <p className="text-[10px] font-mono font-bold text-foreground pl-1 uppercase tracking-widest">
-                                            URL: /playlists/{user?.email}/<span className="text-purple-900">{slug}</span>
+                                            URL: /playlists/{user?.username || user?.email?.split('@')[0]}/<span className="text-purple-900">{slug}</span>
                                         </p>
                                     )}
                                 </div>
@@ -268,7 +286,7 @@ export default function CreatePlaylistPage() {
                                     />
                                 </div>
 
-                                {/* Privacy */}
+                                {/* Visibility Toggle */}
                                 <div className="flex items-center justify-between p-4 bg-background border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]">
                                     <div>
                                         <p className="text-sm font-mono font-bold text-foreground uppercase tracking-widest">Visibility</p>
@@ -286,7 +304,7 @@ export default function CreatePlaylistPage() {
                                 <button
                                     type="submit"
                                     disabled={isSubmitting || !name.trim()}
-                                    className="w-full py-4 bg-foreground text-background border-2 border-foreground font-mono font-bold uppercase tracking-widest hover:bg-purple-900 transition-all shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 flex items-center justify-center gap-2"
+                                    className="w-full py-4 bg-foreground text-background border-2 border-foreground font-mono font-bold uppercase tracking-widest hover:bg-purple-900 transition-all shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
                                     SAVE PLAYLIST
@@ -295,148 +313,168 @@ export default function CreatePlaylistPage() {
                         </div>
                     </div>
 
-                {/* Right Column: Blogs Selection */}
-                <div className="lg:col-span-8 space-y-8">
+                    {/* Right Column: Blog Selection */}
+                    <div className="lg:col-span-8 space-y-8">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-
-                        {/* CURRENT BLOGS */}
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between mb-2">
-                                <h2 className="text-xl font-extrabold text-foreground flex items-center gap-2 uppercase tracking-tighter">
-                                    Included Blogs
-                                    <span className="px-3 py-1 bg-foreground text-background border-2 border-foreground font-mono font-bold text-xs">{selectedBlogs.length}</span>
-                                </h2>
-                            </div>
-
-                            <div className="space-y-4 max-h-[800px] overflow-y-auto pr-2 custom-scrollbar min-h-[300px]">
-                                {selectedBlogs.length > 0 ? (
-                                    selectedBlogs.map((blog, idx) => (
-                                        <div
-                                            key={blog.id}
-                                            className="group bg-background p-4 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex items-center gap-4"
-                                        >
-                                            <div className="w-16 h-16 bg-background overflow-hidden shrink-0 border-2 border-foreground">
-                                                <img src={getImageUrl(blog.thumbnail?.file_path || blog.thumbnail)} className="w-full h-full object-cover" alt="" />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-[10px] font-mono font-bold text-foreground uppercase tracking-widest mb-1 border-b-2 border-foreground pb-1 inline-block">Step {idx + 1}</p>
-                                                <h4 className="text-sm font-bold text-foreground truncate">{blog.title}</h4>
-                                            </div>
-                                            <button
-                                                onClick={() => toggleSelectBlog(blog)}
-                                                className="p-2 border-2 border-foreground bg-background text-foreground hover:bg-red-500 hover:text-white transition-all shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
-                                                title="Remove from playlist"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="text-center py-20 bg-background border-2 border-dashed border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)]">
-                                        <BookOpen className="w-12 h-12 text-foreground mx-auto mb-3" />
-                                        <p className="text-sm font-mono font-bold text-foreground px-6 uppercase tracking-widest">SELECT ARTICLES FROM THE LIST ON THE RIGHT TO ADD THEM TO YOUR NEW PLAYLIST.</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* AVAILABLE BLOGS (Search & Add) */}
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between mb-2">
-                                <h2 className="text-xl font-extrabold text-foreground flex items-center gap-2 uppercase tracking-tighter">
-                                    Add Content
-                                    <span className="font-mono text-xs border-l-2 border-foreground pl-2 ml-2">| {totalBlogs} TOTAL</span>
-                                </h2>
-                            </div>
-
-                            {/* Search Box */}
-                            <div className="relative">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground" />
-                                <input
-                                    type="text"
-                                    placeholder="SEARCH YOUR LIBRARY..."
-                                    value={searchQuery}
-                                    onChange={(e) => {
-                                        setSearchQuery(e.target.value);
-                                        setCurrentPage(1);
-                                    }}
-                                    className="w-full pl-11 pr-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all font-mono font-bold text-sm uppercase tracking-widest"
-                                />
-                            </div>
-
-                            {/* Available List */}
-                            <div className="space-y-3 min-h-[400px]">
-                                {loadingBlogs ? (
-                                    [...Array(5)].map((_, i) => (
-                                        <div key={i} className="animate-pulse bg-background p-4 border-2 border-foreground flex items-center gap-4">
-                                            <div className="w-12 h-12 bg-gray-200 border-2 border-foreground"></div>
-                                            <div className="flex-1 space-y-2">
-                                                <div className="h-3 bg-gray-200 border-2 border-foreground w-1/3"></div>
-                                                <div className="h-3 bg-gray-200 border-2 border-foreground w-2/3"></div>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : availableBlogs.length > 0 ? (
-                                    availableBlogs.map((blog) => (
-                                        <div
-                                            key={blog.id}
-                                            onClick={() => toggleSelectBlog(blog)}
-                                            className={`bg-background p-4 border-2 transition-all flex items-center gap-4 cursor-pointer shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 ${blog.isAdded
-                                                ? 'border-purple-900 bg-purple-50'
-                                                : 'border-foreground'
-                                                }`}
-                                        >
-                                            <div className="w-12 h-12 bg-background overflow-hidden shrink-0 border-2 border-foreground">
-                                                <img src={getImageUrl(blog.thumbnail?.file_path || blog.thumbnail)} className="w-full h-full object-cover" alt="" />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <h4 className="text-xs font-extrabold text-foreground truncate uppercase">{blog.title}</h4>
-                                                <p className="text-[10px] font-mono text-foreground mt-1 font-bold">{formatDate(blog.created_at)}</p>
-                                            </div>
-                                            <div className={`p-2 border-2 border-foreground transition-all shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] ${blog.isAdded
-                                                ? 'bg-purple-900 text-white'
-                                                : 'bg-background text-foreground hover:bg-purple-900 hover:text-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none'
-                                                }`}>
-                                                {blog.isAdded ? <ChevronRight className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="text-center py-20 bg-background border-2 border-dashed border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)]">
-                                        <Search className="w-8 h-8 text-foreground mx-auto mb-3" />
-                                        <p className="text-xs font-mono font-bold text-foreground uppercase tracking-widest">NO ARTICLES FOUND MATCHING YOUR SEARCH.</p>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Available Pagination */}
-                            {Math.ceil(totalBlogs / BLOGS_PER_PAGE) > 1 && (
-                                <div className="flex items-center justify-between pt-4">
-                                    <button
-                                        disabled={currentPage === 1 || loadingBlogs}
-                                        onClick={() => setCurrentPage(prev => prev - 1)}
-                                        className="p-2 border-2 border-foreground bg-background text-foreground shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-purple-900 hover:text-white disabled:opacity-50 transition-all font-mono font-bold text-[10px] uppercase tracking-widest flex items-center gap-1"
-                                    >
-                                        <ChevronLeft className="w-4 h-4" />
-                                        PREV
-                                    </button>
-                                    <span className="text-[10px] font-mono font-bold text-foreground uppercase tracking-widest border-2 border-foreground px-3 py-1 shadow-[2px_2px_0px_0px_rgba(13,17,23,1)]">
-                                        {currentPage} / {Math.ceil(totalBlogs / BLOGS_PER_PAGE)}
-                                    </span>
-                                    <button
-                                        disabled={currentPage === Math.ceil(totalBlogs / BLOGS_PER_PAGE) || loadingBlogs}
-                                        onClick={() => setCurrentPage(prev => prev + 1)}
-                                        className="p-2 border-2 border-foreground bg-background text-foreground shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-purple-900 hover:text-white disabled:opacity-50 transition-all font-mono font-bold text-[10px] uppercase tracking-widest flex items-center gap-1"
-                                    >
-                                        NEXT
-                                        <ChevronRight className="w-4 h-4" />
-                                    </button>
+                            {/* Selected Blogs */}
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <h2 className="text-xl font-extrabold text-foreground flex items-center gap-2 uppercase tracking-tighter">
+                                        Included Blogs
+                                        <span className="px-3 py-1 bg-foreground text-background border-2 border-foreground font-mono font-bold text-xs">{selectedBlogs.length}</span>
+                                    </h2>
                                 </div>
-                            )}
+
+                                <div className="space-y-4 max-h-[800px] overflow-y-auto pr-2 min-h-[300px]">
+                                    {selectedBlogs.length > 0 ? (
+                                        selectedBlogs.map((blog, idx) => (
+                                            <div
+                                                key={getBlogId(blog)}
+                                                className="group bg-background p-4 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex items-center gap-4"
+                                            >
+                                                <div className="w-16 h-16 bg-background overflow-hidden shrink-0 border-2 border-foreground">
+                                                    <img
+                                                        src={getImageUrl(blog.thumbnail)}
+                                                        className="w-full h-full object-cover"
+                                                        alt=""
+                                                        onError={(e) => { e.target.style.display = 'none'; }}
+                                                    />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-[10px] font-mono font-bold text-foreground uppercase tracking-widest mb-1 border-b-2 border-foreground pb-1 inline-block">
+                                                        #{idx + 1}
+                                                    </p>
+                                                    <h4 className="text-sm font-bold text-foreground truncate">{blog.title}</h4>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => toggleSelectBlog(blog)}
+                                                    className="p-2 border-2 border-foreground bg-background text-foreground hover:bg-red-500 hover:text-white transition-all shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
+                                                    title="Remove from playlist"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-20 bg-background border-2 border-dashed border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)]">
+                                            <BookOpen className="w-12 h-12 text-foreground mx-auto mb-3" />
+                                            <p className="text-sm font-mono font-bold text-foreground px-6 uppercase tracking-widest">
+                                                SELECT ARTICLES FROM THE LIST ON THE RIGHT TO ADD THEM TO YOUR NEW PLAYLIST.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Available Blogs */}
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <h2 className="text-xl font-extrabold text-foreground flex items-center gap-2 uppercase tracking-tighter">
+                                        Add Content
+                                        <span className="font-mono text-xs border-l-2 border-foreground pl-2 ml-2">| {totalBlogs} TOTAL</span>
+                                    </h2>
+                                </div>
+
+                                {/* Search */}
+                                <div className="relative">
+                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground" />
+                                    <input
+                                        type="text"
+                                        placeholder="SEARCH YOUR LIBRARY..."
+                                        value={searchQuery}
+                                        onChange={(e) => {
+                                            setSearchQuery(e.target.value);
+                                            setCurrentPage(1);
+                                        }}
+                                        className="w-full pl-11 pr-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all font-mono font-bold text-sm uppercase tracking-widest"
+                                    />
+                                </div>
+
+                                {/* Blog List */}
+                                <div className="space-y-3 min-h-[400px]">
+                                    {loadingBlogs ? (
+                                        [...Array(5)].map((_, i) => (
+                                            <div key={i} className="animate-pulse bg-background p-4 border-2 border-foreground flex items-center gap-4">
+                                                <div className="w-12 h-12 bg-gray-200 border-2 border-foreground"></div>
+                                                <div className="flex-1 space-y-2">
+                                                    <div className="h-3 bg-gray-200 border-2 border-foreground w-1/3"></div>
+                                                    <div className="h-3 bg-gray-200 border-2 border-foreground w-2/3"></div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : availableBlogs.length > 0 ? (
+                                        availableBlogs.map((blog) => (
+                                            <div
+                                                key={getBlogId(blog)}
+                                                onClick={() => toggleSelectBlog(blog)}
+                                                className={`bg-background p-4 border-2 transition-all flex items-center gap-4 cursor-pointer shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 ${
+                                                    blog.isAdded
+                                                        ? 'border-purple-900 bg-purple-50'
+                                                        : 'border-foreground'
+                                                }`}
+                                            >
+                                                <div className="w-12 h-12 bg-background overflow-hidden shrink-0 border-2 border-foreground">
+                                                    <img
+                                                        src={getImageUrl(blog.thumbnail)}
+                                                        className="w-full h-full object-cover"
+                                                        alt=""
+                                                        onError={(e) => { e.target.style.display = 'none'; }}
+                                                    />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <h4 className="text-xs font-extrabold text-foreground truncate uppercase">{blog.title}</h4>
+                                                    <p className="text-[10px] font-mono text-foreground mt-1 font-bold">{formatDate(blog.createdAt || blog.created_at)}</p>
+                                                </div>
+                                                <div className={`p-2 border-2 border-foreground transition-all shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] ${
+                                                    blog.isAdded
+                                                        ? 'bg-purple-900 text-white'
+                                                        : 'bg-background text-foreground hover:bg-purple-900 hover:text-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none'
+                                                }`}>
+                                                    {blog.isAdded ? <ChevronRight className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-20 bg-background border-2 border-dashed border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)]">
+                                            <Search className="w-8 h-8 text-foreground mx-auto mb-3" />
+                                            <p className="text-xs font-mono font-bold text-foreground uppercase tracking-widest">
+                                                {searchQuery ? 'NO ARTICLES FOUND MATCHING YOUR SEARCH.' : 'YOU HAVE NO BLOGS YET.'}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Pagination */}
+                                {Math.ceil(totalBlogs / BLOGS_PER_PAGE) > 1 && (
+                                    <div className="flex items-center justify-between pt-4">
+                                        <button
+                                            type="button"
+                                            disabled={currentPage === 1 || loadingBlogs}
+                                            onClick={() => setCurrentPage(prev => prev - 1)}
+                                            className="p-2 border-2 border-foreground bg-background text-foreground shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-purple-900 hover:text-white disabled:opacity-50 transition-all font-mono font-bold text-[10px] uppercase tracking-widest flex items-center gap-1"
+                                        >
+                                            <ChevronLeft className="w-4 h-4" />
+                                            PREV
+                                        </button>
+                                        <span className="text-[10px] font-mono font-bold text-foreground uppercase tracking-widest border-2 border-foreground px-3 py-1 shadow-[2px_2px_0px_0px_rgba(13,17,23,1)]">
+                                            {currentPage} / {Math.ceil(totalBlogs / BLOGS_PER_PAGE)}
+                                        </span>
+                                        <button
+                                            type="button"
+                                            disabled={currentPage === Math.ceil(totalBlogs / BLOGS_PER_PAGE) || loadingBlogs}
+                                            onClick={() => setCurrentPage(prev => prev + 1)}
+                                            className="p-2 border-2 border-foreground bg-background text-foreground shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-purple-900 hover:text-white disabled:opacity-50 transition-all font-mono font-bold text-[10px] uppercase tracking-widest flex items-center gap-1"
+                                        >
+                                            NEXT
+                                            <ChevronRight className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
-                </div>
                 </div>
             </div>
         </div>

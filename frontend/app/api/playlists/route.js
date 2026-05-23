@@ -1,126 +1,141 @@
 import { NextResponse } from 'next/server';
-import { readDB, writeDB, verifyToken } from '@/lib/db';
+import connectToDatabase from '@/lib/mongodb';
+import Playlist from '@/models/Playlist';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
-export async function GET(request) {
+function normalisePlaylist(playlist) {
+  if (!playlist) return playlist;
+  return {
+    ...playlist,
+    id: playlist._id?.toString(),
+    blogs: (playlist.blogs || []).map(blog =>
+      typeof blog === 'object' && blog !== null
+        ? { ...blog, id: blog._id?.toString() }
+        : blog
+    ),
+  };
+}
+
+export async function GET(req) {
   try {
-    const { searchParams } = new URL(request.url);
-    const isPublic = searchParams.get('is_public') === 'true';
-    const ownerId = searchParams.get('owner.$id') || searchParams.get('owner.id') || '';
+    await connectToDatabase();
+
+    const { searchParams } = new URL(req.url);
+    const skip = parseInt(searchParams.get('skip')) || 0;
+    const limit = parseInt(searchParams.get('limit')) || 10;
     const search = searchParams.get('search') || '';
-    const limit = parseInt(searchParams.get('limit') || '10', 10);
-    const page = parseInt(searchParams.get('page') || '1', 10);
-    const skip = (page - 1) * limit;
+    const ownerId = searchParams.get('ownerId') || '';
+    const isPublic = searchParams.get('is_public');
+    const sort = searchParams.get('sort') || '-createdAt';
+    const blogId = searchParams.get('blogId');
 
-    const db = readDB();
-    let resolvedPlaylists = db.playlists.map(pl => {
-      const owner = db.users.find(u => u.id === pl.owner_id);
-      return {
-        ...pl,
-        owner: owner ? {
-          id: owner.id,
-          email: owner.email,
-          full_name: owner.full_name,
-          username: owner.email.split('@')[0]
-        } : null
-      };
-    });
+    let query = {};
 
-    // 1. Filter by Public
-    if (isPublic) {
-      resolvedPlaylists = resolvedPlaylists.filter(pl => pl.is_public);
-    }
-
-    // 2. Filter by Owner
-    if (ownerId) {
-      resolvedPlaylists = resolvedPlaylists.filter(pl => pl.owner_id === ownerId || (pl.owner && pl.owner.id === ownerId));
-    }
-
-    // 3. Search filter
     if (search) {
-      const term = search.toLowerCase();
-      resolvedPlaylists = resolvedPlaylists.filter(pl => 
-        pl.name?.toLowerCase().includes(term) || 
-        pl.description?.toLowerCase().includes(term)
-      );
+      query.name = { $regex: search, $options: 'i' };
     }
 
-    const total = resolvedPlaylists.length;
-    const paginated = resolvedPlaylists.slice(skip, skip + limit);
+    if (ownerId) {
+      query.owner = ownerId;
+    }
+
+    if (isPublic === 'true') {
+      query.is_public = true;
+    }
+
+    if (blogId) {
+      query.blogs = blogId;
+    }
+
+    let sortOptions = {};
+    if (sort === '-views' || sort === '-total_views') {
+      sortOptions.total_views = -1;
+    } else {
+      sortOptions.createdAt = -1;
+    }
+
+    const total = await Playlist.countDocuments(query);
+    const playlists = await Playlist.find(query)
+      .populate('owner', 'full_name username profile_image')
+      .populate('blogs', 'title slug thumbnail views')
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(limit)
+      .lean();
 
     return NextResponse.json({
-      count: total,
-      total: total,
-      results: paginated,
-      playlists: paginated
+      total,
+      playlists: playlists.map(normalisePlaylist),
+      next: skip + limit < total
+        ? `${req.nextUrl.pathname}?skip=${skip + limit}&limit=${limit}`
+        : null,
+      previous: skip > 0
+        ? `${req.nextUrl.pathname}?skip=${Math.max(0, skip - limit)}&limit=${limit}`
+        : null,
     });
   } catch (error) {
-    console.error('Fetch playlists API error:', error);
-    return NextResponse.json(
-      { detail: 'Internal server error occurred.' },
-      { status: 500 }
-    );
+    console.error('GET Playlists error:', error);
+    return NextResponse.json({ detail: 'Failed to fetch playlists' }, { status: 500 });
   }
 }
 
-export async function POST(request) {
+export async function POST(req) {
   try {
-    const authHeader = request.headers.get('Authorization');
-    const decoded = verifyToken(authHeader);
-
-    if (!decoded) {
-      return NextResponse.json(
-        { detail: 'Given token not valid or expired.' },
-        { status: 401 }
-      );
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ detail: 'Unauthorized' }, { status: 401 });
     }
 
-    const db = readDB();
-    const user = db.users.find(u => u.id === decoded.id);
+    await connectToDatabase();
+    const data = await req.json();
 
-    if (!user) {
-      return NextResponse.json(
-        { detail: 'User session not found.' },
-        { status: 401 }
-      );
+    // Accept either 'name' (model field) or 'title' for backwards compat
+    const playlistName = (data.name || data.title || '').trim();
+    if (!playlistName) {
+      return NextResponse.json({ detail: 'Playlist name is required' }, { status: 400 });
     }
 
-    const { name, description, is_public, thumbnail } = await request.json();
-
-    if (!name) {
-      return NextResponse.json(
-        { detail: 'Playlist name is required.' },
-        { status: 400 }
-      );
+    // Generate unique slug
+    let baseSlug = playlistName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)+/g, '');
+    let slug = data.slug?.trim() || baseSlug;
+    let counter = 1;
+    while (await Playlist.findOne({ slug })) {
+      slug = `${baseSlug}-${counter}`;
+      counter++;
     }
 
-    const slug = name.toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^\w-]/g, '')
-      .replace(/--+/g, '-')
-      .replace(/^-+|-+$/g, '') + `-${Date.now().toString().slice(-4)}`;
+    // Normalise cover_image — accept both 'cover_image' and 'thumbnail' from client
+    const coverImage = data.cover_image || data.thumbnail || '';
 
-    const newPlaylist = {
-      id: `play_${Date.now()}`,
-      slug: slug,
-      name: name,
-      description: description || '',
-      thumbnail: thumbnail || null,
-      is_public: is_public !== undefined ? is_public : true,
-      owner_id: user.id,
-      blog_count: 0,
-      total_views: 0,
-      total_likes: 0,
-      blogs: []
-    };
+    // Filter valid blog ObjectIds
+    const blogs = Array.isArray(data.blogs)
+      ? data.blogs.filter(id => id && String(id).match(/^[0-9a-fA-F]{24}$/))
+      : [];
 
-    db.playlists.push(newPlaylist);
-    writeDB(db);
+    const newPlaylist = await Playlist.create({
+      name: playlistName,
+      slug,
+      description: data.description || '',
+      cover_image: coverImage,
+      is_public: data.is_public !== false,
+      blogs,
+      owner: session.user.id,
+    });
 
-    return NextResponse.json(newPlaylist, { status: 201 });
+    const populated = await Playlist.findById(newPlaylist._id)
+      .populate('owner', 'full_name username profile_image')
+      .populate('blogs', 'title slug thumbnail views')
+      .lean();
+
+    return NextResponse.json(normalisePlaylist(populated), { status: 201 });
   } catch (error) {
-    console.error('Create playlist API error:', error);
+    console.error('POST Playlist error:', error);
     return NextResponse.json(
-      { detail: 'Internal server error occurred.' },
+      { detail: 'Failed to create playlist. ' + error.message },
       { status: 500 }
     );
   }

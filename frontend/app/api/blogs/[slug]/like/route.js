@@ -1,77 +1,55 @@
 import { NextResponse } from 'next/server';
-import { readDB, writeDB, verifyToken } from '@/lib/db';
+import connectToDatabase from '@/lib/mongodb';
+import Blog from '@/models/Blog';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
-export async function POST(request, { params }) {
+export async function POST(req, { params }) {
   try {
     const { slug } = await params;
-    const authHeader = request.headers.get('Authorization');
-    const decoded = verifyToken(authHeader);
-
-    if (!decoded) {
-      return NextResponse.json(
-        { detail: 'Given token not valid or expired.' },
-        { status: 401 }
-      );
+    const session = await getServerSession(authOptions);
+    
+    if (!session) {
+      return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
     }
 
-    const db = readDB();
-    const blogIndex = db.blogs.findIndex(b => b.slug === slug || b.id === slug);
-
-    if (blogIndex === -1) {
-      return NextResponse.json(
-        { detail: 'Blog post not found.' },
-        { status: 404 }
-      );
-    }
-
-    const blog = db.blogs[blogIndex];
-    const userEmail = decoded.email.toLowerCase();
-
-    // Ensure liked_by array is initialized
-    if (!blog.liked_by) {
-      blog.liked_by = [];
-    }
-
-    const userLikedIndex = blog.liked_by.indexOf(userEmail);
-    let status = '';
-
-    const authorIndex = db.users.findIndex(u => u.id === blog.author_id);
-
-    if (userLikedIndex !== -1) {
-      // Toggle off: unlike the blog
-      blog.liked_by.splice(userLikedIndex, 1);
-      blog.likes = Math.max(0, (blog.likes || 1) - 1);
-      status = 'unliked';
-
-      // Decrement cumulative likes for the author
-      if (authorIndex !== -1) {
-        db.users[authorIndex].total_likes = Math.max(0, (db.users[authorIndex].total_likes || 1) - 1);
-      }
+    await connectToDatabase();
+    
+    // We treat 'slug' as the blogId here, but it could be the slug or ID.
+    // For liking, frontend usually passes ID or slug.
+    let blog;
+    if (slug.match(/^[0-9a-fA-F]{24}$/)) {
+      blog = await Blog.findById(slug);
     } else {
-      // Toggle on: like the blog
-      blog.liked_by.push(userEmail);
-      blog.likes = (blog.likes || 0) + 1;
-      status = 'liked';
-
-      // Increment cumulative likes for the author
-      if (authorIndex !== -1) {
-        db.users[authorIndex].total_likes = (db.users[authorIndex].total_likes || 0) + 1;
-      }
+      blog = await Blog.findOne({ slug });
+    }
+    if (!blog) {
+      return NextResponse.json({ detail: "Blog not found" }, { status: 404 });
     }
 
-    db.blogs[blogIndex] = blog;
-    writeDB(db);
+    const userId = session.user.id;
+
+    // Check if user already liked
+    const hasLiked = blog.likes && blog.likes.includes(userId);
+
+    if (hasLiked) {
+      // Unlike
+      blog.likes = blog.likes.filter(id => id.toString() !== userId);
+    } else {
+      // Like
+      if (!blog.likes) blog.likes = [];
+      blog.likes.push(userId);
+    }
+
+    await blog.save();
 
     return NextResponse.json({
-      status: status,
-      total_likes: blog.likes,
-      is_liked: status === 'liked'
+      success: true,
+      likes_count: blog.likes.length,
+      has_liked: !hasLiked
     });
   } catch (error) {
-    console.error('Like blog API error:', error);
-    return NextResponse.json(
-      { detail: 'Internal server error occurred.' },
-      { status: 500 }
-    );
+    console.error("Like Blog error:", error);
+    return NextResponse.json({ detail: "Failed to like blog" }, { status: 500 });
   }
 }

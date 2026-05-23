@@ -8,7 +8,6 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import ContactAdmin from "@/components/ContactAdmin";
-import { useGoogleLogin } from "@react-oauth/google";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -21,30 +20,19 @@ export default function LoginPage() {
   const { login, loginWithGoogle } = useAuth();
   const router = useRouter();
 
-  const handleGoogleLogin = useGoogleLogin({
-    flow: 'auth-code',
-    onSuccess: async (tokenResponse) => {
-      setLoading(true);
-      try {
-        const result = await loginWithGoogle(tokenResponse.code);
-        if (result.success) {
-          toast.success("Login successful! Welcome back!");
-          setTimeout(() => {
-            router.push("/");
-          }, 500);
-        } else {
-          toast.error(result.error || "Google Login failed.");
-        }
-      } catch (err) {
-        toast.error("Google Login error: " + err.message);
-      } finally {
-        setLoading(false);
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    try {
+      const result = await loginWithGoogle();
+      if (!result.success && result.error) {
+        toast.error(result.error);
       }
-    },
-    onError: () => {
-      toast.error("Google Login Failed");
-    },
-  });
+    } catch (err) {
+      toast.error("Google Login error: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();

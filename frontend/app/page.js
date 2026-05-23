@@ -67,7 +67,13 @@ export default function Home() {
 
       // 2. Fetch Stats
       api.getStats().then((data) => {
-        if (data) setStats(data);
+        if (data) {
+          setStats({
+            active_users: data.total_authors || 0,
+            blogs_published: data.total_blogs || 0,
+            total_views: data.total_views || 0,
+          });
+        }
       }).catch((e) => console.error("Failed to fetch stats:", e));
 
       // 3. Fetch Playlists
@@ -364,7 +370,7 @@ export default function Home() {
                 AI Generation
               </h3>
               <p className="text-sm font-mono text-gray-600 flex-grow leading-relaxed">
-                Create engaging, well-structured blogs in minutes. Leverage our LLM pipelines to banish writer's block.
+                Create engaging, well-structured blogs in minutes. Leverage our LLM pipelines to banish writer&apos;s block.
               </p>
             </div>
             
@@ -443,7 +449,7 @@ export default function Home() {
               <h2 className="text-3xl font-extrabold text-foreground uppercase tracking-tight">System Tracks</h2>
               <p className="text-gray-500 font-mono text-sm mt-2">Curated sequential documentation series.</p>
             </div>
-            <Link href="/playlists" className="text-sm font-bold text-foreground border-2 border-foreground px-4 py-2 hover:bg-foreground hover:text-background uppercase tracking-widest inline-flex items-center gap-2 transition-all">
+            <Link href="/playlists" className="text-sm font-bold text-background bg-foreground px-4 py-2 hover:bg-gray-800 uppercase tracking-widest inline-flex items-center gap-2 transition-all shadow-[4px_4px_0px_0px_rgba(200,200,200,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1">
               List Tracks <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -570,7 +576,7 @@ export default function Home() {
                         </p>
                         {author.headline && (
                           <p className="text-xs text-gray-600 line-clamp-1 italic font-serif">
-                            "{author.headline}"
+                            &quot;{author.headline}&quot;
                           </p>
                         )}
                       </div>

@@ -1,40 +1,34 @@
 import { NextResponse } from 'next/server';
-import { readDB, writeDB } from '@/lib/db';
+// You might want to create a Contact model, or just send an email.
+// For now, let's just log it and return success, or if there's a Contact model, save it.
+import connectToDatabase from '@/lib/mongodb';
+import mongoose from 'mongoose';
 
-export async function POST(request) {
+// Simple Contact Schema
+const contactSchema = new mongoose.Schema({
+  name: String,
+  email: String,
+  subject: String,
+  message: String,
+  createdAt: { type: Date, default: Date.now }
+});
+
+const Contact = mongoose.models.Contact || mongoose.model('Contact', contactSchema);
+
+export async function POST(req) {
   try {
-    const { name, email, subject, message } = await request.json();
+    await connectToDatabase();
+    const data = await req.json();
 
-    if (!name || !email || !message) {
-      return NextResponse.json(
-        { detail: 'Name, email, and message are required.' },
-        { status: 400 }
-      );
+    if (!data.name || !data.email || !data.message) {
+      return NextResponse.json({ detail: "Name, email, and message are required" }, { status: 400 });
     }
 
-    const db = readDB();
-    const newContact = {
-      id: `contact_${Date.now()}`,
-      name,
-      email,
-      subject: subject || 'No Subject',
-      message,
-      created_at: new Date().toISOString()
-    };
+    await Contact.create(data);
 
-    if (!db.contacts) {
-      db.contacts = [];
-    }
-
-    db.contacts.push(newContact);
-    writeDB(db);
-
-    return NextResponse.json({ success: true, message: 'Your message has been sent successfully.' }, { status: 201 });
+    return NextResponse.json({ success: true, message: "Your message has been sent." }, { status: 201 });
   } catch (error) {
-    console.error('Contact API error:', error);
-    return NextResponse.json(
-      { detail: 'Internal server error occurred.' },
-      { status: 500 }
-    );
+    console.error("POST Contact error:", error);
+    return NextResponse.json({ detail: "Failed to send message" }, { status: 500 });
   }
 }

@@ -8,10 +8,9 @@ import Footer from "@/components/Footer";
 import GridBackground from "@/components/GridBackground";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "sonner";
-import { GoogleOAuthProvider } from "@react-oauth/google";
 import QueryProvider from "@/components/QueryProvider";
+import NextAuthProvider from "@/components/NextAuthProvider";
 
-const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -33,7 +32,7 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
       >
-        <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+        <NextAuthProvider>
           <QueryProvider>
             <AuthProvider>
               <GridBackground>
@@ -51,7 +50,7 @@ export default function RootLayout({ children }) {
               />
             </AuthProvider>
           </QueryProvider>
-        </GoogleOAuthProvider>
+        </NextAuthProvider>
       </body>
     </html>
   );

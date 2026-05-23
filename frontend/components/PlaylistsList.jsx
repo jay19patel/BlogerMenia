@@ -84,49 +84,47 @@ export default function PlaylistsList() {
 
     if (isLoading) {
         return (
-            <div className="py-12 flex justify-center items-center min-h-[400px]">
-                <LoaderCard message="Loading playlists…" />
+            <div className="py-24 flex justify-center items-center min-h-[400px]">
+                <LoaderCard message="Loading system tracks…" />
             </div>
         );
     }
 
     return (
-        <div className="py-12">
+        <div className="py-12 bg-gray-50/50 min-h-screen">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <Breadcrumb items={breadcrumbItems} />
 
-                <div className="mb-12">
-                    <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight">
-                        Public Playlists
+                <div className="mb-10 border-b-2 border-foreground pb-6 mt-8">
+                    <h1 className="text-4xl md:text-5xl font-extrabold text-foreground uppercase tracking-tight mb-4">
+                        System Tracks
                     </h1>
-                    <p className="text-lg text-gray-600 max-w-2xl">
-                        Curated collections of great reads, learning paths, and inspiration from our community.
+                    <p className="text-lg font-mono text-gray-600 max-w-2xl">
+                        Curated sequential documentation series and inspiration from our architects.
                     </p>
                 </div>
 
                 {/* Search */}
-                <div className="mb-12 relative">
-                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <div className="mb-12 relative flex border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(88,28,135,1)]">
                     <input
                         type="text"
-                        placeholder="Search playlists by name or description..."
+                        placeholder="query track index..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onKeyDown={handleSearchKeyPress}
-                        className="w-full pl-12 pr-32 py-4 bg-white border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm transition-all"
+                        className="w-full pl-6 pr-6 py-4 bg-background focus:outline-none focus:ring-2 focus:ring-foreground transition-all font-mono text-foreground"
                     />
                     <button
                         onClick={handleSearch}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 px-6 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all font-semibold"
+                        className="right-0 top-0 bottom-0 px-8 bg-foreground text-background font-bold uppercase tracking-widest hover:bg-gray-800 transition-all border-l-2 border-foreground flex items-center justify-center font-mono"
                     >
-                        Search
+                        Exec
                     </button>
                 </div>
 
-                <div className="mb-8 flex items-center justify-between">
-                    <p className="text-gray-600 font-medium font-inter">
-                        Showing {allPlaylists.length} of {totalPlaylists} playlist
-                        {totalPlaylists !== 1 ? "s" : ""}
+                <div className="mb-8 flex items-center justify-between border-b-2 border-gray-200 pb-4">
+                    <p className="text-gray-600 font-bold font-mono uppercase tracking-widest text-sm">
+                        Showing {allPlaylists.length} of {totalPlaylists} Track{totalPlaylists !== 1 ? "s" : ""}
                     </p>
                 </div>
 
@@ -138,55 +136,52 @@ export default function PlaylistsList() {
                                 <Link
                                     key={playlist.slug}
                                     href={`/playlists/${playlist.owner?.email || playlist.owner?.username}/${playlist.slug}`}
-                                    className="group block bg-white rounded-2xl overflow-hidden hover:shadow-2xl transition-all duration-500 border border-gray-100 hover:border-indigo-500 shadow-sm relative md:h-40"
+                                    className="group block bg-background border-2 border-foreground overflow-hidden hover:shadow-[8px_8px_0px_0px_rgba(88,28,135,1)] transition-all duration-300 relative md:h-48"
                                 >
                                     <div className="flex flex-col md:flex-row h-full">
                                         {/* Image Box */}
-                                        <div className="md:w-1/4 relative overflow-hidden bg-gray-50 flex items-center justify-center shrink-0 border-r border-gray-50">
+                                        <div className="md:w-1/3 relative overflow-hidden border-b-2 md:border-b-0 md:border-r-2 border-foreground bg-gray-100 flex items-center justify-center shrink-0">
                                             {playlist.thumbnail ? (
                                                 <img
                                                     src={getImageUrl(playlist.thumbnail?.file_path || playlist.thumbnail)}
                                                     alt={playlist.name}
-                                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
                                                 />
                                             ) : (
-                                                <div className="w-full h-full bg-gradient-to-br from-indigo-600 to-purple-700 flex items-center justify-center p-4 text-center text-white font-bold text-sm opacity-90">
-                                                    <ListMusic className="w-10 h-10 mb-2 opacity-50 block mx-auto" />
-                                                    <span className="block">{playlist.name}</span>
+                                                <div className="w-full h-full bg-foreground flex items-center justify-center p-4 text-center text-background font-mono font-bold text-sm">
+                                                    {playlist.name}
                                                 </div>
                                             )}
                                         </div>
 
                                         {/* Content Box */}
-                                        <div className="flex-1 p-5 md:p-6 flex flex-col justify-center min-w-0 bg-white">
+                                        <div className="flex-1 p-6 md:p-8 flex flex-col justify-center min-w-0 bg-background">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <span className="bg-indigo-100 text-indigo-800 text-[10px] font-mono px-2 py-0.5 border border-indigo-200">TRACK</span>
+                                            </div>
                                             <div className="mb-4">
-                                                <h3 className="text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-1 mb-1.5">
+                                                <h3 className="text-2xl font-extrabold text-foreground group-hover:text-indigo-600 transition-colors uppercase tracking-tight mb-2 line-clamp-1">
                                                     {playlist.name}
                                                 </h3>
-                                                <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
-                                                    {playlist.description || "Explore this collection of amazing blogs curated just for you."}
+                                                <p className="text-sm font-mono text-gray-600 line-clamp-2 leading-relaxed max-w-2xl">
+                                                    {playlist.description || "Explore this curated sequential documentation."}
                                                 </p>
                                             </div>
 
-                                            <div className="flex flex-wrap items-center gap-6">
-                                                <div className="flex items-center gap-2.5">
-                                                    <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center">
-                                                        <PlayCircle className="w-4 h-4 text-indigo-600" />
-                                                    </div>
-                                                    <div className="flex flex-col">
-                                                        <span className="text-sm font-bold text-gray-900 leading-none">{playlist.blogs?.length || 0}</span>
-                                                        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Blogs</span>
-                                                    </div>
+                                            <div className="flex flex-wrap items-center gap-8 mt-auto border-t border-gray-200 pt-4">
+                                                <div className="flex flex-col">
+                                                    <span className="text-base font-bold text-foreground font-mono leading-none">{playlist.blogs?.length || 0}</span>
+                                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Articles</span>
                                                 </div>
-                                                <div className="flex items-center gap-6 border-l border-gray-100 pl-6">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-sm font-bold text-gray-900 leading-none">{playlist.total_views || 0}</span>
-                                                        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Views</span>
-                                                    </div>
+                                                <div className="h-8 w-px bg-gray-200"></div>
+                                                <div className="flex flex-col">
+                                                    <span className="text-base font-bold text-foreground font-mono leading-none">{(playlist.total_views || 0).toLocaleString()}</span>
+                                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Total Views</span>
                                                 </div>
-                                                <div className="flex flex-col border-l border-gray-100 pl-6">
-                                                    <span className="text-xs font-semibold text-gray-500">Curated by</span>
-                                                    <span className="text-[10px] font-bold text-indigo-600 truncate max-w-[120px]">
+                                                <div className="h-8 w-px bg-gray-200"></div>
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Architect</span>
+                                                    <span className="text-sm font-bold text-indigo-600 truncate max-w-[150px] uppercase font-mono">
                                                         {playlist.owner?.full_name || playlist.owner?.email?.split('@')[0]}
                                                     </span>
                                                 </div>
@@ -199,11 +194,11 @@ export default function PlaylistsList() {
 
                         {/* Pagination */}
                         {totalPages > 1 && (
-                            <div className="flex items-center justify-center gap-3 mt-16 pb-8">
+                            <div className="flex items-center justify-center gap-4 mt-16 pb-8 font-mono">
                                 <button
                                     onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                                     disabled={currentPage === 1 || isFetching}
-                                    className="p-3 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-indigo-50 hover:border-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                                    className="p-3 bg-background border-2 border-foreground text-foreground hover:bg-foreground hover:text-background disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-[4px_4px_0px_0px_rgba(88,28,135,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1"
                                 >
                                     <ChevronLeft className="w-5 h-5" />
                                 </button>
@@ -212,16 +207,16 @@ export default function PlaylistsList() {
                                     {[...Array(totalPages)].map((_, i) => {
                                         const p = i + 1;
                                         if (totalPages > 7 && Math.abs(p - currentPage) > 2 && p !== 1 && p !== totalPages) {
-                                            if (Math.abs(p - currentPage) === 3) return <span key={p} className="text-gray-400">...</span>;
+                                            if (Math.abs(p - currentPage) === 3) return <span key={p} className="text-gray-400 font-bold tracking-widest">...</span>;
                                             return null;
                                         }
                                         return (
                                             <button
                                                 key={p}
                                                 onClick={() => setCurrentPage(p)}
-                                                className={`w-10 h-10 rounded-xl font-bold transition-all ${currentPage === p
-                                                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-200"
-                                                    : "bg-white text-gray-600 border border-gray-200 hover:border-indigo-300"
+                                                className={`w-12 h-12 font-bold transition-all border-2 border-foreground ${currentPage === p
+                                                    ? "bg-foreground text-background shadow-[4px_4px_0px_0px_rgba(88,28,135,1)]"
+                                                    : "bg-background text-foreground hover:bg-gray-100 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px]"
                                                     }`}
                                             >
                                                 {p}
@@ -233,7 +228,7 @@ export default function PlaylistsList() {
                                 <button
                                     onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                                     disabled={currentPage === totalPages || isFetching}
-                                    className="p-3 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-indigo-50 hover:border-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                                    className="p-3 bg-background border-2 border-foreground text-foreground hover:bg-foreground hover:text-background disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-[4px_4px_0px_0px_rgba(88,28,135,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1"
                                 >
                                     <ChevronRight className="w-5 h-5" />
                                 </button>
@@ -241,14 +236,14 @@ export default function PlaylistsList() {
                         )}
                     </>
                 ) : (
-                    <div className="text-center py-20 bg-gray-50/50 rounded-3xl border border-dashed border-gray-200">
-                        <p className="text-xl font-semibold text-gray-900 mb-2">No playlists found</p>
-                        <p className="text-gray-500">
-                            We couldn't find any public playlists matching "{submittedSearch}".
+                    <div className="text-center py-24 bg-background border-2 border-dashed border-foreground shadow-[8px_8px_0px_0px_rgba(200,200,200,1)]">
+                        <p className="text-2xl font-extrabold text-foreground mb-4 uppercase tracking-tight">No tracks found</p>
+                        <p className="text-gray-600 font-mono">
+                            We couldn't find any public tracks matching "{submittedSearch}".
                         </p>
                         <button
                             onClick={() => { setSearchQuery(""); setSubmittedSearch(""); setCurrentPage(1); }}
-                            className="mt-6 text-indigo-600 font-bold hover:text-indigo-700 underline underline-offset-4"
+                            className="mt-8 px-6 py-3 bg-foreground text-background font-bold uppercase font-mono hover:bg-gray-800 transition-colors"
                         >
                             Reset Search
                         </button>

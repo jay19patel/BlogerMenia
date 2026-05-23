@@ -7,7 +7,6 @@ import { api } from "@/lib/api";
 import { ChevronLeft, ChevronRight, Plus, Eye, Heart, Star, BookOpen, ListMusic, Edit2, Trash2, Loader2, User as UserIcon } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import AddToPlaylistDialog from "@/components/AddToPlaylistDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate, getImageUrl } from "@/lib/utils";
 import Image from "next/image";
@@ -23,8 +22,6 @@ export default function MyBlogsPage() {
   const [submittedSearch, setSubmittedSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [playlistPage, setPlaylistPage] = useState(1);
-  const [showAddToPlaylist, setShowAddToPlaylist] = useState(false);
-  const [selectedBlog, setSelectedBlog] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [deletingPlaylistId, setDeletingPlaylistId] = useState(null);
@@ -85,12 +82,12 @@ export default function MyBlogsPage() {
 
   // Fetch Playlists
   const fetchPlaylists = async () => {
-    if (!token || !user) return;
+    if (!user) return;
     try {
       setPlaylistsLoading(true);
       const userId = user.id || user._id;
       const skip = (playlistPage - 1) * PLAYLISTS_PER_PAGE;
-      const data = await api.getUserPlaylistsByEmail(user.email, userId, token, true, skip, PLAYLISTS_PER_PAGE);
+      const data = await api.getUserPlaylistsByEmail(user.email, userId, null, true, skip, PLAYLISTS_PER_PAGE);
       setPlaylists(data?.playlists || []);
       setTotalPlaylists(data?.total || 0);
     } catch (e) {
@@ -102,13 +99,13 @@ export default function MyBlogsPage() {
 
   useEffect(() => {
     fetchPlaylists();
-  }, [token, user?.email, playlistPage]);
+  }, [user?.email, playlistPage]);
 
   const playlistTotalPages = Math.ceil(totalPlaylists / PLAYLISTS_PER_PAGE);
 
   // Fetch Blogs
   const fetchBlogs = async () => {
-    if (!token || !user) return;
+    if (!user) return;
     setIsFetchingBlogs(true);
     if (blogs.length === 0) setBlogsLoading(true);
     try {
@@ -132,7 +129,7 @@ export default function MyBlogsPage() {
 
   useEffect(() => {
     if (user) fetchBlogs();
-  }, [token, user?.email, submittedSearch, selectedCategory, currentPage]);
+  }, [user?.email, submittedSearch, selectedCategory, currentPage]);
 
   const totalPages = Math.ceil(totalBlogs / BLOGS_PER_PAGE);
 
@@ -287,7 +284,7 @@ export default function MyBlogsPage() {
                   </div>
                   <div className="flex flex-col items-center sm:items-start">
                     <span className="font-extrabold text-xl text-foreground leading-none mt-1">
-                      {userProfile.created_at ? new Date(userProfile.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : '—'}
+                      {(userProfile.createdAt || userProfile.created_at) ? new Date(userProfile.createdAt || userProfile.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : '—'}
                     </span>
                     <span className="text-[10px] font-mono font-bold text-foreground uppercase tracking-widest mt-2">
                       Since
@@ -458,7 +455,6 @@ export default function MyBlogsPage() {
                           <div className="flex items-center gap-3">
                             <Link href={`/my-blogs/edit/${blog.slug}`} className="text-purple-900 font-mono font-bold text-xs uppercase tracking-widest hover:underline decoration-2 underline-offset-4">Edit</Link>
                             <Link href={(blog.author?.email || blog.author_email || blog.authorUsername) ? `/blogs/${(blog.author?.email || blog.author_email || blog.authorUsername)}/${blog.slug}` : `/blogs/${blog.slug}`} className="text-foreground font-mono font-bold text-xs uppercase tracking-widest hover:underline decoration-2 underline-offset-4">View</Link>
-                            <button onClick={() => { setSelectedBlog(blog); setShowAddToPlaylist(true); }} className="text-purple-900 font-mono font-bold text-xs uppercase tracking-widest hover:underline decoration-2 underline-offset-4">Playlist</button>
                             <button onClick={() => handleDeleteBlog(blog.slug || blog.id, blog.title)} disabled={deletingBlogId === (blog.slug || blog.id)} className="text-red-600 font-mono font-bold text-xs uppercase tracking-widest hover:underline decoration-2 underline-offset-4 disabled:opacity-50">
                               {deletingBlogId === (blog.slug || blog.id) ? '...' : 'Delete'}
                             </button>
@@ -653,18 +649,6 @@ export default function MyBlogsPage() {
 
 
 
-        {/* Add to Playlist Dialog */}
-        {showAddToPlaylist && selectedBlog && (
-          <AddToPlaylistDialog
-            isOpen={showAddToPlaylist}
-            onClose={() => {
-              setShowAddToPlaylist(false);
-              setSelectedBlog(null);
-            }}
-            blogData={selectedBlog}
-            token={token}
-          />
-        )}
       </div>
     </div>
   );

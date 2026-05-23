@@ -1,175 +1,144 @@
 import { NextResponse } from 'next/server';
-import { readDB, writeDB, verifyToken } from '@/lib/db';
+import connectToDatabase from '@/lib/mongodb';
+import Blog from '@/models/Blog';
+import User from '@/models/User';
+import Category from '@/models/Category'; // Need to import this for populate
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
-export async function GET(request, { params }) {
+export async function GET(req, { params }) {
   try {
     const { slug } = await params;
-    const { searchParams } = new URL(request.url);
+    await connectToDatabase();
+
+    const { searchParams } = new URL(req.url);
     const trackView = searchParams.get('track_view') !== 'false';
 
-    const db = readDB();
-    const blogIndex = db.blogs.findIndex(b => b.slug === slug || b.id === slug);
-
-    if (blogIndex === -1) {
-      return NextResponse.json(
-        { detail: 'Blog post not found.' },
-        { status: 404 }
-      );
+    let blog;
+    
+    // Check if slug is an ObjectId or string
+    if (slug.match(/^[0-9a-fA-F]{24}$/)) {
+      blog = await Blog.findById(slug)
+        .populate('author', 'full_name username email profile_image headline bio blog_count total_views')
+        .populate('category', 'name slug');
+    } else {
+      blog = await Blog.findOne({ slug })
+        .populate('author', 'full_name username email profile_image headline bio blog_count total_views')
+        .populate('category', 'name slug');
     }
 
-    const blog = db.blogs[blogIndex];
+    if (!blog) {
+      return NextResponse.json({ detail: "Blog not found" }, { status: 404 });
+    }
 
-    // Dynamic view counter incrementing
     if (trackView) {
-      blog.views = (blog.views || 0) + 1;
-      db.blogs[blogIndex] = blog;
+      blog.views += 1;
+      await blog.save();
       
-      // Update cumulative total views for the author
-      const authorIndex = db.users.findIndex(u => u.id === blog.author_id);
-      if (authorIndex !== -1) {
-        db.users[authorIndex].total_views = (db.users[authorIndex].total_views || 0) + 1;
+      // Update author's total views
+      if (blog.author) {
+        await User.findByIdAndUpdate(blog.author._id, { $inc: { total_views: 1 } });
       }
-      
-      writeDB(db);
     }
-
-    // Resolve author and category full details
-    const author = db.users.find(u => u.id === blog.author_id);
-    const category = db.categories.find(c => c.id === blog.category_id);
-
-    const authorProfile = author ? {
-      id: author.id,
-      email: author.email,
-      full_name: author.full_name,
-      profile_image: author.profile_image,
-      headline: author.headline,
-      blog_count: author.blog_count,
-      total_views: author.total_views,
-      total_likes: author.total_likes
-    } : null;
-
-    const resolvedBlog = {
-      ...blog,
-      author: authorProfile,
-      category: category || { name: 'General', slug: 'general' }
-    };
-
-    return NextResponse.json(resolvedBlog);
-  } catch (error) {
-    console.error('Fetch single blog API error:', error);
-    return NextResponse.json(
-      { detail: 'Internal server error occurred.' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function PATCH(request, { params }) {
-  try {
-    const { slug } = await params;
-    const authHeader = request.headers.get('Authorization');
-    const decoded = verifyToken(authHeader);
-
-    if (!decoded) {
-      return NextResponse.json(
-        { detail: 'Given token not valid or expired.' },
-        { status: 401 }
-      );
-    }
-
-    const db = readDB();
-    const blogIndex = db.blogs.findIndex(b => b.slug === slug || b.id === slug);
-
-    if (blogIndex === -1) {
-      return NextResponse.json(
-        { detail: 'Blog post not found.' },
-        { status: 404 }
-      );
-    }
-
-    const blog = db.blogs[blogIndex];
-
-    // Restrict updates to the original author
-    if (blog.author_id !== decoded.id) {
-      return NextResponse.json(
-        { detail: 'You are not authorized to update this blog.' },
-        { status: 403 }
-      );
-    }
-
-    const updateData = await request.json();
-
-    if (updateData.title !== undefined) blog.title = updateData.title;
-    if (updateData.subtitle !== undefined) blog.subtitle = updateData.subtitle;
-    if (updateData.excerpt !== undefined) blog.excerpt = updateData.excerpt;
-    if (updateData.content !== undefined) blog.content = updateData.content;
-    if (updateData.category_id !== undefined) blog.category_id = updateData.category_id;
-    if (updateData.image !== undefined) blog.image = updateData.image;
-    if (updateData.featured !== undefined) blog.featured = updateData.featured;
-
-    db.blogs[blogIndex] = blog;
-    writeDB(db);
 
     return NextResponse.json(blog);
   } catch (error) {
-    console.error('Update blog API error:', error);
-    return NextResponse.json(
-      { detail: 'Internal server error occurred.' },
-      { status: 500 }
-    );
+    console.error("GET Blog error:", error);
+    return NextResponse.json({ detail: "Failed to fetch blog" }, { status: 500 });
   }
 }
 
-export async function DELETE(request, { params }) {
+export async function PATCH(req, { params }) {
   try {
     const { slug } = await params;
-    const authHeader = request.headers.get('Authorization');
-    const decoded = verifyToken(authHeader);
-
-    if (!decoded) {
-      return NextResponse.json(
-        { detail: 'Given token not valid or expired.' },
-        { status: 401 }
-      );
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
     }
 
-    const db = readDB();
-    const blogIndex = db.blogs.findIndex(b => b.slug === slug || b.id === slug);
+    await connectToDatabase();
+    const data = await req.json();
 
-    if (blogIndex === -1) {
-      return NextResponse.json(
-        { detail: 'Blog post not found.' },
-        { status: 404 }
-      );
+    let blog;
+    if (slug.match(/^[0-9a-fA-F]{24}$/)) {
+      blog = await Blog.findById(slug);
+    } else {
+      blog = await Blog.findOne({ slug });
     }
 
-    const blog = db.blogs[blogIndex];
-
-    // Restrict delete to the original author or admin
-    if (blog.author_id !== decoded.id && decoded.id !== 'usr_admin') {
-      return NextResponse.json(
-        { detail: 'You are not authorized to delete this blog.' },
-        { status: 403 }
-      );
+    if (!blog) {
+      return NextResponse.json({ detail: "Blog not found" }, { status: 404 });
     }
 
-    // Remove the blog post
-    db.blogs.splice(blogIndex, 1);
-
-    // Decrement author blog count
-    const authorIndex = db.users.findIndex(u => u.id === blog.author_id);
-    if (authorIndex !== -1) {
-      db.users[authorIndex].blog_count = Math.max(0, (db.users[authorIndex].blog_count || 1) - 1);
+    // Check authorization: only author or admin can edit
+    if (blog.author.toString() !== session.user.id && session.user.role !== 'Admin') {
+      return NextResponse.json({ detail: "Forbidden: You don't have permission to edit this blog" }, { status: 403 });
     }
 
-    writeDB(db);
+    // Handle is_published toggling
+    if (data.is_published && !blog.is_published) {
+      data.publishedDate = new Date();
+    }
 
-    return new Response(null, { status: 204 }); // 204 No Content
+    // Format content correctly for the schema if updating content
+    if (data.introduction !== undefined || data.conclusion !== undefined || data.sections !== undefined) {
+      const contentObj = {
+        introduction: data.introduction !== undefined ? data.introduction : blog.content?.introduction,
+        conclusion: data.conclusion !== undefined ? data.conclusion : blog.content?.conclusion,
+        sections: data.sections !== undefined ? data.sections : blog.content?.sections || []
+      };
+      data.content = contentObj;
+      delete data.introduction;
+      delete data.conclusion;
+      delete data.sections;
+    }
+
+    const updatedBlog = await Blog.findByIdAndUpdate(blog._id, { $set: data }, { new: true })
+      .populate('author', 'full_name username email profile_image')
+      .populate('category', 'name slug');
+
+    return NextResponse.json(updatedBlog);
   } catch (error) {
-    console.error('Delete blog API error:', error);
-    return NextResponse.json(
-      { detail: 'Internal server error occurred.' },
-      { status: 500 }
-    );
+    console.error("PATCH Blog error:", error);
+    return NextResponse.json({ detail: "Failed to update blog. " + error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(req, { params }) {
+  try {
+    const { slug } = await params;
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
+    }
+
+    await connectToDatabase();
+    
+    let blog;
+    if (slug.match(/^[0-9a-fA-F]{24}$/)) {
+      blog = await Blog.findById(slug);
+    } else {
+      blog = await Blog.findOne({ slug });
+    }
+
+    if (!blog) {
+      return NextResponse.json({ detail: "Blog not found" }, { status: 404 });
+    }
+
+    // Check authorization
+    if (blog.author.toString() !== session.user.id && session.user.role !== 'Admin') {
+      return NextResponse.json({ detail: "Forbidden: You don't have permission to delete this blog" }, { status: 403 });
+    }
+
+    await Blog.findByIdAndDelete(blog._id);
+    
+    // Decrement user blog count
+    await User.findByIdAndUpdate(blog.author, { $inc: { blog_count: -1 } });
+
+    // 204 No Content
+    return new NextResponse(null, { status: 204 });
+  } catch (error) {
+    console.error("DELETE Blog error:", error);
+    return NextResponse.json({ detail: "Failed to delete blog" }, { status: 500 });
   }
 }

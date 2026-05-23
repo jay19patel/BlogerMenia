@@ -1,29 +1,27 @@
 import { NextResponse } from 'next/server';
-import { readDB } from '@/lib/db';
+import connectToDatabase from '@/lib/mongodb';
+import User from '@/models/User';
 
-export async function GET(request, { params }) {
+export async function GET(req, { params }) {
   try {
     const { email } = await params;
-    const db = readDB();
-
-    const user = db.users.find(u => u.email === email);
+    await connectToDatabase();
+    
+    // Find user by email or username (the param name is email but it can be username based on UI)
+    const user = await User.findOne({
+      $or: [
+        { email: decodeURIComponent(email) },
+        { username: decodeURIComponent(email) }
+      ]
+    }).select('-password').lean();
 
     if (!user) {
-      return NextResponse.json(
-        { detail: 'User not found.' },
-        { status: 404 }
-      );
+      return NextResponse.json({ detail: "User not found" }, { status: 404 });
     }
 
-    // Strip sensitive fields
-    const { password_hash, ...publicUser } = user;
-
-    return NextResponse.json(publicUser);
+    return NextResponse.json(user);
   } catch (error) {
-    console.error('Fetch user by email API error:', error);
-    return NextResponse.json(
-      { detail: 'Internal server error occurred.' },
-      { status: 500 }
-    );
+    console.error("GET User Profile error:", error);
+    return NextResponse.json({ detail: "Failed to fetch user profile" }, { status: 500 });
   }
 }

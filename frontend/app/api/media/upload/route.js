@@ -1,42 +1,94 @@
 import { NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/db';
+import { bucket, bucketName } from '@/lib/gcs';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { randomUUID } from 'crypto';
+import path from 'path';
+import fs from 'fs';
 
-export async function POST(request) {
+export async function POST(req) {
   try {
-    const authHeader = request.headers.get('Authorization');
-    const decoded = verifyToken(authHeader);
-
-    if (!decoded) {
-      return NextResponse.json(
-        { detail: 'Given token not valid or expired.' },
-        { status: 401 }
-      );
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
     }
 
-    // Since this is a fake DB backend for Next.js, we won't actually process multipart form data 
-    // and save local files (unless specifically required). We'll mock a successful upload 
-    // and return a premium placeholder image or base64 placeholder.
+    const isDevelopment = process.env.NODE_ENV === 'development';
+
+    if (!isDevelopment && !bucket) {
+      return NextResponse.json({ detail: "Google Cloud Storage is not configured properly." }, { status: 500 });
+    }
+
+    const formData = await req.formData();
+    const file = formData.get('file');
+    const folder = formData.get('folder') || 'general';
+
+    if (!file) {
+      const url = formData.get('url');
+      if (url) {
+         return NextResponse.json({ detail: "URL upload is not supported directly. Please upload a file." }, { status: 400 });
+      }
+      return NextResponse.json({ detail: "File is required" }, { status: 400 });
+    }
+
+    // Prepare file data
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
     
-    // In a real app we'd use formidable/multer or cloud storage like S3.
-    // Here we'll just return a nice tech unsplash image to keep the flow working.
+    // Create unique filename
+    const originalName = file.name || 'upload';
+    const extension = path.extname(originalName) || '.png'; // Fallback to png
+    const uniqueFilename = `${folder}/${randomUUID()}${extension}`;
+    const gcsPath = `blogermenia/${uniqueFilename}`;
 
-    const premiumPlaceholders = [
-      'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=800',
-      'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=800',
-      'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=800'
-    ];
+    let publicUrl = '';
 
-    const randomPlaceholder = premiumPlaceholders[Math.floor(Math.random() * premiumPlaceholders.length)];
+    if (isDevelopment) {
+      // Local Upload
+      const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'blogermenia', folder);
+      
+      // Ensure directory exists
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      const filePath = path.join(uploadDir, `${path.basename(uniqueFilename)}`);
+      await fs.promises.writeFile(filePath, buffer);
+      
+      publicUrl = `/uploads/${gcsPath}`;
+    } else {
+      // GCP Upload
+      const blob = bucket.file(gcsPath);
+      
+      // Create write stream
+      await new Promise((resolve, reject) => {
+        const blobStream = blob.createWriteStream({
+          resumable: false,
+          contentType: file.type,
+        });
+
+        blobStream.on('error', (err) => reject(err));
+        blobStream.on('finish', () => resolve());
+        blobStream.end(buffer);
+      });
+
+      try {
+        await blob.makePublic();
+      } catch (e) {
+        console.log("Could not make public explicitly, checking if bucket is already public...", e.message);
+      }
+
+      publicUrl = `https://storage.googleapis.com/${bucketName}/${gcsPath}`;
+    }
 
     return NextResponse.json({
-      url: randomPlaceholder,
-      detail: 'Mock file uploaded successfully.'
-    }, { status: 201 });
+      url: publicUrl,
+      public_id: gcsPath,
+      file_path: publicUrl, // UI expects this to save the path
+    });
+
   } catch (error) {
-    console.error('Media upload API error:', error);
-    return NextResponse.json(
-      { detail: 'Internal server error occurred.' },
-      { status: 500 }
-    );
+    console.error('Upload Error:', error);
+    return NextResponse.json({ detail: "Failed to upload file. " + error.message }, { status: 500 });
   }
 }

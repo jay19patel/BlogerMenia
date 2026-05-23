@@ -1,49 +1,55 @@
-import { NextResponse } from 'next/server';
-import { readDB, writeDB, hashPassword } from '@/lib/db';
+import { NextResponse } from "next/server";
+import connectToDatabase from "@/lib/mongodb";
+import User from "@/models/User";
 
-export async function POST(request) {
+export async function POST(req) {
   try {
-    const { email, password, full_name } = await request.json();
+    const { email, password, full_name } = await req.json();
 
-    if (!email || !password || !full_name) {
+    if (!email || !password) {
       return NextResponse.json(
-        { detail: 'Email, password, and full name are required.' },
+        { detail: "Email and password are required." },
         { status: 400 }
       );
     }
 
-    const db = readDB();
-    const existingUser = db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    await connectToDatabase();
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
 
     if (existingUser) {
       return NextResponse.json(
-        { detail: 'A user with this email address already exists.' },
+        { detail: "User with this email already exists." },
         { status: 400 }
       );
     }
 
-    const newUser = {
-      id: `usr_${Date.now()}`,
-      email: email.toLowerCase(),
-      password_hash: hashPassword(password),
-      full_name: full_name,
-      profile_image: null,
-      headline: '',
-      blog_count: 0,
-      total_views: 0,
-      total_likes: 0,
-      is_active: true
-    };
+    // Create the user
+    // The pre-save hook in User model will hash the password automatically
+    const username = email.split('@')[0];
+    const newUser = await User.create({
+      email,
+      password,
+      full_name: full_name || username,
+      username,
+    });
 
-    db.users.push(newUser);
-    writeDB(db);
-
-    const { password_hash, ...userProfile } = newUser;
-    return NextResponse.json(userProfile, { status: 201 });
-  } catch (error) {
-    console.error('Registration API error:', error);
     return NextResponse.json(
-      { detail: 'Internal server error occurred.' },
+      { 
+        message: "User registered successfully", 
+        user: { 
+          id: newUser._id, 
+          email: newUser.email,
+          full_name: newUser.full_name
+        } 
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("Registration error:", error);
+    return NextResponse.json(
+      { detail: "Failed to register user. " + error.message },
       { status: 500 }
     );
   }

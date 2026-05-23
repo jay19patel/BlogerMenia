@@ -1,134 +1,156 @@
 import { NextResponse } from 'next/server';
-import { readDB, writeDB, verifyToken } from '@/lib/db';
+import connectToDatabase from '@/lib/mongodb';
+import Playlist from '@/models/Playlist';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
-export async function GET(request, { params }) {
+function isObjectId(str) {
+  return /^[0-9a-fA-F]{24}$/.test(str);
+}
+
+function normalisePlaylist(doc) {
+  if (!doc) return doc;
+  const obj = typeof doc.toObject === 'function' ? doc.toObject({ virtuals: true }) : doc;
+  return {
+    ...obj,
+    id: obj._id?.toString(),
+    blogs: (obj.blogs || []).map(blog =>
+      typeof blog === 'object' && blog !== null
+        ? { ...blog, id: blog._id?.toString() }
+        : blog
+    ),
+  };
+}
+
+async function findPlaylist(playlistId) {
+  if (isObjectId(playlistId)) {
+    return Playlist.findById(playlistId);
+  }
+  return Playlist.findOne({ slug: playlistId });
+}
+
+export async function GET(req, { params }) {
   try {
     const { playlistId } = await params;
+    await connectToDatabase();
 
-    const db = readDB();
-    const pl = db.playlists.find(p => p.id === playlistId || p.slug === playlistId);
+    const playlist = await (isObjectId(playlistId)
+      ? Playlist.findById(playlistId)
+      : Playlist.findOne({ slug: playlistId })
+    )
+      .populate('owner', 'full_name username profile_image')
+      .populate({
+        path: 'blogs',
+        populate: { path: 'author', select: 'full_name username' },
+      });
 
-    if (!pl) {
+    if (!playlist) {
+      return NextResponse.json({ detail: 'Playlist not found' }, { status: 404 });
+    }
+
+    // Increment total_views
+    playlist.total_views = (playlist.total_views || 0) + 1;
+    await playlist.save();
+
+    return NextResponse.json(normalisePlaylist(playlist));
+  } catch (error) {
+    console.error('GET Playlist error:', error);
+    return NextResponse.json({ detail: 'Failed to fetch playlist' }, { status: 500 });
+  }
+}
+
+export async function PATCH(req, { params }) {
+  try {
+    const { playlistId } = await params;
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ detail: 'Unauthorized' }, { status: 401 });
+    }
+
+    await connectToDatabase();
+    const data = await req.json();
+
+    const playlist = await findPlaylist(playlistId);
+    if (!playlist) {
+      return NextResponse.json({ detail: 'Playlist not found' }, { status: 404 });
+    }
+
+    if (playlist.owner.toString() !== session.user.id && session.user.role !== 'Admin') {
       return NextResponse.json(
-        { detail: 'Playlist not found.' },
-        { status: 404 }
+        { detail: "Forbidden: You don't have permission to edit this playlist" },
+        { status: 403 }
       );
     }
 
-    const owner = db.users.find(u => u.id === pl.owner_id);
-    const resolvedPlaylist = {
-      ...pl,
-      owner: owner ? {
-        id: owner.id,
-        email: owner.email,
-        full_name: owner.full_name,
-        username: owner.email.split('@')[0]
-      } : null
-    };
+    // Accept both 'thumbnail' and 'cover_image' from client
+    const updatePayload = { ...data };
+    if (data.thumbnail !== undefined && data.cover_image === undefined) {
+      updatePayload.cover_image = data.thumbnail;
+      delete updatePayload.thumbnail;
+    }
 
-    return NextResponse.json(resolvedPlaylist);
+    // Remove client-side fields that shouldn't overwrite server fields
+    delete updatePayload._id;
+    delete updatePayload.owner;
+    delete updatePayload.slug; // Prevent accidental slug change via PATCH unless intentional
+
+    // If client explicitly sends a slug, allow it
+    if (data.slug !== undefined) {
+      updatePayload.slug = data.slug;
+    }
+
+    // Filter blogs to valid ObjectIds only
+    if (Array.isArray(updatePayload.blogs)) {
+      updatePayload.blogs = updatePayload.blogs.filter(
+        id => id && String(id).match(/^[0-9a-fA-F]{24}$/)
+      );
+    }
+
+    const updated = await Playlist.findByIdAndUpdate(
+      playlist._id,
+      { $set: updatePayload },
+      { new: true }
+    )
+      .populate('owner', 'full_name username profile_image')
+      .populate('blogs', 'title slug thumbnail views');
+
+    return NextResponse.json(normalisePlaylist(updated));
   } catch (error) {
-    console.error('Fetch single playlist API error:', error);
+    console.error('PATCH Playlist error:', error);
     return NextResponse.json(
-      { detail: 'Internal server error occurred.' },
+      { detail: 'Failed to update playlist. ' + error.message },
       { status: 500 }
     );
   }
 }
 
-export async function PATCH(request, { params }) {
+export async function DELETE(req, { params }) {
   try {
     const { playlistId } = await params;
-    const authHeader = request.headers.get('Authorization');
-    const decoded = verifyToken(authHeader);
-
-    if (!decoded) {
-      return NextResponse.json(
-        { detail: 'Given token not valid or expired.' },
-        { status: 401 }
-      );
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ detail: 'Unauthorized' }, { status: 401 });
     }
 
-    const db = readDB();
-    const plIndex = db.playlists.findIndex(p => p.id === playlistId || p.slug === playlistId);
+    await connectToDatabase();
 
-    if (plIndex === -1) {
-      return NextResponse.json(
-        { detail: 'Playlist not found.' },
-        { status: 404 }
-      );
+    const playlist = await findPlaylist(playlistId);
+    if (!playlist) {
+      return NextResponse.json({ detail: 'Playlist not found' }, { status: 404 });
     }
 
-    const pl = db.playlists[plIndex];
-
-    if (pl.owner_id !== decoded.id) {
+    if (playlist.owner.toString() !== session.user.id && session.user.role !== 'Admin') {
       return NextResponse.json(
-        { detail: 'You are not authorized to edit this playlist.' },
+        { detail: "Forbidden: You don't have permission to delete this playlist" },
         { status: 403 }
       );
     }
 
-    const updateData = await request.json();
+    await Playlist.findByIdAndDelete(playlist._id);
 
-    if (updateData.name !== undefined) pl.name = updateData.name;
-    if (updateData.description !== undefined) pl.description = updateData.description;
-    if (updateData.is_public !== undefined) pl.is_public = updateData.is_public;
-    if (updateData.thumbnail !== undefined) pl.thumbnail = updateData.thumbnail;
-
-    db.playlists[plIndex] = pl;
-    writeDB(db);
-
-    return NextResponse.json(pl);
+    return new NextResponse(null, { status: 204 });
   } catch (error) {
-    console.error('Update playlist API error:', error);
-    return NextResponse.json(
-      { detail: 'Internal server error occurred.' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function DELETE(request, { params }) {
-  try {
-    const { playlistId } = await params;
-    const authHeader = request.headers.get('Authorization');
-    const decoded = verifyToken(authHeader);
-
-    if (!decoded) {
-      return NextResponse.json(
-        { detail: 'Given token not valid or expired.' },
-        { status: 401 }
-      );
-    }
-
-    const db = readDB();
-    const plIndex = db.playlists.findIndex(p => p.id === playlistId || p.slug === playlistId);
-
-    if (plIndex === -1) {
-      return NextResponse.json(
-        { detail: 'Playlist not found.' },
-        { status: 404 }
-      );
-    }
-
-    const pl = db.playlists[plIndex];
-
-    if (pl.owner_id !== decoded.id && decoded.id !== 'usr_admin') {
-      return NextResponse.json(
-        { detail: 'You are not authorized to delete this playlist.' },
-        { status: 403 }
-      );
-    }
-
-    db.playlists.splice(plIndex, 1);
-    writeDB(db);
-
-    return new Response(null, { status: 204 });
-  } catch (error) {
-    console.error('Delete playlist API error:', error);
-    return NextResponse.json(
-      { detail: 'Internal server error occurred.' },
-      { status: 500 }
-    );
+    console.error('DELETE Playlist error:', error);
+    return NextResponse.json({ detail: 'Failed to delete playlist' }, { status: 500 });
   }
 }

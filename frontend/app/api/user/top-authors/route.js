@@ -1,28 +1,24 @@
 import { NextResponse } from 'next/server';
-import { readDB } from '@/lib/db';
+import connectToDatabase from '@/lib/mongodb';
+import User from '@/models/User';
 
-export async function GET(request) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '5', 10);
+    await connectToDatabase();
     
-    const db = readDB();
+    // Sort users by blog_count and total_views
+    const topAuthors = await User.find({})
+      .select('full_name username email profile_image headline bio blog_count total_views')
+      .sort({ total_views: -1, blog_count: -1 })
+      .limit(10)
+      .lean();
 
-    const topAuthors = db.users
-      .filter(u => u.is_active)
-      .sort((a, b) => b.total_views - a.total_views)
-      .slice(0, limit)
-      .map(u => {
-        const { password_hash, ...publicUser } = u;
-        return publicUser;
-      });
-
-    return NextResponse.json(topAuthors);
+    return NextResponse.json({
+      count: topAuthors.length,
+      users: topAuthors
+    });
   } catch (error) {
-    console.error('Fetch top authors API error:', error);
-    return NextResponse.json(
-      { detail: 'Internal server error occurred.' },
-      { status: 500 }
-    );
+    console.error("GET Top Authors error:", error);
+    return NextResponse.json({ detail: "Failed to fetch top authors" }, { status: 500 });
   }
 }

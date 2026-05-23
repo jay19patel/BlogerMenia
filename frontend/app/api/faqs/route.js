@@ -1,15 +1,20 @@
 import { NextResponse } from 'next/server';
-import { readDB } from '@/lib/db';
+import connectToDatabase from '@/lib/mongodb';
+import FAQ from '@/models/FAQ';
 
-export async function GET(request) {
+export async function GET() {
   try {
-    const db = readDB();
-    return NextResponse.json(db.faqs || []);
+    await connectToDatabase();
+    
+    // Only return active FAQs, sorted by order
+    const faqs = await FAQ.find({ is_active: true }).sort({ order: 1 });
+
+    return NextResponse.json({
+      count: faqs.length,
+      faqs
+    });
   } catch (error) {
-    console.error('Fetch FAQs API error:', error);
-    return NextResponse.json(
-      { detail: 'Internal server error occurred.' },
-      { status: 500 }
-    );
+    console.error("GET FAQs error:", error);
+    return NextResponse.json({ detail: "Failed to fetch FAQs" }, { status: 500 });
   }
 }

@@ -2,8 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { ChevronDown, Plus, Check, Search, Loader2 } from "lucide-react";
 
-const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
+const API_BASE_URL = "/api";
 
 export default function CategorySelect({
     categoryId,
@@ -34,7 +33,7 @@ export default function CategorySelect({
                     headers["Authorization"] = `Bearer ${token}`;
                 }
 
-                const res = await fetch(`${API_BASE_URL}/blogs/categories/`, {
+                const res = await fetch(`${API_BASE_URL}/blogs/categories`, {
                     headers,
                 });
 
@@ -117,7 +116,7 @@ export default function CategorySelect({
                 headers["Authorization"] = `Bearer ${token}`;
             }
 
-            const res = await fetch(`${API_BASE_URL}/blogs/categories/`, {
+            const res = await fetch(`${API_BASE_URL}/blogs/categories`, {
                 method: "POST",
                 headers,
                 body: JSON.stringify({ name, slug }),
@@ -132,7 +131,7 @@ export default function CategorySelect({
             } else {
                 // fallback: refetch and find
                 const refetch = await fetch(
-                    `${API_BASE_URL}/blogs/categories/`,
+                    `${API_BASE_URL}/blogs/categories`,
                     { headers }
                 );
 

@@ -24,12 +24,28 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!user) return;
 
-    setFormData({
-      full_name: user.full_name || "",
-      headline: user.headline || "",
-      bio: user.bio || "",
-      profile_image: user.profile_image || user.profile_image_url || "",
-    });
+    const fetchProfile = async () => {
+      try {
+        // Fetch full profile from DB because session object doesn't include headline/bio
+        const fullUser = await api.getUserProfileByEmail(user.email);
+        setFormData({
+          full_name: fullUser.full_name || user.full_name || "",
+          headline: fullUser.headline || "",
+          bio: fullUser.bio || "",
+          profile_image: fullUser.profile_image || fullUser.profile_image_url || user.profile_image || "",
+        });
+      } catch (err) {
+        console.error("Failed to fetch full profile", err);
+        setFormData({
+          full_name: user.full_name || "",
+          headline: user.headline || "",
+          bio: user.bio || "",
+          profile_image: user.profile_image || user.profile_image_url || "",
+        });
+      }
+    };
+
+    fetchProfile();
   }, [user]);
 
   const handleInputChange = (e) => {
@@ -96,11 +112,11 @@ export default function ProfilePage() {
       if (imageFile) {
         try {
           const uploadRes = await api.uploadImage(imageFile, 'users', token);
-          if (uploadRes && uploadRes.id) {
-            updateData.profile_image = uploadRes.id;
+          if (uploadRes && (uploadRes.url || uploadRes.file_path)) {
+            updateData.profile_image = uploadRes.url || uploadRes.file_path;
             hasChanges = true;
           } else {
-            throw new Error("No ID returned from image upload");
+            throw new Error("No URL returned from image upload");
           }
         } catch (uploadError) {
           console.error("Error uploading profile picture:", uploadError);
@@ -119,12 +135,12 @@ export default function ProfilePage() {
       const result = await api.updateUserProfile(token, updateData);
 
       if (updateProfile) {
-        await updateProfile();
+        await updateProfile(updateData);
       }
 
       toast.success("Profile updated successfully!");
 
-      // Reload mainly to refresh context/UI fully if needed
+      // Refresh to get new data
       setTimeout(() => {
         window.location.reload();
       }, 1500);

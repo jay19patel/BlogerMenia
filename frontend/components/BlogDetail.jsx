@@ -16,12 +16,12 @@ import React from 'react';
 const Flowchart = ({ section }) => {
     const getStepColor = (color) => {
         switch (color) {
-            case 'blue': return 'bg-blue-50 text-blue-600 dark:bg-blue-900/10 dark:text-blue-400';
-            case 'indigo': return 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/10 dark:text-indigo-400';
-            case 'violet': return 'bg-violet-50 text-violet-600 dark:bg-violet-900/10 dark:text-violet-400';
-            case 'purple': return 'bg-purple-50 text-purple-600 dark:bg-purple-900/10 dark:text-purple-400';
-            case 'pink': return 'bg-pink-50 text-pink-600 dark:bg-pink-900/10 dark:text-pink-400';
-            default: return 'bg-gray-50 text-gray-600 dark:bg-gray-900/10 dark:text-gray-400';
+            case 'blue': return 'bg-blue-300 text-black';
+            case 'indigo': return 'bg-indigo-300 text-black';
+            case 'violet': return 'bg-violet-300 text-black';
+            case 'purple': return 'bg-purple-300 text-black';
+            case 'pink': return 'bg-pink-300 text-black';
+            default: return 'bg-yellow-300 text-black';
         }
     };
 
@@ -31,35 +31,36 @@ const Flowchart = ({ section }) => {
         return (
             <div key={step.id} className={`relative flex flex-col ${isBranch ? 'flex-1' : 'w-full'}`}>
                 <div className="relative flex gap-4 group">
-                    {/* Minimal Connector Line */}
+                    {/* Brutalist Connector Line (Dashed) */}
                     {!isBranch && stepIndex < totalInFlow - 1 && (
-                        <div className="absolute top-10 bottom-[-1.5rem] left-5 w-[1px] bg-gray-200 dark:bg-gray-700" />
+                        <div className="absolute top-10 bottom-[-1.5rem] left-5 w-0 border-l-[4px] border-dashed border-black z-0" />
                     )}
 
-                    {/* Node - Clean Circle with Number or Dot */}
-                    <div className={`relative z-10 ${isBranch ? 'w-8 h-8' : 'w-10 h-10'} rounded-full border border-gray-100 dark:border-gray-800 flex items-center justify-center shrink-0 transition-all duration-300 group-hover:scale-105 group-hover:shadow-sm ${getStepColor(step.color)}`}>
+                    {/* Node - Neo-brutalist Square */}
+                    <div className={`relative z-10 ${isBranch ? 'w-8 h-8' : 'w-10 h-10'} border-[3px] border-black flex items-center justify-center shrink-0 transition-all duration-300 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] group-hover:translate-x-[-2px] group-hover:translate-y-[-2px] group-hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] ${getStepColor(step.color)}`}>
                         {!isBranch ? (
-                            <span className="text-sm font-bold tracking-tight">{(stepIndex + 1).toString().padStart(2, '0')}</span>
+                            <span className="text-sm font-mono font-extrabold tracking-tighter">{(stepIndex + 1).toString().padStart(2, '0')}</span>
                         ) : (
-                            <div className="w-1.5 h-1.5 rounded-full bg-current opacity-80" />
+                            <div className="w-2.5 h-2.5 bg-black border border-black" />
                         )}
                     </div>
 
                     {/* Content Area */}
                     <div className="flex-1 pt-1 ml-1">
                         <div className="flex items-center gap-2">
-                            <h4 className={`${isBranch ? 'text-[13px]' : 'text-sm'} font-bold text-gray-900 dark:text-white group-hover:text-indigo-600 transition-colors`}>
+                            <h4 className={`${isBranch ? 'text-[14px]' : 'text-base'} font-extrabold text-black uppercase tracking-tight group-hover:underline decoration-[2px] underline-offset-2`}>
                                 {step.title}
                             </h4>
                         </div>
-                        <p className={`${isBranch ? 'text-[11px]' : 'text-[13px]'} text-gray-500 dark:text-gray-400 leading-snug mt-1 font-normal opacity-90 group-hover:opacity-100 transition-opacity`}>
+                        <p className={`${isBranch ? 'text-[12px]' : 'text-[14px]'} text-black leading-snug mt-1 font-mono font-medium opacity-90`}>
                             {step.description}
                         </p>
 
-                        {/* Minimal Branching UI */}
+                        {/* Brutalist Branching UI */}
                         {hasBranches && (
-                            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
-                                <div className="flex flex-col sm:flex-row gap-4">
+                            <div className="mt-4 pt-6 border-t-[4px] border-dashed border-black relative">
+                                <div className="absolute top-[-10px] left-0 bg-white px-2 font-mono text-[10px] font-bold uppercase tracking-widest text-black border-[2px] border-black">BRANCHES</div>
+                                <div className="flex flex-col sm:flex-row gap-6 mt-2">
                                     {step.branches.map((branch, bIdx) => renderStep(branch, bIdx, true))}
                                 </div>
                             </div>
@@ -72,8 +73,11 @@ const Flowchart = ({ section }) => {
     };
 
     return (
-        <div className="relative p-6 bg-white dark:bg-[#0d1117] rounded-xl border border-gray-100/50 dark:border-gray-800/50 mt-4 mb-8">
-            <div className="relative flex flex-col">
+        <div className="relative p-6 bg-white border-[4px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mt-2 mb-2">
+            <div className="absolute top-[-14px] right-4 bg-purple-900 px-3 py-1 font-mono text-[10px] text-white font-bold uppercase tracking-widest border-[2px] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                FLOWCHART
+            </div>
+            <div className="relative flex flex-col pt-2">
                 {section.steps?.map((step, stepIndex) => renderStep(step, stepIndex, false, section.steps.length))}
             </div>
         </div>
@@ -562,11 +566,11 @@ export default function BlogDetailPage() {
                                 {section.title}
                             </h3>
                         )}
-                        {(section.attachment?.file_path || section.url) && (
+                        {(section.attachment || section.url) && (
                             <div className="border-[4px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white overflow-hidden p-2">
                                 <div className="border-[4px] border-black relative group">
                                     <img
-                                        src={getImageUrl(section.attachment?.file_path || section.url)}
+                                        src={getImageUrl(section.attachment || section.url)}
                                         alt={section.attachment?.filename || section.title || 'Section image'}
                                         className="w-full h-auto object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-500"
                                         loading="lazy"
@@ -688,9 +692,7 @@ export default function BlogDetailPage() {
                                 <span className="font-mono font-bold uppercase tracking-widest text-white bg-black px-2 py-1.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-[2px] border-black text-[10px]">Interactive Flow</span>
                             </div>
                         )}
-                        <div className="border-[4px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white p-4 relative overflow-hidden">
-                            <Flowchart section={section} />
-                        </div>
+                        <Flowchart section={section} />
                     </div>
                 );
 
@@ -726,7 +728,7 @@ export default function BlogDetailPage() {
     }
 
     return (
-        <div className="min-h-screen py-12 relative bg-[linear-gradient(to_right,#e5e7eb_1px,transparent_1px),linear-gradient(to_bottom,#e5e7eb_1px,transparent_1px)] bg-[size:24px_24px] bg-[#f8f9fa]">
+        <div className="min-h-screen py-12 relative bg-transparent">
             <div className="flex justify-center relative z-10">
                 {/* TOC Button - Fixed on Left */}
                 {tableOfContents.length > 0 && (
@@ -801,9 +803,9 @@ export default function BlogDetailPage() {
                     <article className="bg-white border-[4px] border-black relative z-10 flex flex-col">
                         {/* Featured Image */}
                         <div className="relative h-[450px] w-full border-b-[4px] border-black bg-black">
-                            {(blog.thumbnail?.file_path || blog.image) ? (
+                            {(blog.thumbnail || blog.image) ? (
                                 <Image
-                                    src={getImageUrl(blog.thumbnail?.file_path || blog.image)}
+                                    src={getImageUrl(blog.thumbnail || blog.image)}
                                     alt={blog.title}
                                     fill
                                     className="object-cover grayscale-[40%] opacity-80"
@@ -821,7 +823,7 @@ export default function BlogDetailPage() {
                                 <div className="max-w-4xl">
                                     <div className="flex flex-wrap gap-3 mb-6">
                                         <span className="px-3 py-1 bg-white text-black text-[10px] uppercase font-mono font-bold tracking-widest border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                                            {typeof blog.category === 'object' ? blog.category.name : blog.category}
+                                            {blog.category ? (typeof blog.category === 'object' ? blog.category.name : blog.category) : 'General'}
                                         </span>
                                         {blog.featured && (
                                             <span className="px-3 py-1 bg-purple-900 text-white text-[10px] uppercase font-mono font-bold tracking-widest border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
@@ -938,8 +940,8 @@ export default function BlogDetailPage() {
                                         className="group block bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(88,28,135,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex flex-col h-full overflow-hidden"
                                     >
                                         <div className="relative aspect-video overflow-hidden bg-purple-50 border-b-2 border-black">
-                                            {(item.thumbnail?.file_path || item.image) ? (
-                                                <img src={getImageUrl(item.thumbnail?.file_path || item.image)} alt={item.title} className="w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 transition-all duration-500" />
+                                            {(item.thumbnail || item.image) ? (
+                                                <img src={getImageUrl(item.thumbnail || item.image)} alt={item.title} className="w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 transition-all duration-500" />
                                             ) : (
                                                 <div className="w-full h-full bg-purple-100 flex items-center justify-center">
                                                     <p className="text-purple-900 text-[10px] font-mono font-bold uppercase tracking-widest opacity-50">Sys-Log</p>

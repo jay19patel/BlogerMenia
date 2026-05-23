@@ -1,93 +1,59 @@
 import { NextResponse } from 'next/server';
-import { readDB, writeDB, verifyToken } from '@/lib/db';
+import connectToDatabase from '@/lib/mongodb';
+import Playlist from '@/models/Playlist';
+import Blog from '@/models/Blog';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
-export async function POST(request, { params }) {
+function isObjectId(str) {
+  return /^[0-9a-fA-F]{24}$/.test(str);
+}
+
+export async function POST(req, { params }) {
   try {
     const { playlistId } = await params;
-    const authHeader = request.headers.get('Authorization');
-    const decoded = verifyToken(authHeader);
-
-    if (!decoded) {
-      return NextResponse.json(
-        { detail: 'Given token not valid or expired.' },
-        { status: 401 }
-      );
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ detail: 'Unauthorized' }, { status: 401 });
     }
 
-    const db = readDB();
-    const plIndex = db.playlists.findIndex(p => p.id === playlistId || p.slug === playlistId);
+    await connectToDatabase();
+    const data = await req.json();
 
-    if (plIndex === -1) {
-      return NextResponse.json(
-        { detail: 'Playlist not found.' },
-        { status: 404 }
-      );
+    if (!data.blog_id) {
+      return NextResponse.json({ detail: 'blog_id is required' }, { status: 400 });
     }
 
-    const pl = db.playlists[plIndex];
+    const playlist = isObjectId(playlistId)
+      ? await Playlist.findById(playlistId)
+      : await Playlist.findOne({ slug: playlistId });
 
-    if (pl.owner_id !== decoded.id) {
+    if (!playlist) {
+      return NextResponse.json({ detail: 'Playlist not found' }, { status: 404 });
+    }
+
+    if (playlist.owner.toString() !== session.user.id && session.user.role !== 'Admin') {
       return NextResponse.json(
-        { detail: 'You are not authorized to edit this playlist.' },
+        { detail: "Forbidden: You don't have permission to modify this playlist" },
         { status: 403 }
       );
     }
 
-    const blogData = await request.json();
-    const blogId = blogData.blog_id || blogData.id || blogData._id;
-
-    if (!blogId) {
-      return NextResponse.json(
-        { detail: 'Blog ID is required.' },
-        { status: 400 }
-      );
+    const blog = await Blog.findById(data.blog_id);
+    if (!blog) {
+      return NextResponse.json({ detail: 'Blog not found' }, { status: 404 });
     }
 
-    // Check if the blog already exists in the playlist
-    const exists = pl.blogs.some(b => (b.blog_id === blogId || b.id === blogId));
-    if (exists) {
-      return NextResponse.json(
-        { detail: 'This blog post is already in this playlist.' },
-        { status: 400 }
-      );
+    const alreadyInPlaylist = playlist.blogs.some(id => id.toString() === blog._id.toString());
+    if (!alreadyInPlaylist) {
+      playlist.blogs.push(blog._id);
+      playlist.blog_count = playlist.blogs.length;
+      await playlist.save();
     }
 
-    // Fetch full blog details to populate values accurately
-    const originalBlog = db.blogs.find(b => b.id === blogId || b.slug === blogData.slug);
-    
-    const newBlogEntry = {
-      blog_id: blogId,
-      slug: originalBlog ? originalBlog.slug : (blogData.slug || ''),
-      title: originalBlog ? originalBlog.title : (blogData.title || 'Untitled'),
-      image: originalBlog ? originalBlog.image : (blogData.image || ''),
-      excerpt: originalBlog ? originalBlog.excerpt : (blogData.excerpt || '')
-    };
-
-    pl.blogs.push(newBlogEntry);
-    pl.blog_count = pl.blogs.length;
-
-    // Recompute total views and likes for the playlist based on members
-    let totalViews = 0;
-    let totalLikes = 0;
-    pl.blogs.forEach(b => {
-      const dbBlog = db.blogs.find(ob => ob.id === b.blog_id || ob.slug === b.slug);
-      if (dbBlog) {
-        totalViews += (dbBlog.views || 0);
-        totalLikes += (dbBlog.likes || 0);
-      }
-    });
-    pl.total_views = totalViews;
-    pl.total_likes = totalLikes;
-
-    db.playlists[plIndex] = pl;
-    writeDB(db);
-
-    return NextResponse.json(pl);
+    return NextResponse.json({ success: true, message: 'Blog added to playlist' });
   } catch (error) {
-    console.error('Add blog to playlist API error:', error);
-    return NextResponse.json(
-      { detail: 'Internal server error occurred.' },
-      { status: 500 }
-    );
+    console.error('POST Playlist Blog error:', error);
+    return NextResponse.json({ detail: 'Failed to add blog to playlist' }, { status: 500 });
   }
 }

@@ -7,7 +7,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { useGoogleLogin } from "@react-oauth/google";
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -61,30 +60,19 @@ export default function RegisterPage() {
     }
   };
 
-  const handleGoogleLogin = useGoogleLogin({
-    flow: 'auth-code',
-    onSuccess: async (tokenResponse) => {
-      setLoading(true);
-      try {
-        const result = await loginWithGoogle(tokenResponse.code);
-        if (result.success) {
-          toast.success("Account created securely with Google! Welcome!");
-          setTimeout(() => {
-            router.push("/");
-          }, 500);
-        } else {
-          toast.error(result.error || "Google Login failed.");
-        }
-      } catch (err) {
-        toast.error("Google Login error: " + err.message);
-      } finally {
-        setLoading(false);
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    try {
+      const result = await loginWithGoogle();
+      if (!result.success && result.error) {
+        toast.error(result.error);
       }
-    },
-    onError: () => {
-      toast.error("Google Login Failed");
-    },
-  });
+    } catch (err) {
+      toast.error("Google Login error: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12">
