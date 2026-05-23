@@ -85,7 +85,7 @@ export default function CreatorsList() {
     if (isLoading) {
         return (
             <div className="py-24 flex justify-center items-center min-h-[400px]">
-                <LoaderCard message="Loading system architects…" />
+                <LoaderCard message="Loading architects…" />
             </div>
         );
     }
@@ -97,7 +97,7 @@ export default function CreatorsList() {
 
                 <div className="mb-10 border-b-2 border-foreground pb-6 mt-8">
                     <h1 className="text-4xl md:text-5xl font-extrabold text-foreground uppercase tracking-tight mb-4">
-                        System Architects
+                        Architects
                     </h1>
                     <p className="text-lg font-mono text-gray-600 max-w-2xl">
                         The brilliant engineering minds behind the platform's most engaging documentation.
@@ -141,7 +141,7 @@ export default function CreatorsList() {
                                     <div className="flex flex-col sm:flex-row h-full">
                                         {/* Left Side: Avatar */}
                                         <div className="relative w-full sm:w-1/3 shrink-0 border-b-2 sm:border-b-0 sm:border-r-2 border-foreground bg-indigo-50 flex flex-col justify-center items-center p-6">
-                                           <div className="w-20 h-20 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(88,28,135,1)] bg-white overflow-hidden relative">
+                                            <div className="w-20 h-20 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(88,28,135,1)] bg-white overflow-hidden relative">
                                                 {author.profile_image ? (
                                                     <img
                                                         src={getImageUrl(author.profile_image?.file_path || author.profile_image)}

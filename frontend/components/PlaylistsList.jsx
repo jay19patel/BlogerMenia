@@ -85,7 +85,7 @@ export default function PlaylistsList() {
     if (isLoading) {
         return (
             <div className="py-24 flex justify-center items-center min-h-[400px]">
-                <LoaderCard message="Loading system tracks…" />
+                <LoaderCard message="Loading tracks…" />
             </div>
         );
     }
@@ -97,7 +97,7 @@ export default function PlaylistsList() {
 
                 <div className="mb-10 border-b-2 border-foreground pb-6 mt-8">
                     <h1 className="text-4xl md:text-5xl font-extrabold text-foreground uppercase tracking-tight mb-4">
-                        System Tracks
+                        Tracks
                     </h1>
                     <p className="text-lg font-mono text-gray-600 max-w-2xl">
                         Curated sequential documentation series and inspiration from our architects.
