@@ -8,7 +8,6 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import ContactAdmin from "@/components/ContactAdmin";
-import { useGoogleLogin } from "@react-oauth/google";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -21,30 +20,19 @@ export default function LoginPage() {
   const { login, loginWithGoogle } = useAuth();
   const router = useRouter();
 
-  const handleGoogleLogin = useGoogleLogin({
-    flow: 'auth-code',
-    onSuccess: async (tokenResponse) => {
-      setLoading(true);
-      try {
-        const result = await loginWithGoogle(tokenResponse.code);
-        if (result.success) {
-          toast.success("Login successful! Welcome back!");
-          setTimeout(() => {
-            router.push("/");
-          }, 500);
-        } else {
-          toast.error(result.error || "Google Login failed.");
-        }
-      } catch (err) {
-        toast.error("Google Login error: " + err.message);
-      } finally {
-        setLoading(false);
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    try {
+      const result = await loginWithGoogle();
+      if (!result.success && result.error) {
+        toast.error(result.error);
       }
-    },
-    onError: () => {
-      toast.error("Google Login Failed");
-    },
-  });
+    } catch (err) {
+      toast.error("Google Login error: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -76,52 +64,49 @@ export default function LoginPage() {
           <div className="hidden lg:block">
             <div className="pr-12">
               <Link href="/" className="inline-block mb-8">
-                <span className="text-3xl font-bold text-indigo-600">
-                  <span className="text-purple-600">B</span>
-                  loger
-                  <span className="text-purple-600">M</span>
-                  enia
+                <span className="text-3xl font-extrabold text-foreground uppercase tracking-tighter">
+                  SYS<span className="text-indigo-600">.</span>LOG
                 </span>
               </Link>
 
-              <h1 className="text-5xl font-bold text-gray-900 mb-6">
-                Welcome back to your
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600"> creative space</span>
+              <h1 className="text-5xl font-extrabold text-foreground mb-6 uppercase tracking-tight">
+                ACCESS
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600"> CONTROL</span>
               </h1>
 
-              <p className="text-xl text-gray-600 mb-12">
-                Continue your journey of sharing stories and connecting with readers around the world.
+              <p className="text-xl text-gray-700 mb-12 font-serif italic">
+                Authenticate your session to manage deployments and access your sys-logs.
               </p>
 
               {/* Features */}
               <div className="space-y-6">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <BookOpen className="w-6 h-6 text-indigo-600" />
+                  <div className="w-12 h-12 bg-background border-2 border-foreground shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] flex items-center justify-center flex-shrink-0">
+                    <BookOpen className="w-6 h-6 text-foreground" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">Write & Publish</h3>
-                    <p className="text-gray-600">Share your thoughts and stories with our intuitive editor</p>
+                    <h3 className="font-extrabold text-foreground mb-1 uppercase tracking-tight">Write & Publish</h3>
+                    <p className="text-gray-600 font-mono text-sm">Commit logs directly to the public registry.</p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-violet-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Users className="w-6 h-6 text-violet-600" />
+                  <div className="w-12 h-12 bg-background border-2 border-foreground shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] flex items-center justify-center flex-shrink-0">
+                    <Users className="w-6 h-6 text-foreground" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">Grow Your Audience</h3>
-                    <p className="text-gray-600">Connect with readers who love your content</p>
+                    <h3 className="font-extrabold text-foreground mb-1 uppercase tracking-tight">Access Nodes</h3>
+                    <p className="text-gray-600 font-mono text-sm">Connect with distributed nodes globally.</p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Sparkles className="w-6 h-6 text-pink-600" />
+                  <div className="w-12 h-12 bg-background border-2 border-foreground shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] flex items-center justify-center flex-shrink-0">
+                    <Sparkles className="w-6 h-6 text-foreground" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">Track Your Growth</h3>
-                    <p className="text-gray-600">Understand your readers with powerful analytics</p>
+                    <h3 className="font-extrabold text-foreground mb-1 uppercase tracking-tight">Telemetry</h3>
+                    <p className="text-gray-600 font-mono text-sm">Monitor endpoint health and metrics.</p>
                   </div>
                 </div>
               </div>
@@ -130,14 +115,14 @@ export default function LoginPage() {
 
           {/* Right Side - Login Form */}
           <div className="w-full">
-            <div className="bg-white rounded-2xl border border-gray-200 p-8 md:p-10 shadow-sm">
+            <div className="bg-background border-2 border-foreground p-8 md:p-10 shadow-[8px_8px_0px_0px_rgba(13,17,23,1)]">
               {/* Header */}
-              <div className="text-center mb-8">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                  Welcome Back
+              <div className="text-center mb-8 border-b-2 border-foreground pb-6">
+                <h1 className="text-3xl font-extrabold text-foreground mb-2 uppercase tracking-tight">
+                  Auth Request
                 </h1>
-                <p className="text-gray-600">
-                  Sign in to continue to BlogerMenia
+                <p className="text-gray-600 font-mono text-xs uppercase tracking-widest font-bold">
+                  Identify yourself
                 </p>
               </div>
 
@@ -147,9 +132,9 @@ export default function LoginPage() {
                 <div>
                   <label
                     htmlFor="email"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+                    className="block text-xs font-mono font-bold uppercase tracking-widest text-foreground mb-2"
                   >
-                    Email Address
+                    Identifier
                   </label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -161,8 +146,8 @@ export default function LoginPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, email: e.target.value })
                       }
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
-                      placeholder="you@example.com"
+                      className="w-full pl-10 pr-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all font-mono text-sm"
+                      placeholder="sys@admin.com"
                     />
                   </div>
                 </div>
@@ -171,9 +156,9 @@ export default function LoginPage() {
                 <div>
                   <label
                     htmlFor="password"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+                    className="block text-xs font-mono font-bold uppercase tracking-widest text-foreground mb-2"
                   >
-                    Password
+                    Passkey
                   </label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -185,13 +170,13 @@ export default function LoginPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, password: e.target.value })
                       }
-                      className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
-                      placeholder="Enter your password"
+                      className="w-full pl-10 pr-12 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all font-mono text-sm"
+                      placeholder="Enter passkey"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-foreground transition-colors"
                     >
                       {showPassword ? (
                         <EyeOff className="w-5 h-5" />
@@ -203,20 +188,23 @@ export default function LoginPage() {
                 </div>
 
                 {/* Remember & Forgot */}
-                <div className="flex items-center justify-between">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-600"
-                    />
-                    <span className="ml-2 text-sm text-gray-600">Remember me</span>
+                <div className="flex items-center justify-between mt-4">
+                  <label className="flex items-center cursor-pointer group">
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        className="sr-only"
+                      />
+                      <div className="w-4 h-4 border-2 border-foreground bg-background group-hover:bg-gray-100 transition-colors"></div>
+                    </div>
+                    <span className="ml-2 text-xs font-mono font-bold uppercase tracking-widest text-foreground">Persist Session</span>
                   </label>
                   <ContactAdmin open={contactAdminOpen} onOpenChange={setContactAdminOpen}>
                     <button
                       type="button"
-                      className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                      className="text-xs font-mono font-bold uppercase tracking-widest text-indigo-600 hover:text-foreground transition-colors"
                     >
-                      Forgot password?
+                      Recover Access
                     </button>
                   </ContactAdmin>
                 </div>
@@ -225,19 +213,19 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-foreground text-background py-3 border-2 border-foreground hover:bg-gray-800 transition-all font-mono font-bold uppercase tracking-widest text-xs disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-[6px_6px_0px_0px_rgba(88,28,135,1)] hover:-translate-x-1 hover:-translate-y-1"
                 >
-                  {loading ? "Signing In..." : "Sign In"}
+                  {loading ? "Authenticating..." : "Authenticate"}
                 </button>
               </form>
 
               {/* Divider */}
-              <div className="relative my-6">
+              <div className="relative my-8">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300"></div>
+                  <div className="w-full border-t-2 border-foreground border-dashed"></div>
                 </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white text-gray-500">Or continue with</span>
+                <div className="relative flex justify-center text-xs font-mono font-bold uppercase tracking-widest">
+                  <span className="px-4 bg-background text-foreground">Or</span>
                 </div>
               </div>
 
@@ -245,9 +233,9 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => handleGoogleLogin()}
-                className="w-full bg-white text-gray-900 py-3 rounded-lg border-2 border-gray-300 hover:border-gray-400 transition-colors font-semibold flex items-center justify-center gap-3"
+                className="w-full bg-background text-foreground py-3 border-2 border-foreground hover:bg-gray-100 transition-all font-mono font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-[6px_6px_0px_0px_rgba(88,28,135,1)] hover:-translate-x-1 hover:-translate-y-1"
               >
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" viewBox="0 0 24 24">
                   <path
                     fill="currentColor"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -265,17 +253,17 @@ export default function LoginPage() {
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                   />
                 </svg>
-                Continue with Google
+                Google SSO
               </button>
 
               {/* Sign Up Link */}
-              <p className="mt-6 text-center text-sm text-gray-600">
-                Don't have an account?{" "}
+              <p className="mt-8 text-center text-xs font-mono uppercase tracking-widest text-foreground font-bold">
+                Unregistered User?{" "}
                 <Link
                   href="/register"
-                  className="text-indigo-600 hover:text-indigo-700 font-semibold"
+                  className="text-indigo-600 hover:text-foreground transition-colors underline decoration-2 underline-offset-4"
                 >
-                  Create one now
+                  Init Session
                 </Link>
               </p>
             </div>

@@ -5,69 +5,55 @@ import { Home, RefreshCcw, AlertTriangle } from "lucide-react";
 
 export default function Error({ error, reset }) {
   return (
-    <div className="min-h-[calc(100vh-20rem)] flex items-center justify-center px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl w-full text-center">
-        {/* Error Icon */}
-        <div className="mb-8 flex justify-center">
-          <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center">
-            <AlertTriangle className="w-12 h-12 text-red-600" />
-          </div>
-        </div>
+    <div className="min-h-[70vh] flex items-center justify-center px-4 bg-background">
+      <div className="bg-background border-2 border-foreground p-8 max-w-lg w-full text-center relative overflow-hidden group shadow-[8px_8px_0px_0px_rgba(13,17,23,1)]">
+        <div className="relative z-10">
+            {/* Error Icon */}
+            <div className="mb-6 flex justify-center">
+            <div className="w-16 h-16 bg-background border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] flex items-center justify-center transform -rotate-6 group-hover:rotate-0 transition-transform">
+                <AlertTriangle className="w-8 h-8 text-red-600" />
+            </div>
+            </div>
 
-        {/* 500 Title */}
-        <div className="mb-8">
-          <h1 className="text-6xl md:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-600 mb-4">
-            500
-          </h1>
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Something Went Wrong
-          </h2>
-          <p className="text-lg text-gray-600 mb-2">
-            We&apos;re sorry, but something unexpected happened.
-          </p>
-          <p className="text-gray-500">
-            Don&apos;t worry, our team has been notified and we&apos;re working on it.
-          </p>
-        </div>
-
-        {/* Error Details (Only in Development) */}
-        {process.env.NODE_ENV === "development" && error && (
-          <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg text-left">
-            <p className="text-sm font-mono text-red-800 break-words">
-              {error.message || "An unexpected error occurred"}
+            {/* Title */}
+            <div className="mb-6">
+            <h1 className="text-4xl md:text-5xl font-extrabold text-foreground mb-3 uppercase tracking-tighter">
+                ERROR.500
+            </h1>
+            <h2 className="text-lg font-mono font-bold text-foreground mb-3 uppercase tracking-widest bg-red-100 border-2 border-red-900 inline-block px-3 py-1">
+                SYSTEM_FAULT
+            </h2>
+            <p className="text-sm font-mono text-gray-700 mb-1 uppercase tracking-widest mt-4">
+                An unexpected system fault occurred.
             </p>
-          </div>
-        )}
+            </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <button
-            onClick={() => reset()}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors font-semibold"
-          >
-            <RefreshCcw className="w-5 h-5" />
-            Try Again
-          </button>
-          <Link
-            href="/"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white text-gray-900 px-6 py-3 rounded-lg border-2 border-gray-300 hover:border-indigo-600 hover:text-indigo-600 transition-colors font-semibold"
-          >
-            <Home className="w-5 h-5" />
-            Back to Home
-          </Link>
-        </div>
+            {/* Error Details (Only in Development) */}
+            {process.env.NODE_ENV === "development" && error && (
+            <div className="mb-6 p-3 bg-background border-2 border-red-900 text-left shadow-[4px_4px_0px_0px_rgba(153,27,27,1)]">
+                <p className="text-xs font-mono font-bold text-red-900 break-words">
+                [TRACE]: {error.message || "An unexpected error occurred"}
+                </p>
+            </div>
+            )}
 
-        {/* Help Text */}
-        <div className="mt-12 pt-8 border-t border-gray-200">
-          <p className="text-sm text-gray-600 mb-2">
-            If the problem persists, please contact our support team.
-          </p>
-          <a
-            href="mailto:support@BlogerMenia.com"
-            className="text-indigo-600 hover:text-indigo-700 font-medium text-sm transition-colors"
-          >
-            support@BlogerMenia.com
-          </a>
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8 border-t-2 border-foreground pt-6">
+            <button
+                onClick={() => reset()}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-foreground text-background border-2 border-foreground font-mono font-bold uppercase tracking-widest text-xs px-6 py-2.5 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
+            >
+                <RefreshCcw className="w-4 h-4" />
+                RETRY
+            </button>
+            <Link
+                href="/"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-background text-foreground border-2 border-foreground font-mono font-bold uppercase tracking-widest text-xs px-6 py-2.5 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:bg-purple-900 hover:text-white hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
+            >
+                <Home className="w-4 h-4" />
+                HOME
+            </Link>
+            </div>
         </div>
       </div>
     </div>

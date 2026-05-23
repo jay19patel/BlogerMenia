@@ -44,22 +44,22 @@ export default function CreatePlaylistDialog({ isOpen, onClose, onSuccess }) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4 overflow-hidden">
-                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+            <div className="bg-background border-2 border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)] w-full max-w-md mx-4 overflow-hidden">
+                <div className="flex items-center justify-between p-4 border-b-2 border-foreground">
+                    <h2 className="text-xl font-extrabold text-foreground uppercase tracking-tighter">
                         Create New Playlist
                     </h2>
                     <button
                         onClick={onClose}
-                        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                        className="p-1 border-2 border-transparent hover:border-foreground hover:bg-foreground hover:text-background transition-all"
                     >
-                        <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                        <X className="w-5 h-5" />
                     </button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-4 space-y-4">
                     <div>
-                        <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label htmlFor="name" className="block text-xs font-mono font-bold text-foreground uppercase tracking-widest mb-1">
                             Name
                         </label>
                         <input
@@ -67,14 +67,14 @@ export default function CreatePlaylistDialog({ isOpen, onClose, onSuccess }) {
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            placeholder="e.g., Python Tutorials"
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            placeholder="e.g., PYTHON TUTORIALS"
+                            className="w-full px-3 py-2 border-2 border-foreground bg-background text-foreground focus:outline-none focus:ring-0 focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all uppercase"
                             autoFocus
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label htmlFor="description" className="block text-xs font-mono font-bold text-foreground uppercase tracking-widest mb-1">
                             Description (Optional)
                         </label>
                         <textarea
@@ -83,7 +83,7 @@ export default function CreatePlaylistDialog({ isOpen, onClose, onSuccess }) {
                             onChange={(e) => setDescription(e.target.value)}
                             placeholder="What is this playlist about?"
                             rows={3}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                            className="w-full px-3 py-2 border-2 border-foreground bg-background text-foreground focus:outline-none focus:ring-0 focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all resize-none uppercase"
                         />
                     </div>
 
@@ -91,22 +91,22 @@ export default function CreatePlaylistDialog({ isOpen, onClose, onSuccess }) {
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            className="px-4 py-2 border-2 border-foreground bg-background text-foreground font-mono font-bold uppercase tracking-widest hover:bg-purple-900 hover:text-white hover:translate-x-1 hover:translate-y-1 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none transition-all text-xs"
                         >
-                            Cancel
+                            CANCEL
                         </button>
                         <button
                             type="submit"
                             disabled={loading || !name.trim()}
-                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                            className="px-4 py-2 border-2 border-foreground bg-foreground text-background font-mono font-bold uppercase tracking-widest hover:bg-purple-900 hover:translate-x-1 hover:translate-y-1 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none transition-all text-xs disabled:opacity-50 disabled:shadow-none flex items-center gap-2"
                         >
                             {loading ? (
                                 <>
                                     <Loader2 className="w-4 h-4 animate-spin" />
-                                    Creating...
+                                    CREATING...
                                 </>
                             ) : (
-                                'Create Playlist'
+                                'CREATE PLAYLIST'
                             )}
                         </button>
                     </div>

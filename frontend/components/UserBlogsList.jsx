@@ -10,7 +10,6 @@ import Link from "next/link";
 import Image from "next/image";
 import LoaderCard from "@/components/ui/loader";
 import { useAuth } from "@/contexts/AuthContext";
-import CreatePlaylistDialog from "@/components/CreatePlaylistDialog";
 import { formatDate, getImageUrl } from "@/lib/utils";
 
 const BLOGS_PER_PAGE = 9;
@@ -30,7 +29,6 @@ export default function UserBlogsList({ username }) {
     const [submittedSearch, setSubmittedSearch] = useState(initialSearch);
     const [selectedCategory, setSelectedCategory] = useState(initialCategory);
     const [currentPage, setCurrentPage] = useState(initialPage);
-    const [isCreatePlaylistOpen, setIsCreatePlaylistOpen] = useState(false);
 
     const isOwner = user?.email === username;
 
@@ -197,41 +195,41 @@ export default function UserBlogsList({ username }) {
                 <Breadcrumb items={breadcrumbItems} />
 
                 {/* Profile Header */}
-                <div className="mb-12 border border-gray-200 rounded-2xl p-8 bg-white shadow-sm overflow-hidden">
+                <div className="mb-12 border-2 border-foreground p-8 bg-background shadow-[8px_8px_0px_0px_#581c87]">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                         {/* Left Side: Avatar & Name/Details */}
                         <div className="lg:col-span-5 flex flex-col sm:flex-row items-center sm:items-start gap-6">
                             <div className="relative w-28 h-28 shrink-0">
-                                <div className="absolute inset-0 border-[3px] border-indigo-50 rounded-full overflow-hidden shadow-sm">
+                                <div className="absolute inset-0 border-2 border-foreground bg-purple-900 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] overflow-hidden">
                                     {(typeof userProfile.profile_image === 'string' ? userProfile.profile_image : userProfile.profile_image?.file_path) ? (
                                         <Image
                                             src={getImageUrl(typeof userProfile.profile_image === 'string' ? userProfile.profile_image : userProfile.profile_image.file_path)}
                                             alt={userProfile.username || 'User'}
                                             fill
-                                            className="object-cover"
+                                            className="object-cover grayscale hover:grayscale-0 mix-blend-luminosity hover:mix-blend-normal transition-all duration-500"
                                         />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-gray-50">
-                                            <UserIcon className="w-12 h-12 text-gray-400" />
+                                        <div className="w-full h-full flex items-center justify-center bg-foreground text-background">
+                                            <p className="font-mono font-bold uppercase tracking-widest text-3xl">SYS</p>
                                         </div>
                                     )}
                                 </div>
                             </div>
 
-                            <div className="flex flex-col justify-center text-center sm:text-left">
-                                <h3 className="font-bold text-2xl text-gray-900 mb-1">
+                            <div className="flex flex-col justify-center text-center sm:text-left mt-2">
+                                <h3 className="font-extrabold text-3xl text-foreground mb-1 uppercase tracking-tighter">
                                     {userProfile.full_name || userProfile.email?.split('@')[0] || "User"}
                                 </h3>
-                                <p className="font-medium text-sm text-indigo-600 mb-3">
+                                <p className="font-mono font-bold text-xs uppercase tracking-widest text-purple-900 mb-3 border-b-2 border-foreground inline-block pb-1">
                                     {userProfile.email}
                                 </p>
                                 {userProfile.headline && (
-                                    <p className="font-medium text-sm text-gray-800 mb-1">
+                                    <p className="font-serif italic text-lg text-foreground mb-2">
                                         {userProfile.headline}
                                     </p>
                                 )}
                                 {userProfile.description && (
-                                    <p className="font-normal text-sm leading-relaxed text-gray-500 line-clamp-2">
+                                    <p className="font-mono text-xs leading-relaxed text-gray-600 line-clamp-3">
                                         {userProfile.description}
                                     </p>
                                 )}
@@ -241,36 +239,36 @@ export default function UserBlogsList({ username }) {
                         {/* Middle/Right: Stats & Categories in a Vertical Stack */}
                         <div className="lg:col-span-7 flex flex-col gap-6">
                             {/* Minimal Stats Row */}
-                            <div className="flex flex-row items-center justify-between sm:justify-start sm:gap-12 border-b border-gray-100 pb-6">
+                            <div className="flex flex-row items-center justify-between sm:justify-start sm:gap-12 border-b-2 border-foreground pb-6">
                                 <div className="flex flex-col items-center sm:items-start">
-                                    <span className="font-bold text-2xl text-gray-900 leading-none">
+                                    <span className="font-extrabold text-3xl text-foreground leading-none">
                                         {userProfile.blog_count || 0}
                                     </span>
-                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                                    <span className="text-[10px] font-mono font-bold text-foreground uppercase tracking-widest mt-2">
                                         Blogs
                                     </span>
                                 </div>
                                 <div className="flex flex-col items-center sm:items-start">
-                                    <span className="font-bold text-2xl text-gray-900 leading-none">
+                                    <span className="font-extrabold text-3xl text-foreground leading-none">
                                         {userProfile.total_views?.toLocaleString() || 0}
                                     </span>
-                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                                    <span className="text-[10px] font-mono font-bold text-foreground uppercase tracking-widest mt-2">
                                         Views
                                     </span>
                                 </div>
                                 <div className="flex flex-col items-center sm:items-start">
-                                    <span className="font-bold text-2xl text-gray-900 leading-none">
+                                    <span className="font-extrabold text-3xl text-foreground leading-none">
                                         {userProfile.total_likes?.toLocaleString() || 0}
                                     </span>
-                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                                    <span className="text-[10px] font-mono font-bold text-foreground uppercase tracking-widest mt-2">
                                         Likes
                                     </span>
                                 </div>
                                 <div className="flex flex-col items-center sm:items-start">
-                                    <span className="font-bold text-lg text-gray-900 leading-none">
-                                        {new Date(userProfile.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+                                    <span className="font-bold font-mono text-lg text-foreground leading-none mt-1">
+                                        {userProfile.created_at ? new Date(userProfile.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : '—'}
                                     </span>
-                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                                    <span className="text-[10px] font-mono font-bold text-foreground uppercase tracking-widest mt-2">
                                         Joined
                                     </span>
                                 </div>
@@ -299,82 +297,61 @@ export default function UserBlogsList({ username }) {
                 {(playlists.length > 0 || isOwner) && (
                     <div className="mb-12">
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2">
-                                <ListMusic className="w-7 h-7 text-indigo-600" />
+                            <h2 className="text-2xl md:text-3xl font-extrabold text-foreground uppercase tracking-tighter flex items-center gap-2">
+                                <ListMusic className="w-7 h-7" />
                                 All Playlists
                             </h2>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {/* Create New Playlist Card (For Owner) */}
-                            {isOwner && (
-                                <button
-                                    onClick={() => setIsCreatePlaylistOpen(true)}
-                                    className="group relative block w-full h-full min-h-[280px] border-2 border-dashed border-gray-300 rounded-xl hover:border-indigo-500 hover:bg-indigo-50/50 transition-all duration-300 flex flex-col items-center justify-center gap-4"
-                                >
-                                    <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                        <Plus className="w-8 h-8 text-indigo-600" />
-                                    </div>
-                                    <div className="text-center">
-                                        <h3 className="font-semibold text-lg text-gray-900 mb-1 group-hover:text-indigo-600">
-                                            Create New Playlist
-                                        </h3>
-                                        <p className="text-sm text-gray-500">
-                                            Curate your favorite blogs
-                                        </p>
-                                    </div>
-                                </button>
-                            )}
 
                             {playlists.map((playlist, index) => (
                                 <Link
                                     key={playlist.id}
                                     href={`/playlists/${username}/${playlist.slug}`}
-                                    className="group relative block"
+                                    className="group relative block h-full"
                                     style={{ zIndex: playlists.length - index }}
                                 >
-                                    <div className="relative">
-                                        <div className="absolute inset-0 bg-gray-50 border border-gray-400 rounded-lg transform translate-x-3 translate-y-3 opacity-40 shadow-md"></div>
-                                        <div className="absolute inset-0 bg-gray-50 border border-gray-400 rounded-lg transform translate-x-2 translate-y-2 opacity-60 shadow-md"></div>
-                                        <div className="absolute inset-0 bg-gray-50 border border-gray-400 rounded-lg transform translate-x-1 translate-y-1 opacity-80 shadow-md transition-all duration-300"></div>
+                                    <div className="relative h-full">
+                                        <div className="absolute inset-0 bg-foreground transform translate-x-2 translate-y-2 opacity-100 transition-all duration-300"></div>
 
-                                        <div className="relative bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm group-hover:shadow-lg group-hover:border-indigo-300 group-hover:scale-105 transition-all duration-300">
-                                            <div className="relative aspect-[16/9] overflow-hidden bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600">
+                                        <div className="relative h-full flex flex-col bg-background border-2 border-foreground overflow-hidden hover:shadow-[4px_4px_0px_0px_rgba(88,28,135,1)] hover:-translate-y-1 hover:-translate-x-1 transition-all duration-300">
+                                            <div className="relative aspect-video overflow-hidden bg-purple-900 border-b-2 border-foreground">
                                                 {(typeof (playlist.cover_image || playlist.thumbnail) === 'string' ? (playlist.cover_image || playlist.thumbnail) : (playlist.cover_image?.file_path || playlist.thumbnail?.file_path)) ? (
                                                     <img
                                                         src={getImageUrl(typeof (playlist.cover_image || playlist.thumbnail) === 'string' ? (playlist.cover_image || playlist.thumbnail) : (playlist.cover_image?.file_path || playlist.thumbnail?.file_path))}
                                                         alt={playlist.name}
-                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                        className="w-full h-full object-cover grayscale opacity-90 mix-blend-luminosity group-hover:grayscale-0 group-hover:mix-blend-normal group-hover:opacity-100 transition-all duration-500"
                                                     />
                                                 ) : (
-                                                    <div className="w-full h-full flex items-center justify-center">
-                                                        <BookOpen className="w-16 h-16 text-white opacity-50" />
+                                                    <div className="w-full h-full flex items-center justify-center bg-foreground text-background">
+                                                        <p className="font-mono font-bold uppercase tracking-widest text-xl opacity-50">SYS.NO_IMG</p>
                                                     </div>
                                                 )}
                                             </div>
 
-                                            <div className="p-4">
-                                                <h3 className="font-semibold text-lg text-gray-900 mb-1 line-clamp-2 group-hover:text-indigo-600 transition-colors">
+                                            <div className="p-5 flex-1 flex flex-col">
+                                                <h3 className="font-extrabold text-xl text-foreground mb-2 line-clamp-2 uppercase tracking-tight group-hover:text-purple-900 transition-colors">
                                                     {playlist.name}
                                                 </h3>
 
                                                 {playlist.description && (
-                                                    <p className="text-sm text-gray-600 line-clamp-2 mb-3">
+                                                    <p className="text-xs font-mono text-gray-700 line-clamp-3 mb-4 leading-relaxed flex-1">
                                                         {playlist.description}
                                                     </p>
                                                 )}
 
-                                                <div className="flex items-center gap-3 text-xs text-gray-500 mt-3 pt-3 border-t border-gray-100">
-                                                    <span className="flex items-center gap-1">
-                                                        <BookOpen className="w-3 h-3" />
+                                                <div className="flex items-center gap-4 text-[10px] font-mono font-bold uppercase tracking-widest text-foreground mt-auto pt-4 border-t-2 border-foreground group-hover:border-purple-900 transition-colors">
+                                                    <span className="flex items-center gap-1.5 group-hover:text-purple-900">
+                                                        <BookOpen className="w-3.5 h-3.5" strokeWidth={2.5} />
                                                         {playlist.blog_count || 0}
                                                     </span>
-                                                    <span className="flex items-center gap-1">
-                                                        <Eye className="w-3 h-3" />
+                                                    <span className="flex items-center gap-1.5 group-hover:text-purple-900">
+                                                        <Eye className="w-3.5 h-3.5" strokeWidth={2.5} />
                                                         {(playlist.total_views || 0).toLocaleString()}
                                                     </span>
-                                                    <span className="flex items-center gap-1">
-                                                        <Heart className="w-3 h-3" />
+                                                    <span className="flex items-center gap-1.5 group-hover:text-purple-900">
+                                                        <Heart className="w-3.5 h-3.5" strokeWidth={2.5} />
                                                         {(playlist.total_likes || 0).toLocaleString()}
                                                     </span>
                                                 </div>
@@ -387,51 +364,43 @@ export default function UserBlogsList({ username }) {
                     </div>
                 )}
 
-                <CreatePlaylistDialog
-                    isOpen={isCreatePlaylistOpen}
-                    onClose={() => setIsCreatePlaylistOpen(false)}
-                    onSuccess={() => {
-                        fetchPlaylists();
-                    }}
-                />
 
                 {/* Blogs List */}
                 <div className="mb-8">
-                    <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">
-                        All Articles
+                    <h2 className="text-2xl md:text-3xl font-extrabold text-foreground mb-6 uppercase tracking-tight">
+                        SYSTEM.RECORDS
                     </h2>
 
-                    <div className="flex gap-3 mb-6">
+                    <div className="flex flex-col sm:flex-row gap-4 mb-6">
                         <div className="relative flex-1">
-                            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-foreground w-5 h-5" />
                             <input
                                 type="text"
-                                placeholder="Search articles... (type at least 3 characters)"
+                                placeholder="Query records... (min 3 chars)"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 onKeyDown={handleKeyPress}
-                                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                className="w-full pl-12 pr-4 py-3 bg-background border-2 border-foreground text-foreground placeholder:text-gray-400 focus:outline-none focus:ring-0 focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all font-mono text-sm"
                             />
                         </div>
                         <button
                             onClick={handleSearch}
                             disabled={searchQuery.length < 3 && searchQuery.length > 0}
-                            className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-lg font-medium hover:from-indigo-700 hover:to-violet-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 whitespace-nowrap"
+                            className="px-8 py-3 bg-foreground text-background border-2 border-foreground font-mono font-bold uppercase tracking-widest text-xs hover:bg-purple-900 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap flex items-center justify-center"
                         >
-                            <Search className="w-5 h-5 inline-block mr-2" />
-                            Search
+                            <Search className="w-4 h-4 inline-block mr-2" />
+                            Execute
                         </button>
                     </div>
 
                     <div className="mb-6">
-                        <p className="text-gray-600">
-                            Showing {transformedBlogs.length} article
-                            {transformedBlogs.length !== 1 ? "s" : ""}
-                            {totalBlogs > 0 && ` of ${totalBlogs} total`}
+                        <p className="text-foreground font-mono text-xs font-bold uppercase tracking-widest">
+                            Found {transformedBlogs.length} record{transformedBlogs.length !== 1 ? "s" : ""}
+                            {totalBlogs > 0 && ` / ${totalBlogs} TOTAL`}
                         </p>
                     </div>
 
-                    <div className="mb-8 flex flex-wrap gap-3">
+                    <div className="mb-8 flex flex-wrap gap-2">
                         {categories.map((category) => (
                             <button
                                 key={category}
@@ -439,9 +408,9 @@ export default function UserBlogsList({ username }) {
                                     setSelectedCategory(category);
                                     setCurrentPage(1);
                                 }}
-                                className={`px-5 py-2 rounded-lg font-medium transition-all duration-300 ${selectedCategory === category
-                                    ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/30"
-                                    : "bg-white text-gray-700 border border-gray-300 hover:border-indigo-500 hover:text-indigo-600"
+                                className={`px-4 py-1.5 font-mono font-bold uppercase tracking-widest text-[10px] transition-all border-2 border-foreground ${selectedCategory === category
+                                    ? "bg-foreground text-background shadow-[2px_2px_0px_0px_rgba(13,17,23,1)]"
+                                    : "bg-background text-foreground hover:bg-purple-900 hover:text-white hover:shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:-translate-y-0.5 hover:-translate-x-0.5"
                                     }`}
                             >
                                 {category}
@@ -463,16 +432,16 @@ export default function UserBlogsList({ username }) {
                         </div>
 
                         {totalPages > 1 && (
-                            <div className="flex items-center justify-center gap-2">
+                            <div className="flex items-center justify-center gap-2 mt-12">
                                 <button
                                     onClick={() =>
                                         setCurrentPage((prev) => Math.max(prev - 1, 1))
                                     }
                                     disabled={currentPage === 1 || isFetchingBlogs}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                                    className="flex items-center gap-1 px-3 py-2 bg-background border-2 border-foreground text-foreground font-mono font-bold uppercase tracking-widest text-[10px] hover:bg-purple-900 hover:text-white shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                                 >
-                                    <ChevronLeft className="w-5 h-5" />
-                                    Previous
+                                    <ChevronLeft className="w-4 h-4" />
+                                    Prev
                                 </button>
 
                                 <div className="flex items-center gap-2">
@@ -495,9 +464,9 @@ export default function UserBlogsList({ username }) {
                                                 key={page}
                                                 onClick={() => setCurrentPage(page)}
                                                 disabled={isFetchingBlogs}
-                                                className={`w-10 h-10 rounded-lg font-medium transition-all duration-300 ${currentPage === page
-                                                    ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/30"
-                                                    : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-indigo-500"
+                                                className={`w-9 h-9 border-2 border-foreground font-mono font-bold text-xs transition-all ${currentPage === page
+                                                    ? "bg-foreground text-background shadow-[2px_2px_0px_0px_rgba(13,17,23,1)]"
+                                                    : "bg-background text-foreground hover:bg-purple-900 hover:text-white shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5"
                                                     }`}
                                             >
                                                 {page}
@@ -511,10 +480,10 @@ export default function UserBlogsList({ username }) {
                                         setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                                     }
                                     disabled={currentPage === totalPages || isFetchingBlogs}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                                    className="flex items-center gap-1 px-3 py-2 bg-background border-2 border-foreground text-foreground font-mono font-bold uppercase tracking-widest text-[10px] hover:bg-purple-900 hover:text-white shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                                 >
                                     Next
-                                    <ChevronRight className="w-5 h-5" />
+                                    <ChevronRight className="w-4 h-4" />
                                 </button>
                             </div>
                         )}
@@ -526,16 +495,16 @@ export default function UserBlogsList({ username }) {
                         </div>
                     </div>
                 ) : (
-                    <div className="text-center py-16">
-                        <p className="text-xl text-gray-600 mb-4">
+                    <div className="text-center py-16 bg-background border-2 border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)] mt-8">
+                        <h3 className="text-2xl font-extrabold text-foreground mb-2 uppercase tracking-tight">
                             {searchQuery.length >= 3
-                                ? "No articles found"
-                                : "No articles yet"}
-                        </p>
-                        <p className="text-gray-500">
+                                ? "SYSTEM.NOT_FOUND"
+                                : "SYSTEM.EMPTY"}
+                        </h3>
+                        <p className="text-gray-600 font-mono text-sm">
                             {searchQuery.length >= 3
-                                ? "Try adjusting your search to find what you're looking for."
-                                : "This user hasn't published any articles yet."}
+                                ? "No records match your query."
+                                : "No records found in this collection."}
                         </p>
                     </div>
                 )}

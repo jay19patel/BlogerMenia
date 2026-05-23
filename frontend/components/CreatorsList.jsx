@@ -84,113 +84,121 @@ export default function CreatorsList() {
 
     if (isLoading) {
         return (
-            <div className="py-12 flex justify-center items-center min-h-[400px]">
-                <LoaderCard message="Loading creators…" />
+            <div className="py-24 flex justify-center items-center min-h-[400px]">
+                <LoaderCard message="Loading system architects…" />
             </div>
         );
     }
 
     return (
-        <div className="py-12">
+        <div className="py-12 bg-gray-50/50 min-h-screen">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <Breadcrumb items={breadcrumbItems} />
 
-                <div className="mb-12">
-                    <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight">
-                        Our Top Creators
+                <div className="mb-10 border-b-2 border-foreground pb-6 mt-8">
+                    <h1 className="text-4xl md:text-5xl font-extrabold text-foreground uppercase tracking-tight mb-4">
+                        System Architects
                     </h1>
-                    <p className="text-lg text-gray-600 max-w-2xl">
-                        Discover the brilliant minds behind BlogerMenia's most engaging stories and insights.
+                    <p className="text-lg font-mono text-gray-600 max-w-2xl">
+                        The brilliant engineering minds behind the platform's most engaging documentation.
                     </p>
                 </div>
 
                 {/* Search */}
-                <div className="mb-12 relative">
-                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <div className="mb-12 relative flex border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(88,28,135,1)]">
                     <input
                         type="text"
-                        placeholder="Search creators by name, headline or email..."
+                        placeholder="query architect index..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onKeyDown={handleSearchKeyPress}
-                        className="w-full pl-12 pr-32 py-4 bg-white border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm transition-all shadow-indigo-50/20"
+                        className="w-full pl-6 pr-6 py-4 bg-background focus:outline-none focus:ring-2 focus:ring-foreground transition-all font-mono text-foreground"
                     />
                     <button
                         onClick={handleSearch}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 px-6 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all font-semibold shadow-lg shadow-indigo-200"
+                        className="right-0 top-0 bottom-0 px-8 bg-foreground text-background font-bold uppercase tracking-widest hover:bg-gray-800 transition-all border-l-2 border-foreground flex items-center justify-center font-mono"
                     >
-                        Search
+                        Exec
                     </button>
                 </div>
 
-                <div className="mb-8 flex items-center justify-between">
-                    <p className="text-gray-600 font-medium">
-                        Showing {allCreators.length} of {totalCreators} creator
-                        {totalCreators !== 1 ? "s" : ""}
+                <div className="mb-8 flex items-center justify-between border-b-2 border-gray-200 pb-4">
+                    <p className="text-gray-600 font-bold font-mono uppercase tracking-widest text-sm">
+                        Showing {allCreators.length} of {totalCreators} Architect{totalCreators !== 1 ? "s" : ""}
                     </p>
                 </div>
 
                 {/* Creators Grid */}
                 {allCreators.length > 0 ? (
                     <>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {allCreators.map((author) => (
                                 <Link
                                     key={author.email}
                                     href={`/blogs/${author.email}`}
-                                    className="group block bg-white border border-gray-100 rounded-3xl overflow-hidden hover:shadow-2xl hover:border-indigo-500 transition-all duration-500 shadow-xl shadow-gray-100/30 md:h-44"
+                                    className="group block bg-background border-2 border-foreground hover:shadow-[6px_6px_0px_0px_rgba(88,28,135,1)] transition-all md:h-48"
                                 >
-                                    <div className="flex flex-col md:flex-row h-full p-6 gap-6">
-                                        {/* Left Side: Circular Avatar (Like Profile Page) */}
-                                        <div className="relative w-24 h-24 shrink-0 mx-auto md:mx-0">
-                                            <div className="absolute inset-0 border-4 border-indigo-50 rounded-full overflow-hidden shadow-inner group-hover:border-indigo-100 transition-colors">
-                                                <img
-                                                    src={author.profile_image ? getImageUrl(author.profile_image?.file_path || author.profile_image) : `https://ui-avatars.com/api/?name=${author.full_name || author.email}&background=random`}
-                                                    alt={author.full_name || author.email}
-                                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                                />
+                                    <div className="flex flex-col sm:flex-row h-full">
+                                        {/* Left Side: Avatar */}
+                                        <div className="relative w-full sm:w-1/3 shrink-0 border-b-2 sm:border-b-0 sm:border-r-2 border-foreground bg-indigo-50 flex flex-col justify-center items-center p-6">
+                                           <div className="w-20 h-20 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(88,28,135,1)] bg-white overflow-hidden relative">
+                                                {author.profile_image ? (
+                                                    <img
+                                                        src={getImageUrl(author.profile_image?.file_path || author.profile_image)}
+                                                        alt={author.full_name || author.email}
+                                                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all"
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full bg-foreground flex items-center justify-center text-background">
+                                                        <span className="font-mono font-bold text-4xl uppercase tracking-widest">
+                                                            {(author.full_name?.[0] || author.email?.[0] || 'U')}
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
 
                                         {/* Right Side: Content (Name, Headline, Stats) */}
-                                        <div className="flex-1 flex flex-col justify-center min-w-0 text-center md:text-left">
-                                            <div className="mb-3">
-                                                <h3 className="font-bold text-lg md:text-xl text-gray-900 truncate group-hover:text-indigo-600 transition-colors">
+                                        <div className="flex-1 flex flex-col justify-center p-6 bg-background">
+                                            <div className="mb-4 border-b border-gray-200 pb-4">
+                                                <h3 className="font-extrabold text-xl text-foreground uppercase truncate group-hover:text-indigo-600 transition-colors tracking-tight">
                                                     {author.full_name || author.email?.split('@')[0] || "User"}
                                                 </h3>
-                                                <p className="font-semibold text-[11px] text-indigo-600 truncate opacity-90 mb-1">
+                                                <p className="font-mono text-[10px] text-gray-500 truncate mb-2 uppercase">
                                                     {author.email}
                                                 </p>
                                                 {author.headline && (
-                                                    <p className="text-xs text-gray-500 line-clamp-1 italic">
-                                                        {author.headline}
+                                                    <p className="text-xs text-gray-600 line-clamp-1 italic font-serif">
+                                                        "{author.headline}"
                                                     </p>
                                                 )}
                                             </div>
 
                                             {/* Stats Row (Elegant) */}
-                                            <div className="flex flex-row items-center justify-center md:justify-start gap-8 pt-3 border-t border-gray-50">
-                                                <div className="flex flex-col items-center md:items-start">
-                                                    <span className="font-bold text-lg text-gray-900 leading-none">
+                                            <div className="flex flex-row items-center gap-6">
+                                                <div className="flex flex-col">
+                                                    <span className="font-bold text-lg text-foreground font-mono leading-none">
                                                         {author.blog_count || 0}
                                                     </span>
-                                                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">
-                                                        Blogs
+                                                    <span className="text-[9px] text-gray-400 uppercase tracking-widest font-mono mt-1">
+                                                        Deployments
                                                     </span>
                                                 </div>
-                                                <div className="flex flex-col items-center md:items-start border-l border-gray-100 pl-8">
-                                                    <span className="font-bold text-lg text-gray-900 leading-none">
+                                                <div className="h-6 w-px bg-gray-200"></div>
+                                                <div className="flex flex-col">
+                                                    <span className="font-bold text-lg text-foreground font-mono leading-none">
                                                         {(author.total_views || 0).toLocaleString()}
                                                     </span>
-                                                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">
-                                                        Views
+                                                    <span className="text-[9px] text-gray-400 uppercase tracking-widest font-mono mt-1">
+                                                        Hits
                                                     </span>
                                                 </div>
-                                                <div className="flex flex-col items-center md:items-start border-l border-gray-100 pl-8">
-                                                    <span className="font-bold text-lg text-gray-900 leading-none">
+                                                <div className="h-6 w-px bg-gray-200"></div>
+                                                <div className="flex flex-col">
+                                                    <span className="font-bold text-lg text-foreground font-mono leading-none">
                                                         {(author.total_likes || 0).toLocaleString()}
                                                     </span>
-                                                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                                                    <span className="text-[9px] text-gray-400 uppercase tracking-widest font-mono mt-1">
                                                         Likes
                                                     </span>
                                                 </div>
@@ -203,11 +211,11 @@ export default function CreatorsList() {
 
                         {/* Pagination */}
                         {totalPages > 1 && (
-                            <div className="flex items-center justify-center gap-3 mt-16 pb-8">
+                            <div className="flex items-center justify-center gap-4 mt-16 pb-8 font-mono">
                                 <button
                                     onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                                     disabled={currentPage === 1 || isFetching}
-                                    className="p-3 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-indigo-50 hover:border-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                                    className="p-3 bg-background border-2 border-foreground text-foreground hover:bg-foreground hover:text-background disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-[4px_4px_0px_0px_rgba(88,28,135,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1"
                                 >
                                     <ChevronLeft className="w-5 h-5" />
                                 </button>
@@ -216,16 +224,16 @@ export default function CreatorsList() {
                                     {[...Array(totalPages)].map((_, i) => {
                                         const p = i + 1;
                                         if (totalPages > 7 && Math.abs(p - currentPage) > 2 && p !== 1 && p !== totalPages) {
-                                            if (Math.abs(p - currentPage) === 3) return <span key={p} className="text-gray-400">...</span>;
+                                            if (Math.abs(p - currentPage) === 3) return <span key={p} className="text-gray-400 font-bold tracking-widest">...</span>;
                                             return null;
                                         }
                                         return (
                                             <button
                                                 key={p}
                                                 onClick={() => setCurrentPage(p)}
-                                                className={`w-10 h-10 rounded-xl font-bold transition-all ${currentPage === p
-                                                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-200"
-                                                    : "bg-white text-gray-600 border border-gray-200 hover:border-indigo-300"
+                                                className={`w-12 h-12 font-bold transition-all border-2 border-foreground ${currentPage === p
+                                                    ? "bg-foreground text-background shadow-[4px_4px_0px_0px_rgba(88,28,135,1)]"
+                                                    : "bg-background text-foreground hover:bg-gray-100 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px]"
                                                     }`}
                                             >
                                                 {p}
@@ -237,7 +245,7 @@ export default function CreatorsList() {
                                 <button
                                     onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                                     disabled={currentPage === totalPages || isFetching}
-                                    className="p-3 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-indigo-50 hover:border-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                                    className="p-3 bg-background border-2 border-foreground text-foreground hover:bg-foreground hover:text-background disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-[4px_4px_0px_0px_rgba(88,28,135,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1"
                                 >
                                     <ChevronRight className="w-5 h-5" />
                                 </button>
@@ -245,14 +253,14 @@ export default function CreatorsList() {
                         )}
                     </>
                 ) : (
-                    <div className="text-center py-20 bg-gray-50/50 rounded-3xl border border-dashed border-gray-200">
-                        <p className="text-xl font-semibold text-gray-900 mb-2">No creators found</p>
-                        <p className="text-gray-500">
+                    <div className="text-center py-24 bg-background border-2 border-dashed border-foreground shadow-[8px_8px_0px_0px_rgba(200,200,200,1)]">
+                        <p className="text-2xl font-extrabold text-foreground mb-4 uppercase tracking-tight">No architects found</p>
+                        <p className="text-gray-600 font-mono">
                             We couldn't find any creators matching "{submittedSearch}".
                         </p>
                         <button
                             onClick={() => { setSearchQuery(""); setSubmittedSearch(""); setCurrentPage(1); }}
-                            className="mt-6 text-indigo-600 font-bold hover:text-indigo-700 underline underline-offset-4"
+                            className="mt-8 px-6 py-3 bg-foreground text-background font-bold uppercase font-mono hover:bg-gray-800 transition-colors"
                         >
                             Reset Search
                         </button>

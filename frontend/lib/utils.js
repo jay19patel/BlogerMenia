@@ -24,6 +24,21 @@ export function getImageUrl(path) {
   const serverUrl = baseUrl.replace(/\/api\/?$/, '');
   const cleanPath = finalPath.startsWith('/') ? finalPath : `/${finalPath}`;
 
+  // If it's a local upload via Next.js public directory, return it directly so the frontend serves it
+  if (cleanPath.startsWith('/uploads/')) {
+    return cleanPath;
+  }
+
+  // Handle GCS paths that were saved as public_id (e.g. blogermenia/...)
+  if (cleanPath.startsWith('/blogermenia/')) {
+    if (process.env.NODE_ENV === 'development') {
+      return `/uploads${cleanPath}`;
+    } else {
+      const bucket = process.env.NEXT_PUBLIC_GCS_BUCKET_NAME || 'learning_by_jay';
+      return `https://storage.googleapis.com/${bucket}${cleanPath}`;
+    }
+  }
+
   // If the path doesn't already contain /media/ and isn't an absolute URL, prepend /media/
   if (!cleanPath.startsWith('/media/') && !cleanPath.includes('://')) {
     return `${serverUrl}/media${cleanPath}`;

@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { Camera, User, Mail, FileText, Save, MessageSquare, Sparkles } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import TestimonialModal from "@/components/TestimonialModal";
 import { getImageUrl } from "@/lib/utils";
 
@@ -25,12 +24,28 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!user) return;
 
-    setFormData({
-      full_name: user.full_name || "",
-      headline: user.headline || "",
-      bio: user.bio || "",
-      profile_image: user.profile_image || user.profile_image_url || "",
-    });
+    const fetchProfile = async () => {
+      try {
+        // Fetch full profile from DB because session object doesn't include headline/bio
+        const fullUser = await api.getUserProfileByEmail(user.email);
+        setFormData({
+          full_name: fullUser.full_name || user.full_name || "",
+          headline: fullUser.headline || "",
+          bio: fullUser.bio || "",
+          profile_image: fullUser.profile_image || fullUser.profile_image_url || user.profile_image || "",
+        });
+      } catch (err) {
+        console.error("Failed to fetch full profile", err);
+        setFormData({
+          full_name: user.full_name || "",
+          headline: user.headline || "",
+          bio: user.bio || "",
+          profile_image: user.profile_image || user.profile_image_url || "",
+        });
+      }
+    };
+
+    fetchProfile();
   }, [user]);
 
   const handleInputChange = (e) => {
@@ -97,11 +112,11 @@ export default function ProfilePage() {
       if (imageFile) {
         try {
           const uploadRes = await api.uploadImage(imageFile, 'users', token);
-          if (uploadRes && uploadRes.id) {
-            updateData.profile_image = uploadRes.id;
+          if (uploadRes && (uploadRes.url || uploadRes.file_path)) {
+            updateData.profile_image = uploadRes.url || uploadRes.file_path;
             hasChanges = true;
           } else {
-            throw new Error("No ID returned from image upload");
+            throw new Error("No URL returned from image upload");
           }
         } catch (uploadError) {
           console.error("Error uploading profile picture:", uploadError);
@@ -120,12 +135,12 @@ export default function ProfilePage() {
       const result = await api.updateUserProfile(token, updateData);
 
       if (updateProfile) {
-        await updateProfile();
+        await updateProfile(updateData);
       }
 
       toast.success("Profile updated successfully!");
 
-      // Reload mainly to refresh context/UI fully if needed
+      // Refresh to get new data
       setTimeout(() => {
         window.location.reload();
       }, 1500);
@@ -139,50 +154,53 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] py-12 bg-gray-50/50">
+    <div className="min-h-[calc(100vh-4rem)] py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-10 text-center lg:text-left">
-          <h1 className="text-4xl font-extrabold text-gray-900 mb-3 tracking-tight">Account Settings</h1>
-          <p className="text-gray-600 text-lg">
-            Personalize your presence on BlogerMenia
+        <div className="mb-10 text-center lg:text-left border-b-2 border-foreground pb-6">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-foreground mb-3 tracking-tight uppercase">SYSTEM.SETTINGS</h1>
+          <p className="font-mono text-sm uppercase tracking-widest text-gray-600">
+            Configure your terminal identity
           </p>
         </div>
 
         {/* Profile Card */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.04)] overflow-hidden mb-10">
-          <div className="p-8 md:p-12">
+        <div className="bg-background border-2 border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)] overflow-hidden mb-12 relative">
+          {/* Decorative Top Bar */}
+          <div className="absolute top-0 left-0 right-0 h-2 bg-purple-900 border-b-2 border-foreground"></div>
+
+          <div className="p-8 md:p-12 pt-12 md:pt-16">
             {/* Profile Image Section */}
-            <div className="mb-12">
-              <label className="block text-sm font-bold text-gray-700 mb-6 uppercase tracking-wider">
-                Profile Display
+            <div className="mb-12 border-b-2 border-foreground pb-12">
+              <label className="block text-sm font-bold text-foreground mb-6 uppercase tracking-widest font-mono">
+                [ Profile Display ]
               </label>
               <div className="flex flex-col md:flex-row items-center gap-8">
-                <div className="relative group">
-                  <div className="absolute inset-0 bg-indigo-500 rounded-full blur-xl opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
-                  <Avatar className="w-32 h-32 border-4 border-white shadow-xl relative z-10">
-                    <AvatarImage src={getImageUrl(formData.profile_image)} alt={user?.full_name || user?.email} />
-                    <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-violet-600 text-white text-3xl font-bold">
-                      {user?.full_name?.[0] || user?.email?.[0] || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <label
-                    htmlFor="profile-image-input"
-                    className="absolute bottom-1 right-1 w-10 h-10 bg-indigo-600 text-white rounded-2xl flex items-center justify-center cursor-pointer hover:bg-indigo-700 transition-all shadow-lg hover:rotate-12 relative z-20"
-                  >
-                    <Camera className="w-5 h-5" />
-                  </label>
+                <div className="relative group w-32 h-32 border-2 border-foreground bg-purple-900 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] overflow-hidden shrink-0">
+                    {formData.profile_image ? (
+                        <img 
+                            src={getImageUrl(formData.profile_image)} 
+                            alt={user?.full_name || user?.email} 
+                            className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                        />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-foreground text-background">
+                            <span className="font-mono font-bold text-5xl uppercase">
+                                {user?.full_name?.[0] || user?.email?.[0] || "U"}
+                            </span>
+                        </div>
+                    )}
                 </div>
-                <div className="text-center md:text-left">
-                  <h3 className="text-xl font-bold text-gray-900 mb-1">{formData.full_name || "New Explorer"}</h3>
-                  <p className="text-sm text-gray-500 mb-4 max-w-xs">
-                    Recommended: Square JPG/PNG, at least 400x400px.
+                <div className="text-center md:text-left flex flex-col items-center md:items-start">
+                  <h3 className="text-2xl font-extrabold text-foreground mb-2 uppercase tracking-tight">{formData.full_name || "New Explorer"}</h3>
+                  <p className="text-[10px] font-mono text-gray-600 mb-4 max-w-xs uppercase tracking-widest leading-relaxed">
+                    Requirement: Square JPG/PNG. Max 2MB.
                   </p>
                   <label
                     htmlFor="profile-image-input"
-                    className="inline-flex items-center px-6 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:bg-white hover:border-indigo-600 hover:text-indigo-600 transition-all cursor-pointer"
+                    className="inline-flex items-center px-6 py-2 bg-background border-2 border-foreground text-xs font-mono font-bold uppercase tracking-widest text-foreground hover:bg-purple-900 hover:text-white transition-all cursor-pointer shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1"
                   >
-                    Upload New Image
+                    Upload Image
                   </label>
                   <input
                     id="profile-image-input"
@@ -200,18 +218,18 @@ export default function ProfilePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Full Name Field */}
                 <div>
-                  <label htmlFor="full_name" className="block text-sm font-bold text-gray-700 mb-3 ml-1">
-                    Full Name
+                  <label htmlFor="full_name" className="block text-xs font-mono font-bold text-foreground mb-3 uppercase tracking-widest">
+                    [ Full Name ]
                   </label>
                   <div className="relative">
-                    <User className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <User className="absolute left-4 top-1/2 transform -translate-y-1/2 text-foreground w-5 h-5" />
                     <input
                       id="full_name"
                       name="full_name"
                       type="text"
                       value={formData.full_name}
                       onChange={handleInputChange}
-                      className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all font-medium text-gray-900"
+                      className="w-full pl-12 pr-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all font-mono text-sm text-foreground placeholder:text-gray-400"
                       placeholder="Enter your name"
                       required
                     />
@@ -220,17 +238,17 @@ export default function ProfilePage() {
 
                 {/* Email (Read-only) */}
                 <div>
-                  <label htmlFor="email" className="block text-sm font-bold text-gray-400 mb-3 ml-1">
-                    Email Address <span className="text-[10px] font-bold text-gray-300 uppercase ml-2 tracking-widest">(Locked)</span>
+                  <label htmlFor="email" className="block text-xs font-mono font-bold text-foreground mb-3 uppercase tracking-widest opacity-80">
+                    [ Email Address ] <span className="text-[10px] bg-foreground text-background px-2 py-0.5 ml-2 font-bold uppercase tracking-widest">LOCKED</span>
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-300 w-5 h-5" />
+                    <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" />
                     <input
                       id="email"
                       type="email"
                       value={user?.email || ""}
                       disabled
-                      className="w-full pl-12 pr-4 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl text-gray-400 cursor-not-allowed font-medium"
+                      className="w-full pl-12 pr-4 py-3 bg-gray-100 border-2 border-gray-300 text-gray-500 cursor-not-allowed font-mono text-sm opacity-80"
                     />
                   </div>
                 </div>
@@ -238,11 +256,11 @@ export default function ProfilePage() {
 
               {/* Headline */}
               <div>
-                <label htmlFor="headline" className="block text-sm font-bold text-gray-700 mb-3 ml-1 text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">
-                  Headline
+                <label htmlFor="headline" className="block text-xs font-mono font-bold text-purple-900 mb-3 uppercase tracking-widest">
+                  [ Headline ]
                 </label>
                 <div className="relative">
-                  <FileText className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <FileText className="absolute left-4 top-1/2 transform -translate-y-1/2 text-foreground w-5 h-5" />
                   <input
                     id="headline"
                     name="headline"
@@ -250,7 +268,7 @@ export default function ProfilePage() {
                     maxLength={255}
                     value={formData.headline}
                     onChange={handleInputChange}
-                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all font-medium text-gray-900"
+                    className="w-full pl-12 pr-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all font-mono text-sm text-foreground placeholder:text-gray-400"
                     placeholder="e.g. Creative Writer | Tech Enthusiast"
                   />
                 </div>
@@ -258,8 +276,8 @@ export default function ProfilePage() {
 
               {/* Bio */}
               <div>
-                <label htmlFor="bio" className="block text-sm font-bold text-gray-700 mb-3 ml-1">
-                  Your Story (Bio)
+                <label htmlFor="bio" className="block text-xs font-mono font-bold text-foreground mb-3 uppercase tracking-widest">
+                  [ Your Story ]
                 </label>
                 <textarea
                   id="bio"
@@ -267,27 +285,27 @@ export default function ProfilePage() {
                   rows={4}
                   value={formData.bio}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all resize-none font-medium text-gray-900"
+                  className="w-full px-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all resize-none font-mono text-sm text-foreground placeholder:text-gray-400"
                   placeholder="Share a bit about yourself..."
                 />
               </div>
 
               {/* Submit Button */}
-              <div className="flex justify-end gap-4 pt-4">
+              <div className="flex justify-end gap-4 pt-8 border-t-2 border-foreground">
                 <button
                   type="button"
                   onClick={() => router.back()}
-                  className="px-8 py-3.5 bg-gray-50 text-gray-600 rounded-2xl font-bold hover:bg-gray-100 transition-all"
+                  className="px-6 py-3 bg-background border-2 border-transparent text-foreground hover:border-foreground transition-all font-mono font-bold text-xs uppercase tracking-widest"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-10 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 transition-all disabled:opacity-50 flex items-center gap-2"
+                  className="px-8 py-3 bg-foreground text-background border-2 border-foreground font-mono font-bold uppercase tracking-widest text-xs hover:bg-purple-900 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {loading ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white"></div>
+                    <div className="animate-spin rounded-none h-4 w-4 border-2 border-background border-t-transparent"></div>
                   ) : (
                     <Save className="w-4 h-4" />
                   )}
@@ -299,24 +317,26 @@ export default function ProfilePage() {
         </div>
 
         {/* Support the Community Section */}
-        <div className="bg-white rounded-2xl p-8 md:p-10 border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.04)] relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full blur-3xl opacity-50 -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700"></div>
+        <div className="bg-background border-2 border-foreground p-8 md:p-10 shadow-[8px_8px_0px_0px_rgba(13,17,23,1)] relative overflow-hidden group mb-12">
+          {/* Decorative Pattern */}
+          <div className="absolute right-0 top-0 bottom-0 w-32 md:w-64 bg-purple-900 opacity-5 flex flex-wrap" style={{backgroundImage: 'radial-gradient(#581c87 2px, transparent 2px)', backgroundSize: '10px 10px'}}></div>
+          
           <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
-            <div className="w-20 h-20 bg-indigo-50 rounded-2xl flex items-center justify-center shrink-0">
-              <Sparkles className="w-10 h-10 text-indigo-600" />
+            <div className="w-16 h-16 bg-purple-900 border-2 border-foreground flex items-center justify-center shrink-0 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] group-hover:shadow-none group-hover:translate-x-1 group-hover:translate-y-1 transition-all">
+              <Sparkles className="w-8 h-8 text-white" />
             </div>
             <div className="flex-grow text-center md:text-left">
-              <h3 className="text-2xl font-black text-gray-900 mb-2">Support the Community</h3>
-              <p className="text-gray-600 leading-relaxed font-medium">
+              <h3 className="text-2xl font-extrabold text-foreground mb-2 uppercase tracking-tight">Support the Community</h3>
+              <p className="text-gray-700 font-mono text-xs leading-relaxed max-w-lg">
                 Your feedback helps us grow! Share your experience with other creators and tell us what you love about BlogerMenia.
               </p>
             </div>
             <button
               onClick={() => setIsTestimonialModalOpen(true)}
-              className="inline-flex items-center gap-3 px-8 py-4 bg-gray-900 text-white rounded-2xl font-bold hover:bg-indigo-600 hover:shadow-xl hover:shadow-indigo-200 transition-all shrink-0 active:scale-95"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-purple-900 text-white border-2 border-foreground font-mono font-bold uppercase tracking-widest text-[10px] shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all shrink-0"
             >
-              <MessageSquare className="w-5 h-5" />
-              Write a Testimonial
+              <MessageSquare className="w-4 h-4" />
+              Write Testimonial
             </button>
           </div>
         </div>
