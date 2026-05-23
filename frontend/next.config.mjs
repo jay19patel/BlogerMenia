@@ -26,6 +26,13 @@ const nextConfig = {
       __dirname,
       'node_modules/uuid/dist/cjs/index.js'
     );
+    
+    // Ignore optional dependencies that cause build warnings
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      'fast-crc32c': false,
+      'request': false,
+    };
     return config;
   },
 };
