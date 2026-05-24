@@ -1,382 +1,471 @@
-// API base URL - Internal Next.js API Routes
-const API_BASE_URL = '/api';
+// ─────────────────────────────────────────────────────────────────────────────
+//  API client
+//  - Blog / category / stats / AI-chat  → FastAPI (port 8000)
+//  - Auth / user / media / playlists    → Next.js API routes (same origin)
+// ─────────────────────────────────────────────────────────────────────────────
 
-// Helper function to compress images client-side before upload to prevent Vercel payload limits
-async function compressImage(file) {
-  if (typeof window === 'undefined' || !file || !file.type || !file.type.startsWith('image/')) {
-    return file;
-  }
+const NEXT_API = '/api';
 
-  // Skip compression for GIFs to preserve animation
-  if (file.type === 'image/gif') {
-    return file;
-  }
+function getFastApiBase() {
+  const configured = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  const clean = configured.replace(/\/+$/, '');
+
+  if (typeof window === 'undefined') return clean;
 
   try {
-    // Dynamic import to prevent SSR/Next.js pre-rendering issues during build
+    const url = new URL(clean);
+    if (url.hostname === 'backend' || url.hostname === '0.0.0.0') {
+      return `${window.location.protocol}//${window.location.hostname}:8000`;
+    }
+    return url.toString().replace(/\/+$/, '');
+  } catch {
+    return `${window.location.protocol}//${window.location.hostname}:8000`;
+  }
+}
+
+const FASTAPI_BASE = getFastApiBase();
+
+const BLOG_API = `${FASTAPI_BASE}/api/v1/blogs`;
+const PLAYLIST_API = `${FASTAPI_BASE}/api/v1/playlists`;
+
+// ── Backend JWT token cache ───────────────────────────────────────────────────
+// The frontend fetches a short-lived HS256 JWT from /api/auth/backend-token
+// (a Next.js route that reads the NextAuth session). This token is sent as
+// Authorization: Bearer to FastAPI for protected blog endpoints.
+
+let _cachedToken = null;
+let _tokenExpiry = 0;
+
+async function getBackendToken() {
+  const now = Date.now();
+  if (_cachedToken && now < _tokenExpiry) return _cachedToken;
+
+  const res = await fetch(`${NEXT_API}/auth/backend-token`, { method: 'POST' });
+  if (!res.ok) return null;
+  const data = await res.json();
+  _cachedToken = data.access_token;
+  // Expire 5 minutes before the token actually expires (1hr - 5min = 55min)
+  _tokenExpiry = now + (data.expires_in - 300) * 1000;
+  return _cachedToken;
+}
+
+function clearBackendToken() {
+  _cachedToken = null;
+  _tokenExpiry = 0;
+}
+
+// ── Shared helpers ────────────────────────────────────────────────────────────
+
+async function compressImage(file) {
+  if (typeof window === 'undefined' || !file?.type?.startsWith('image/')) return file;
+  if (file.type === 'image/gif') return file;
+  try {
     const imageCompression = (await import('browser-image-compression')).default;
-
-    const options = {
-      maxSizeMB: 0.4,          // Target file size under 500KB (400KB limit is perfect!)
-      maxWidthOrHeight: 720,    // Optimized HD resolution for blogs, playlists, and profiles
-      useWebWorker: true,      // Compress in a separate background thread so UI doesn't stutter!
-      fileType: file.type || 'image/jpeg'
-    };
-
-    const compressedBlob = await imageCompression(file, options);
-    // Convert the compressed Blob back to a File object with its original name and metadata
-    return new File([compressedBlob], file.name, {
-      type: compressedBlob.type || file.type,
-      lastModified: Date.now(),
+    const compressed = await imageCompression(file, {
+      maxSizeMB: 0.4,
+      maxWidthOrHeight: 720,
+      useWebWorker: true,
+      fileType: file.type || 'image/jpeg',
     });
-  } catch (error) {
-    console.error("Image compression failed, uploading original file instead:", error);
+    return new File([compressed], file.name, { type: compressed.type || file.type, lastModified: Date.now() });
+  } catch {
     return file;
   }
 }
 
-// Helper function to handle API responses
 async function handleResponse(response) {
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({
-      detail: `HTTP error! status: ${response.status}`
+      detail: `HTTP error! status: ${response.status}`,
     }));
-
-    let detailMessage;
+    let detail;
     if (Array.isArray(errorData.detail)) {
-      detailMessage = errorData.detail.map(e => `${e.loc?.join('.')} — ${e.msg}`).join('; ');
+      detail = errorData.detail.map(e => `${e.loc?.join('.')} — ${e.msg}`).join('; ');
     } else if (typeof errorData.detail === 'object' && errorData.detail !== null) {
-      detailMessage = JSON.stringify(errorData.detail);
+      detail = JSON.stringify(errorData.detail);
     } else {
-      detailMessage = errorData.detail || errorData.error || `HTTP error! status: ${response.status}`;
+      detail = errorData.detail || errorData.error || `HTTP error! status: ${response.status}`;
     }
-
-    const error = new Error(detailMessage);
-    error.status = response.status;
-    error.response = { status: response.status, data: errorData };
-    throw error;
+    const err = new Error(detail);
+    err.status = response.status;
+    err.response = { status: response.status, data: errorData };
+    throw err;
   }
-  
   if (response.status === 204) return { success: true };
   return response.json();
 }
 
-// Helper function to get headers
-function getHeaders(token = null) {
-  return {
-    'Content-Type': 'application/json',
-  };
+function fetchErrorMessage(error, url) {
+  if (error instanceof TypeError) {
+    return `Could not reach FastAPI at ${url}. Make sure backend is running on ${FASTAPI_BASE}.`;
+  }
+  return error.message || 'Request failed';
 }
 
+function jsonHeaders() {
+  return { 'Content-Type': 'application/json' };
+}
+
+async function authHeaders() {
+  const token = await getBackendToken();
+  return token
+    ? { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+    : { 'Content-Type': 'application/json' };
+}
+
+// ── Public API ────────────────────────────────────────────────────────────────
+
 export const api = {
-  async getCurrentUser(token) {
-    const response = await fetch(`/api/auth/session`, { method: 'GET' });
-    return handleResponse(response);
+  // ── Auth / Session (Next.js) ─────────────────────────────────────────────
+  async getCurrentUser() {
+    const res = await fetch(`${NEXT_API}/auth/session`, { method: 'GET' });
+    return handleResponse(res);
   },
 
+  // ── User (Next.js) ───────────────────────────────────────────────────────
   async updateUserProfile(token, updateData) {
-    const headers = getHeaders();
+    const headers = jsonHeaders();
     let body = JSON.stringify(updateData);
-
     if (updateData instanceof FormData) {
       delete headers['Content-Type'];
       body = updateData;
     }
-
-    const response = await fetch(`${API_BASE_URL}/user/profile`, {
-      method: 'PATCH', 
-      headers: headers,
-      body: body,
-    });
-    return handleResponse(response);
+    const res = await fetch(`${NEXT_API}/user/profile`, { method: 'PATCH', headers, body });
+    return handleResponse(res);
   },
 
   async getUserById(userId) {
-    const response = await fetch(`${API_BASE_URL}/user/${userId}`, { method: 'GET', headers: getHeaders() });
-    return handleResponse(response);
+    const res = await fetch(`${NEXT_API}/user/${userId}`, { method: 'GET', headers: jsonHeaders() });
+    return handleResponse(res);
   },
 
   async getUserProfileByEmail(email) {
-    const response = await fetch(`${API_BASE_URL}/user/profile/${encodeURIComponent(email)}`, { method: 'GET', headers: getHeaders() });
-    return handleResponse(response);
+    const res = await fetch(`${NEXT_API}/user/profile/${encodeURIComponent(email)}`, { method: 'GET', headers: jsonHeaders() });
+    return handleResponse(res);
   },
 
-  async getAllUsers(token) {
-    const response = await fetch(`${API_BASE_URL}/user/all`, { method: 'GET', headers: getHeaders() });
-    return handleResponse(response);
+  async getAllUsers() {
+    const res = await fetch(`${NEXT_API}/user/all`, { method: 'GET', headers: jsonHeaders() });
+    return handleResponse(res);
   },
 
   async activateUser(token, userId) {
-    const response = await fetch(`${API_BASE_URL}/user/${userId}/activate`, { method: 'PUT', headers: getHeaders() });
-    return handleResponse(response);
+    const res = await fetch(`${NEXT_API}/user/${userId}/activate`, { method: 'PUT', headers: jsonHeaders() });
+    return handleResponse(res);
   },
 
   async deactivateUser(token, userId) {
-    const response = await fetch(`${API_BASE_URL}/user/${userId}/deactivate`, { method: 'PUT', headers: getHeaders() });
-    return handleResponse(response);
+    const res = await fetch(`${NEXT_API}/user/${userId}/deactivate`, { method: 'PUT', headers: jsonHeaders() });
+    return handleResponse(res);
   },
 
   async getAllCreators(searchQuery = null, skip = 0, limit = 10) {
-    let url = `${API_BASE_URL}/user/all?skip=${skip}&limit=${limit}`;
+    let url = `${NEXT_API}/user/all?skip=${skip}&limit=${limit}`;
     if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
-    const response = await fetch(url, { method: 'GET', headers: getHeaders() });
-    return handleResponse(response);
+    const res = await fetch(url, { method: 'GET', headers: jsonHeaders() });
+    return handleResponse(res);
   },
 
+  async getTopAuthors() {
+    const res = await fetch(`${NEXT_API}/user/top-authors`, { method: 'GET', headers: jsonHeaders() });
+    const data = await handleResponse(res);
+    return data.users || data.results || data || [];
+  },
+
+  // ── Blogs → FastAPI ───────────────────────────────────────────────────────
+
   async getBlogs(searchQuery = null, skip = 0, limit = 10, filter = null, authorId = null) {
-    let url = `${API_BASE_URL}/blogs?skip=${skip}&limit=${limit}`;
+    let url = `${BLOG_API}/?skip=${skip}&limit=${limit}`;
     if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
-    if (filter && filter !== "All") url += `&category=${encodeURIComponent(filter)}`;
+    if (filter && filter !== 'All') url += `&category=${encodeURIComponent(filter)}`;
     if (authorId) url += `&authorId=${encodeURIComponent(authorId)}`;
-    const response = await fetch(url, { method: 'GET', headers: getHeaders() });
-    return handleResponse(response);
+    const res = await fetch(url, { method: 'GET', headers: jsonHeaders() });
+    return handleResponse(res);
   },
 
   async getFeaturedBlogs() {
-    const response = await fetch(`${API_BASE_URL}/blogs?sort=-views&limit=6`);
-    const data = await handleResponse(response);
+    const res = await fetch(`${BLOG_API}/?sort=-views&limit=6`);
+    const data = await handleResponse(res);
     return data.blogs || data.results || data;
   },
 
   async getMyBlogs(token, userId, searchQuery = null, skip = 0, limit = 10, filter = null) {
-    let url = `${API_BASE_URL}/blogs?authorId=${encodeURIComponent(userId)}&skip=${skip}&limit=${limit}`;
+    let url = `${BLOG_API}/?authorId=${encodeURIComponent(userId)}&skip=${skip}&limit=${limit}`;
     if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
-    if (filter && filter !== "All") url += `&category=${encodeURIComponent(filter)}`;
-    const response = await fetch(url, { method: 'GET', headers: getHeaders() });
-    return handleResponse(response);
+    if (filter && filter !== 'All') url += `&category=${encodeURIComponent(filter)}`;
+    const res = await fetch(url, { method: 'GET', headers: jsonHeaders() });
+    return handleResponse(res);
   },
 
   async getBlogBySlug(slug, token = null, trackView = true) {
-    let url = `${API_BASE_URL}/blogs/${slug}`;
+    let url = `${BLOG_API}/${slug}/`;
     if (!trackView) url += '?track_view=false';
-    const response = await fetch(url, { method: 'GET', headers: getHeaders() });
-    return handleResponse(response);
+    const res = await fetch(url, { method: 'GET', headers: jsonHeaders() });
+    return handleResponse(res);
   },
 
-  async createBlog(blogData, token) {
-    const response = await fetch(`${API_BASE_URL}/blogs`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(blogData) });
-    return handleResponse(response);
+  async createBlog(blogData) {
+    const headers = await authHeaders();
+    const res = await fetch(`${BLOG_API}/`, { method: 'POST', headers, body: JSON.stringify(blogData) });
+    return handleResponse(res);
   },
 
-  async updateBlog(slug, blogData, token) {
-    const response = await fetch(`${API_BASE_URL}/blogs/${slug}`, { method: 'PATCH', headers: getHeaders(), body: JSON.stringify(blogData) });
-    return handleResponse(response);
+  async updateBlog(slug, blogData) {
+    const headers = await authHeaders();
+    const res = await fetch(`${BLOG_API}/${slug}/`, { method: 'PATCH', headers, body: JSON.stringify(blogData) });
+    return handleResponse(res);
   },
 
   async deleteBlog(token, slugOrId) {
-    const response = await fetch(`${API_BASE_URL}/blogs/${slugOrId}`, { method: 'DELETE', headers: getHeaders() });
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const headers = await authHeaders();
+    const res = await fetch(`${BLOG_API}/${slugOrId}/`, { method: 'DELETE', headers });
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     return { success: true };
   },
 
-  async likeBlog(blogId, token) {
-    const response = await fetch(`${API_BASE_URL}/blogs/${blogId}/like`, { method: 'POST', headers: getHeaders() });
-    return handleResponse(response);
+  async likeBlog(blogId) {
+    const headers = await authHeaders();
+    const res = await fetch(`${BLOG_API}/${blogId}/like/`, { method: 'POST', headers });
+    return handleResponse(res);
   },
 
   async toggleFeaturedBlog(token, blogId, newStatus) {
-    const response = await fetch(`${API_BASE_URL}/blogs/${blogId}`, { method: 'PATCH', headers: getHeaders(), body: JSON.stringify({ featured: newStatus }) });
-    return handleResponse(response);
+    const headers = await authHeaders();
+    const res = await fetch(`${BLOG_API}/${blogId}/`, { method: 'PATCH', headers, body: JSON.stringify({ featured: newStatus }) });
+    return handleResponse(res);
   },
 
   async getSuggestedBlogs(limit = 3, excludeSlug = null) {
-    let url = `${API_BASE_URL}/blogs?limit=${limit}`;
+    let url = `${BLOG_API}/?limit=${limit}`;
     if (excludeSlug) url += `&excludeSlug=${encodeURIComponent(excludeSlug)}`;
-    const response = await fetch(url, { headers: getHeaders() });
-    const data = await handleResponse(response);
+    const res = await fetch(url, { headers: jsonHeaders() });
+    const data = await handleResponse(res);
     return data.blogs || data.results || data;
   },
 
   async getRandomRelatedBlogs(limit = 5, excludeSlug = null) {
-    let url = `${API_BASE_URL}/blogs?limit=${limit}`;
+    let url = `${BLOG_API}/?limit=${limit}`;
     if (excludeSlug) url += `&excludeSlug=${encodeURIComponent(excludeSlug)}`;
-    const response = await fetch(url, { headers: getHeaders() });
-    const data = await handleResponse(response);
+    const res = await fetch(url, { headers: jsonHeaders() });
+    const data = await handleResponse(res);
     return data.blogs || data.results || data;
   },
 
+  // ── Categories → FastAPI ──────────────────────────────────────────────────
+
   async getBlogCategories(username = null) {
-    let url = `${API_BASE_URL}/blogs/categories`;
+    let url = `${BLOG_API}/categories/`;
     if (username) url += `?username=${encodeURIComponent(username)}`;
-    const response = await fetch(url, { method: 'GET', headers: getHeaders() });
-    return handleResponse(response);
+    try {
+      const res = await fetch(url, { method: 'GET', headers: jsonHeaders() });
+      return handleResponse(res);
+    } catch (error) {
+      throw new Error(fetchErrorMessage(error, url));
+    }
   },
+
+  async getCategories() {
+    const res = await fetch(`${BLOG_API}/categories/?limit=100`, { method: 'GET', headers: jsonHeaders() });
+    const data = await handleResponse(res);
+    return data.categories || data.results || data.items || data || [];
+  },
+
+  async getOrCreateCategory(name) {
+    if (!name?.trim()) return null;
+    const trimmedName = name.trim();
+    const slug = trimmedName.toLowerCase()
+      .replace(/\s+/g, '-').replace(/[^\w-]/g, '').replace(/--+/g, '-').replace(/^-+|-+$/g, '');
+
+    // Check existing first
+    try {
+      const res = await fetch(`${BLOG_API}/categories/`);
+      const data = await res.json();
+      const all = Array.isArray(data) ? data : (data.items || data.results || []);
+      const existing = all.find(c => c.name.toLowerCase() === trimmedName.toLowerCase());
+      if (existing) return existing._id || existing.id;
+    } catch { /* fallthrough to create */ }
+
+    try {
+      const createRes = await fetch(`${BLOG_API}/categories/`, {
+        method: 'POST',
+        headers: jsonHeaders(),
+        body: JSON.stringify({ name: trimmedName, slug }),
+      });
+      const created = await handleResponse(createRes);
+      return created._id || created.id;
+    } catch (error) {
+      throw new Error(fetchErrorMessage(error, `${BLOG_API}/categories/`));
+    }
+  },
+
+  // ── Stats → FastAPI ───────────────────────────────────────────────────────
 
   async getStats() {
-    const response = await fetch(`${API_BASE_URL}/blogs/stats`, { method: 'GET', headers: getHeaders() });
-    return handleResponse(response);
+    const res = await fetch(`${BLOG_API}/stats/`, { method: 'GET', headers: jsonHeaders() });
+    return handleResponse(res);
   },
 
+  // ── AI Chat → FastAPI ─────────────────────────────────────────────────────
+
+  async generateBlog(userMessage, sessionId = null) {
+    const headers = await authHeaders();
+    const res = await fetch(`${FASTAPI_BASE}/chat/`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ message: userMessage, session_id: sessionId }),
+    });
+    return handleResponse(res);
+  },
+
+  async getSessionState(sessionId) {
+    const res = await fetch(`${FASTAPI_BASE}/session/${sessionId}/`, { method: 'GET', headers: jsonHeaders() });
+    return handleResponse(res);
+  },
+
+  async saveGeneratedBlog(sessionId) {
+    // Push session blog state to FastAPI → then save via blog endpoint
+    const headers = await authHeaders();
+    const sessionRes = await fetch(`${FASTAPI_BASE}/session/${sessionId}/`, { headers: jsonHeaders() });
+    if (!sessionRes.ok) throw new Error('Session not found');
+    const { blog_state } = await sessionRes.json();
+    if (!blog_state) throw new Error('No blog in session to save');
+    return api.createBlog(blog_state);
+  },
+
+  async deleteSession(sessionId) {
+    const res = await fetch(`${FASTAPI_BASE}/session/${sessionId}/`, { method: 'DELETE', headers: jsonHeaders() });
+    return handleResponse(res);
+  },
+
+  // ── Media (Next.js) ───────────────────────────────────────────────────────
+
+  async uploadImage(file = null, collectionName = 'blogs', token = null, url = null) {
+    const formData = new FormData();
+    if (file) {
+      formData.append('file', file);
+    }
+    if (url) formData.append('url', url);
+    if (collectionName) formData.append('folder', collectionName);
+
+    const headers = await authHeaders();
+    // Strip application/json Content-Type so browser sets correct multipart/form-data boundary
+    delete headers['Content-Type'];
+
+    const res = await fetch(`${FASTAPI_BASE}/api/v1/media/upload/`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+    return handleResponse(res);
+  },
+
+  // ── Playlists → FastAPI ───────────────────────────────────────────────────
+
   async getPublicPlaylists() {
-    const response = await fetch(`${API_BASE_URL}/playlists?is_public=true`, { method: 'GET', headers: getHeaders() });
-    const data = await handleResponse(response);
+    const res = await fetch(`${PLAYLIST_API}/?is_public=true`, { headers: jsonHeaders() });
+    const data = await handleResponse(res);
     return data.playlists || data.results || data || [];
   },
 
   async getPlaylists(searchQuery = null, skip = 0, limit = 10, ownerId = null) {
-    let url = `${API_BASE_URL}/playlists?is_public=true&skip=${skip}&limit=${limit}`;
+    let url = `${PLAYLIST_API}/?is_public=true&skip=${skip}&limit=${limit}`;
     if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
     if (ownerId) url += `&ownerId=${encodeURIComponent(ownerId)}`;
-    const response = await fetch(url, { method: 'GET', headers: getHeaders() });
-    return handleResponse(response);
+    const res = await fetch(url, { headers: jsonHeaders() });
+    return handleResponse(res);
   },
 
   async getPopularPlaylists() {
-    const response = await fetch(`${API_BASE_URL}/playlists?is_public=true&limit=6&sort=-views`, { method: 'GET', headers: getHeaders() });
-    const data = await handleResponse(response);
+    const res = await fetch(`${PLAYLIST_API}/?is_public=true&limit=6&sort=-views`, { headers: jsonHeaders() });
+    const data = await handleResponse(res);
     return data.playlists || data.results || data || [];
   },
 
-  async getTopAuthors() {
-    const response = await fetch(`${API_BASE_URL}/user/top-authors`, { method: 'GET', headers: getHeaders() });
-    const data = await handleResponse(response);
-    return data.users || data.results || data || [];
+  async createPlaylist(playlistData) {
+    const headers = await authHeaders();
+    const res = await fetch(`${PLAYLIST_API}/`, { method: 'POST', headers, body: JSON.stringify(playlistData) });
+    return handleResponse(res);
   },
 
+  async getMyPlaylists(token, userId) {
+    const res = await fetch(`${PLAYLIST_API}/?ownerId=${encodeURIComponent(userId)}`, { headers: jsonHeaders() });
+    return handleResponse(res);
+  },
+
+  async getUserPlaylistsByEmail(email, userId, token = null, isOwner = false, skip = 0, limit = 10) {
+    let url = `${PLAYLIST_API}/?ownerId=${encodeURIComponent(userId)}&skip=${skip}&limit=${limit}`;
+    if (!isOwner) url += '&is_public=true';
+    const res = await fetch(url, { headers: jsonHeaders() });
+    return handleResponse(res);
+  },
+
+  async getPlaylist(playlistId) {
+    const res = await fetch(`${PLAYLIST_API}/${playlistId}/`, { headers: jsonHeaders() });
+    return handleResponse(res);
+  },
+
+  async updatePlaylist(playlistId, playlistData) {
+    const headers = await authHeaders();
+    const res = await fetch(`${PLAYLIST_API}/${playlistId}/`, { method: 'PATCH', headers, body: JSON.stringify(playlistData) });
+    return handleResponse(res);
+  },
+
+  async deletePlaylist(playlistIdOrSlug) {
+    const headers = await authHeaders();
+    const res = await fetch(`${PLAYLIST_API}/${playlistIdOrSlug}/`, { method: 'DELETE', headers });
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    return { success: true };
+  },
+
+  async addBlogToPlaylist(playlistIdOrSlug, blogData) {
+    const headers = await authHeaders();
+    const res = await fetch(`${PLAYLIST_API}/${playlistIdOrSlug}/blogs/`, { method: 'POST', headers, body: JSON.stringify(blogData) });
+    return handleResponse(res);
+  },
+
+  async removeBlogFromPlaylist(playlistIdOrSlug, blogId) {
+    const headers = await authHeaders();
+    const res = await fetch(`${PLAYLIST_API}/${playlistIdOrSlug}/blogs/${blogId}/`, { method: 'DELETE', headers });
+    return handleResponse(res);
+  },
+
+  async getBlogPlaylists(blogId) {
+    const res = await fetch(`${PLAYLIST_API}/?blogId=${encodeURIComponent(blogId)}`, { headers: jsonHeaders() });
+    return handleResponse(res);
+  },
+
+  // ── Content (Next.js) ─────────────────────────────────────────────────────
+
   async contactUs(data) {
-    const response = await fetch(`${API_BASE_URL}/content/contact`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) });
-    return handleResponse(response);
+    const res = await fetch(`${NEXT_API}/content/contact`, { method: 'POST', headers: jsonHeaders(), body: JSON.stringify(data) });
+    return handleResponse(res);
   },
 
   async getTestimonials() {
     try {
-      const response = await fetch(`${API_BASE_URL}/testimonials`, { method: 'GET', headers: getHeaders() });
-      const data = await handleResponse(response);
+      const res = await fetch(`${NEXT_API}/testimonials`, { headers: jsonHeaders() });
+      const data = await handleResponse(res);
       return { testimonials: data.testimonials || data.results || [] };
-    } catch (error) {
-      console.error("Error fetching testimonials:", error);
+    } catch {
       return { testimonials: [] };
     }
   },
 
   async getFAQs() {
     try {
-      const response = await fetch(`${API_BASE_URL}/faqs`, { method: 'GET', headers: getHeaders() });
-      const data = await handleResponse(response);
+      const res = await fetch(`${NEXT_API}/faqs`, { headers: jsonHeaders() });
+      const data = await handleResponse(res);
       return { faqs: data.faqs || data.results || [] };
-    } catch (error) {
-      console.error("Error fetching FAQs:", error);
+    } catch {
       return { faqs: [] };
     }
   },
 
   async submitTestimonial(token, data) {
-    const response = await fetch(`${API_BASE_URL}/testimonials`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) });
-    return handleResponse(response);
+    const res = await fetch(`${NEXT_API}/testimonials`, { method: 'POST', headers: jsonHeaders(), body: JSON.stringify(data) });
+    return handleResponse(res);
   },
 
-  async generateBlog(userMessage, sessionId = null) {
-    const response = await fetch(`${API_BASE_URL}/chat/generate`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ message: userMessage, session_id: sessionId }) });
-    return handleResponse(response);
-  },
-
-  async getSessionState(sessionId) {
-    const response = await fetch(`${API_BASE_URL}/chat/session/${sessionId}`, { method: 'GET', headers: getHeaders() });
-    return handleResponse(response);
-  },
-
-  async saveGeneratedBlog(sessionId, token) {
-    const response = await fetch(`${API_BASE_URL}/chat/save`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ session_id: sessionId }) });
-    return handleResponse(response);
-  },
-
-  async deleteSession(sessionId) {
-    const response = await fetch(`${API_BASE_URL}/chat/session/${sessionId}`, { method: 'DELETE', headers: getHeaders() });
-    return handleResponse(response);
-  },
-
-  async createPlaylist(playlistData, token) {
-    const response = await fetch(`${API_BASE_URL}/playlists`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(playlistData) });
-    return handleResponse(response);
-  },
-
-  async getMyPlaylists(token, userId) {
-    const response = await fetch(`${API_BASE_URL}/playlists?ownerId=${userId}`, { method: 'GET', headers: getHeaders() });
-    return handleResponse(response);
-  },
-
-  async getUserPlaylistsByEmail(email, userId, token = null, isOwner = false, skip = 0, limit = 10) {
-    let url = `${API_BASE_URL}/playlists?ownerId=${userId}&skip=${skip}&limit=${limit}`;
-    if (!isOwner) url += '&is_public=true';
-    const response = await fetch(url, { method: 'GET', headers: getHeaders() });
-    return handleResponse(response);
-  },
-
-  async getPlaylist(playlistId, token = null) {
-    const response = await fetch(`${API_BASE_URL}/playlists/${playlistId}`, { method: 'GET', headers: getHeaders() });
-    return handleResponse(response);
-  },
-
-  async updatePlaylist(playlistId, playlistData, token) {
-    const response = await fetch(`${API_BASE_URL}/playlists/${playlistId}`, { method: 'PATCH', headers: getHeaders(), body: JSON.stringify(playlistData) });
-    return handleResponse(response);
-  },
-
-  async deletePlaylist(playlistIdOrSlug, token) {
-    const response = await fetch(`${API_BASE_URL}/playlists/${playlistIdOrSlug}`, { method: 'DELETE', headers: getHeaders() });
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return { success: true };
-  },
-
-  async addBlogToPlaylist(playlistIdOrSlug, blogData, token) {
-    const response = await fetch(`${API_BASE_URL}/playlists/${playlistIdOrSlug}/blogs`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(blogData) });
-    return handleResponse(response);
-  },
-
-  async removeBlogFromPlaylist(playlistIdOrSlug, blogId, token) {
-    const response = await fetch(`${API_BASE_URL}/playlists/${playlistIdOrSlug}/blogs/${blogId}`, { method: 'DELETE', headers: getHeaders() });
-    return handleResponse(response);
-  },
-
-  async getBlogPlaylists(blogId, token) {
-    const response = await fetch(`${API_BASE_URL}/playlists?blogId=${blogId}`, { method: 'GET', headers: getHeaders() });
-    return handleResponse(response);
-  },
-
-  async getCategories(token = null) {
-    const res = await fetch(`${API_BASE_URL}/blogs/categories?limit=100`, { method: 'GET', headers: getHeaders() });
-    const data = await handleResponse(res);
-    return data.categories || data.results || data.items || data || [];
-  },
-
-  async getOrCreateCategory(name, token) {
-    if (!name || !name.trim()) return null;
-    const trimmedName = name.trim();
-    const slug = trimmedName.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '').replace(/--+/g, '-').replace(/^-+|-+$/g, '');
-    const findExisting = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/blogs/categories?limit=200`);
-        const data = await res.json();
-        const all = data.categories || data.results || data.items || (Array.isArray(data) ? data : []);
-        return all.find(c => c.name.toLowerCase() === trimmedName.toLowerCase()) || null;
-      } catch { return null; }
-    };
-    const existing = await findExisting();
-    if (existing) return existing._id || existing.id;
-    try {
-      const createRes = await fetch(`${API_BASE_URL}/blogs/categories`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ name: trimmedName, slug }) });
-      if (createRes.ok) {
-        const created = await createRes.json();
-        return created._id || created.id;
-      }
-      const retry = await findExisting();
-      if (retry) return retry._id || retry.id;
-      return null;
-    } catch (e) {
-      const retry = await findExisting();
-      return retry?._id || retry?.id || null;
-    }
-  },
-
-  async uploadImage(file = null, collectionName = 'blogs', token = null, url = null) {
-    const formData = new FormData();
-    if (file) {
-      const compressedFile = await compressImage(file);
-      formData.append('file', compressedFile);
-    }
-    if (url) formData.append('url', url);
-    if (collectionName) formData.append('folder', collectionName);
-    const response = await fetch(`${API_BASE_URL}/media/upload`, { method: 'POST', body: formData });
-    return handleResponse(response);
-  }
+  // ── Token utils ───────────────────────────────────────────────────────────
+  clearBackendToken,
 };

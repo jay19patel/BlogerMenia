@@ -1,0 +1,119 @@
+
+
+services:
+  # ── MongoDB ────────────────────────────────────────────────────────────────
+  mongo:
+    image: mongo:7
+    container_name: blogermenia_mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-password}
+      MONGO_INITDB_DATABASE: ${MONGO_DB:-blogermenia}
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - blogermenia_net
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis ──────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: blogermenia_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redis_data:/data
+    networks:
+      - blogermenia_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ── FastAPI backend ────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: blogermenia_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # MongoDB — uses the mongo service name as hostname
+      MONGODB_URI: mongodb://${MONGO_USER:-admin}:${MONGO_PASSWORD:-password}@mongo:27017/${MONGO_DB:-blogermenia}?authSource=admin
+      MONGODB_DB: ${MONGO_DB:-blogermenia}
+      # Redis — uses the redis service name as hostname
+      REDIS_URL: redis://redis:6379
+      # Auth — must match frontend NEXTAUTH_SECRET exactly
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      DEBUG: ${DEBUG:-false}
+      # GCS Settings
+      USE_GCS: ${USE_GCS:-false}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.1}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./njtechstudio-311abb994297.json:/app/gcs-key.json:ro
+      - ./backend/uploads:/app/uploads
+    networks:
+      - blogermenia_net
+
+  # ── Next.js frontend ───────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: blogermenia_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # NextAuth
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NEXTAUTH_URL: http://localhost:3000
+      # Google OAuth
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      # MongoDB (Next.js still needs it for auth user lookups)
+      MONGODB_URI: mongodb://${MONGO_USER:-admin}:${MONGO_PASSWORD:-password}@mongo:27017/${MONGO_DB:-blogermenia}?authSource=admin
+      # FastAPI base URL (used by lib/api.js for blog endpoints)
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      # GCS (image uploads)
+      GCS_BUCKET_NAME: ${GCS_BUCKET_NAME:-}
+      NEXT_PUBLIC_GCS_BUCKET_NAME: ${GCS_BUCKET_NAME:-blogermenia}
+      USE_GCS: ${USE_GCS:-false}
+      NODE_ENV: production
+    depends_on:
+      - backend
+      - mongo
+    volumes:
+      - ./njtechstudio-311abb994297.json:/app/gcs-key.json:ro
+    networks:
+      - blogermenia_net
+
+volumes:
+  mongo_data:
+  redis_data:
+
+networks:
+  blogermenia_net:
+    driver: bridge

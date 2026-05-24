@@ -18,3 +18,7 @@ db.sqlite3
 # Node
 node_modules/
 .next/
+
+# Service Account Keys
+*key.json
+njtechstudio-*.json

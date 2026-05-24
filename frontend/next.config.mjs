@@ -17,6 +17,7 @@ const nextConfig = {
   },
 
   reactStrictMode: true,
+  output: 'standalone',
 
   webpack(config) {
     // next-auth v4 resolves uuid via the ESM-node entry (dist/esm-node/index.js)

@@ -32,7 +32,7 @@ export function getImageUrl(path) {
     if (process.env.NODE_ENV === 'development') {
       return `/uploads${cleanPath}`;
     } else {
-      const bucket = process.env.NEXT_PUBLIC_GCS_BUCKET_NAME || 'learning_by_jay';
+      const bucket = process.env.NEXT_PUBLIC_GCS_BUCKET_NAME || 'blogermenia';
       return `https://storage.googleapis.com/${bucket}${cleanPath}`;
     }
   }
