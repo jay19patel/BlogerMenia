@@ -9,7 +9,7 @@ import uuid
 from typing import Annotated, Any, Dict, List, Optional, TypedDict
 
 from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_ollama import ChatOllama
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Send
 from pydantic import BaseModel
@@ -44,15 +44,11 @@ class WorkflowState(TypedDict):
     change_summary: Optional[Dict[str, Any]]
 
 
-def get_llm() -> ChatOllama:
-    return ChatOllama(
-        model=settings.ollama_model,
-        base_url=settings.ollama_base_url,
-        reasoning=False,
+def get_llm() -> ChatGoogleGenerativeAI:
+    return ChatGoogleGenerativeAI(
+        model=settings.gemini_model,
+        google_api_key=settings.google_api_key,
         temperature=0.7,
-        num_predict=settings.ollama_num_predict,
-        num_ctx=settings.ollama_num_ctx,
-        client_kwargs={"timeout": settings.ollama_timeout},
     )
 
 

@@ -2,11 +2,28 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    ollama_model: str = "qwen3.5:latest"
-    ollama_base_url: str = "http://localhost:11434"
-    ollama_timeout: float = 60.0
-    ollama_num_predict: int = 1024
-    ollama_num_ctx: int = 4096
+    """Application settings — loaded from environment variables or .env file."""
+
+    # ── Google Gemini ─────────────────────────────────────────────────────────
+    google_api_key: str = ""
+    gemini_model: str = "gemini-2.0-flash"
+
+    # ── GCS ───────────────────────────────────────────────────────────────────
+    gcs_bucket_name: str = "blogermenia"
+    use_gcs: bool = False
+
+    # ── MongoDB ───────────────────────────────────────────────────────────────
+    mongodb_uri: str = "mongodb://localhost:27017"
+    mongodb_db: str = "blogermenia"
+
+    # ── Redis ─────────────────────────────────────────────────────────────────
+    redis_url: str = "redis://localhost:6379"
+
+    # ── Auth (NextAuth JWT validation) ────────────────────────────────────────
+    nextauth_secret: str = "fallback_secret_for_development_only"
+
+    # ── App ───────────────────────────────────────────────────────────────────
+    debug: bool = False
 
     model_config = SettingsConfigDict(
         env_file=".env",

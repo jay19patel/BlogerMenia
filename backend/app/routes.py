@@ -24,27 +24,12 @@ router = APIRouter()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-def _check_ollama() -> Dict[str, Any]:
-    try:
-        with urllib.request.urlopen(
-            f"{settings.ollama_base_url}/api/tags",
-            timeout=3,
-        ) as response:
-            payload = json.loads(response.read().decode("utf-8"))
-        models = [model.get("name") for model in payload.get("models", [])]
-        return {
-            "ok": settings.ollama_model in models,
-            "base_url": settings.ollama_base_url,
-            "model": settings.ollama_model,
-            "available_models": models,
-        }
-    except Exception as exc:
-        return {
-            "ok": False,
-            "base_url": settings.ollama_base_url,
-            "model": settings.ollama_model,
-            "error": str(exc),
-        }
+def _check_gemini() -> Dict[str, Any]:
+    return {
+        "ok": bool(settings.google_api_key),
+        "model": settings.gemini_model,
+        "provider": "google-ai",
+    }
 
 # ── API models ────────────────────────────────────────────────────────────────
 
@@ -69,7 +54,7 @@ async def index():
 
 @router.get("/health/")
 async def health():
-    return {"status": "ok", "ollama": _check_ollama()}
+    return {"status": "ok", "gemini": _check_gemini()}
 
 
 @router.get("/chat/")
@@ -78,7 +63,7 @@ async def chat_help():
         "status": "ok",
         "message": "Use POST /chat/ with JSON body: {\"message\": \"hello\"}",
         "docs": "/docs",
-        "ollama": _check_ollama(),
+        "gemini": _check_gemini(),
     }
 
 @router.post("/chat/", response_model=ChatResponse)

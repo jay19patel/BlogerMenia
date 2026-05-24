@@ -241,7 +241,7 @@
     <main>
       <div id="messages" class="messages">
         <div class="empty" id="emptyState">
-          Start chatting with your local Ollama model. Try: "hello" or "write a short blog about Python".
+          Start chatting with your Google Gemini model. Try: "hello" or "write a short blog about Python".
         </div>
       </div>
       <div id="meta" class="meta">
@@ -313,13 +313,13 @@
       try {
         const response = await fetch(`${API_BASE}/health/`);
         const data = await response.json();
-        const ollama = data.ollama || {};
-        if (ollama.ok) {
-          setStatus(true, `API online - ${ollama.model}`);
-          if (showMessage) addMessage("assistant", `Health OK\nModel: ${ollama.model}\nBase URL: ${ollama.base_url}`);
+        const gemini = data.gemini || {};
+        if (gemini.ok) {
+          setStatus(true, `API online - ${gemini.model}`);
+          if (showMessage) addMessage("assistant", `Health OK\nModel: ${gemini.model}\nProvider: ${gemini.provider}`);
         } else {
-          setStatus(false, "Ollama model unavailable");
-          if (showMessage) addMessage("error", JSON.stringify(ollama, null, 2));
+          setStatus(false, "Gemini configuration missing");
+          if (showMessage) addMessage("error", JSON.stringify(gemini, null, 2));
         }
       } catch (error) {
         setStatus(false, "API offline");
