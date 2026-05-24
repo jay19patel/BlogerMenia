@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Blog Chat</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --line: #d9e1ec;
+      --text: #142033;
+      --muted: #667085;
+      --accent: #0f766e;
+      --accent-dark: #0b5f59;
+      --user: #e7f7f4;
+      --bot: #f2f4f7;
+      --danger: #b42318;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .shell {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      max-width: 980px;
+      height: 100vh;
+      margin: 0 auto;
+      padding: 18px;
+      gap: 12px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--danger);
+    }
+
+    .dot.ok {
+      background: var(--accent);
+    }
+
+    main {
+      overflow: hidden;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      display: grid;
+      grid-template-rows: 1fr auto;
+    }
+
+    .messages {
+      overflow-y: auto;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .empty {
+      margin: auto;
+      max-width: 540px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    .message {
+      max-width: min(760px, 92%);
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .message.user {
+      align-self: flex-end;
+      background: var(--user);
+      border-color: #bfe7df;
+    }
+
+    .message.assistant {
+      align-self: flex-start;
+      background: var(--bot);
+    }
+
+    .message.error {
+      align-self: flex-start;
+      background: #fff1f0;
+      border-color: #f3b6b0;
+      color: var(--danger);
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 10px 14px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      background: #fbfcfe;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      padding: 12px;
+      border-top: 1px solid var(--line);
+      background: var(--panel);
+    }
+
+    textarea {
+      min-height: 48px;
+      max-height: 160px;
+      resize: vertical;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font: inherit;
+      color: var(--text);
+      outline: none;
+    }
+
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
+    }
+
+    button {
+      min-width: 96px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--accent);
+      color: white;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: var(--accent-dark);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.65;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .ghost {
+      min-width: auto;
+      padding: 8px 10px;
+      color: var(--text);
+      background: #eef2f7;
+      border: 1px solid var(--line);
+    }
+
+    .ghost:hover {
+      background: #e4eaf2;
+    }
+
+    @media (max-width: 640px) {
+      .shell {
+        padding: 10px;
+      }
+
+      header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      form {
+        grid-template-columns: 1fr;
+      }
+
+      button {
+        min-height: 44px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div>
+        <h1>AI Blog Chat</h1>
+        <div class="status"><span id="statusDot" class="dot"></span><span id="statusText">Checking API...</span></div>
+      </div>
+      <div class="actions">
+        <button id="newChatBtn" class="ghost" type="button">New Chat</button>
+        <button id="healthBtn" class="ghost" type="button">Health</button>
+      </div>
+    </header>
+
+    <main>
+      <div id="messages" class="messages">
+        <div class="empty" id="emptyState">
+          Start chatting with your local Ollama model. Try: "hello" or "write a short blog about Python".
+        </div>
+      </div>
+      <div id="meta" class="meta">
+        <span>Session: new</span>
+      </div>
+      <form id="chatForm">
+        <textarea id="messageInput" placeholder="Type your message..." required></textarea>
+        <button id="sendBtn" type="submit">Send</button>
+      </form>
+    </main>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+    const messagesEl = document.getElementById("messages");
+    const emptyState = document.getElementById("emptyState");
+    const form = document.getElementById("chatForm");
+    const input = document.getElementById("messageInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const statusDot = document.getElementById("statusDot");
+    const statusText = document.getElementById("statusText");
+    const metaEl = document.getElementById("meta");
+    const newChatBtn = document.getElementById("newChatBtn");
+    const healthBtn = document.getElementById("healthBtn");
+
+    let sessionId = localStorage.getItem("blog_chat_session_id") || null;
+    let busy = false;
+
+    function setStatus(ok, text) {
+      statusDot.classList.toggle("ok", ok);
+      statusText.textContent = text;
+    }
+
+    function setMeta(data) {
+      const parts = [
+        `Session: ${sessionId || "new"}`,
+      ];
+      if (data?.mode) parts.push(`Mode: ${data.mode}`);
+      if (data?.blog_state?.title) parts.push(`Blog: ${data.blog_state.title}`);
+      metaEl.innerHTML = parts.map((item) => `<span>${escapeHtml(item)}</span>`).join("");
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function addMessage(role, text) {
+      emptyState?.remove();
+      const item = document.createElement("div");
+      item.className = `message ${role}`;
+      item.textContent = text;
+      messagesEl.appendChild(item);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function setBusy(value) {
+      busy = value;
+      sendBtn.disabled = value;
+      input.disabled = value;
+      sendBtn.textContent = value ? "Wait..." : "Send";
+    }
+
+    async function checkHealth(showMessage = false) {
+      try {
+        const response = await fetch(`${API_BASE}/health/`);
+        const data = await response.json();
+        const ollama = data.ollama || {};
+        if (ollama.ok) {
+          setStatus(true, `API online - ${ollama.model}`);
+          if (showMessage) addMessage("assistant", `Health OK\nModel: ${ollama.model}\nBase URL: ${ollama.base_url}`);
+        } else {
+          setStatus(false, "Ollama model unavailable");
+          if (showMessage) addMessage("error", JSON.stringify(ollama, null, 2));
+        }
+      } catch (error) {
+        setStatus(false, "API offline");
+        if (showMessage) addMessage("error", `Health check failed: ${error.message}`);
+      }
+    }
+
+    async function sendMessage(message) {
+      setBusy(true);
+      addMessage("user", message);
+      try {
+        const payload = { message };
+        if (sessionId) payload.session_id = sessionId;
+
+        const response = await fetch(`${API_BASE}/chat/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.detail || `Request failed: ${response.status}`);
+        }
+
+        sessionId = data.session_id;
+        localStorage.setItem("blog_chat_session_id", sessionId);
+        addMessage(data.mode === "error" ? "error" : "assistant", data.message || "Done.");
+        setMeta(data);
+      } catch (error) {
+        addMessage("error", error.message);
+      } finally {
+        setBusy(false);
+        input.focus();
+      }
+    }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (busy) return;
+      const message = input.value.trim();
+      if (!message) return;
+      input.value = "";
+      sendMessage(message);
+    });
+
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        form.requestSubmit();
+      }
+    });
+
+    newChatBtn.addEventListener("click", () => {
+      sessionId = null;
+      localStorage.removeItem("blog_chat_session_id");
+      messagesEl.innerHTML = '<div class="empty" id="emptyState">New chat started.</div>';
+      setMeta(null);
+      input.focus();
+    });
+
+    healthBtn.addEventListener("click", () => checkHealth(true));
+
+    setMeta(null);
+    checkHealth();
+    input.focus();
+  </script>
+</body>
+</html>
