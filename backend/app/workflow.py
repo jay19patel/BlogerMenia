@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import json
+import logging
 import operator
 import re
 import urllib.parse
@@ -9,7 +10,8 @@ import uuid
 from typing import Annotated, Any, Dict, List, Optional, TypedDict
 
 from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.language_models.chat_models import BaseChatModel
+from langchain_ollama import ChatOllama
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Send
 from pydantic import BaseModel
@@ -29,6 +31,8 @@ from app.schemas import (
     Task,
 )
 
+logger = logging.getLogger(__name__)
+
 class WorkflowState(TypedDict):
     prompt: str
     session_id: str
@@ -44,10 +48,16 @@ class WorkflowState(TypedDict):
     change_summary: Optional[Dict[str, Any]]
 
 
-def get_llm() -> ChatGoogleGenerativeAI:
-    return ChatGoogleGenerativeAI(
-        model=settings.gemini_model,
-        google_api_key=settings.google_api_key,
+def get_llm() -> BaseChatModel:
+    """Return the local Ollama chat model."""
+    logger.info(
+        "Using local Ollama LLM provider (model: %s) at %s",
+        settings.ollama_model,
+        settings.ollama_base_url,
+    )
+    return ChatOllama(
+        model=settings.ollama_model,
+        base_url=settings.ollama_base_url,
         temperature=0.7,
     )
 

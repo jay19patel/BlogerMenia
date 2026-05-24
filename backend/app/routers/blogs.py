@@ -20,12 +20,12 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from app.api.deps import get_current_user, get_optional_user
-from app.application.blog_service import BlogService
-from app.application.category_service import CategoryService
+from app.deps import get_current_user
+from app.services.blog_service import BlogService
+from app.services.category_service import CategoryService
 from app.database.mongo import get_db
-from app.domain.exceptions import ForbiddenError, NotFoundError
-from app.domain.models import (
+from app.exceptions import ForbiddenError, NotFoundError
+from app.models.blog import (
     BlogCreate,
     BlogListOut,
     BlogOut,
@@ -81,7 +81,6 @@ async def list_categories(
 )
 async def create_category(
     body: CategoryCreate,
-    current_user: CurrentUser = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ) -> CategoryOut:
     svc = CategoryService(db)

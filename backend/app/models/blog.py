@@ -1,13 +1,13 @@
 """
 Domain models (Pydantic) — mirror the Mongoose schemas in the Next.js frontend.
-These are pure data contracts; no database logic here.
+These are data contracts for Blog and Category modules.
 """
 from __future__ import annotations
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 
 # ── Author embedded in blog responses ────────────────────────────────────────

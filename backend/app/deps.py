@@ -20,7 +20,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 
 from app.config import settings
-from app.domain.models import CurrentUser
+from app.models.blog import CurrentUser
 
 logger = logging.getLogger(__name__)
 

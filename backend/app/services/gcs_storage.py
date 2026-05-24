@@ -6,7 +6,6 @@ from __future__ import annotations
 from io import BytesIO
 import logging
 import os
-from typing import Any
 
 from google.cloud import storage
 from PIL import Image
@@ -24,13 +23,13 @@ def get_gcs_client() -> storage.Client | None:
     if _storage_client is not None:
         return _storage_client
 
+    key_path = "/app/gcs-key.json"
     try:
-        key_path = "/app/gcs-key.json"
         if os.path.exists(key_path):
             _storage_client = storage.Client.from_service_account_json(key_path)
             logger.info("GCS Storage client successfully initialized via mounted key file.")
         else:
-            logger.warning("GCS credentials not found in env and no key file mounted. Falling back to default credentials.")
+            logger.warning("GCS mounted key file not found at %r. Falling back to default credentials.", key_path)
             _storage_client = storage.Client()
     except Exception as exc:
         logger.error("Failed to initialize Google Cloud Storage Client: %s", exc, exc_info=True)
@@ -78,7 +77,7 @@ def compress_image(image_bytes: bytes, max_size_kb: int = 400, max_width_height:
 def upload_to_gcs(file_bytes: bytes, gcs_path: str, content_type: str) -> str:
     """
     Uploads raw file bytes to the configured Google Cloud Storage bucket.
-    Makes the blob public and returns the storage.googleapis.com public URL.
+    Makes the blog public and returns the storage.googleapis.com public URL.
     """
     client = get_gcs_client()
     if not client:
@@ -95,8 +94,22 @@ def upload_to_gcs(file_bytes: bytes, gcs_path: str, content_type: str) -> str:
     try:
         blob.make_public()
     except Exception as exc:
-        logger.warning("Could not explicitly set public access for blob (it might inherit public permission): %s", exc)
+        logger.warning("Could not explicitly set public access for blog (it might inherit public permission): %s", exc)
 
     public_url = f"https://storage.googleapis.com/{bucket_name}/{gcs_path}"
     logger.info("File uploaded successfully to GCS: %s", public_url)
     return public_url
+
+
+def save_locally(file_bytes: bytes, gcs_path: str) -> str:
+    """
+    Saves raw file bytes to the local filesystem under the 'uploads' folder.
+    Returns the relative local path string.
+    """
+    full_path = os.path.join("uploads", gcs_path)
+    os.makedirs(os.path.dirname(full_path), exist_ok=True)
+    with open(full_path, "wb") as f:
+        f.write(file_bytes)
+    logger.info("File saved locally: %s", full_path)
+    return f"/uploads/{gcs_path}"
+

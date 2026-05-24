@@ -15,6 +15,7 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 _redis: aioredis.Redis | None = None
+_redis_enabled: bool = True
 
 # ── TTL constants ─────────────────────────────────────────────────────────────
 TTL_BLOG_LIST = 60      # seconds — list pages invalidate quickly
@@ -24,25 +25,40 @@ TTL_CATEGORIES = 600    # 10 min — categories rarely change
 
 
 async def connect_to_redis() -> None:
-    """Open the Redis connection pool. Call once at app startup."""
-    global _redis
-    _redis = aioredis.from_url(settings.redis_url, decode_responses=True)
-    await _redis.ping()
-    logger.info("Connected to Redis at %s", settings.redis_url)
+    """Open the Redis connection pool. Call once at app startup. Handles connection failures gracefully."""
+    global _redis, _redis_enabled
+    try:
+        _redis = aioredis.from_url(settings.redis_url, decode_responses=True)
+        await _redis.ping()
+        _redis_enabled = True
+        logger.info("Connected to Redis at %s", settings.redis_url)
+    except Exception as exc:
+        _redis_enabled = False
+        _redis = None
+        logger.warning(
+            "Redis is not available at %s. Caching will be gracefully disabled. Error: %s",
+            settings.redis_url,
+            exc,
+        )
 
 
 async def close_redis_connection() -> None:
     """Close the Redis connection pool."""
-    global _redis
+    global _redis, _redis_enabled
     if _redis:
-        await _redis.aclose()
+        try:
+            await _redis.aclose()
+        except Exception as exc:
+            logger.debug("Failed to close Redis connection: %s", exc)
         _redis = None
-        logger.info("Redis connection closed.")
+    _redis_enabled = False
+    logger.info("Redis connection closed.")
 
 
 def get_redis() -> aioredis.Redis:
-    if _redis is None:
-        raise RuntimeError("Redis client not initialised — did startup run?")
+    """Return active Redis client. Raises RuntimeError if disabled or not connected."""
+    if not _redis_enabled or _redis is None:
+        raise RuntimeError("Redis client is disabled or not initialised")
     return _redis
 
 
@@ -59,6 +75,8 @@ def _make_key(prefix: str, params: dict | str) -> str:
 
 async def cache_get(key: str) -> Any | None:
     """Return cached value or None on miss / error."""
+    if not _redis_enabled:
+        return None
     try:
         r = get_redis()
         raw = await r.get(key)
@@ -70,6 +88,8 @@ async def cache_get(key: str) -> Any | None:
 
 async def cache_set(key: str, value: Any, ttl: int) -> None:
     """Write value to cache. Silently fails on Redis errors."""
+    if not _redis_enabled:
+        return
     try:
         r = get_redis()
         await r.set(key, json.dumps(value, default=str), ex=ttl)
@@ -79,6 +99,8 @@ async def cache_set(key: str, value: Any, ttl: int) -> None:
 
 async def cache_delete(key: str) -> None:
     """Delete a single cache key."""
+    if not _redis_enabled:
+        return
     try:
         await get_redis().delete(key)
     except Exception:
@@ -87,6 +109,8 @@ async def cache_delete(key: str) -> None:
 
 async def cache_delete_pattern(pattern: str) -> None:
     """Delete all keys matching a glob pattern (e.g. 'blogs:list:*')."""
+    if not _redis_enabled:
+        return
     try:
         r = get_redis()
         keys = await r.keys(pattern)

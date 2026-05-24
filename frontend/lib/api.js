@@ -5,11 +5,25 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 const NEXT_API = '/api';
-const FASTAPI_BASE =
-  (typeof window !== 'undefined'
-    ? process.env.NEXT_PUBLIC_API_URL   // browser: read at runtime
-    : process.env.NEXT_PUBLIC_API_URL)  // server-side rendering
-  || 'http://localhost:8000';
+
+function getFastApiBase() {
+  const configured = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  const clean = configured.replace(/\/+$/, '');
+
+  if (typeof window === 'undefined') return clean;
+
+  try {
+    const url = new URL(clean);
+    if (url.hostname === 'backend' || url.hostname === '0.0.0.0') {
+      return `${window.location.protocol}//${window.location.hostname}:8000`;
+    }
+    return url.toString().replace(/\/+$/, '');
+  } catch {
+    return `${window.location.protocol}//${window.location.hostname}:8000`;
+  }
+}
+
+const FASTAPI_BASE = getFastApiBase();
 
 const BLOG_API = `${FASTAPI_BASE}/api/v1/blogs`;
 const PLAYLIST_API = `${FASTAPI_BASE}/api/v1/playlists`;
@@ -79,6 +93,13 @@ async function handleResponse(response) {
   }
   if (response.status === 204) return { success: true };
   return response.json();
+}
+
+function fetchErrorMessage(error, url) {
+  if (error instanceof TypeError) {
+    return `Could not reach FastAPI at ${url}. Make sure backend is running on ${FASTAPI_BASE}.`;
+  }
+  return error.message || 'Request failed';
 }
 
 function jsonHeaders() {
@@ -235,8 +256,12 @@ export const api = {
   async getBlogCategories(username = null) {
     let url = `${BLOG_API}/categories/`;
     if (username) url += `?username=${encodeURIComponent(username)}`;
-    const res = await fetch(url, { method: 'GET', headers: jsonHeaders() });
-    return handleResponse(res);
+    try {
+      const res = await fetch(url, { method: 'GET', headers: jsonHeaders() });
+      return handleResponse(res);
+    } catch (error) {
+      throw new Error(fetchErrorMessage(error, url));
+    }
   },
 
   async getCategories() {
@@ -261,16 +286,16 @@ export const api = {
     } catch { /* fallthrough to create */ }
 
     try {
-      const headers = await authHeaders();
       const createRes = await fetch(`${BLOG_API}/categories/`, {
-        method: 'POST', headers, body: JSON.stringify({ name: trimmedName, slug }),
+        method: 'POST',
+        headers: jsonHeaders(),
+        body: JSON.stringify({ name: trimmedName, slug }),
       });
-      if (createRes.ok) {
-        const created = await createRes.json();
-        return created._id || created.id;
-      }
-    } catch { /* ignore */ }
-    return null;
+      const created = await handleResponse(createRes);
+      return created._id || created.id;
+    } catch (error) {
+      throw new Error(fetchErrorMessage(error, `${BLOG_API}/categories/`));
+    }
   },
 
   // ── Stats → FastAPI ───────────────────────────────────────────────────────

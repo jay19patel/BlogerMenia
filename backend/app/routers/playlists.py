@@ -17,12 +17,12 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from app.api.deps import get_current_user, get_optional_user
-from app.application.playlist_service import PlaylistService
+from app.deps import get_current_user, get_optional_user
+from app.services.playlist_service import PlaylistService
 from app.database.mongo import get_db
-from app.domain.exceptions import ForbiddenError, NotFoundError
-from app.domain.models import CurrentUser
-from app.domain.playlist_models import (
+from app.exceptions import ForbiddenError, NotFoundError
+from app.models.blog import CurrentUser
+from app.models.playlist import (
     AddBlogRequest,
     PlaylistCreate,
     PlaylistListOut,

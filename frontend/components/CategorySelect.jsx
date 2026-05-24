@@ -1,14 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { ChevronDown, Plus, Check, Search, Loader2 } from "lucide-react";
-
-const FASTAPI_BASE =
-  (typeof window !== 'undefined'
-    ? process.env.NEXT_PUBLIC_API_URL
-    : process.env.NEXT_PUBLIC_API_URL)
-  || 'http://localhost:8000';
-
-const API_BASE_URL = `${FASTAPI_BASE}/api/v1`;
+import { api } from "@/lib/api";
 
 export default function CategorySelect({
     categoryId,
@@ -34,20 +27,7 @@ export default function CategorySelect({
         const loadCategories = async () => {
             setLoading(true);
             try {
-                const headers = {};
-                if (token) {
-                    headers["Authorization"] = `Bearer ${token}`;
-                }
-
-                const res = await fetch(`${API_BASE_URL}/blogs/categories/`, {
-                    headers,
-                });
-
-                if (!res.ok) {
-                    throw new Error(`Error ${res.status}`);
-                }
-
-                const data = await res.json();
+                const data = await api.getBlogCategories();
 
                 let list = [];
 
@@ -107,58 +87,25 @@ export default function CategorySelect({
         setCreating(true);
 
         try {
-            const slug = name
-                .toLowerCase()
-                .replace(/\s+/g, "-")
-                .replace(/[^\w-]/g, "")
-                .replace(/--+/g, "-")
-                .replace(/^-+|-+$/g, "");
+            const createdId = await api.getOrCreateCategory(name);
+            const data = await api.getBlogCategories();
 
-            const headers = {
-                "Content-Type": "application/json",
-            };
+            let list = [];
+            if (Array.isArray(data)) list = data;
+            else if (Array.isArray(data.results)) list = data.results;
+            else if (Array.isArray(data.items)) list = data.items;
 
-            if (token) {
-                headers["Authorization"] = `Bearer ${token}`;
-            }
+            const created = list.find(
+                (c) => (c.id || c._id) === createdId || c.name?.toLowerCase() === name.toLowerCase()
+            );
 
-            const res = await fetch(`${API_BASE_URL}/blogs/categories/`, {
-                method: "POST",
-                headers,
-                body: JSON.stringify({ name, slug }),
-            });
-
-            if (res.ok) {
-                const created = await res.json();
-
-                setCategories((prev) => [...prev, created]);
+            if (created) {
+                setCategories(list);
                 onSelect(created.id || created._id, created.name);
                 setOpen(false);
             } else {
-                // fallback: refetch and find
-                const refetch = await fetch(
-                    `${API_BASE_URL}/blogs/categories/`,
-                    { headers }
-                );
-
-                const data = await refetch.json();
-
-                let list = [];
-                if (Array.isArray(data)) list = data;
-                else if (Array.isArray(data.results)) list = data.results;
-                else if (Array.isArray(data.items)) list = data.items;
-
-                const found = list.find(
-                    (c) => c.name?.toLowerCase() === name.toLowerCase()
-                );
-
-                if (found) {
-                    setCategories(list);
-                    onSelect(found.id || found._id, found.name);
-                    setOpen(false);
-                } else {
-                    console.error("Category creation failed");
-                }
+                onSelect(createdId, name);
+                setOpen(false);
             }
         } catch (error) {
             console.error("Error creating category:", error);

@@ -7,7 +7,7 @@ Cache strategy:
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
@@ -15,9 +15,9 @@ from app.database.redis import (
     cache_delete, cache_delete_pattern, cache_get,
     cache_set, list_cache_key,
 )
-from app.domain.exceptions import ForbiddenError, NotFoundError
-from app.domain.models import CurrentUser
-from app.infrastructure.playlist_repo import PlaylistRepository
+from app.exceptions import ForbiddenError, NotFoundError
+from app.models.blog import CurrentUser
+from app.repositories.playlist_repo import PlaylistRepository
 
 logger = logging.getLogger(__name__)
 

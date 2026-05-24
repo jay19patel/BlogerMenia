@@ -6,13 +6,12 @@ from __future__ import annotations
 
 import logging
 import re
-import uuid
 from typing import Any, Dict, List, Optional, Tuple
 
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from app.domain.exceptions import NotFoundError
+from app.exceptions import NotFoundError
 
 logger = logging.getLogger(__name__)
 

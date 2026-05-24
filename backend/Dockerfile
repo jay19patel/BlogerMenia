@@ -15,6 +15,6 @@ RUN UV_SYSTEM_PYTHON=1 uv sync --no-dev
 # Copy application code
 COPY . .
 
-EXPOSE 8000
+EXPOSE 8080
 
-CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+CMD ["sh", "-c", "uv run uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 2"]

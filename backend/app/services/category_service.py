@@ -12,7 +12,7 @@ from app.database.redis import (
     CATEGORIES_KEY, TTL_CATEGORIES,
     cache_delete, cache_get, cache_set,
 )
-from app.infrastructure.category_repo import CategoryRepository
+from app.repositories.category_repo import CategoryRepository
 
 logger = logging.getLogger(__name__)
 

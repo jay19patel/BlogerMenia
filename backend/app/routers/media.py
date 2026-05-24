@@ -10,10 +10,10 @@ import uuid
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile, status
 
-from app.api.deps import get_current_user
+from app.deps import get_current_user
 from app.config import settings
-from app.domain.models import CurrentUser
-from app.infrastructure.gcs_storage import compress_image, upload_to_gcs
+from app.models.blog import CurrentUser
+from app.services.gcs_storage import compress_image, upload_to_gcs, save_locally
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ def process_and_upload_gcs_background(
     """
     Synchronous background worker executed by FastAPI's thread pool.
     1. If static image, compresses it to JPEG using Pillow.
-    2. Uploads raw or compressed bytes to Google Cloud Storage.
+    2. Uploads raw or compressed bytes to GCS in production, or saves locally in development.
     """
     try:
         if is_static_image:
@@ -38,11 +38,15 @@ def process_and_upload_gcs_background(
             # Use jpeg as target compression format
             content_type = "image/jpeg"
 
-        # Upload bytes to GCS
-        upload_to_gcs(file_bytes, gcs_path, content_type)
-        logger.info("Background upload to GCS completed successfully: %r", gcs_path)
+        # Save locally or upload to GCS depending on the environment
+        if settings.is_production:
+            upload_to_gcs(file_bytes, gcs_path, content_type)
+            logger.info("Background upload to GCS completed successfully: %r", gcs_path)
+        else:
+            save_locally(file_bytes, gcs_path)
+            logger.info("Background local save completed successfully: %r", gcs_path)
     except Exception as exc:
-        logger.error("Background task GCS upload failed for %r: %s", gcs_path, exc, exc_info=True)
+        logger.error("Background task media storage failed for %r: %s", gcs_path, exc, exc_info=True)
 
 
 @router.post("/upload/", summary="Upload compressed image to GCS")
@@ -78,8 +82,12 @@ async def upload_image(
             unique_name = f"{folder}/{uuid.uuid4()}{original_ext}"
 
         gcs_path = unique_name
-        bucket_name = settings.gcs_bucket_name
-        public_url = f"https://storage.googleapis.com/{bucket_name}/{gcs_path}"
+
+        if settings.is_production:
+            bucket_name = settings.gcs_bucket_name
+            public_url = f"https://storage.googleapis.com/{bucket_name}/{gcs_path}"
+        else:
+            public_url = f"{settings.next_public_api_url.rstrip('/')}/uploads/{gcs_path}"
 
         # Schedule the compression and upload as a background task
         background_tasks.add_task(
@@ -90,7 +98,7 @@ async def upload_image(
             is_static_image,
         )
 
-        logger.info("Scheduled GCS upload task in background for %r. Returning predicted URL: %s", gcs_path, public_url)
+        logger.info("Scheduled media storage task in background for %r. Returning predicted URL: %s", gcs_path, public_url)
 
         return {
             "url": public_url,
@@ -104,4 +112,3 @@ async def upload_image(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to process and schedule file upload: {exc}",
         )
-

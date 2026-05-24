@@ -34,7 +34,7 @@
     .shell {
       display: grid;
       grid-template-rows: auto 1fr auto;
-      max-width: 980px;
+      max-width: 1180px;
       height: 100vh;
       margin: 0 auto;
       padding: 18px;
@@ -78,13 +78,99 @@
       background: var(--accent);
     }
 
+    .workspace {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr);
+      gap: 12px;
+    }
+
+    .sidebar,
     main {
       overflow: hidden;
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 8px;
+    }
+
+    .sidebar {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-height: 0;
+    }
+
+    .sidebar-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .sidebar-title {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .sessions {
+      min-height: 0;
+      overflow-y: auto;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .session-item {
+      width: 100%;
+      min-width: 0;
+      display: grid;
+      gap: 4px;
+      padding: 10px;
+      text-align: left;
+      color: var(--text);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .session-item:hover {
+      background: #f4f7fb;
+      border-color: var(--line);
+    }
+
+    .session-item.active {
+      background: var(--user);
+      border-color: #bfe7df;
+    }
+
+    .session-main {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .session-sub,
+    .session-preview {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    main {
       display: grid;
       grid-template-rows: 1fr auto;
+      min-height: 0;
     }
 
     .messages {
@@ -210,6 +296,11 @@
         padding: 10px;
       }
 
+      .workspace {
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(160px, 28vh) 1fr;
+      }
+
       header {
         align-items: flex-start;
         flex-direction: column;
@@ -238,20 +329,32 @@
       </div>
     </header>
 
-    <main>
-      <div id="messages" class="messages">
-        <div class="empty" id="emptyState">
-          Start chatting with your Google Gemini model. Try: "hello" or "write a short blog about Python".
+    <div class="workspace">
+      <aside class="sidebar" aria-label="Chat sessions">
+        <div class="sidebar-head">
+          <h2 class="sidebar-title">Sessions</h2>
+          <button id="refreshSessionsBtn" class="ghost" type="button">Refresh</button>
         </div>
-      </div>
-      <div id="meta" class="meta">
-        <span>Session: new</span>
-      </div>
-      <form id="chatForm">
-        <textarea id="messageInput" placeholder="Type your message..." required></textarea>
-        <button id="sendBtn" type="submit">Send</button>
-      </form>
-    </main>
+        <div id="sessionsList" class="sessions">
+          <div class="empty">No saved sessions yet.</div>
+        </div>
+      </aside>
+
+      <main>
+        <div id="messages" class="messages">
+          <div class="empty" id="emptyState">
+            Start chatting with your local Ollama model. Try: "hello" or "write a short blog about Python".
+          </div>
+        </div>
+        <div id="meta" class="meta">
+          <span>Session: new</span>
+        </div>
+        <form id="chatForm">
+          <textarea id="messageInput" placeholder="Type your message..." required></textarea>
+          <button id="sendBtn" type="submit">Send</button>
+        </form>
+      </main>
+    </div>
   </div>
 
   <script>
@@ -266,6 +369,8 @@
     const metaEl = document.getElementById("meta");
     const newChatBtn = document.getElementById("newChatBtn");
     const healthBtn = document.getElementById("healthBtn");
+    const sessionsList = document.getElementById("sessionsList");
+    const refreshSessionsBtn = document.getElementById("refreshSessionsBtn");
 
     let sessionId = localStorage.getItem("blog_chat_session_id") || null;
     let busy = false;
@@ -294,12 +399,80 @@
     }
 
     function addMessage(role, text) {
-      emptyState?.remove();
+      document.getElementById("emptyState")?.remove();
       const item = document.createElement("div");
       item.className = `message ${role}`;
       item.textContent = text;
       messagesEl.appendChild(item);
       messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function renderConversation(conversation = []) {
+      messagesEl.innerHTML = "";
+      if (!conversation.length) {
+        messagesEl.innerHTML = '<div class="empty" id="emptyState">New chat started.</div>';
+        return;
+      }
+      conversation.forEach((msg) => addMessage(msg.role === "assistant" ? "assistant" : msg.role, msg.content || ""));
+    }
+
+    function sessionLabel(id) {
+      return id ? `Session: ${id}` : "Session: new";
+    }
+
+    function shortSessionId(id) {
+      return id ? `${id.slice(0, 8)}...${id.slice(-4)}` : "new";
+    }
+
+    function renderSessions(sessions = []) {
+      if (!sessions.length) {
+        sessionsList.innerHTML = '<div class="empty">No saved sessions yet.</div>';
+        return;
+      }
+
+      sessionsList.innerHTML = sessions.map((item) => {
+        const active = item.session_id === sessionId ? " active" : "";
+        const title = item.blog_title || sessionLabel(item.session_id);
+        const preview = item.preview || `${item.turns || 0} messages`;
+        return `
+          <button class="session-item${active}" type="button" data-session-id="${escapeHtml(item.session_id)}" title="${escapeHtml(sessionLabel(item.session_id))}">
+            <span class="session-main">${escapeHtml(title)}</span>
+            <span class="session-sub">${escapeHtml(shortSessionId(item.session_id))} · ${Number(item.turns || 0)} turns</span>
+            <span class="session-preview">${escapeHtml(preview)}</span>
+          </button>
+        `;
+      }).join("");
+    }
+
+    async function loadSessions() {
+      try {
+        const response = await fetch(`${API_BASE}/sessions/`);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || "Could not load sessions");
+        renderSessions(data.sessions || []);
+      } catch (error) {
+        sessionsList.innerHTML = `<div class="empty">${escapeHtml(error.message)}</div>`;
+      }
+    }
+
+    async function loadSession(id) {
+      if (!id || busy) return;
+      setBusy(true);
+      try {
+        const response = await fetch(`${API_BASE}/session/${encodeURIComponent(id)}/`);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || "Session not found");
+        sessionId = data.session_id;
+        localStorage.setItem("blog_chat_session_id", sessionId);
+        renderConversation(data.conversation || []);
+        setMeta(data);
+        loadSessions();
+      } catch (error) {
+        addMessage("error", error.message);
+      } finally {
+        setBusy(false);
+        input.focus();
+      }
     }
 
     function setBusy(value) {
@@ -313,13 +486,13 @@
       try {
         const response = await fetch(`${API_BASE}/health/`);
         const data = await response.json();
-        const gemini = data.gemini || {};
-        if (gemini.ok) {
-          setStatus(true, `API online - ${gemini.model}`);
-          if (showMessage) addMessage("assistant", `Health OK\nModel: ${gemini.model}\nProvider: ${gemini.provider}`);
+        const llm = data.llm || {};
+        if (llm.ok) {
+          setStatus(true, `API online - ${llm.model}`);
+          if (showMessage) addMessage("assistant", `Health OK\nModel: ${llm.model}\nProvider: ${llm.provider}\nStorage: ${data.storage || "unknown"}`);
         } else {
-          setStatus(false, "Gemini configuration missing");
-          if (showMessage) addMessage("error", JSON.stringify(gemini, null, 2));
+          setStatus(false, "Ollama configuration missing");
+          if (showMessage) addMessage("error", JSON.stringify(llm, null, 2));
         }
       } catch (error) {
         setStatus(false, "API offline");
@@ -349,6 +522,7 @@
         localStorage.setItem("blog_chat_session_id", sessionId);
         addMessage(data.mode === "error" ? "error" : "assistant", data.message || "Done.");
         setMeta(data);
+        loadSessions();
       } catch (error) {
         addMessage("error", error.message);
       } finally {
@@ -378,13 +552,21 @@
       localStorage.removeItem("blog_chat_session_id");
       messagesEl.innerHTML = '<div class="empty" id="emptyState">New chat started.</div>';
       setMeta(null);
+      loadSessions();
       input.focus();
     });
 
     healthBtn.addEventListener("click", () => checkHealth(true));
+    refreshSessionsBtn.addEventListener("click", loadSessions);
+    sessionsList.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-session-id]");
+      if (button) loadSession(button.dataset.sessionId);
+    });
 
     setMeta(null);
     checkHealth();
+    loadSessions();
+    if (sessionId) loadSession(sessionId);
     input.focus();
   </script>
 </body>

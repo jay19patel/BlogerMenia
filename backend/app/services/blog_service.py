@@ -8,7 +8,7 @@ Cache strategy:
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Tuple
 
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
@@ -17,9 +17,9 @@ from app.database.redis import (
     blog_cache_key, cache_delete, cache_delete_pattern, cache_get,
     cache_set, list_cache_key,
 )
-from app.domain.exceptions import ForbiddenError, NotFoundError
-from app.domain.models import CurrentUser
-from app.infrastructure.blog_repo import BlogRepository
+from app.exceptions import ForbiddenError, NotFoundError
+from app.models.blog import CurrentUser
+from app.repositories.blog_repo import BlogRepository
 
 logger = logging.getLogger(__name__)
 

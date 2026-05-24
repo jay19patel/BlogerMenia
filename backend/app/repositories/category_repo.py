@@ -11,7 +11,7 @@ from typing import List, Optional
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from app.domain.exceptions import NotFoundError
+from app.exceptions import NotFoundError
 
 logger = logging.getLogger(__name__)
 
