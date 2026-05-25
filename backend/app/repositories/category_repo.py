@@ -33,16 +33,39 @@ class CategoryRepository:
         self._col = db[COLLECTION]
 
     async def list_all(self) -> List[dict]:
-        """Return all categories sorted by name."""
-        cursor = self._col.find({}).sort("name", 1)
-        return [_to_out(doc) async for doc in cursor]
-
-    async def list_by_user(self, user_id: str) -> List[dict]:
-        """Return only categories that this user has published blogs under."""
+        """Return categories used by at least one published blog."""
         blog_col = self._col.database["blogs"]
         distinct_ids = await blog_col.distinct(
             "category",
-            {"author": ObjectId(user_id), "is_published": True},
+            {"is_published": True, "category": {"$ne": None}},
+        )
+        cursor = self._col.find({"_id": {"$in": distinct_ids}}).sort("name", 1)
+        return [_to_out(doc) async for doc in cursor]
+
+    async def list_by_user(self, user_id: str) -> List[dict]:
+        """Return categories used by a user identified by id, email, or username."""
+        users_col = self._col.database["users"]
+        blog_col = self._col.database["blogs"]
+
+        if ObjectId.is_valid(user_id):
+            author_id = ObjectId(user_id)
+        else:
+            user = await users_col.find_one(
+                {
+                    "$or": [
+                        {"email": user_id},
+                        {"username": user_id},
+                    ]
+                },
+                {"_id": 1},
+            )
+            if not user:
+                return []
+            author_id = user["_id"]
+
+        distinct_ids = await blog_col.distinct(
+            "category",
+            {"author": author_id, "is_published": True},
         )
         cursor = self._col.find({"_id": {"$in": distinct_ids}}).sort("name", 1)
         return [_to_out(doc) async for doc in cursor]

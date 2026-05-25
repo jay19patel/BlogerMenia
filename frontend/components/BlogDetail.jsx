@@ -569,11 +569,13 @@ export default function BlogDetailPage() {
                         {(section.attachment || section.url) && (
                             <div className="border-[4px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white overflow-hidden p-2">
                                 <div className="border-[4px] border-black relative group">
-                                    <img
+                                    <Image
                                         src={getImageUrl(section.attachment || section.url)}
                                         alt={section.attachment?.filename || section.title || 'Section image'}
+                                        width={1200}
+                                        height={675}
+                                        sizes="(min-width: 1024px) 896px, 100vw"
                                         className="w-full h-auto object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-500"
-                                        loading="lazy"
                                     />
                                 </div>
                                 {section.caption && (
@@ -823,7 +825,7 @@ export default function BlogDetailPage() {
                                 <div className="max-w-4xl">
                                     <div className="flex flex-wrap gap-3 mb-6">
                                         <span className="px-3 py-1 bg-white text-black text-[10px] uppercase font-mono font-bold tracking-widest border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                                            {blog.category ? (typeof blog.category === 'object' ? blog.category.name : blog.category) : 'General'}
+                                            {blog.category_name || (blog.category ? (typeof blog.category === 'object' ? blog.category.name : blog.category) : 'General')}
                                         </span>
                                         {blog.featured && (
                                             <span className="px-3 py-1 bg-purple-900 text-white text-[10px] uppercase font-mono font-bold tracking-widest border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
@@ -941,16 +943,22 @@ export default function BlogDetailPage() {
                                     >
                                         <div className="relative aspect-video overflow-hidden bg-purple-50 border-b-2 border-black">
                                             {(item.thumbnail || item.image) ? (
-                                                <img src={getImageUrl(item.thumbnail || item.image)} alt={item.title} className="w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 transition-all duration-500" />
+                                                <Image
+                                                    src={getImageUrl(item.thumbnail || item.image)}
+                                                    alt={item.title}
+                                                    fill
+                                                    sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                                                    className="object-cover grayscale-[30%] group-hover:grayscale-0 transition-all duration-500"
+                                                />
                                             ) : (
                                                 <div className="w-full h-full bg-purple-100 flex items-center justify-center">
                                                     <p className="text-purple-900 text-[10px] font-mono font-bold uppercase tracking-widest opacity-50">Sys-Log</p>
                                                 </div>
                                             )}
-                                            {item.category && (
+                                            {(item.category_name || item.category) && (
                                                 <div className="absolute top-2 left-2">
                                                     <span className="inline-flex items-center px-2 py-1 text-[10px] font-mono font-bold uppercase tracking-widest bg-white text-black border-2 border-black">
-                                                        {typeof item.category === 'object' ? item.category?.name : item.category}
+                                                        {item.category_name || (typeof item.category === 'object' ? item.category?.name : item.category)}
                                                     </span>
                                                 </div>
                                             )}

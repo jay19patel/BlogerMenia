@@ -13,13 +13,20 @@ const nextConfig = {
       { protocol: 'http',  hostname: 'localhost' },
       { protocol: 'https', hostname: 'res.cloudinary.com' },
       { protocol: 'https', hostname: 'storage.googleapis.com' },
+      { protocol: 'https', hostname: 'ui-avatars.com' },
     ],
   },
 
   reactStrictMode: true,
   output: 'standalone',
 
-  webpack(config) {
+  webpack(config, { dev }) {
+    // Next dev's persistent webpack cache cannot snapshot some resolved
+    // dependencies in this project and repeatedly logs warnings on HMR.
+    if (dev) {
+      config.cache = false;
+    }
+
     // next-auth v4 resolves uuid via the ESM-node entry (dist/esm-node/index.js)
     // which is missing in some uuid installs. Alias uuid to its CJS build using
     // an absolute path so webpack never hits the broken ESM entry point.

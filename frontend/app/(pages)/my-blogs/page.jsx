@@ -70,7 +70,10 @@ export default function MyBlogsPage() {
       if (!user?.email) return;
       try {
         const data = await api.getBlogCategories(user.email);
-        setCategories(["All", ...(data.categories || [])]);
+        const categoryNames = (data.categories || []).map((category) =>
+          typeof category === "string" ? category : category.name
+        );
+        setCategories(["All", ...categoryNames]);
       } catch (e) {
         console.error("Failed to fetch categories", e);
       } finally {

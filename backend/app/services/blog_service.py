@@ -13,7 +13,7 @@ from typing import Any, Dict, Tuple
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.database.redis import (
-    STATS_KEY, TTL_BLOG_DETAIL, TTL_BLOG_LIST, TTL_STATS,
+    CATEGORIES_KEY, STATS_KEY, TTL_BLOG_DETAIL, TTL_BLOG_LIST, TTL_STATS,
     blog_cache_key, cache_delete, cache_delete_pattern, cache_get,
     cache_set, list_cache_key,
 )
@@ -104,6 +104,7 @@ class BlogService:
         """Create blog and bust list + stats caches."""
         blog = await self._repo.create(data, current_user.id)
         await cache_delete_pattern("blogs:list:*")
+        await cache_delete(CATEGORIES_KEY)
         await cache_delete(STATS_KEY)
         return blog
 
@@ -122,6 +123,7 @@ class BlogService:
 
         updated = await self._repo.update(existing["id"], data)
         await cache_delete_pattern("blogs:list:*")
+        await cache_delete(CATEGORIES_KEY)
         await cache_delete(blog_cache_key(slug))
         await cache_delete(blog_cache_key(existing["id"]))
         return updated
@@ -139,6 +141,7 @@ class BlogService:
 
         await self._repo.delete(existing["id"], author_id)
         await cache_delete_pattern("blogs:list:*")
+        await cache_delete(CATEGORIES_KEY)
         await cache_delete(blog_cache_key(slug))
         await cache_delete(blog_cache_key(existing["id"]))
         await cache_delete(STATS_KEY)

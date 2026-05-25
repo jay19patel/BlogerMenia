@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Camera, User, Mail, FileText, Save, MessageSquare, Sparkles } from "lucide-react";
 import TestimonialModal from "@/components/TestimonialModal";
 import { getImageUrl } from "@/lib/utils";
+import Image from "next/image";
 
 export default function ProfilePage() {
   const { user, token, updateProfile } = useAuth();
@@ -178,10 +179,12 @@ export default function ProfilePage() {
               <div className="flex flex-col md:flex-row items-center gap-8">
                 <div className="relative group w-32 h-32 border-2 border-foreground bg-zinc-100 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] overflow-hidden shrink-0">
                     {formData.profile_image ? (
-                        <img 
+                        <Image
                             src={getImageUrl(formData.profile_image)} 
                             alt={user?.full_name || user?.email} 
-                            className="w-full h-full object-cover transition-all duration-500"
+                            fill
+                            sizes="128px"
+                            className="object-cover transition-all duration-500"
                         />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center bg-foreground text-background">
@@ -351,4 +354,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-

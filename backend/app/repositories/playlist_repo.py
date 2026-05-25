@@ -12,6 +12,7 @@ from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.exceptions import NotFoundError
+from app.services.media_urls import normalise_media_paths
 
 logger = logging.getLogger(__name__)
 
@@ -108,7 +109,7 @@ class PlaylistRepository:
         docs = []
         async for doc in cursor:
             s = _serialise(doc)
-            docs.append(await _populate(self._db, s))
+            docs.append(normalise_media_paths(await _populate(self._db, s)))
         return total, docs
 
     async def get_by_id_or_slug(self, playlist_id: str) -> Optional[dict]:
@@ -118,7 +119,7 @@ class PlaylistRepository:
             doc = await self._col.find_one({"slug": playlist_id})
         if not doc:
             return None
-        return await _populate(self._db, _serialise(doc))
+        return normalise_media_paths(await _populate(self._db, _serialise(doc)))
 
     # ── Mutations ─────────────────────────────────────────────────────────────
 
@@ -155,7 +156,7 @@ class PlaylistRepository:
         }
         result = await self._col.insert_one(doc)
         created = await self._col.find_one({"_id": result.inserted_id})
-        return await _populate(self._db, _serialise(created))
+        return normalise_media_paths(await _populate(self._db, _serialise(created)))
 
     async def update(self, playlist_id: str, data: dict) -> dict:
         payload = {k: v for k, v in data.items() if k not in ("_id", "owner")}
@@ -179,7 +180,7 @@ class PlaylistRepository:
 
         await self._col.update_one({"_id": oid}, {"$set": payload})
         doc = await self._col.find_one({"_id": oid})
-        return await _populate(self._db, _serialise(doc))
+        return normalise_media_paths(await _populate(self._db, _serialise(doc)))
 
     async def delete(self, playlist_id: str) -> None:
         if _is_oid(playlist_id):

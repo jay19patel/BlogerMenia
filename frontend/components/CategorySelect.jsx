@@ -32,6 +32,7 @@ export default function CategorySelect({
                 let list = [];
 
                 if (Array.isArray(data)) list = data;
+                else if (Array.isArray(data.categories)) list = data.categories;
                 else if (Array.isArray(data.results)) list = data.results;
                 else if (Array.isArray(data.items)) list = data.items;
 
@@ -92,6 +93,7 @@ export default function CategorySelect({
 
             let list = [];
             if (Array.isArray(data)) list = data;
+            else if (Array.isArray(data.categories)) list = data.categories;
             else if (Array.isArray(data.results)) list = data.results;
             else if (Array.isArray(data.items)) list = data.items;
 

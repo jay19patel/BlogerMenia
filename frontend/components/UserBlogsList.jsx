@@ -132,7 +132,7 @@ export default function UserBlogsList({ username }) {
         slug: blog.slug,
         title: blog.title,
         description: blog.excerpt,
-        image: blog.thumbnail?.file_path || blog.image,
+        image: blog.thumbnail?.file_path || blog.thumbnail || blog.image,
         category: blog.category_name || (typeof blog.category === 'string' ? blog.category : blog.category?.name),
         date: formatDate(blog.publishedDate || blog.created_at),
         featured: blog.featured || false,
@@ -318,10 +318,12 @@ export default function UserBlogsList({ username }) {
                                         <div className="relative h-full flex flex-col bg-background border-2 border-foreground overflow-hidden hover:shadow-[4px_4px_0px_0px_rgba(88,28,135,1)] hover:-translate-y-1 hover:-translate-x-1 transition-all duration-300">
                                             <div className="relative aspect-video overflow-hidden bg-zinc-100 border-b-2 border-foreground">
                                                 {(typeof (playlist.cover_image || playlist.thumbnail) === 'string' ? (playlist.cover_image || playlist.thumbnail) : (playlist.cover_image?.file_path || playlist.thumbnail?.file_path)) ? (
-                                                    <img
+                                                    <Image
                                                         src={getImageUrl(typeof (playlist.cover_image || playlist.thumbnail) === 'string' ? (playlist.cover_image || playlist.thumbnail) : (playlist.cover_image?.file_path || playlist.thumbnail?.file_path))}
                                                         alt={playlist.name}
-                                                        className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-all duration-500"
+                                                        fill
+                                                        sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                                                        className="object-cover opacity-90 group-hover:opacity-100 transition-all duration-500"
                                                     />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center bg-foreground text-background">

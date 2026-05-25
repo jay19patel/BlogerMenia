@@ -11,6 +11,8 @@ dependencies = [
     "pydantic-settings>=2.14.1",
     # MongoDB
     "motor>=3.7.0",
+    # Seeded users must authenticate through the frontend bcrypt login flow
+    "bcrypt>=4.2.0",
     # Redis
     "redis>=5.0.0",
     # JWT validation

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { User, Mail, Calendar, FileText, MapPin, Briefcase } from 'lucide-react';
+import Image from 'next/image';
 import { api } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { getImageUrl } from '@/lib/utils';
@@ -107,12 +108,14 @@ export default function AuthorTooltip({ userId, children }) {
             <div className="space-y-3">
               {/* Header with profile image and name */}
               <div className="flex items-start gap-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-lg flex-shrink-0">
+                <div className="relative overflow-hidden w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-lg flex-shrink-0">
                   {userInfo.profile_image ? (
-                    <img
+                    <Image
                       src={getImageUrl(userInfo.profile_image)}
                       alt={userInfo.full_name || userInfo.username}
-                      className="w-full h-full rounded-full object-cover"
+                      fill
+                      sizes="48px"
+                      className="rounded-full object-cover"
                     />
                   ) : (
                     <User className="w-6 h-6" />

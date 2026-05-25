@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Eye, Heart } from "lucide-react";
 import { getImageUrl } from "../lib/utils";
 
@@ -12,7 +13,7 @@ export default function HorizontalBlogCard({ blog }) {
         return `/blogs/${blog.slug}`;
     };
 
-    const imagePath = blog.thumbnail?.file_path || blog.image;
+    const imagePath = blog.thumbnail?.file_path || blog.thumbnail || blog.image;
 
     return (
         <Link href={getBlogUrl()} className="block group h-full">
@@ -20,10 +21,12 @@ export default function HorizontalBlogCard({ blog }) {
                 {/* Image Section - Left side on desktop */}
                 <div className="md:w-1/3 relative min-h-[200px] border-b-2 md:border-b-0 md:border-r-2 border-foreground bg-background flex-shrink-0 overflow-hidden">
                     {imagePath ? (
-                        <img
+                        <Image
                             src={getImageUrl(imagePath)}
                             alt={blog.title}
-                            className="absolute inset-0 w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
+                            fill
+                            sizes="(min-width: 768px) 33vw, 100vw"
+                            className="object-cover transition-all duration-500 group-hover:scale-105"
                         />
                     ) : (
                         <div className="w-full h-full bg-foreground flex items-center justify-center text-background">

@@ -23,13 +23,13 @@ def get_gcs_client() -> storage.Client | None:
     if _storage_client is not None:
         return _storage_client
 
-    key_path = "/app/gcs-key.json"
     try:
-        if os.path.exists(key_path):
-            _storage_client = storage.Client.from_service_account_json(key_path)
-            logger.info("GCS Storage client successfully initialized via mounted key file.")
+        key_path = settings.gcs_credentials_path
+        if key_path and key_path.exists():
+            _storage_client = storage.Client.from_service_account_json(str(key_path))
+            logger.info("GCS Storage client initialized from %s.", key_path)
         else:
-            logger.warning("GCS mounted key file not found at %r. Falling back to default credentials.", key_path)
+            logger.info("GCS credentials file not configured; using application default credentials.")
             _storage_client = storage.Client()
     except Exception as exc:
         logger.error("Failed to initialize Google Cloud Storage Client: %s", exc, exc_info=True)
@@ -112,4 +112,3 @@ def save_locally(file_bytes: bytes, gcs_path: str) -> str:
         f.write(file_bytes)
     logger.info("File saved locally: %s", full_path)
     return f"/uploads/{gcs_path}"
-
