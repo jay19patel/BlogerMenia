@@ -96,6 +96,51 @@ A detailed architecture review is available at [backend/BACKBONE_ARCHITECTURE_AU
 - Redis
 - `uv` recommended for Python environment management
 
+### GCP VM Docker deployment and local MongoDB Compass access
+
+MongoDB is intentionally bound to `127.0.0.1:27017` on the VM. The backend
+and frontend reach it over the Docker network, while a local computer reaches
+it through an SSH tunnel. This avoids opening the database port to the internet.
+
+On the GCP VM:
+
+```bash
+cp .env.gcp.example .env
+# Edit .env and set strong MONGO_PASSWORD and NEXTAUTH_SECRET values.
+docker compose up -d
+docker compose ps
+```
+
+For a new VM this creates the MongoDB root user from `.env`. If `mongo_data`
+already contains an initialized database, changing `MONGO_PASSWORD` alone does
+not change that existing user's password.
+
+On your local machine, keep this terminal command running:
+
+```bash
+gcloud compute ssh VM_NAME \
+  --project=PROJECT_ID \
+  --zone=ZONE \
+  -- -N -L 27018:127.0.0.1:27017
+```
+
+Then connect from MongoDB Compass on your local machine using the username,
+password, and database configured in the VM's `.env`:
+
+```text
+mongodb://admin:<MONGO_PASSWORD>@127.0.0.1:27018/blogermenia?authSource=admin
+```
+
+Use local port `27018` so this tunnel does not conflict with any MongoDB
+already running locally. The GCP firewall only needs SSH access for this
+workflow; do not create a public ingress rule for TCP port `27017`.
+
+To test the tunnel from a local shell with MongoDB Shell installed:
+
+```bash
+mongosh "mongodb://admin:<MONGO_PASSWORD>@127.0.0.1:27018/blogermenia?authSource=admin"
+```
+
 ### Backend setup
 
 ```bash
@@ -151,4 +196,3 @@ The next implementation phase should focus on framework maturity instead of addi
 - This project is not Django-based anymore. The current backend is FastAPI + Beanie.
 - `Backbone` is the most important reusable layer in the backend and should be treated as a framework package, not just app code.
 - New features should prefer clean extension points over putting more logic directly into routers.
-
