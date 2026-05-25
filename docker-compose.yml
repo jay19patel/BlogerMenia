@@ -6,8 +6,11 @@ services:
     image: mongo:7
     container_name: blogermenia_mongo
     restart: unless-stopped
+    # Listen inside the container for Docker services and external clients.
+    command: ["mongod", "--bind_ip_all"]
     ports:
-      - "27017:27017"
+      # On a VM, keep this on loopback and reach it through an SSH tunnel.
+      - "${MONGO_HOST_BIND_IP:-127.0.0.1}:${MONGO_EXTERNAL_PORT:-27017}:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-admin}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-password}
@@ -89,7 +92,7 @@ services:
     environment:
       # NextAuth
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
-      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
       # Google OAuth
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
