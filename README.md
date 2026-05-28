@@ -176,9 +176,9 @@ GCS_CREDENTIALS_JSON='{"type":"service_account","project_id":"..."}'
 
 ### Backend deployment on Vercel
 
-Create the Vercel project with `backend/` as the project root. The backend has
-an `index.py` entrypoint for Vercel's FastAPI auto-detection, so no custom build
-or start command is required.
+Create the Vercel project with `backend/` as the project root. The backend uses
+the existing `main.py` as the Vercel Python serverless entrypoint, and that file
+imports the FastAPI app from `app/main.py`.
 
 Set these environment variables in Vercel:
 
