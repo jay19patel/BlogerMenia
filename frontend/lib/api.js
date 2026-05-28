@@ -41,7 +41,10 @@ async function getBackendToken() {
   if (_cachedToken && now < _tokenExpiry) return _cachedToken;
 
   const res = await fetch(`${NEXT_API}/auth/backend-token`, { method: 'POST' });
-  if (!res.ok) return null;
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || 'Could not create backend auth token. Please log in again.');
+  }
   const data = await res.json();
   _cachedToken = data.access_token;
   // Expire 5 minutes before the token actually expires (1hr - 5min = 55min)
@@ -108,9 +111,7 @@ function jsonHeaders() {
 
 async function authHeaders() {
   const token = await getBackendToken();
-  return token
-    ? { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
-    : { 'Content-Type': 'application/json' };
+  return { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
