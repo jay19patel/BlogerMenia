@@ -7,7 +7,7 @@ import Breadcrumb from "@/components/Breadcrumb";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { api } from "@/lib/api";
 import LoaderCard from "@/components/ui/loader";
-import { formatDate } from "../lib/utils";
+import { getBlogDate, formatDate } from "../lib/utils";
 
 const BLOGS_PER_PAGE = 9;
 
@@ -89,11 +89,11 @@ export default function BlogsList() {
         description: blog.excerpt,
         image: blog.thumbnail?.file_path || blog.thumbnail || blog.image,
         category: blog.category_name || blog.category?.name || "General",
-        date: formatDate(blog.publishedDate || blog.created_at),
+        date: formatDate(getBlogDate(blog), "Date"),
         featured: blog.featured || false,
-        publishedDate: blog.publishedDate,
+        publishedDate: getBlogDate(blog),
         authorFullName: blog.author?.full_name,
-        authorUsername: blog.author?.username || blog.author?.email,
+        authorUsername: blog.author?.username || blog.author?.email || blog.author?.id,
         authorEmail: blog.author?.email,
         views: blog.views,
         likes: blog.likes

@@ -8,7 +8,7 @@ import { ChevronLeft, ChevronRight, Plus, Eye, Heart, Star, BookOpen, ListMusic,
 import Link from "next/link";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatDate, getImageUrl } from "@/lib/utils";
+import { getBlogDate, formatDate, getImageUrl } from "@/lib/utils";
 import Image from "next/image";
 
 const BLOGS_PER_PAGE = 10;
@@ -422,7 +422,7 @@ export default function MyBlogsPage() {
                           </td>
                         )}
                         <td className="px-6 py-4 text-sm font-mono text-foreground">
-                          {formatDate(blog.publishedDate || blog.created_at)}
+                          {formatDate(getBlogDate(blog), "Date")}
                         </td>
                         <td className="px-6 py-4 text-center">
                           <div className="flex items-center justify-center gap-2 text-foreground">
