@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Search, ChevronLeft, ChevronRight, Share2 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { api } from "@/lib/api";
 import { getImageUrl } from "@/lib/utils";
 import LoaderCard from "@/components/ui/loader";
@@ -143,10 +144,12 @@ export default function CreatorsList() {
                                         <div className="relative w-full sm:w-1/3 shrink-0 border-b-2 sm:border-b-0 sm:border-r-2 border-foreground bg-indigo-50 flex flex-col justify-center items-center p-6">
                                             <div className="w-20 h-20 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(88,28,135,1)] bg-white overflow-hidden relative">
                                                 {author.profile_image ? (
-                                                    <img
+                                                    <Image
                                                         src={getImageUrl(author.profile_image?.file_path || author.profile_image)}
                                                         alt={author.full_name || author.email}
-                                                        className="w-full h-full object-cover transition-all"
+                                                        fill
+                                                        sizes="80px"
+                                                        className="object-cover transition-all"
                                                     />
                                                 ) : (
                                                     <div className="w-full h-full bg-foreground flex items-center justify-center text-background">

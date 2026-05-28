@@ -12,6 +12,7 @@ from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.exceptions import NotFoundError
+from app.services.media_urls import normalise_media_paths
 
 logger = logging.getLogger(__name__)
 
@@ -128,7 +129,7 @@ class BlogRepository:
         async for doc in cursor:
             serialised = _serialise(doc)
             populated = await _populate(self._db, serialised)
-            docs.append(populated)
+            docs.append(normalise_media_paths(populated))
 
         return total, docs
 
@@ -143,7 +144,7 @@ class BlogRepository:
             return None
 
         serialised = _serialise(doc)
-        return await _populate(self._db, serialised)
+        return normalise_media_paths(await _populate(self._db, serialised))
 
     # ── Mutations ─────────────────────────────────────────────────────────────
 
@@ -168,16 +169,20 @@ class BlogRepository:
 
         # Resolve category ObjectId
         category_oid = None
+        category_name = None
         if data.get("category"):
             cat_val = data["category"]
             if _is_object_id(cat_val):
                 category_oid = ObjectId(cat_val)
+                cat_doc = await self._db["categories"].find_one({"_id": category_oid}, CATEGORY_FIELDS)
             else:
                 cat_doc = await self._db["categories"].find_one(
                     {"name": re.compile(f"^{re.escape(cat_val)}$", re.IGNORECASE)}
                 )
                 if cat_doc:
                     category_oid = cat_doc["_id"]
+            if cat_doc:
+                category_name = cat_doc["name"]
 
         insert_doc = {
             **{k: v for k, v in data.items() if k not in ("introduction", "conclusion", "sections")},
@@ -185,6 +190,7 @@ class BlogRepository:
             "content": content,
             "author": ObjectId(author_id),
             "category": category_oid,
+            "category_name": category_name,
             "views": 0,
             "likes": 0,
             "featured": data.get("featured", False),
@@ -200,7 +206,7 @@ class BlogRepository:
         )
 
         doc = await self._col.find_one({"_id": result.inserted_id})
-        return await _populate(self._db, _serialise(doc))
+        return normalise_media_paths(await _populate(self._db, _serialise(doc)))
 
     async def update(self, blog_id: str, data: dict) -> dict:
         """Update blog fields and return the updated populated document."""
@@ -225,17 +231,19 @@ class BlogRepository:
             cat_val = data["category"]
             if _is_object_id(cat_val):
                 data["category"] = ObjectId(cat_val)
+                cat_doc = await self._db["categories"].find_one({"_id": data["category"]}, CATEGORY_FIELDS)
             else:
                 cat_doc = await self._db["categories"].find_one(
                     {"name": re.compile(f"^{re.escape(cat_val)}$", re.IGNORECASE)}
                 )
                 data["category"] = cat_doc["_id"] if cat_doc else None
+            data["category_name"] = cat_doc["name"] if cat_doc else None
 
         update_dict.update({k: v for k, v in data.items() if v is not None})
 
         await self._col.update_one({"_id": ObjectId(blog_id)}, {"$set": update_dict})
         doc = await self._col.find_one({"_id": ObjectId(blog_id)})
-        return await _populate(self._db, _serialise(doc))
+        return normalise_media_paths(await _populate(self._db, _serialise(doc)))
 
     async def delete(self, blog_id: str, author_id: str) -> None:
         """Delete a blog and decrement the author's blog_count."""

@@ -27,16 +27,6 @@ export function getImageUrl(path) {
     return cleanPath;
   }
 
-  // Handle GCS paths that were saved as public_id (e.g. blogermenia/...)
-  if (cleanPath.startsWith('/blogermenia/')) {
-    if (process.env.NODE_ENV === 'development') {
-      return `/uploads${cleanPath}`;
-    } else {
-      const bucket = process.env.NEXT_PUBLIC_GCS_BUCKET_NAME || 'blogermenia';
-      return `https://storage.googleapis.com/${bucket}${cleanPath}`;
-    }
-  }
-
   return cleanPath;
 }
 

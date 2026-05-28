@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any
 
 from pydantic import field_validator
@@ -8,12 +9,13 @@ class Settings(BaseSettings):
     """Application settings — loaded from environment variables or .env file."""
 
     # ── Local Ollama ─────────────────────────────────────────────────────────
-    ollama_base_url: str = "http://host.docker.internal:11434"
+    ollama_base_url: str = "http://127.0.0.1:11434"
     ollama_model: str = "llama3.1"
 
     # ── GCS ───────────────────────────────────────────────────────────────────
     gcs_bucket_name: str = "blogermenia"
-    use_gcs: bool = False
+    gcs_credentials_json: str | None = None
+    gcs_credentials_path: Path | None = None
 
     # ── MongoDB ───────────────────────────────────────────────────────────────
     mongodb_uri: str = "mongodb://localhost:27017"

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Calendar, Tag, Star, Eye, Heart } from "lucide-react";
 import { getImageUrl, formatDate } from "../lib/utils";
 
@@ -22,10 +23,12 @@ export default function BlogCard({ blog }) {
         {/* Image */}
         <div className="relative aspect-video overflow-hidden bg-background border-b-2 border-foreground">
           {imagePath ? (
-            <img
+            <Image
               src={getImageUrl(imagePath)}
               alt={blog.title}
-              className="w-full h-full object-cover transition-all duration-500 hover:scale-105"
+              fill
+              sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+              className="object-cover transition-all duration-500 hover:scale-105"
             />
           ) : (
             <div className="w-full h-full bg-foreground flex items-center justify-center text-background">

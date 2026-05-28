@@ -96,24 +96,39 @@ A detailed architecture review is available at [backend/BACKBONE_ARCHITECTURE_AU
 - Redis
 - `uv` recommended for Python environment management
 
-### GCP VM Docker deployment and local MongoDB Compass access
+### Standalone MongoDB and Redis Docker services
 
-MongoDB is intentionally bound to `127.0.0.1:27017` on the VM. The backend
-and frontend reach it over the Docker network, while a local computer reaches
-it through an SSH tunnel. This avoids opening the database port to the internet.
-
-On the GCP VM:
+The root [docker-compose.yml](/Users/jaypatel/Desktop/Development/Jay/Blogermenia-Djnago/docker-compose.yml)
+runs only MongoDB and Redis. Frontend and backend still run separately and
+continue using their own two env files.
 
 ```bash
-cp .env.gcp.example .env
-# Edit .env and set strong MONGO_PASSWORD and NEXTAUTH_SECRET values.
 docker compose up -d
 docker compose ps
 ```
 
-For a new VM this creates the MongoDB root user from `.env`. If `mongo_data`
-already contains an initialized database, changing `MONGO_PASSWORD` alone does
-not change that existing user's password.
+By default the containers match the existing application env files:
+
+```text
+MongoDB: mongodb://admin:password@127.0.0.1:27017/blogermenia?authSource=admin
+Redis:   redis://127.0.0.1:6379
+```
+
+MongoDB and Redis are exposed only on `127.0.0.1`, so they are usable by apps
+running on the same VM without publishing database ports to the internet.
+
+To set a stronger MongoDB password without creating a third env file:
+
+```bash
+MONGO_PASSWORD='replace-with-a-long-password' docker compose up -d
+```
+
+Use the same password in the `MONGODB_URI` values inside `backend/.env` and
+`frontend/.env.local`. MongoDB initialization variables apply when the
+`mongo_data` volume is first created; they do not reset an existing database
+user's password.
+
+### GCP VM and local MongoDB Compass access
 
 On your local machine, keep this terminal command running:
 
@@ -125,7 +140,7 @@ gcloud compute ssh VM_NAME \
 ```
 
 Then connect from MongoDB Compass on your local machine using the username,
-password, and database configured in the VM's `.env`:
+password, and database configured in the application env files:
 
 ```text
 mongodb://admin:<MONGO_PASSWORD>@127.0.0.1:27018/blogermenia?authSource=admin
@@ -149,6 +164,63 @@ uv sync
 uv run uvicorn main:app --reload
 ```
 
+Configure `backend/.env` with MongoDB, Redis, auth, Ollama, and GCS settings.
+For GCS uploads, put the service-account JSON directly in the env file instead
+of relying on a local JSON key path:
+
+```env
+ENVIRONMENT="production"
+GCS_BUCKET_NAME="blogermenia"
+GCS_CREDENTIALS_JSON='{"type":"service_account","project_id":"..."}'
+```
+
+### Backend deployment on Vercel
+
+Create the Vercel project with `backend/` as the project root. The backend uses
+the existing `main.py` as the Vercel Python serverless entrypoint, and that file
+imports the FastAPI app from `app/main.py`.
+
+Set these environment variables in Vercel:
+
+```env
+ENVIRONMENT="production"
+MONGODB_URI="mongodb+srv://..."
+MONGODB_DB="blogermenia"
+REDIS_URL="rediss://..."
+NEXTAUTH_SECRET="..."
+NEXT_PUBLIC_API_URL="https://your-backend.vercel.app"
+GCS_BUCKET_NAME="blogermenia"
+GCS_CREDENTIALS_JSON='{"type":"service_account","project_id":"..."}'
+```
+
+`REDIS_URL` can be omitted or left unreachable if you want caching disabled,
+but `MONGODB_URI` must point to a publicly reachable MongoDB deployment.
+
+### Database seeding
+
+Seed data is defined directly in one Python backend script; there is no
+separate JSON seed-data directory or JavaScript seed project. With MongoDB
+running and `backend/.env` configured:
+
+```bash
+cd backend
+uv run python scripts/seed_database.py
+```
+
+The seeder creates or updates categories, users, blogs, playlists, FAQs and
+testimonials using stable records and proper MongoDB references. It is safe to
+run repeatedly and includes a login user:
+
+```text
+user1@example.com / password1
+```
+
+To refresh only records managed by this Python seeder before inserting them:
+
+```bash
+uv run python scripts/seed_database.py --reset
+```
+
 ### Frontend setup
 
 ```bash
@@ -157,22 +229,22 @@ npm install
 npm run dev
 ```
 
-### Suggested environment variables for backend
+### Environment ownership
 
-Create `backend/.env`:
+`frontend/.env.local` contains only the variables used by the Next.js app:
 
-```env
-SECRET_KEY=replace_with_a_real_secret
-ENVIRONMENT=develop
-MONGODB_URL=mongodb://localhost:27017
-DATABASE_NAME=backbone_app
-CACHE_ENABLED=true
-REDIS_URL=redis://localhost:6379/0
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-CLOUDINARY_URL=
-CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
-```
+- MongoDB connection, NextAuth, Google OAuth and backend public URL
+- shared `NEXTAUTH_SECRET` used by NextAuth and legacy auth routes
+
+`backend/.env` contains only the variables consumed by FastAPI:
+
+- MongoDB and Redis connection settings
+- shared `NEXTAUTH_SECRET` token verification setting
+- Ollama model settings
+- environment, API upload URL, GCS bucket and GCS credential-file setting
+
+Only these two application env files are used. `NEXTAUTH_SECRET` must match in
+both files, and both `MONGODB_URI` values must point to the same database.
 
 ## Backend Entry Points
 

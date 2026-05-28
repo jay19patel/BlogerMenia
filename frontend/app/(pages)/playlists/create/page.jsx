@@ -17,6 +17,7 @@ import {
     ChevronLeft
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { toast } from 'sonner';
 import { formatDate, getImageUrl } from '@/lib/utils';
 
@@ -208,7 +209,7 @@ export default function CreatePlaylistPage() {
                                         className="relative group overflow-hidden mb-4 aspect-video bg-background border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] flex items-center justify-center cursor-pointer hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
                                     >
                                         {imagePreview ? (
-                                            <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                                            <Image src={imagePreview} alt="Preview" fill sizes="100vw" className="object-cover" />
                                         ) : (
                                             <div className="text-center">
                                                 <Upload className="w-10 h-10 text-foreground mx-auto mb-2" />
@@ -333,10 +334,12 @@ export default function CreatePlaylistPage() {
                                                 key={getBlogId(blog)}
                                                 className="group bg-background p-4 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex items-center gap-4"
                                             >
-                                                <div className="w-16 h-16 bg-background overflow-hidden shrink-0 border-2 border-foreground">
-                                                    <img
+                                                <div className="relative w-16 h-16 bg-background overflow-hidden shrink-0 border-2 border-foreground">
+                                                    <Image
                                                         src={getImageUrl(blog.thumbnail)}
-                                                        className="w-full h-full object-cover"
+                                                        fill
+                                                        sizes="64px"
+                                                        className="object-cover"
                                                         alt=""
                                                         onError={(e) => { e.target.style.display = 'none'; }}
                                                     />
@@ -415,10 +418,12 @@ export default function CreatePlaylistPage() {
                                                         : 'border-foreground'
                                                 }`}
                                             >
-                                                <div className="w-12 h-12 bg-background overflow-hidden shrink-0 border-2 border-foreground">
-                                                    <img
+                                                <div className="relative w-12 h-12 bg-background overflow-hidden shrink-0 border-2 border-foreground">
+                                                    <Image
                                                         src={getImageUrl(blog.thumbnail)}
-                                                        className="w-full h-full object-cover"
+                                                        fill
+                                                        sizes="48px"
+                                                        className="object-cover"
                                                         alt=""
                                                         onError={(e) => { e.target.style.display = 'none'; }}
                                                     />

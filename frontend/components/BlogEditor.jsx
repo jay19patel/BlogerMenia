@@ -10,6 +10,7 @@ import {
   Type, List, Code, Table, Youtube, FileText, Link as LinkIcon, Image as ImageIcon, Upload, Send, Bot, User, GitBranch, Palette
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -114,10 +115,13 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
       const catValue = initialData.category;
       if (catValue && typeof catValue === "object" && catValue.name) {
         setCategory(catValue.name);
+        setCategoryId(catValue.id || catValue._id || null);
       } else if (typeof catValue === "string") {
         setCategory(catValue);
+        setCategoryId(null);
       } else {
-        setCategory("");
+        setCategory(initialData.category_name || "");
+        setCategoryId(null);
       }
       
       setFeatured(initialData.featured || false);
@@ -703,20 +707,21 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
     setSaving(true);
     try {
       let finalImageUrl = image;
-      let finalImageId = null;
+      let finalThumbnail = null;
 
-      // Extract existing thumbnail ID if present
+      // Retain the existing thumbnail value when no new image is uploaded.
       if (isEditMode && initialData?.thumbnail) {
-        finalImageId = typeof initialData.thumbnail === 'object' ? (initialData.thumbnail.id || initialData.thumbnail._id) : initialData.thumbnail;
+        finalThumbnail = typeof initialData.thumbnail === 'object'
+          ? (initialData.thumbnail.file_path || initialData.thumbnail.url || initialData.thumbnail.id || initialData.thumbnail._id)
+          : initialData.thumbnail;
       }
 
       // 1. Upload main thumbnail if file exists
       if (imageFile) {
         try {
           const uploadRes = await api.uploadImage(imageFile, 'blogs', token);
-          finalImageUrl = uploadRes.url;
-          // Use public_id if id is not available from Next.js local API
-          finalImageId = uploadRes.id || uploadRes.public_id || uploadRes._id;
+          finalImageUrl = uploadRes.file_path || uploadRes.url;
+          finalThumbnail = finalImageUrl;
         } catch (uploadError) {
           console.error("Error uploading thumbnail:", uploadError);
           toast.error("Failed to upload thumbnail image");
@@ -731,7 +736,7 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
           try {
             const uploadRes = await api.uploadImage(section.imageFile, 'blogs', token);
             const { imageFile, imagePreview, imageUrl, imageId, id, ...rest } = section;
-            return { ...rest, attachment: uploadRes.id || uploadRes.public_id || uploadRes._id };
+            return { ...rest, attachment: uploadRes.file_path || uploadRes.url };
           } catch (uploadError) {
             console.error("Error uploading section image:", uploadError);
             toast.error(`Failed to upload image for section: ${section.title || 'Untitled'}`);
@@ -749,8 +754,11 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
         return rest;
       }));
 
-      // Category is already resolved by CategorySelect — use categoryId directly
-      const finalCategoryId = categoryId || null;
+      // Resolve typed/imported categories too, not only dropdown selections.
+      const finalCategoryId = categoryId || await api.getOrCreateCategory(category);
+      if (!finalCategoryId) {
+        throw new Error("Unable to resolve the selected category.");
+      }
 
       const blogData = {
         slug,
@@ -762,7 +770,7 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
         author: isEditMode ? (initialData?.author?.id || initialData?.author?._id || user?.id || user?._id || "Anonymous") : (user?.id || user?._id || "Anonymous"),
         publishedDate: isEditMode ? (initialData?.publishedDate || initialData?.created_at || new Date().toISOString().split("T")[0]) : new Date().toISOString().split("T")[0],
         tags: tags.split(",").map((t) => t.trim()).filter((t) => t.length > 0),
-        thumbnail: finalImageId || undefined,
+        thumbnail: finalThumbnail || undefined,
         image: finalImageUrl,
         category: finalCategoryId,
         featured,
@@ -995,7 +1003,7 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
                   Category *
                 </label>
                 <CategorySelect
-                  categoryId={category}
+                  categoryId={categoryId}
                   categoryName={category}
                   onSelect={(id, name) => { setCategoryId(id); setCategory(name); }}
                   token={token}
@@ -1041,10 +1049,12 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
                 >
                   {imagePreview || image ? (
                     <>
-                      <img
+                      <Image
                         src={getImageUrl(imagePreview || image)}
                         alt="Preview"
-                        className="w-full h-full object-cover"
+                        fill
+                        sizes="100vw"
+                        className="object-cover"
                       />
                       <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
                         <div className="flex items-center gap-2 text-white font-medium">
@@ -1423,10 +1433,12 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
                       >
                         {section.imagePreview || section.imageUrl || section.attachment ? (
                           <>
-                            <img
+                            <Image
                               src={getImageUrl(section.imagePreview || section.imageUrl || section.attachment)}
                               alt="Preview"
-                              className="w-full h-full object-cover"
+                              fill
+                              sizes="100vw"
+                              className="object-cover"
                             />
                             <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
                               <div className="flex items-center gap-2 text-white font-medium">

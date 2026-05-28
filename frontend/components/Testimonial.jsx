@@ -150,9 +150,11 @@ export default function Testimonial() {
                     </div>
 
                     <div className="flex items-center gap-5 mb-8 border-b-2 border-gray-100 pb-6 relative z-10">
-                      <div className="w-16 h-16 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] bg-white overflow-hidden shrink-0">
-                        <img
-                          className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                      <div className="relative w-16 h-16 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] bg-white overflow-hidden shrink-0">
+                        <Image
+                          fill
+                          sizes="64px"
+                          className="object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
                           src={image ? getImageUrl(image?.file_path || image) : `https://ui-avatars.com/api/?name=${name}&background=0D1117&color=fff&rounded=false&bold=true`}
                           alt={name}
                         />

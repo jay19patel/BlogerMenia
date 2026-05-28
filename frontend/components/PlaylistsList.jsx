@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Search, ChevronLeft, ChevronRight, PlayCircle, ListMusic } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { api } from "@/lib/api";
 import { getImageUrl } from "@/lib/utils";
 import LoaderCard from "@/components/ui/loader";
@@ -140,12 +141,14 @@ export default function PlaylistsList() {
                                 >
                                     <div className="flex flex-col md:flex-row h-full">
                                         {/* Image Box */}
-                                        <div className="md:w-1/3 relative overflow-hidden border-b-2 md:border-b-0 md:border-r-2 border-foreground bg-gray-100 flex items-center justify-center shrink-0">
-                                            {playlist.thumbnail ? (
-                                                <img
-                                                    src={getImageUrl(playlist.thumbnail?.file_path || playlist.thumbnail)}
+                                        <div className="aspect-video md:aspect-auto md:w-1/3 relative overflow-hidden border-b-2 md:border-b-0 md:border-r-2 border-foreground bg-gray-100 flex items-center justify-center shrink-0">
+                                            {(playlist.cover_image || playlist.thumbnail) ? (
+                                                <Image
+                                                    src={getImageUrl(playlist.cover_image || playlist.thumbnail)}
                                                     alt={playlist.name}
-                                                    className="w-full h-full object-cover transition-all duration-500"
+                                                    fill
+                                                    sizes="(min-width: 768px) 33vw, 100vw"
+                                                    className="object-cover transition-all duration-500"
                                                 />
                                             ) : (
                                                 <div className="w-full h-full bg-foreground flex items-center justify-center p-4 text-center text-background font-mono font-bold text-sm">

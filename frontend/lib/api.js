@@ -258,7 +258,8 @@ export const api = {
     if (username) url += `?username=${encodeURIComponent(username)}`;
     try {
       const res = await fetch(url, { method: 'GET', headers: jsonHeaders() });
-      return handleResponse(res);
+      const data = await handleResponse(res);
+      return Array.isArray(data) ? { categories: data } : data;
     } catch (error) {
       throw new Error(fetchErrorMessage(error, url));
     }

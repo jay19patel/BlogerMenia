@@ -3,18 +3,18 @@ import path from 'path';
 import crypto from 'crypto';
 
 const DB_FILE = path.join(process.cwd(), 'lib', 'db.json');
-const JWT_SECRET = process.env.JWT_SECRET || 'blogermenia-super-secure-secret-2026';
+const AUTH_SECRET = process.env.NEXTAUTH_SECRET || 'fallback_secret_for_development_only';
 
 // Helper to hash password using SHA-256
 export function hashPassword(password) {
-  return crypto.createHmac('sha256', JWT_SECRET).update(password).digest('hex');
+  return crypto.createHmac('sha256', AUTH_SECRET).update(password).digest('hex');
 }
 
 // Generate secure client-verifiable JWTs
 export function generateToken(payload) {
   const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
   const body = Buffer.from(JSON.stringify({ ...payload, exp: Date.now() + 7 * 24 * 60 * 60 * 1000 })).toString('base64url');
-  const signature = crypto.createHmac('sha256', JWT_SECRET).update(`${header}.${body}`).digest('base64url');
+  const signature = crypto.createHmac('sha256', AUTH_SECRET).update(`${header}.${body}`).digest('base64url');
   return `${header}.${body}.${signature}`;
 }
 
@@ -24,7 +24,7 @@ export function verifyToken(token) {
   try {
     const cleanToken = token.startsWith('Bearer ') ? token.slice(7) : token;
     const [header, body, signature] = cleanToken.split('.');
-    const expectedSig = crypto.createHmac('sha256', JWT_SECRET).update(`${header}.${body}`).digest('base64url');
+    const expectedSig = crypto.createHmac('sha256', AUTH_SECRET).update(`${header}.${body}`).digest('base64url');
     if (signature !== expectedSig) return null;
     
     const decoded = JSON.parse(Buffer.from(body, 'base64url').toString('utf8'));
