@@ -1,16 +1,16 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Eye, Heart } from "lucide-react";
-import { getImageUrl } from "../lib/utils";
+import { getBlogDate, getImageUrl, formatDate } from "../lib/utils";
 
 export default function HorizontalBlogCard({ blog }) {
     // Construct URL
     const getBlogUrl = () => {
-        const authorIdentifier = blog.author?.email || blog.authorEmail || blog.authorUsername;
+        const authorIdentifier = blog.author?.email || blog.authorEmail || blog.authorUsername || blog.author?.username || blog.author?.id || blog.author;
         if (authorIdentifier) {
             return `/blogs/${encodeURIComponent(authorIdentifier)}/${blog.slug}`;
         }
-        return `/blogs/${blog.slug}`;
+        return `/blogs/unknown/${blog.slug}`;
     };
 
     const imagePath = blog.thumbnail?.file_path || blog.thumbnail || blog.image;
@@ -40,7 +40,7 @@ export default function HorizontalBlogCard({ blog }) {
                     <div>
                         <div className="flex items-center gap-3 mb-3">
                             <span className="bg-foreground text-background group-hover:bg-purple-900 transition-colors px-2 py-0.5 text-[10px] uppercase font-mono font-bold tracking-widest">
-                                {blog.date || "Date"}
+                                {formatDate(getBlogDate(blog), "Date")}
                             </span>
                             {blog.category && (
                                 <span className="border-2 border-foreground px-2 py-0.5 text-[10px] uppercase font-mono font-bold tracking-widest text-foreground group-hover:border-purple-900 group-hover:text-purple-900 transition-colors">

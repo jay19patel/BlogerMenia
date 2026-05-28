@@ -1,19 +1,19 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Calendar, Tag, Star, Eye, Heart } from "lucide-react";
-import { getImageUrl, formatDate } from "../lib/utils";
+import { getBlogDate, getImageUrl, formatDate } from "../lib/utils";
 
 export default function BlogCard({ blog }) {
   const getBlogUrl = () => {
-    const authorIdentifier = blog.author?.email || blog.author_email || blog.authorUsername || blog.author;
-    if (authorIdentifier && typeof authorIdentifier === 'string') {
+    const authorIdentifier = blog.author?.email || blog.author_email || blog.authorUsername || blog.author?.username || blog.author?.id || blog.author;
+    if (authorIdentifier) {
       return `/blogs/${encodeURIComponent(authorIdentifier)}/${blog.slug}`.replace(/([^:]\/)\/+/g, "$1");
     }
-    return `/blogs/${blog.slug}`;
+    return `/blogs/unknown/${blog.slug}`;
   };
 
   const imagePath = blog.thumbnail?.file_path || blog.thumbnail || blog.image;
-  const displayDate = blog.date || formatDate(blog.publishedDate || blog.created_at || blog.added_at);
+  const displayDate = formatDate(getBlogDate(blog), "Date");
   const displayCategory = blog.category_name || (typeof blog.category === 'string' ? blog.category : blog.category?.name) || 'Uncategorized';
   const displayDescription = blog.description || blog.excerpt || '';
 

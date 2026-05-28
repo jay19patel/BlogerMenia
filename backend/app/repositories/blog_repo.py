@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import logging
 import re
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 from bson import ObjectId
@@ -50,6 +51,12 @@ def _serialise(doc: dict) -> dict:
     # Normalise _id → id
     if "_id" in out:
         out["id"] = out.pop("_id")
+    if "publishedDate" in out and "published_date" not in out:
+        out["published_date"] = out["publishedDate"]
+    if "createdAt" in out and "created_at" not in out:
+        out["created_at"] = out["createdAt"]
+    if "updatedAt" in out and "updated_at" not in out:
+        out["updated_at"] = out["updatedAt"]
     return out
 
 
@@ -188,6 +195,9 @@ class BlogRepository:
             if cat_doc:
                 category_name = cat_doc["name"]
 
+        now = datetime.now(timezone.utc)
+        published_date = data.pop("publishedDate", None) or data.pop("published_date", None) or now
+
         insert_doc = {
             **{k: v for k, v in data.items() if k not in ("introduction", "conclusion", "sections")},
             "slug": slug,
@@ -199,6 +209,9 @@ class BlogRepository:
             "likes": 0,
             "featured": data.get("featured", False),
             "is_published": data.get("is_published", True),
+            "publishedDate": published_date,
+            "createdAt": now,
+            "updatedAt": now,
         }
 
         result = await self._col.insert_one(insert_doc)
@@ -244,6 +257,8 @@ class BlogRepository:
             data["category_name"] = cat_doc["name"] if cat_doc else None
 
         update_dict.update({k: v for k, v in data.items() if v is not None})
+
+        update_dict["updatedAt"] = datetime.now(timezone.utc)
 
         await self._col.update_one({"_id": ObjectId(blog_id)}, {"$set": update_dict})
         doc = await self._col.find_one({"_id": ObjectId(blog_id)})

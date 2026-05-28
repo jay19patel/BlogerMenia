@@ -78,6 +78,8 @@ class BlogCreate(BaseModel):
     sections: Optional[List[Any]] = None
     is_published: bool = True
     featured: bool = False
+    publishedDate: Optional[datetime] = None
+    published_date: Optional[datetime] = None
 
 
 class BlogUpdate(BaseModel):
@@ -96,6 +98,8 @@ class BlogUpdate(BaseModel):
     sections: Optional[List[Any]] = None
     is_published: Optional[bool] = None
     featured: Optional[bool] = None
+    publishedDate: Optional[datetime] = None
+    published_date: Optional[datetime] = None
 
 
 class BlogListOut(BaseModel):

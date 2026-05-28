@@ -17,7 +17,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { getImageUrl, formatDate } from "@/lib/utils";
+import { getBlogDate, getImageUrl, formatDate } from "@/lib/utils";
 
 export default function Home() {
   const router = useRouter();
@@ -57,7 +57,7 @@ export default function Home() {
                 ? blog.category
                 : blog.category?.name),
             description: blog.excerpt || blog.subtitle || "",
-            date: formatDate(blog.publishedDate || blog.created_at),
+            date: formatDate(getBlogDate(blog), "Date"),
           }))
         );
       } catch (e) {
@@ -250,9 +250,9 @@ export default function Home() {
                   {searchResults.length > 0 && searchQuery.trim() !== "" && (
                     <div className="absolute top-full left-0 right-0 mt-0 bg-background border-2 border-t-0 border-foreground shadow-sm z-50 max-h-80 overflow-y-auto">
                       {searchResults.map((blog) => {
-                        const authorIdentifier = blog.author?.email || blog.author_email || blog.authorUsername;
-                        const blogUrl = authorIdentifier ? `/blogs/${encodeURIComponent(authorIdentifier)}/${blog.slug}` : `/blogs/${blog.slug}`;
-                        const displayDate = formatDate(blog.publishedDate || blog.created_at);
+                        const authorIdentifier = blog.author?.email || blog.author_email || blog.authorUsername || blog.author?.username || blog.author?.id || 'unknown';
+                        const blogUrl = `/blogs/${encodeURIComponent(authorIdentifier)}/${blog.slug}`;
+                        const displayDate = formatDate(getBlogDate(blog), "Date");
 
                         return (
                           <Link

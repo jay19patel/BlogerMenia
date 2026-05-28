@@ -9,7 +9,7 @@ import { ExternalLink, AlertCircle, Copy, Check, Menu, ArrowLeft, Calendar, User
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { api } from '@/lib/api';
-import { getImageUrl, formatDate } from '@/lib/utils';
+import { getBlogDate, getImageUrl, formatDate } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import React from 'react';
 
@@ -130,7 +130,7 @@ export default function BlogDetailPage() {
     const [likesCount, setLikesCount] = useState(0);
 
     // Define authorIdentifier for use in JSX and effects
-    const authorIdentifier = blog?.author?.email || blog?.author_email || blog?.authorUsername;
+    const authorIdentifier = blog?.author?.email || blog?.author_email || blog?.authorUsername || blog?.author?.username || blog?.author?.id;
 
     // Always go back to /blogs
     const backUrl = '/blogs';
@@ -426,23 +426,49 @@ export default function BlogDetailPage() {
         return formattedCode;
     };
 
+    const renderParagraphBlock = (section, index, headingOnly = false) => (
+        <div key={index} id={`section-${index}`} className="mb-12">
+            {section.title && (
+                <h3 className="text-2xl font-extrabold text-black uppercase tracking-tighter mb-4 border-b-[4px] border-black pb-2 inline-block">
+                    {section.title}
+                </h3>
+            )}
+            {!headingOnly && section.content && (
+                <p className="text-black text-base leading-relaxed whitespace-pre-wrap font-medium">
+                    {section.content}
+                </p>
+            )}
+        </div>
+    );
+
+    const renderListItems = (section) => {
+        const items = Array.isArray(section.items)
+            ? section.items
+            : Array.isArray(section.content)
+                ? section.content
+                : [];
+        return items.map((item) => typeof item === 'string' ? item : item?.text || JSON.stringify(item));
+    };
+
+    const normaliseTable = (section) => {
+        if (section.headers && section.rows) return { headers: section.headers, rows: section.rows };
+        if (!Array.isArray(section.content) || section.content.length === 0) return { headers: [], rows: [] };
+        const headers = Object.keys(section.content[0]);
+        const rows = section.content.map((row) => headers.map((header) => row?.[header] ?? ''));
+        return { headers, rows };
+    };
+
     const renderSection = (section, index) => {
         switch (section.type) {
+            case 'heading':
+                return renderParagraphBlock(section, index, false);
+            case 'paragraph':
             case 'text':
-                return (
-                    <div key={index} id={`section-${index}`} className="mb-12">
-                        {section.title && (
-                            <h3 className="text-2xl font-extrabold text-black uppercase tracking-tighter mb-4 border-b-[4px] border-black pb-2 inline-block">
-                                {section.title}
-                            </h3>
-                        )}
-                        <p className="text-black text-base leading-relaxed whitespace-pre-wrap font-medium">
-                            {section.content}
-                        </p>
-                    </div>
-                );
+                return renderParagraphBlock(section, index);
 
+            case 'list':
             case 'bullets':
+                const listItems = renderListItems(section);
                 return (
                     <div key={index} id={`section-${index}`} className="mb-12">
                         {section.title && (
@@ -451,7 +477,7 @@ export default function BlogDetailPage() {
                             </h3>
                         )}
                         <ul className="space-y-4">
-                            {section.items?.map((item, itemIndex) => (
+                            {listItems.map((item, itemIndex) => (
                                 <li key={itemIndex} className="flex items-start gap-4 p-4 border-[4px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
                                     <div className="w-3 h-3 bg-purple-900 border-[2px] border-black mt-1.5 flex-shrink-0" />
                                     <span className="text-black font-bold text-base">{item}</span>
@@ -462,6 +488,7 @@ export default function BlogDetailPage() {
                 );
 
             case 'table':
+                const tableData = normaliseTable(section);
                 return (
                     <div key={index} id={`section-${index}`} className="mb-12">
                         {section.title && (
@@ -473,7 +500,7 @@ export default function BlogDetailPage() {
                             <table className="min-w-full">
                                 <thead className="bg-gray-100 text-black border-b-[4px] border-black">
                                     <tr>
-                                        {section.headers?.map((header, headerIndex) => (
+                                        {tableData.headers.map((header, headerIndex) => (
                                             <th
                                                 key={headerIndex}
                                                 className="px-6 py-4 text-left font-mono font-bold uppercase tracking-widest text-sm border-r-[4px] border-black last:border-r-0"
@@ -484,7 +511,7 @@ export default function BlogDetailPage() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y-[2px] divide-black bg-white">
-                                    {section.rows?.map((row, rowIndex) => (
+                                    {tableData.rows.map((row, rowIndex) => (
                                         <tr key={rowIndex} className="hover:bg-gray-50 transition-colors">
                                             {row.map((cell, cellIndex) => (
                                                 <td
@@ -499,6 +526,20 @@ export default function BlogDetailPage() {
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                );
+
+            case 'quote':
+                return (
+                    <div key={index} id={`section-${index}`} className="mb-12">
+                        {section.title && (
+                            <h3 className="text-2xl font-extrabold text-black uppercase tracking-tighter mb-4 border-b-[4px] border-black pb-2 inline-block">
+                                {section.title}
+                            </h3>
+                        )}
+                        <blockquote className="border-l-[8px] border-purple-900 bg-white p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-xl font-extrabold text-black leading-relaxed">
+                            {section.content}
+                        </blockquote>
                     </div>
                 );
 
@@ -559,6 +600,7 @@ export default function BlogDetailPage() {
                 );
 
             case 'image':
+                const sectionImage = section.attachment || section.url || section.imageUrl || section.content;
                 return (
                     <div key={index} id={`section-${index}`} className="mb-12">
                         {section.title && (
@@ -566,11 +608,11 @@ export default function BlogDetailPage() {
                                 {section.title}
                             </h3>
                         )}
-                        {(section.attachment || section.url) && (
+                        {sectionImage && (
                             <div className="border-[4px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white overflow-hidden p-2">
                                 <div className="border-[4px] border-black relative group">
                                     <Image
-                                        src={getImageUrl(section.attachment || section.url)}
+                                        src={getImageUrl(sectionImage)}
                                         alt={section.attachment?.filename || section.title || 'Section image'}
                                         width={1200}
                                         height={675}
@@ -582,6 +624,13 @@ export default function BlogDetailPage() {
                                     <div className="mt-4 p-4 bg-black text-white border-[4px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                                         <p className="font-mono font-bold uppercase tracking-widest text-xs text-center">
                                             {section.caption}
+                                        </p>
+                                    </div>
+                                )}
+                                {section.description && !section.caption && (
+                                    <div className="mt-4 p-4 bg-black text-white border-[4px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                                        <p className="font-mono font-bold uppercase tracking-widest text-xs text-center">
+                                            {section.description}
                                         </p>
                                     </div>
                                 )}
@@ -849,7 +898,7 @@ export default function BlogDetailPage() {
                         <div className="flex flex-wrap items-center gap-x-8 gap-y-4 p-6 border-b-[4px] border-black bg-white">
                             <div className="flex items-center gap-2 text-black font-mono uppercase text-xs font-bold tracking-widest">
                                 <Calendar className="w-4 h-4" />
-                                <span>{formatDate(blog.publishedDate || blog.created_at)}</span>
+                                <span>{formatDate(getBlogDate(blog), "Date")}</span>
                             </div>
                             <div className="flex items-center gap-2 text-black font-mono uppercase text-xs font-bold tracking-widest">
                                 <User className="w-4 h-4" />
@@ -938,7 +987,7 @@ export default function BlogDetailPage() {
                                 {suggestedBlogs.map((item, idx) => (
                                     <Link 
                                         key={idx} 
-                                        href={(item.author?.email || item.author_email || item.authorUsername) ? `/blogs/${encodeURIComponent(item.author?.email || item.author_email || item.authorUsername)}/${item.slug}` : `/blogs/${item.slug}`} 
+                                        href={`/blogs/${encodeURIComponent(item.author?.email || item.author_email || item.authorUsername || item.author?.username || item.author?.id || 'unknown')}/${item.slug}`}
                                         className="group block bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(88,28,135,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex flex-col h-full overflow-hidden"
                                     >
                                         <div className="relative aspect-video overflow-hidden bg-purple-50 border-b-2 border-black">

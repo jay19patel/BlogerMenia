@@ -41,3 +41,7 @@ export function formatDate(dateString, fallback = "N/A") {
     year: "numeric",
   });
 }
+
+export function getBlogDate(blog) {
+  return blog?.publishedDate || blog?.published_date || blog?.created_at || blog?.createdAt || blog?.added_at || blog?.date;
+}
