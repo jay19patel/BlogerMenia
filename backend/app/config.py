@@ -14,6 +14,7 @@ class Settings(BaseSettings):
 
     # ── GCS ───────────────────────────────────────────────────────────────────
     gcs_bucket_name: str = "blogermenia"
+    gcs_credentials_json: str | None = None
     gcs_credentials_path: Path | None = None
 
     # ── MongoDB ───────────────────────────────────────────────────────────────

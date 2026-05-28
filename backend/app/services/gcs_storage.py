@@ -4,9 +4,11 @@ GCS Storage — handles Google Cloud Storage uploads and PIL-based image compres
 from __future__ import annotations
 
 from io import BytesIO
+import json
 import logging
 import os
 
+from google.oauth2 import service_account
 from google.cloud import storage
 from PIL import Image
 
@@ -24,8 +26,18 @@ def get_gcs_client() -> storage.Client | None:
         return _storage_client
 
     try:
+        credentials_json = settings.gcs_credentials_json
         key_path = settings.gcs_credentials_path
-        if key_path and key_path.exists():
+
+        if credentials_json:
+            credentials_info = json.loads(credentials_json)
+            credentials = service_account.Credentials.from_service_account_info(credentials_info)
+            _storage_client = storage.Client(
+                credentials=credentials,
+                project=credentials_info.get("project_id"),
+            )
+            logger.info("GCS Storage client initialized from GCS_CREDENTIALS_JSON.")
+        elif key_path and key_path.exists():
             _storage_client = storage.Client.from_service_account_json(str(key_path))
             logger.info("GCS Storage client initialized from %s.", key_path)
         else:

@@ -165,14 +165,36 @@ uv run uvicorn main:app --reload
 ```
 
 Configure `backend/.env` with MongoDB, Redis, auth, Ollama, and GCS settings.
-For GCS uploads, this repository already contains the ignored service-account
-key `../njtechstudio-311abb994297.json`; the backend reads it using:
+For GCS uploads, put the service-account JSON directly in the env file instead
+of relying on a local JSON key path:
 
 ```env
 ENVIRONMENT="production"
 GCS_BUCKET_NAME="blogermenia"
-GCS_CREDENTIALS_PATH="../njtechstudio-311abb994297.json"
+GCS_CREDENTIALS_JSON='{"type":"service_account","project_id":"..."}'
 ```
+
+### Backend deployment on Vercel
+
+Create the Vercel project with `backend/` as the project root. The backend has
+an `index.py` entrypoint for Vercel's FastAPI auto-detection, so no custom build
+or start command is required.
+
+Set these environment variables in Vercel:
+
+```env
+ENVIRONMENT="production"
+MONGODB_URI="mongodb+srv://..."
+MONGODB_DB="blogermenia"
+REDIS_URL="rediss://..."
+NEXTAUTH_SECRET="..."
+NEXT_PUBLIC_API_URL="https://your-backend.vercel.app"
+GCS_BUCKET_NAME="blogermenia"
+GCS_CREDENTIALS_JSON='{"type":"service_account","project_id":"..."}'
+```
+
+`REDIS_URL` can be omitted or left unreachable if you want caching disabled,
+but `MONGODB_URI` must point to a publicly reachable MongoDB deployment.
 
 ### Database seeding
 
