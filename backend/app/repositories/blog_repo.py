@@ -65,6 +65,8 @@ async def _populate(db: AsyncIOMotorDatabase, doc: dict) -> dict:
         author = await db["users"].find_one({"_id": raw_id}, AUTHOR_FIELDS)
         if author:
             doc["author"] = _serialise(author)
+        else:
+            doc["author"] = {"id": str(author_id)}
 
     # Populate category
     cat_id = doc.get("category")
@@ -73,6 +75,8 @@ async def _populate(db: AsyncIOMotorDatabase, doc: dict) -> dict:
         category = await db["categories"].find_one({"_id": raw_id}, CATEGORY_FIELDS)
         if category:
             doc["category"] = _serialise(category)
+        else:
+            doc["category"] = None
 
     return doc
 
