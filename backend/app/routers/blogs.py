@@ -17,12 +17,14 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response, status
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.deps import get_current_user
 from app.services.blog_service import BlogService
 from app.services.category_service import CategoryService
+from app.services.interaction_service import InteractionService
+from app.services.embedding_jobs import embed_blog_in_background
 from app.database.mongo import get_db
 from app.exceptions import ForbiddenError, NotFoundError
 from app.models.blog import (
@@ -36,6 +38,7 @@ from app.models.blog import (
     LikeOut,
     StatsOut,
 )
+from app.models.interaction import LikeToggleOut
 
 logger = logging.getLogger(__name__)
 
@@ -122,6 +125,7 @@ async def list_blogs(
 @router.post("/", response_model=BlogOut, status_code=status.HTTP_201_CREATED, summary="Create blog")
 async def create_blog(
     body: BlogCreate,
+    background_tasks: BackgroundTasks,
     current_user: CurrentUser = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ) -> BlogOut:
@@ -131,7 +135,65 @@ async def create_blog(
     except Exception as exc:
         logger.error("create_blog failed: %s", exc, exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to create blog: {exc}")
+
+    # Generate the Mistral embedding after we return the response so the
+    # client doesn't wait on the API round-trip.
+    background_tasks.add_task(embed_blog_in_background, blog["id"])
     return BlogOut(**blog)
+
+
+# ── Related blogs (semantic neighbours) ───────────────────────────────────────
+
+@router.get(
+    "/{slug}/related/",
+    response_model=list[BlogOut],
+    summary="Get blogs most semantically similar to this one",
+)
+async def get_related(
+    slug: str,
+    limit: int = Query(4, ge=1, le=20),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+) -> list[BlogOut]:
+    """Returns vector-similar blogs based on Mistral embeddings. If embeddings
+    are unavailable (no API key, or the source blog hasn't been embedded yet)
+    we degrade to a recency-based list excluding the current slug."""
+    from app.services.vector_search import related as vector_related
+    from app.repositories.blog_repo import BlogRepository
+
+    repo = BlogRepository(db)
+    src = await repo.get_by_slug_or_id(slug)
+    if not src:
+        raise HTTPException(status_code=404, detail="Blog not found")
+
+    try:
+        scored = await vector_related(db, src["id"], limit=limit)
+    except Exception as exc:
+        logger.warning("Related lookup failed for %s (%s); using recency fallback", slug, exc)
+        scored = []
+    if scored:
+        from bson import ObjectId as _Oid
+        oids = [_Oid(bid) for bid, _ in scored]
+        id_to_doc: dict[str, dict] = {}
+        from app.repositories.blog_repo import _populate, _serialise  # type: ignore
+        from app.services.media_urls import normalise_media_paths
+
+        async for doc in db["blogs"].find({"_id": {"$in": oids}}):
+            id_to_doc[str(doc["_id"])] = doc
+
+        ordered: list[BlogOut] = []
+        for bid, _ in scored:
+            doc = id_to_doc.get(bid)
+            if not doc:
+                continue
+            populated = await _populate(db, _serialise(doc))
+            ordered.append(BlogOut(**normalise_media_paths(populated)))
+        if ordered:
+            return ordered
+
+    # Fallback: recency-based suggestion list when embeddings unavailable.
+    svc = BlogService(db)
+    fallback = await svc.list_blogs(exclude_slug=slug, sort="-createdAt", skip=0, limit=limit)
+    return [BlogOut(**b) for b in fallback.get("blogs", [])]
 
 
 # ── Blog detail, update, delete ───────────────────────────────────────────────
@@ -154,6 +216,7 @@ async def get_blog(
 async def update_blog(
     slug: str,
     body: BlogUpdate,
+    background_tasks: BackgroundTasks,
     current_user: CurrentUser = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ) -> BlogOut:
@@ -164,6 +227,10 @@ async def update_blog(
         _handle_not_found(exc)
     except ForbiddenError as exc:
         _handle_forbidden(exc)
+
+    # Re-embed after the response is sent. The worker hash-compares the
+    # source text and skips the Mistral call when nothing meaningful changed.
+    background_tasks.add_task(embed_blog_in_background, blog["id"])
     return BlogOut(**blog)
 
 
@@ -185,15 +252,21 @@ async def delete_blog(
 
 # ── Like toggle ───────────────────────────────────────────────────────────────
 
-@router.post("/{slug}/like/", response_model=LikeOut, summary="Toggle like on a blog")
+@router.post("/{slug}/like/", response_model=LikeToggleOut, summary="Toggle like on a blog")
 async def toggle_like(
     slug: str,
     current_user: CurrentUser = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
-) -> LikeOut:
-    svc = BlogService(db)
+) -> LikeToggleOut:
+    svc = InteractionService(db)
     try:
-        count, has_liked = await svc.toggle_like(slug, current_user)
+        count, has_liked = await svc.toggle_like(slug, current_user.id)
     except NotFoundError as exc:
         _handle_not_found(exc)
-    return LikeOut(success=True, likes_count=count, has_liked=has_liked)
+    return LikeToggleOut(
+        success=True,
+        has_liked=has_liked,
+        likes_count=count,
+        status="liked" if has_liked else "unliked",
+        total_likes=count,
+    )

@@ -8,9 +8,17 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     """Application settings — loaded from environment variables or .env file."""
 
-    # ── Local Ollama ─────────────────────────────────────────────────────────
-    ollama_base_url: str = "http://127.0.0.1:11434"
-    ollama_model: str = "llama3.1"
+    # ── Mistral AI ────────────────────────────────────────────────────────────
+    # One API key powers both the chat model (LangGraph blog workflow) and the
+    # embeddings (search / suggestions / related blogs).
+    mistral_api_key: str | None = None
+    # Chat model for the AI blog workflow.
+    mistral_chat_model: str = "mistral-large-latest"
+    mistral_temperature: float = 0.7
+    # Embeddings.
+    mistral_embed_model: str = "mistral-embed"
+    # Maximum batch size for a single embeddings request (Mistral limit is 512)
+    mistral_embed_batch_size: int = 64
 
     # ── GCS ───────────────────────────────────────────────────────────────────
     gcs_bucket_name: str = "blogermenia"

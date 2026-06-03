@@ -13,7 +13,13 @@ from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.exceptions import NotFoundError
+from app.services.embeddings import is_enabled as embeddings_enabled
 from app.services.media_urls import normalise_media_paths
+# NOTE: embedding *generation* is intentionally NOT done inline here. It runs
+# in a FastAPI BackgroundTask (see app/services/embedding_jobs.py) scheduled
+# from the router so blog save returns immediately. We still import
+# `embeddings_enabled` because list_blogs uses it to choose between the
+# vector search path and the legacy regex fallback.
 
 logger = logging.getLogger(__name__)
 
@@ -35,11 +41,18 @@ def _is_object_id(value: str) -> bool:
 
 
 def _serialise(doc: dict) -> dict:
-    """Recursively convert ObjectId → str and datetime stays (Pydantic handles it)."""
+    """Recursively convert ObjectId → str and datetime stays (Pydantic handles it).
+
+    Strips internal-only fields (embedding vector, embedding hash) so they
+    never bloat API responses or get sent over the wire to the frontend.
+    """
     if not doc:
         return doc
     out = {}
     for k, v in doc.items():
+        # Internal fields — never expose
+        if k in ("embedding", "embedding_text_hash"):
+            continue
         if isinstance(v, ObjectId):
             out[k] = str(v)
         elif isinstance(v, dict):
@@ -107,29 +120,49 @@ class BlogRepository:
         skip: int = 0,
         limit: int = 10,
     ) -> Tuple[int, List[dict]]:
-        """Return (total_count, list_of_blog_dicts) with author+category populated."""
-        query: Dict[str, Any] = {}
+        """Return (total_count, list_of_blog_dicts) with author+category populated.
 
-        if search:
-            query["$or"] = [
-                {"title": {"$regex": search, "$options": "i"}},
-                {"excerpt": {"$regex": search, "$options": "i"}},
-            ]
+        When `search` is provided and embeddings are available, we hand the
+        ranking off to the hybrid vector search service and apply the other
+        filters as a pre-filter on the candidate set. When embeddings aren't
+        available, we fall back to the old regex search so the endpoint still
+        works without MISTRAL_API_KEY.
+        """
+        # ── Apply structural filters (category / author / exclude_slug) ──
+        base_query: Dict[str, Any] = {}
 
         if exclude_slug:
-            query["slug"] = {"$ne": exclude_slug}
+            base_query["slug"] = {"$ne": exclude_slug}
 
         if category_name and category_name != "All":
             cat = await self._db["categories"].find_one(
                 {"name": re.compile(f"^{re.escape(category_name)}$", re.IGNORECASE)}
             )
             if cat:
-                query["category"] = cat["_id"]
+                base_query["category"] = cat["_id"]
             else:
                 return 0, []
 
         if author_id:
-            query["author"] = ObjectId(author_id) if _is_object_id(author_id) else author_id
+            base_query["author"] = ObjectId(author_id) if _is_object_id(author_id) else author_id
+
+        # ── Branch: semantic search when a query is present ──────────────
+        # If anything in the embedding path fails at runtime (Mistral down,
+        # rate-limited, etc.) we log and fall through to the regex query below,
+        # so search never returns a 500 just because the API is unavailable.
+        if search and embeddings_enabled():
+            try:
+                return await self._semantic_search(base_query, search, skip, limit)
+            except Exception as exc:
+                logger.warning("Semantic search failed (%s); using regex fallback", exc)
+
+        # ── Fallback: classic Mongo query (no search, or embeddings off) ─
+        query = dict(base_query)
+        if search:
+            query["$or"] = [
+                {"title": {"$regex": search, "$options": "i"}},
+                {"excerpt": {"$regex": search, "$options": "i"}},
+            ]
 
         sort_field = "views" if sort == "-views" else "createdAt"
         sort_direction = -1
@@ -143,6 +176,59 @@ class BlogRepository:
             docs.append(normalise_media_paths(populated))
 
         return total, docs
+
+    async def _semantic_search(
+        self,
+        base_query: Dict[str, Any],
+        search: str,
+        skip: int,
+        limit: int,
+    ) -> Tuple[int, List[dict]]:
+        """Rank embedded blogs by hybrid (semantic + keyword) score.
+
+        Returns (total_matches, page_of_blog_dicts). Raises on embedding-API
+        failure so the caller can fall back to regex search.
+        """
+        from app.services.vector_search import search as vector_search
+
+        # Only pre-filter when structural filters are actually set; an empty
+        # base_query means "no filter", so we skip the full _id scan and let
+        # the scorer rank the whole embedded corpus.
+        candidate_ids: Optional[List[str]] = None
+        if base_query:
+            candidate_ids = [
+                str(doc["_id"])
+                async for doc in self._col.find(base_query, projection={"_id": 1})
+            ]
+            if not candidate_ids:
+                return 0, []
+
+        # Score the full candidate set (corpus is small, scoring is in-memory)
+        # so `total` is accurate and pagination is correct.
+        scored = await vector_search(
+            self._db, search,
+            limit=len(candidate_ids) if candidate_ids is not None else 1_000_000,
+            candidate_ids=candidate_ids,
+        )
+        total = len(scored)
+        page = scored[skip:skip + limit]
+        if not page:
+            return total, []
+
+        # Hydrate the page, preserving the scorer's order.
+        oids = [ObjectId(bid) for bid, _ in page]
+        id_to_doc: Dict[str, dict] = {}
+        async for doc in self._col.find({"_id": {"$in": oids}}):
+            id_to_doc[str(doc["_id"])] = doc
+
+        ordered_docs: List[dict] = []
+        for bid, _ in page:
+            doc = id_to_doc.get(bid)
+            if not doc:
+                continue
+            populated = await _populate(self._db, _serialise(doc))
+            ordered_docs.append(normalise_media_paths(populated))
+        return total, ordered_docs
 
     async def get_by_slug_or_id(self, slug: str) -> Optional[dict]:
         """Find a blog by slug string or MongoDB ObjectId string."""
@@ -214,6 +300,8 @@ class BlogRepository:
             "updatedAt": now,
         }
 
+        # Embedding is generated asynchronously by a BackgroundTask scheduled
+        # from the router (see app/services/embedding_jobs.py).
         result = await self._col.insert_one(insert_doc)
 
         # Increment author blog count
@@ -260,6 +348,9 @@ class BlogRepository:
 
         update_dict["updatedAt"] = datetime.now(timezone.utc)
 
+        # Re-embedding is handled by a BackgroundTask scheduled from the
+        # router. The worker compares the source-text hash and skips the
+        # Mistral round-trip when nothing meaningful changed.
         await self._col.update_one({"_id": ObjectId(blog_id)}, {"$set": update_dict})
         doc = await self._col.find_one({"_id": ObjectId(blog_id)})
         return normalise_media_paths(await _populate(self._db, _serialise(doc)))

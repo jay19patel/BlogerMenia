@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, BookOpen, Users, TrendingUp, Eye, Heart } from "lucide-react";
+import { ArrowRight, BookOpen, Users, TrendingUp, Eye, Heart, Bookmark } from "lucide-react";
 import BlogCard from "@/components/BlogCard";
 import HorizontalBlogCard from "@/components/HorizontalBlogCard";
 import dynamic from "next/dynamic";
@@ -18,12 +18,16 @@ import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { getBlogDate, getImageUrl, formatDate } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Home() {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [bookmarks, setBookmarks] = useState([]);
+  const [bookmarksLoading, setBookmarksLoading] = useState(false);
   // Removed unused hero typing animation state
   const [displayedMessages, setDisplayedMessages] = useState([]);
   const [currentTypingIndex, setCurrentTypingIndex] = useState(-1);
@@ -94,6 +98,24 @@ export default function Home() {
 
     fetchHomeData();
   }, []);
+
+  // Fetch the signed-in user's bookmarks for the "My Bookmarks" rail.
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setBookmarks([]);
+      return;
+    }
+    let cancelled = false;
+    setBookmarksLoading(true);
+    api.getMyBookmarks(8)
+      .then((data) => {
+        if (cancelled) return;
+        setBookmarks(Array.isArray(data) ? data : []);
+      })
+      .catch((e) => console.error("Failed to fetch bookmarks:", e))
+      .finally(() => { if (!cancelled) setBookmarksLoading(false); });
+    return () => { cancelled = true; };
+  }, [isAuthenticated]);
 
 
   // Simple scripted chat simulation (alternating user/assistant)
@@ -401,6 +423,75 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* My Bookmarks (logged-in users with at least one bookmark) */}
+      {isAuthenticated && (bookmarksLoading || bookmarks.length > 0) && (
+        <section className="py-20 border-b border-border">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 border-b-2 border-foreground pb-6">
+              <div>
+                <h2 className="text-3xl font-extrabold text-foreground uppercase tracking-tight flex items-center gap-3">
+                  <Bookmark className="w-7 h-7 text-purple-700" />
+                  My Bookmarks
+                </h2>
+                <p className="text-gray-500 font-mono text-sm mt-2">Resume reading from where you left off.</p>
+              </div>
+            </div>
+
+            {bookmarksLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[...Array(4)].map((_, i) => (
+                  <Skeleton key={i} className="h-56 w-full border-2 border-foreground rounded-none" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {bookmarks.map((bm) => {
+                  const authorKey = bm.author_email || bm.author_username || 'unknown';
+                  const href = `/blogs/${encodeURIComponent(authorKey)}/${bm.blog_slug}`;
+                  const cover = bm.blog_thumbnail ? getImageUrl(bm.blog_thumbnail) : null;
+                  return (
+                    <Link
+                      key={bm.id}
+                      href={href}
+                      className="group block bg-background border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(88,28,135,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all overflow-hidden"
+                    >
+                      <div className="relative aspect-video bg-purple-50 border-b-2 border-foreground overflow-hidden">
+                        {cover ? (
+                          <Image
+                            src={cover}
+                            alt={bm.blog_title || 'Bookmarked blog'}
+                            fill
+                            sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                            className="object-cover transition-all duration-500 group-hover:scale-105"
+                            unoptimized
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-foreground text-background">
+                            <p className="text-[10px] font-mono font-bold uppercase tracking-widest opacity-70">No cover</p>
+                          </div>
+                        )}
+                        <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-1 bg-purple-700 text-white border-2 border-foreground font-mono text-[10px] font-bold uppercase tracking-widest">
+                          <Bookmark className="w-3 h-3 fill-current" />
+                          Saved
+                        </span>
+                      </div>
+                      <div className="p-5 flex flex-col gap-2">
+                        <h3 className="text-base font-extrabold text-foreground uppercase tracking-tight line-clamp-2 group-hover:text-purple-700 transition-colors">
+                          {bm.blog_title || 'Untitled'}
+                        </h3>
+                        <p className="font-mono text-[11px] uppercase tracking-widest text-gray-500 truncate">
+                          Resume at: <span className="text-purple-700">{bm.section_title || bm.section_id}</span>
+                        </p>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Featured Blogs Section */}
       <section className="py-20 border-b border-border bg-gray-50/50">

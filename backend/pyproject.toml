@@ -20,5 +20,8 @@ dependencies = [
     # GCS & Image Compression
     "google-cloud-storage>=2.14.0",
     "pillow>=10.2.0",
-    "langchain-ollama>=1.1.0",
+    # Mistral chat model for the LangGraph AI blog workflow
+    "langchain-mistralai>=0.2.0",
+    # Mistral embeddings (used for blog search / suggestions / related)
+    "mistralai>=1.2.0",
 ]

@@ -14,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.routers import blogs as blog_router
+from app.routers import interactions as interactions_router
 from app.routers import media as media_router
 from app.routers import playlists as playlists_router
 from app.database.mongo import connect_to_mongo, close_mongo_connection
@@ -38,7 +39,7 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     app = FastAPI(
         title="Blogermenia API",
-        description="AI blog generation (local Ollama + LangGraph) + full blog CRUD with MongoDB and Redis",
+        description="AI blog generation (Mistral AI + LangGraph) + full blog CRUD with MongoDB and Redis",
         version="3.0.0",
         lifespan=lifespan,
         docs_url="/docs",
@@ -55,6 +56,7 @@ def create_app() -> FastAPI:
 
     # ── Blog CRUD + categories + stats ─────────────────────────────────────
     app.include_router(blog_router.router)
+    app.include_router(interactions_router.router)
     app.include_router(playlists_router.router)
     app.include_router(media_router.router)
 

@@ -31,10 +31,29 @@ export async function POST(req) {
     await connectToDatabase();
     const data = await req.json();
 
+    // The modal posts { author, designation, content } but the schema requires
+    // { name, role, content, rating }. Map fields, fall back to the session
+    // for the author name, and default the rating since the UI doesn't expose it.
+    const name = (data.name || data.author || session.user?.name || session.user?.email || "").trim();
+    const role = (data.role || data.designation || "User").trim();
+    const content = (data.content || "").trim();
+    const ratingRaw = Number(data.rating);
+    const rating = Number.isFinite(ratingRaw) && ratingRaw >= 1 && ratingRaw <= 5 ? ratingRaw : 5;
+
+    if (!name) {
+      return NextResponse.json({ detail: "Name is required" }, { status: 400 });
+    }
+    if (!content) {
+      return NextResponse.json({ detail: "Feedback content is required" }, { status: 400 });
+    }
+
     const newTestimonial = await Testimonial.create({
-      ...data,
+      name,
+      role,
+      content,
+      rating,
       user: session.user.id,
-      is_approved: false // Default to false until admin approves
+      is_approved: true,
     });
 
     return NextResponse.json(newTestimonial, { status: 201 });
