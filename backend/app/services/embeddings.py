@@ -24,10 +24,10 @@ logger = logging.getLogger(__name__)
 # Mistral's `mistral-embed` returns 1024-dim vectors.
 EMBEDDING_DIM = 1024
 
-# Soft cap on characters we feed into the embedding model. Mistral accepts up
-# to ~8192 tokens; we trim conservatively to ~24k chars (~6k tokens) so a
-# single batch never explodes payload size.
-MAX_CHARS_PER_INPUT = 24_000
+# Hard cap on characters per input. Mistral rejects any input over 8192 tokens.
+# Dense or code-heavy content can run as low as ~2.5 chars/token, so we trim to
+# 16k chars (~6.4k tokens worst case) to stay safely under the limit.
+MAX_CHARS_PER_INPUT = 16_000
 
 
 # ── Source-text builder ──────────────────────────────────────────────────────
@@ -202,7 +202,19 @@ async def embed_batch(texts: Iterable[str]) -> List[Optional[List[float]]]:
     batch_size = max(1, int(settings.mistral_embed_batch_size))
     for start in range(0, len(indexed_non_empty), batch_size):
         chunk = indexed_non_empty[start:start + batch_size]
-        vecs = await _embed_chunk([t for _, t in chunk])
-        for (orig_idx, _), vec in zip(chunk, vecs):
-            results[orig_idx] = vec
+        try:
+            vecs = await _embed_chunk([t for _, t in chunk])
+            for (orig_idx, _), vec in zip(chunk, vecs):
+                results[orig_idx] = vec
+        except Exception as exc:
+            # Mistral rejects the whole request if any single input is invalid
+            # (e.g. too long). Retry each input on its own so one bad blog
+            # doesn't take down the rest of the batch.
+            logger.warning("Batch of %d failed (%s); retrying inputs individually", len(chunk), exc)
+            for orig_idx, text in chunk:
+                try:
+                    one = await _embed_chunk([text])
+                    results[orig_idx] = one[0] if one else None
+                except Exception as item_exc:
+                    logger.error("Skipping input %d: %s", orig_idx, item_exc)
     return results
