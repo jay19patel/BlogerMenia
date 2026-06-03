@@ -164,7 +164,7 @@ uv sync
 uv run uvicorn main:app --reload
 ```
 
-Configure `backend/.env` with MongoDB, Redis, auth, Ollama, and GCS settings.
+Configure `backend/.env` with MongoDB, Redis, auth, Mistral AI, and GCS settings.
 For GCS uploads, put the service-account JSON directly in the env file instead
 of relying on a local JSON key path:
 
@@ -240,7 +240,7 @@ npm run dev
 
 - MongoDB and Redis connection settings
 - shared `NEXTAUTH_SECRET` token verification setting
-- Ollama model settings
+- Mistral AI settings (`MISTRAL_API_KEY`, chat + embed model)
 - environment, API upload URL, GCS bucket and GCS credential-file setting
 
 Only these two application env files are used. `NEXTAUTH_SECRET` must match in

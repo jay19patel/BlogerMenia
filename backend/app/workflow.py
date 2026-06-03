@@ -11,7 +11,7 @@ from typing import Annotated, Any, Dict, List, Optional, TypedDict
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_ollama import ChatOllama
+from langchain_mistralai import ChatMistralAI
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Send
 from pydantic import BaseModel
@@ -48,18 +48,26 @@ class WorkflowState(TypedDict):
     change_summary: Optional[Dict[str, Any]]
 
 
+_llm: Optional[BaseChatModel] = None
+
+
 def get_llm() -> BaseChatModel:
-    """Return the local Ollama chat model."""
-    logger.info(
-        "Using local Ollama LLM provider (model: %s) at %s",
-        settings.ollama_model,
-        settings.ollama_base_url,
+    """Return the Mistral chat model, building it once and reusing it.
+
+    Requires MISTRAL_API_KEY; the same key also powers embeddings.
+    """
+    global _llm
+    if _llm is not None:
+        return _llm
+    if not settings.mistral_api_key:
+        raise RuntimeError("MISTRAL_API_KEY is not set; the AI blog workflow needs it.")
+    logger.info("Using Mistral chat model: %s", settings.mistral_chat_model)
+    _llm = ChatMistralAI(
+        model=settings.mistral_chat_model,
+        api_key=settings.mistral_api_key,
+        temperature=settings.mistral_temperature,
     )
-    return ChatOllama(
-        model=settings.ollama_model,
-        base_url=settings.ollama_base_url,
-        temperature=0.7,
-    )
+    return _llm
 
 
 def _conv_context(conversation: List[Dict[str, str]], max_turns: int = 6) -> str:

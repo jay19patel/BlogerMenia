@@ -230,6 +230,47 @@ export const api = {
     return handleResponse(res);
   },
 
+  // ── Interactions (likes + bookmarks, user-scoped) ─────────────────────────
+
+  async getBlogInteraction(slug) {
+    // Returns { has_liked, bookmark|null } for the current user. Requires auth.
+    const headers = await authHeaders();
+    const res = await fetch(`${BLOG_API}/${slug}/interaction/`, { headers });
+    return handleResponse(res);
+  },
+
+  async saveBookmark(slug, sectionId, sectionTitle = null) {
+    const headers = await authHeaders();
+    const res = await fetch(`${BLOG_API}/${slug}/bookmark/`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ section_id: sectionId, section_title: sectionTitle }),
+    });
+    return handleResponse(res);
+  },
+
+  async deleteBookmark(slug) {
+    const headers = await authHeaders();
+    const res = await fetch(`${BLOG_API}/${slug}/bookmark/`, { method: 'DELETE', headers });
+    if (!res.ok && res.status !== 204) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+    return { success: true };
+  },
+
+  async getMyBookmarks(limit = 20) {
+    const headers = await authHeaders();
+    const res = await fetch(`${FASTAPI_BASE}/api/v1/users/me/bookmarks/?limit=${limit}`, { headers });
+    return handleResponse(res);
+  },
+
+  async getMyLikedBlogIds(limit = 100) {
+    const headers = await authHeaders();
+    const res = await fetch(`${FASTAPI_BASE}/api/v1/users/me/likes/?limit=${limit}`, { headers });
+    const data = await handleResponse(res);
+    return data.blog_ids || [];
+  },
+
   async toggleFeaturedBlog(token, blogId, newStatus) {
     const headers = await authHeaders();
     const res = await fetch(`${BLOG_API}/${blogId}/`, { method: 'PATCH', headers, body: JSON.stringify({ featured: newStatus }) });
@@ -237,6 +278,22 @@ export const api = {
   },
 
   async getSuggestedBlogs(limit = 3, excludeSlug = null) {
+    // Prefer the semantic-similar endpoint when we know which blog we're
+    // suggesting around. Falls back to a recency list if related/ 404s
+    // (e.g. for a freshly-created blog before its embedding lands).
+    if (excludeSlug) {
+      try {
+        const res = await fetch(`${BLOG_API}/${encodeURIComponent(excludeSlug)}/related/?limit=${limit}`, {
+          headers: jsonHeaders(),
+        });
+        if (res.ok) {
+          const data = await handleResponse(res);
+          if (Array.isArray(data) && data.length > 0) return data;
+        }
+      } catch (e) {
+        // fall through to recency
+      }
+    }
     let url = `${BLOG_API}/?limit=${limit}`;
     if (excludeSlug) url += `&excludeSlug=${encodeURIComponent(excludeSlug)}`;
     const res = await fetch(url, { headers: jsonHeaders() });

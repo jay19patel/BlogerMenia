@@ -117,6 +117,24 @@ export default function Testimonial() {
             className="testimonial-swiper !pb-16"
           >
             <style jsx global>{`
+              /* Allow vertical overflow so cards can translate up on hover
+                 without being clipped, while still hiding horizontal overflow
+                 so the slide animation looks correct. Extra top padding keeps
+                 the shadow visible too. */
+              .testimonial-swiper {
+                overflow-x: clip !important;
+                overflow-y: visible !important;
+                padding-top: 16px !important;
+              }
+              .testimonial-swiper .swiper-wrapper {
+                align-items: stretch;
+              }
+              .testimonial-swiper .swiper-slide {
+                overflow: visible;
+              }
+              .testimonial-swiper .swiper-pagination {
+                bottom: 0 !important;
+              }
               .testimonial-swiper .swiper-pagination-bullet-active-brutalist {
                 background: #000 !important;
                 border: 2px solid #000 !important;
@@ -174,15 +192,7 @@ export default function Testimonial() {
                         "{content}"
                       </p>
                     </div>
-
-                    <div className="mt-8 pt-6 border-t-2 border-gray-100 flex items-center justify-between">
-                      <div className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">
-                        Status: <span className="text-green-600 font-bold">Verified</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="w-2 h-2 bg-foreground rounded-full animate-pulse"></span>
-                      </div>
-                    </div>
+ 
                   </div>
                 </SwiperSlide>
               );

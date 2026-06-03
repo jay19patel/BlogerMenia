@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { ExternalLink, AlertCircle, Copy, Check, Menu, ArrowLeft, Calendar, User, Eye, Heart, ArrowRight, ArrowDown, Layers, Zap, Cloud, Cpu, Database, RefreshCw, GitBranch } from 'lucide-react';
+import { ExternalLink, AlertCircle, Copy, Check, Menu, ArrowLeft, Calendar, User, Eye, Heart, ArrowRight, ArrowDown, Layers, Zap, Cloud, Cpu, Database, RefreshCw, GitBranch, Bookmark, BookmarkCheck } from 'lucide-react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { api } from '@/lib/api';
@@ -111,7 +111,7 @@ const normalizeReferenceUrl = (raw) => {
 };
 
 export default function BlogDetailPage() {
-    const { token } = useAuth();
+    const { token, isAuthenticated } = useAuth();
     const params = useParams();
     const router = useRouter();
     const slug = params.slug;
@@ -128,6 +128,11 @@ export default function BlogDetailPage() {
     const [isLiking, setIsLiking] = useState(false);
     const [isLikedState, setIsLikedState] = useState(false);
     const [likesCount, setLikesCount] = useState(0);
+
+    // Bookmark state — { section_id, section_title } when present
+    const [bookmark, setBookmark] = useState(null);
+    const [bookmarkBusy, setBookmarkBusy] = useState(false);
+    const [bookmarkRestored, setBookmarkRestored] = useState(false);
 
     // Define authorIdentifier for use in JSX and effects
     const authorIdentifier = blog?.author?.email || blog?.author_email || blog?.authorUsername || blog?.author?.username || blog?.author?.id;
@@ -282,6 +287,30 @@ export default function BlogDetailPage() {
         }
     }, [blog]);
 
+    // 3b. Hydrate has_liked + bookmark from the server when authenticated.
+    // The blog endpoint is anonymous + cached, so per-user state comes from
+    // a separate /interaction/ call.
+    useEffect(() => {
+        if (!blog || !isAuthenticated) {
+            setBookmark(null);
+            return;
+        }
+        let cancelled = false;
+        (async () => {
+            try {
+                const data = await api.getBlogInteraction(blog.slug);
+                if (cancelled) return;
+                if (typeof data.has_liked === 'boolean') {
+                    setIsLikedState(data.has_liked);
+                }
+                setBookmark(data.bookmark || null);
+            } catch (err) {
+                console.error('Failed to load blog interaction:', err);
+            }
+        })();
+        return () => { cancelled = true; };
+    }, [blog, isAuthenticated]);
+
     // 4. Handle Redirects
     useEffect(() => {
         const normalizedUsername = decodeURIComponent(String(username || '')).toLowerCase();
@@ -314,6 +343,28 @@ export default function BlogDetailPage() {
         }
         return toc;
     })() : [];
+
+    // 5b. Reset bookmark-restore guard when navigating between blogs
+    useEffect(() => {
+        setBookmarkRestored(false);
+    }, [slug]);
+
+    // 5c. Auto-scroll to bookmarked section once content is in the DOM
+    useEffect(() => {
+        if (!blog || !bookmark?.section_id || bookmarkRestored) return;
+        if (tableOfContents.length === 0) return;
+        // Wait one paint so all section ids are mounted, then scroll.
+        const timer = setTimeout(() => {
+            const el = document.getElementById(bookmark.section_id);
+            if (!el) return;
+            const offset = 100;
+            window.scrollTo({ top: el.offsetTop - offset, behavior: 'smooth' });
+            setActiveSection(bookmark.section_id);
+            setBookmarkRestored(true);
+            toast.success(`Resumed at ${bookmark.section_title || 'your bookmark'}`);
+        }, 150);
+        return () => clearTimeout(timer);
+    }, [blog, bookmark, bookmarkRestored, tableOfContents.length]);
 
     // 6. Scroll Tracking
     useEffect(() => {
@@ -363,18 +414,44 @@ export default function BlogDetailPage() {
         }
     };
 
+    const handleToggleBookmark = async (sectionId, sectionTitle) => {
+        if (!blog || bookmarkBusy) return;
+        if (!isAuthenticated) {
+            toast.error('Please login to bookmark this section');
+            return;
+        }
+        try {
+            setBookmarkBusy(true);
+            // Re-clicking the same section removes the bookmark; otherwise upsert.
+            const isSameSection = bookmark?.section_id === sectionId;
+            if (isSameSection) {
+                await api.deleteBookmark(blog.slug);
+                setBookmark(null);
+                toast.success('Bookmark removed');
+            } else {
+                const saved = await api.saveBookmark(blog.slug, sectionId, sectionTitle || null);
+                setBookmark(saved);
+                toast.success(`Bookmarked: ${sectionTitle || sectionId}`);
+            }
+        } catch (err) {
+            console.error('Bookmark toggle failed:', err);
+            toast.error('Failed to update bookmark');
+        } finally {
+            setBookmarkBusy(false);
+        }
+    };
+
     const handleLike = async () => {
         if (!blog || isLiking) return;
 
         try {
-            if (!token) {
+            if (!isAuthenticated) {
                 toast.error('Please login to like this blog');
                 return;
             }
 
             setIsLiking(true);
-            // Use slug instead of ID for the like endpoint
-            const response = await api.likeBlog(blog.slug, token);
+            const response = await api.likeBlog(blog.slug);
 
             // Update local state based on response or toggle
             if (response && response.status) {
@@ -815,24 +892,56 @@ export default function BlogDetailPage() {
                                     </button>
                                 </div>
 
+                                {bookmark?.section_id && (
+                                    <div className="mb-4 p-3 border-[3px] border-purple-900 bg-purple-50 flex items-center gap-2">
+                                        <BookmarkCheck className="w-4 h-4 text-purple-900 flex-shrink-0" />
+                                        <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-purple-900 truncate">
+                                            Saved: {bookmark.section_title || bookmark.section_id}
+                                        </span>
+                                    </div>
+                                )}
                                 <nav className="space-y-4">
-                                    {tableOfContents.map((item, index) => (
-                                        <button
-                                            key={item.id}
-                                            onClick={() => scrollToSection(item.id)}
-                                            className={`w-full text-left px-4 py-3 text-sm transition-all duration-300 border-[4px] ${activeSection === item.id
-                                                ? 'bg-black text-white border-black font-bold shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] translate-y-[-2px]'
-                                                : 'text-black border-black bg-white hover:bg-gray-50 font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-y-1 hover:translate-x-1'
-                                                }`}
-                                        >
-                                            <div className="flex items-start gap-3">
-                                                <span className={`text-xs font-mono mt-0.5 flex-shrink-0 ${activeSection === item.id ? 'text-gray-300' : 'text-gray-500'}`}>
-                                                    {(index + 1).toString().padStart(2, '0')}
-                                                </span>
-                                                <span className="flex-1 uppercase tracking-tight">{item.title}</span>
+                                    {tableOfContents.map((item, index) => {
+                                        const isActive = activeSection === item.id;
+                                        const isBookmarked = bookmark?.section_id === item.id;
+                                        return (
+                                            <div
+                                                key={item.id}
+                                                className={`flex items-stretch transition-all duration-300 border-[4px] ${isActive
+                                                    ? 'bg-black border-black shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] translate-y-[-2px]'
+                                                    : 'border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-y-1 hover:translate-x-1'
+                                                    }`}
+                                            >
+                                                <button
+                                                    onClick={() => scrollToSection(item.id)}
+                                                    className={`flex-1 text-left px-4 py-3 text-sm font-bold ${isActive ? 'text-white' : 'text-black'}`}
+                                                >
+                                                    <div className="flex items-start gap-3">
+                                                        <span className={`text-xs font-mono mt-0.5 flex-shrink-0 ${isActive ? 'text-gray-300' : 'text-gray-500'}`}>
+                                                            {(index + 1).toString().padStart(2, '0')}
+                                                        </span>
+                                                        <span className="flex-1 uppercase tracking-tight">{item.title}</span>
+                                                    </div>
+                                                </button>
+                                                <button
+                                                    onClick={() => handleToggleBookmark(item.id, item.title)}
+                                                    disabled={bookmarkBusy}
+                                                    title={isBookmarked ? 'Remove bookmark' : 'Bookmark this section'}
+                                                    aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark this section'}
+                                                    className={`px-3 flex items-center justify-center border-l-[4px] border-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isBookmarked
+                                                        ? 'bg-purple-900 text-white hover:bg-purple-800'
+                                                        : isActive
+                                                            ? 'bg-gray-800 text-white hover:bg-purple-900'
+                                                            : 'bg-white text-black hover:bg-purple-100'
+                                                        }`}
+                                                >
+                                                    {isBookmarked
+                                                        ? <BookmarkCheck className="w-4 h-4 fill-current" />
+                                                        : <Bookmark className="w-4 h-4" />}
+                                                </button>
                                             </div>
-                                        </button>
-                                    ))}
+                                        );
+                                    })}
                                 </nav>
                             </div>
                         </div>

@@ -25,12 +25,11 @@ router = APIRouter()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-def _check_ollama() -> Dict[str, Any]:
+def _check_llm() -> Dict[str, Any]:
     return {
-        "ok": True,
-        "model": settings.ollama_model,
-        "base_url": settings.ollama_base_url,
-        "provider": "ollama",
+        "ok": bool(settings.mistral_api_key),
+        "model": settings.mistral_chat_model,
+        "provider": "mistral",
     }
 
 
@@ -91,7 +90,7 @@ async def index():
 
 @router.get("/health/")
 async def health():
-    return {"status": "ok", "llm": _check_ollama(), "storage": "mongodb"}
+    return {"status": "ok", "llm": _check_llm(), "storage": "mongodb"}
 
 
 @router.get("/chat/")
@@ -100,7 +99,7 @@ async def chat_help():
         "status": "ok",
         "message": "Use POST /chat/ with JSON body: {\"message\": \"hello\"}",
         "docs": "/docs",
-        "llm": _check_ollama(),
+        "llm": _check_llm(),
         "storage": "mongodb",
     }
 
