@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { Mail, Lock, User, Eye, EyeOff, Zap, Shield, Heart } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 
-export default function RegisterPage() {
+function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -21,6 +21,8 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const { register, loginWithGoogle } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -48,7 +50,7 @@ export default function RegisterPage() {
       if (result.success) {
         toast.success("Account created successfully! Welcome to BlogerMenia!");
         setTimeout(() => {
-          router.push("/");
+          router.push(callbackUrl);
         }, 500);
       } else {
         toast.error(result.error || "Registration failed. Please try again.");
@@ -293,7 +295,11 @@ export default function RegisterPage() {
                       required
                       className="sr-only peer"
                     />
-                    <div className="w-4 h-4 border-2 border-foreground bg-background peer-checked:bg-foreground transition-colors"></div>
+                    <div className="w-4 h-4 border-2 border-foreground bg-background peer-checked:bg-foreground transition-colors flex items-center justify-center">
+                      <svg className="w-2.5 h-2.5 text-background opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
                   </div>
                   <label htmlFor="terms" className="ml-2 text-xs font-mono text-gray-600">
                     Acknowledge the{" "}
@@ -358,7 +364,7 @@ export default function RegisterPage() {
               <p className="mt-8 text-center text-xs font-mono uppercase tracking-widest text-foreground font-bold">
                 Existing Operator?{" "}
                 <Link
-                  href="/login"
+                  href={callbackUrl !== "/" ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}` : "/login"}
                   className="text-indigo-600 hover:text-foreground transition-colors underline decoration-2 underline-offset-4"
                 >
                   Authenticate
@@ -369,5 +375,20 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={
+      <div className="w-full min-h-[calc(100vh-4rem)] flex items-center justify-center">
+        <div className="flex items-center justify-center gap-3 bg-background px-6 py-4 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]">
+          <span className="h-5 w-5 border-2 border-foreground border-r-transparent animate-spin"></span>
+          <span className="font-mono font-bold text-sm uppercase tracking-widest text-foreground">Loading System...</span>
+        </div>
+      </div>
+    }>
+      <RegisterForm />
+    </Suspense>
   );
 }

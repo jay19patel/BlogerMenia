@@ -11,7 +11,7 @@ import { getImageUrl } from "@/lib/utils";
 import Image from "next/image";
 
 export default function ProfilePage() {
-  const { user, token, updateProfile } = useAuth();
+  const { user, token, updateProfile, isAuthenticated, loading: authLoading } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [isTestimonialModalOpen, setIsTestimonialModalOpen] = useState(false);
@@ -21,6 +21,13 @@ export default function ProfilePage() {
     bio: "",
     profile_image: "",
   });
+
+  // Redirect if definitely not authenticated and not loading
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.replace(`/login?callbackUrl=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+    }
+  }, [authLoading, isAuthenticated, router]);
 
   useEffect(() => {
     if (!user) return;
@@ -153,6 +160,17 @@ export default function ProfilePage() {
       setLoading(false);
     }
   };
+
+  if (authLoading || !isAuthenticated || (isAuthenticated && !user)) {
+    return (
+      <div className="w-full h-screen flex items-center justify-center">
+        <div className="flex items-center justify-center gap-3 bg-background px-6 py-4 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]">
+          <span className="h-5 w-5 border-2 border-foreground border-r-transparent animate-spin"></span>
+          <span className="font-mono font-bold text-sm uppercase tracking-widest text-foreground">Loading System...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[calc(100vh-4rem)] py-12">

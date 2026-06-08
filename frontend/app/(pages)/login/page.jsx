@@ -1,16 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { Mail, Lock, Eye, EyeOff, BookOpen, Users, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import ContactAdmin from "@/components/ContactAdmin";
 
-export default function LoginPage() {
+function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
+  const [persistSession, setPersistSession] = useState(true);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -19,6 +20,8 @@ export default function LoginPage() {
   const [contactAdminOpen, setContactAdminOpen] = useState(false);
   const { login, loginWithGoogle } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/";
 
   const handleGoogleLogin = async () => {
     setLoading(true);
@@ -44,7 +47,7 @@ export default function LoginPage() {
       if (result.success) {
         toast.success("Login successful! Welcome back!");
         setTimeout(() => {
-          router.replace("/");
+          router.replace(callbackUrl);
         }, 500);
       } else {
         toast.error(result.error || "Login failed. Please try again.");
@@ -190,14 +193,20 @@ export default function LoginPage() {
                 {/* Remember & Forgot */}
                 <div className="flex items-center justify-between mt-4">
                   <label className="flex items-center cursor-pointer group">
-                    <div className="relative">
+                    <div className="relative flex items-center justify-center">
                       <input
                         type="checkbox"
-                        className="sr-only"
+                        checked={persistSession}
+                        onChange={(e) => setPersistSession(e.target.checked)}
+                        className="sr-only peer"
                       />
-                      <div className="w-4 h-4 border-2 border-foreground bg-background group-hover:bg-gray-100 transition-colors"></div>
+                      <div className="w-4 h-4 border-2 border-foreground bg-background peer-checked:bg-foreground transition-colors flex items-center justify-center">
+                        <svg className="w-2.5 h-2.5 text-background opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
                     </div>
-                    <span className="ml-2 text-xs font-mono font-bold uppercase tracking-widest text-foreground">Persist Session</span>
+                    <span className="ml-2 text-xs font-mono font-bold uppercase tracking-widest text-foreground select-none">Persist Session</span>
                   </label>
                   <ContactAdmin open={contactAdminOpen} onOpenChange={setContactAdminOpen}>
                     <button
@@ -260,7 +269,7 @@ export default function LoginPage() {
               <p className="mt-8 text-center text-xs font-mono uppercase tracking-widest text-foreground font-bold">
                 Unregistered User?{" "}
                 <Link
-                  href="/register"
+                  href={callbackUrl !== "/" ? `/register?callbackUrl=${encodeURIComponent(callbackUrl)}` : "/register"}
                   className="text-indigo-600 hover:text-foreground transition-colors underline decoration-2 underline-offset-4"
                 >
                   Init Session
@@ -271,5 +280,20 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="w-full min-h-[calc(100vh-4rem)] flex items-center justify-center">
+        <div className="flex items-center justify-center gap-3 bg-background px-6 py-4 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]">
+          <span className="h-5 w-5 border-2 border-foreground border-r-transparent animate-spin"></span>
+          <span className="font-mono font-bold text-sm uppercase tracking-widest text-foreground">Loading System...</span>
+        </div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }

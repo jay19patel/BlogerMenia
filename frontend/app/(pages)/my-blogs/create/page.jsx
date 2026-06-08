@@ -13,7 +13,7 @@ export default function CreateBlogPage() {
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      router.push("/login");
+      router.push(`/login?callbackUrl=${encodeURIComponent(window.location.pathname + window.location.search)}`);
     }
   }, [isAuthenticated, loading, router]);
 

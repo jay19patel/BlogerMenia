@@ -2,13 +2,15 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { Search, ChevronLeft, ChevronRight, Share2 } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { api } from "@/lib/api";
 import { getImageUrl } from "@/lib/utils";
 import LoaderCard from "@/components/ui/loader";
 import Breadcrumb from "@/components/Breadcrumb";
+import SearchBar from "@/components/ui/search-bar";
+import Pagination from "@/components/ui/pagination";
 
 const CREATORS_PER_PAGE = 10;
 
@@ -31,14 +33,14 @@ export default function CreatorsList() {
     const [isLoading, setIsLoading] = useState(true);
     const [isFetching, setIsFetching] = useState(false);
 
-    // Sync URL when state changes
+    // Sync URL when state changes — use replace to avoid polluting browser Back button history
     const updateUrl = useCallback((page, search) => {
         const params = new URLSearchParams();
         if (page > 1) params.set("page", page.toString());
         if (search && search.trim() !== "") params.set("search", search.trim());
 
         const newUrl = `${pathname}${params.toString() ? `?${params.toString()}` : ""}`;
-        router.push(newUrl, { scroll: false });
+        router.replace(newUrl, { scroll: false });
     }, [pathname, router]);
 
     // Fetch Creators
@@ -70,12 +72,6 @@ export default function CreatorsList() {
         setSubmittedSearch(searchQuery.trim());
     };
 
-    const handleSearchKeyPress = (e) => {
-        if (e.key === "Enter") {
-            handleSearch();
-        }
-    };
-
     const totalPages = Math.ceil(totalCreators / CREATORS_PER_PAGE);
 
     const breadcrumbItems = [
@@ -105,22 +101,17 @@ export default function CreatorsList() {
                     </p>
                 </div>
 
-                {/* Search */}
-                <div className="mb-12 relative flex border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(88,28,135,1)]">
-                    <input
-                        type="text"
-                        placeholder="query architect index..."
+                {/* Search — shared SearchBar component */}
+                <div className="mb-12">
+                    <SearchBar
+                        id="creators-search"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        onKeyDown={handleSearchKeyPress}
-                        className="w-full pl-6 pr-6 py-4 bg-background focus:outline-none focus:ring-2 focus:ring-foreground transition-all font-mono text-foreground"
+                        onSubmit={handleSearch}
+                        placeholder="query architect index..."
+                        buttonLabel="Exec"
+                        disabled={isFetching}
                     />
-                    <button
-                        onClick={handleSearch}
-                        className="right-0 top-0 bottom-0 px-8 bg-foreground text-background font-bold uppercase tracking-widest hover:bg-gray-800 transition-all border-l-2 border-foreground flex items-center justify-center font-mono"
-                    >
-                        Exec
-                    </button>
                 </div>
 
                 <div className="mb-8 flex items-center justify-between border-b-2 border-gray-200 pb-4">
@@ -150,6 +141,7 @@ export default function CreatorsList() {
                                                         fill
                                                         sizes="80px"
                                                         className="object-cover transition-all"
+                                                        unoptimized
                                                     />
                                                 ) : (
                                                     <div className="w-full h-full bg-foreground flex items-center justify-center text-background">
@@ -213,47 +205,12 @@ export default function CreatorsList() {
                         </div>
 
                         {/* Pagination */}
-                        {totalPages > 1 && (
-                            <div className="flex items-center justify-center gap-4 mt-16 pb-8 font-mono">
-                                <button
-                                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                                    disabled={currentPage === 1 || isFetching}
-                                    className="p-3 bg-background border-2 border-foreground text-foreground hover:bg-foreground hover:text-background disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-[4px_4px_0px_0px_rgba(88,28,135,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1"
-                                >
-                                    <ChevronLeft className="w-5 h-5" />
-                                </button>
-
-                                <div className="flex items-center gap-2">
-                                    {[...Array(totalPages)].map((_, i) => {
-                                        const p = i + 1;
-                                        if (totalPages > 7 && Math.abs(p - currentPage) > 2 && p !== 1 && p !== totalPages) {
-                                            if (Math.abs(p - currentPage) === 3) return <span key={p} className="text-gray-400 font-bold tracking-widest">...</span>;
-                                            return null;
-                                        }
-                                        return (
-                                            <button
-                                                key={p}
-                                                onClick={() => setCurrentPage(p)}
-                                                className={`w-12 h-12 font-bold transition-all border-2 border-foreground ${currentPage === p
-                                                    ? "bg-foreground text-background shadow-[4px_4px_0px_0px_rgba(88,28,135,1)]"
-                                                    : "bg-background text-foreground hover:bg-gray-100 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px]"
-                                                    }`}
-                                            >
-                                                {p}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-
-                                <button
-                                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                                    disabled={currentPage === totalPages || isFetching}
-                                    className="p-3 bg-background border-2 border-foreground text-foreground hover:bg-foreground hover:text-background disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-[4px_4px_0px_0px_rgba(88,28,135,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1"
-                                >
-                                    <ChevronRight className="w-5 h-5" />
-                                </button>
-                            </div>
-                        )}
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={setCurrentPage}
+                            disabled={isFetching}
+                        />
                     </>
                 ) : (
                     <div className="text-center py-24 bg-background border-2 border-dashed border-foreground shadow-[8px_8px_0px_0px_rgba(200,200,200,1)]">
@@ -263,7 +220,7 @@ export default function CreatorsList() {
                         </p>
                         <button
                             onClick={() => { setSearchQuery(""); setSubmittedSearch(""); setCurrentPage(1); }}
-                            className="mt-8 px-6 py-3 bg-foreground text-background font-bold uppercase font-mono hover:bg-gray-800 transition-colors"
+                            className="mt-8 px-6 py-3 bg-foreground text-background font-bold uppercase font-mono hover:bg-gray-800 transition-colors border-2 border-foreground"
                         >
                             Reset Search
                         </button>

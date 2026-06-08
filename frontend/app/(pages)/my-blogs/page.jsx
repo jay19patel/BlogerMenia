@@ -44,11 +44,9 @@ export default function MyBlogsPage() {
   const [totalPlaylists, setTotalPlaylists] = useState(0);
   const PLAYLISTS_PER_PAGE = 5;
 
-  // Redirect if definitely not authenticated and not loading
-  // Use replace so the login page doesn't appear in Back history
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      router.replace("/login");
+      router.replace(`/login?callbackUrl=${encodeURIComponent(window.location.pathname + window.location.search)}`);
     }
   }, [authLoading, isAuthenticated, router]);
 
