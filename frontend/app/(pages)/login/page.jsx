@@ -44,7 +44,7 @@ export default function LoginPage() {
       if (result.success) {
         toast.success("Login successful! Welcome back!");
         setTimeout(() => {
-          router.push("/");
+          router.replace("/");
         }, 500);
       } else {
         toast.error(result.error || "Login failed. Please try again.");

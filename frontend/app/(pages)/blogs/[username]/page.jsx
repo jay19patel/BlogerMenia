@@ -33,7 +33,13 @@ export default async function UserBlogsPage({ params }) {
   const username = decodeURIComponent(rawUsername);
 
   return (
-    <Suspense fallback={<div className="flex justify-center items-center min-h-screen"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div></div>}>
+    <Suspense fallback={
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <div className="border-2 border-foreground p-8 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]">
+          <p className="font-mono font-bold text-xs uppercase tracking-widest text-foreground">Loading Profile...</p>
+        </div>
+      </div>
+    }>
       <UserBlogsList username={username} />
     </Suspense>
   );

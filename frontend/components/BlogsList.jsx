@@ -4,7 +4,9 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import HorizontalBlogCard from "@/components/HorizontalBlogCard";
 import Breadcrumb from "@/components/Breadcrumb";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import SearchBar from "@/components/ui/search-bar";
+import CategoryPills from "@/components/ui/category-pills";
+import Pagination from "@/components/ui/pagination";
 import { api } from "@/lib/api";
 import LoaderCard from "@/components/ui/loader";
 import { getBlogDate, formatDate } from "../lib/utils";
@@ -33,7 +35,7 @@ export default function BlogsList() {
     const [isLoading, setIsLoading] = useState(true);
     const [isFetchingBlogs, setIsFetchingBlogs] = useState(false);
 
-    // Sync URL when state changes
+    // Sync URL when state changes — use replace to avoid polluting Back button history
     const updateUrl = useCallback((page, search, category) => {
         const params = new URLSearchParams();
         if (page > 1) params.set("page", page.toString());
@@ -41,7 +43,7 @@ export default function BlogsList() {
         if (category && category !== "All") params.set("category", category);
 
         const newUrl = `${pathname}${params.toString() ? `?${params.toString()}` : ""}`;
-        router.push(newUrl, { scroll: false });
+        router.replace(newUrl, { scroll: false });
     }, [pathname, router]);
 
     // Fetch Categories
@@ -106,13 +108,6 @@ export default function BlogsList() {
         setSubmittedSearch(val);
     };
 
-    const handleSearchKeyPress = (e) => {
-        if (e.key === "Enter") {
-            e.preventDefault();
-            handleSearch();
-        }
-    };
-
     const handleCategoryChange = (category) => {
         setSelectedCategory(category);
         setCurrentPage(1);
@@ -155,40 +150,20 @@ export default function BlogsList() {
 
                 {/* Search and Filter */}
                 <div className="mb-12 space-y-6">
-                    <div className="relative border-2 border-foreground bg-background focus-within:ring-2 focus-within:ring-foreground transition-all flex h-14">
-                        <div className="flex items-center justify-center pl-4 bg-background">
-                            <Search className="text-foreground w-5 h-5" />
-                        </div>
-                        <input
-                            type="text"
-                            placeholder="QUERY INDEX..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            onKeyDown={handleSearchKeyPress}
-                            className="w-full px-4 py-3 bg-transparent text-foreground placeholder-gray-400 focus:outline-none font-mono uppercase text-sm"
-                        />
-                        <button
-                            onClick={handleSearch}
-                            className="px-8 py-3 bg-foreground text-background font-bold uppercase tracking-widest hover:bg-gray-800 transition-all border-l-2 border-foreground hover:shadow-[6px_6px_0px_0px_rgba(88,28,135,1)] hover:-translate-x-1 hover:-translate-y-1"
-                        >
-                            Exec
-                        </button>
-                    </div>
-
-                    <div className="flex flex-wrap gap-3">
-                        {categories.map((category) => (
-                            <button
-                                key={category}
-                                onClick={() => handleCategoryChange(category)}
-                                className={`px-4 py-2 font-mono text-xs uppercase tracking-widest font-bold transition-all border-2 border-foreground ${selectedCategory === category
-                                    ? "bg-foreground text-background shadow-[4px_4px_0px_0px_rgba(88,28,135,1)]"
-                                    : "bg-background text-foreground hover:bg-gray-100 hover:shadow-[4px_4px_0px_0px_rgba(88,28,135,1)] hover:-translate-y-1"
-                                    }`}
-                            >
-                                {category}
-                            </button>
-                        ))}
-                    </div>
+                    <SearchBar
+                        id="blogs-search"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onSubmit={handleSearch}
+                        placeholder="QUERY INDEX..."
+                        buttonLabel="Exec"
+                        disabled={isFetchingBlogs}
+                    />
+                    <CategoryPills
+                        categories={categories}
+                        selectedCategory={selectedCategory}
+                        onSelect={handleCategoryChange}
+                    />
                 </div>
 
                 <div className="mb-8 flex items-center justify-between border-b border-border pb-4">
@@ -197,7 +172,7 @@ export default function BlogsList() {
                     </p>
                 </div>
 
-                {/* Blogs List - Single Column */}
+                {/* Blogs List */}
                 {transformedBlogs.length > 0 ? (
                     <>
                         <div className="mx-auto">
@@ -207,92 +182,36 @@ export default function BlogsList() {
                                 ))}
                             </div>
                         </div>
-
-                        {/* Pagination */}
-                        {totalPages > 1 && (
-                            <div className="flex items-center justify-center gap-4 mt-16 pb-8 font-mono">
-                                <button
-                                    onClick={() =>
-                                        setCurrentPage((prev) => Math.max(prev - 1, 1))
-                                    }
-                                    disabled={currentPage === 1 || isFetchingBlogs}
-                                    className="flex items-center justify-center w-10 h-10 bg-background border-2 border-foreground text-foreground hover:bg-gray-100 hover:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none transition-all"
-                                >
-                                    <ChevronLeft className="w-5 h-5" />
-                                </button>
-
-                                <div className="flex items-center gap-2">
-                                    {(() => {
-                                        const getPaginationRange = (current, total) => {
-                                            if (total <= 7) {
-                                                return Array.from({ length: total }, (_, i) => i + 1);
-                                            }
-
-                                            let pages = [1, 2, 3];
-                                            pages.push(total - 2, total - 1, total);
-                                            if (current > 1 && current < total) {
-                                                pages.push(current - 1, current, current + 1);
-                                            }
-
-                                            pages = [...new Set(pages)].filter(p => p > 0 && p <= total).sort((a, b) => a - b);
-
-                                            const result = [];
-                                            for (let i = 0; i < pages.length; i++) {
-                                                if (i > 0 && pages[i] - pages[i - 1] > 1) {
-                                                    result.push('...');
-                                                }
-                                                result.push(pages[i]);
-                                            }
-
-                                            return result;
-                                        };
-
-                                        const paginationRange = getPaginationRange(currentPage, totalPages);
-
-                                        return paginationRange.map((page, index) => {
-                                            if (page === '...') {
-                                                return (
-                                                    <span key={`dots-${index}`} className="px-2 text-foreground font-bold">
-                                                        ...
-                                                    </span>
-                                                );
-                                            }
-
-                                            return (
-                                                <button
-                                                    key={page}
-                                                    onClick={() => setCurrentPage(page)}
-                                                    disabled={isFetchingBlogs}
-                                                    className={`w-10 h-10 flex items-center justify-center font-bold text-sm uppercase transition-all border-2 border-foreground ${currentPage === page
-                                                        ? "bg-foreground text-background shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]"
-                                                        : "bg-background text-foreground hover:bg-gray-100"
-                                                        }`}
-                                                >
-                                                    {page}
-                                                </button>
-                                            );
-                                        });
-                                    })()}
-                                </div>
-
-                                <button
-                                    onClick={() =>
-                                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                                    }
-                                    disabled={currentPage === totalPages || isFetchingBlogs}
-                                    className="flex items-center justify-center w-10 h-10 bg-background border-2 border-foreground text-foreground hover:bg-gray-100 hover:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none transition-all"
-                                >
-                                    <ChevronRight className="w-5 h-5" />
-                                </button>
-                            </div>
-                        )}
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={setCurrentPage}
+                            disabled={isFetchingBlogs}
+                        />
                     </>
                 ) : (
-                    <div className="text-center py-16 border-2 border-dashed border-gray-300">
-                        <p className="text-xl text-foreground font-mono font-bold uppercase tracking-widest mb-4">No logs matched query</p>
-                        <p className="text-gray-500 font-mono text-sm">
-                            Try adjusting your search criteria.
+                    <div className="text-center py-16 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]">
+                        <p className="text-xl text-foreground font-mono font-bold uppercase tracking-widest mb-4">
+                            {submittedSearch || selectedCategory !== "All" ? "SYS.NO_MATCH" : "SYS.EMPTY_LOGS"}
                         </p>
+                        <p className="text-gray-500 font-mono text-sm mb-6">
+                            {submittedSearch || selectedCategory !== "All"
+                                ? `No logs matched query / category filters. Try adjusting your criteria.`
+                                : "No logs found in this index."}
+                        </p>
+                        {(submittedSearch || selectedCategory !== "All") && (
+                            <button
+                                onClick={() => {
+                                    setSearchQuery("");
+                                    setSubmittedSearch("");
+                                    setSelectedCategory("All");
+                                    setCurrentPage(1);
+                                }}
+                                className="px-6 py-3 bg-foreground text-background border-2 border-foreground font-mono font-bold uppercase tracking-widest text-xs shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:bg-purple-900 hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
+                            >
+                                Reset Filters
+                            </button>
+                        )}
                     </div>
                 )}
             </div>

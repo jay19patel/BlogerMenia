@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
@@ -14,6 +14,7 @@ import { getImageUrl } from '@/lib/utils';
 
 export default function PlaylistDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const { token: authToken } = useAuth();
   const playlistSlug = params.playlist_id;
   const username = params.username;
@@ -92,13 +93,19 @@ export default function PlaylistDetailPage() {
     <div className="py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back Button */}
-        <Link
-          href={`/blogs/${username}`}
+        <button
+          onClick={() => {
+            if (typeof window !== 'undefined' && window.history.length > 1) {
+              router.back();
+            } else {
+              router.push(`/blogs/${username}`);
+            }
+          }}
           className="inline-flex items-center gap-2 text-foreground hover:bg-foreground hover:text-background border-2 border-transparent hover:border-foreground px-3 py-1 font-mono font-bold uppercase tracking-widest text-xs transition-all mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to {playlist?.owner?.full_name || username}'s Articles
-        </Link>
+        </button>
 
         {/* Playlist Profile Section */}
         <div className="relative mb-12 border-2 border-foreground p-8 bg-background shadow-[8px_8px_0px_0px_#581c87] min-h-[16rem]">

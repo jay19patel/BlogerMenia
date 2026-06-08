@@ -4,12 +4,16 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { ChevronLeft, ChevronRight, Plus, Eye, Heart, Star, BookOpen, ListMusic, Edit2, Trash2, Loader2, User as UserIcon } from "lucide-react";
+import { Plus, Eye, Heart, Star, ListMusic } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getBlogDate, formatDate, getImageUrl } from "@/lib/utils";
 import Image from "next/image";
+import ProfileHeader from "@/components/ProfileHeader";
+import CategoryPills from "@/components/ui/category-pills";
+import Pagination from "@/components/ui/pagination";
+import SearchBar from "@/components/ui/search-bar";
 
 const BLOGS_PER_PAGE = 10;
 
@@ -41,9 +45,10 @@ export default function MyBlogsPage() {
   const PLAYLISTS_PER_PAGE = 5;
 
   // Redirect if definitely not authenticated and not loading
+  // Use replace so the login page doesn't appear in Back history
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      router.push("/login");
+      router.replace("/login");
     }
   }, [authLoading, isAuthenticated, router]);
 
@@ -211,180 +216,106 @@ export default function MyBlogsPage() {
   // If not authenticated (and done loading), the router push handles it, but we return null to avoid flash.
   if (!authLoading && !isAuthenticated) return null;
 
+  const profileActions = (
+    <>
+      <Link
+        href="/my-blogs/create"
+        className="group flex items-center gap-2 px-6 py-3 bg-purple-900 text-white border-2 border-foreground font-mono font-bold uppercase tracking-widest text-xs shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
+      >
+        <Plus className="w-4 h-4" />
+        CREATE BLOG
+      </Link>
+      <Link
+        href="/playlists/create"
+        className="group flex items-center gap-2 px-6 py-3 bg-foreground text-background border-2 border-foreground font-mono font-bold uppercase tracking-widest text-xs shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:bg-purple-900 hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
+      >
+        <ListMusic className="w-4 h-4" />
+        CREATE PLAYLIST
+      </Link>
+      <Link
+        href={`/blogs/${user?.email}`}
+        className="flex items-center gap-2 px-6 py-3 bg-background text-foreground border-2 border-foreground font-mono font-bold uppercase tracking-widest text-xs shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
+      >
+        <Eye className="w-4 h-4" />
+        PUBLIC VIEW
+      </Link>
+    </>
+  );
+
   return (
     <div className="min-h-screen py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Profile Header */}
-        {userProfile ? (
-          <div className="mb-12 border-2 border-foreground p-8 bg-background shadow-[8px_8px_0px_0px_#581c87]">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-              {/* Left Side: Avatar & Name/Details */}
-              <div className="lg:col-span-5 flex flex-col sm:flex-row items-center sm:items-start gap-6">
-                <div className="relative w-28 h-28 shrink-0">
-                  <div className="absolute inset-0 border-2 border-foreground bg-zinc-100 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] overflow-hidden">
-                    {(typeof userProfile.profile_image === 'string' ? userProfile.profile_image : userProfile.profile_image?.file_path) ? (
-                      <Image
-                        src={getImageUrl(typeof userProfile.profile_image === 'string' ? userProfile.profile_image : userProfile.profile_image.file_path)}
-                        alt={userProfile.username || 'User'}
-                        fill
-                        className="object-cover transition-all duration-500"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-foreground text-background">
-                        <p className="font-mono font-bold uppercase tracking-widest text-3xl">SYS</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
+        {/* Shared Profile Header */}
+        <ProfileHeader
+          profile={userProfile}
+          loading={profileLoading}
+          actions={profileActions}
+        />
 
-                <div className="flex flex-col justify-center text-center sm:text-left mt-2">
-                  <h3 className="font-extrabold text-3xl text-foreground mb-1 uppercase tracking-tighter">
-                    {userProfile.full_name || userProfile.email?.split('@')[0] || "User"}
-                  </h3>
-                  <p className="font-mono font-bold text-xs uppercase tracking-widest text-purple-900 mb-3 border-b-2 border-foreground inline-block pb-1">
-                    {userProfile.email}
-                  </p>
-                  {userProfile.headline && (
-                    <p className="font-serif italic text-lg text-foreground mb-2">
-                      {userProfile.headline}
-                    </p>
-                  )}
-                  {userProfile.bio && (
-                    <p className="font-mono text-xs leading-relaxed text-gray-600 line-clamp-3">
-                      {userProfile.bio}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Middle/Right: Stats & Action Stack */}
-              <div className="lg:col-span-7 flex flex-col gap-6">
-                {/* Minimal Stats Row */}
-                <div className="flex flex-row items-center justify-between sm:justify-start sm:gap-12 border-b-2 border-foreground pb-6">
-                  <div className="flex flex-col items-center sm:items-start">
-                    <span className="font-extrabold text-3xl text-foreground leading-none">
-                      {userProfile.blog_count || 0}
-                    </span>
-                    <span className="text-[10px] font-mono font-bold text-foreground uppercase tracking-widest mt-2">
-                      Blogs
-                    </span>
-                  </div>
-                  <div className="flex flex-col items-center sm:items-start">
-                    <span className="font-extrabold text-3xl text-foreground leading-none">
-                      {userProfile.total_views?.toLocaleString() || 0}
-                    </span>
-                    <span className="text-[10px] font-mono font-bold text-foreground uppercase tracking-widest mt-2">
-                      Views
-                    </span>
-                  </div>
-                  <div className="flex flex-col items-center sm:items-start">
-                    <span className="font-extrabold text-3xl text-foreground leading-none">
-                      {userProfile.total_likes?.toLocaleString() || 0}
-                    </span>
-                    <span className="text-[10px] font-mono font-bold text-foreground uppercase tracking-widest mt-2">
-                      Likes
-                    </span>
-                  </div>
-                  <div className="flex flex-col items-center sm:items-start">
-                    <span className="font-extrabold text-xl text-foreground leading-none mt-1">
-                      {(userProfile.createdAt || userProfile.created_at) ? new Date(userProfile.createdAt || userProfile.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : '—'}
-                    </span>
-                    <span className="text-[10px] font-mono font-bold text-foreground uppercase tracking-widest mt-2">
-                      Since
-                    </span>
-                  </div>
-                </div>
-
-                {/* Dashboard Actions Row */}
-                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4">
-                  <Link
-                    href="/my-blogs/create"
-                    className="group flex items-center gap-2 px-6 py-3 bg-purple-900 text-white border-2 border-foreground font-mono font-bold uppercase tracking-widest text-xs shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
-                  >
-                    <Plus className="w-4 h-4" />
-                    CREATE BLOG
-                  </Link>
-                  <Link
-                    href="/playlists/create"
-                    className="group flex items-center gap-2 px-6 py-3 bg-foreground text-background border-2 border-foreground font-mono font-bold uppercase tracking-widest text-xs shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:bg-purple-900 hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
-                  >
-                    <ListMusic className="w-4 h-4" />
-                    CREATE PLAYLIST
-                  </Link>
-                  <Link
-                    href={`/blogs/${user?.email}`}
-                    className="flex items-center gap-2 px-6 py-3 bg-background text-foreground border-2 border-foreground font-mono font-bold uppercase tracking-widest text-xs shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
-                  >
-                    <Eye className="w-4 h-4" />
-                    PUBLIC VIEW
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : profileLoading ? (
-          <div className="mb-12 border-2 border-foreground p-8">
-            <Skeleton className="w-full h-48 rounded-none" />
-          </div>
-        ) : null}
-
-        {/* Search / Category / Create Section */}
+        {/* Search & Category Filter */}
         <div className="mb-6 flex flex-col gap-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                placeholder="Search blogs by title..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={handleSearchKeyPress}
-                className="w-full px-5 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all font-mono text-sm text-foreground pr-24"
-              />
-              <button
-                onClick={handleSearch}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 px-4 py-1.5 bg-foreground text-background border-2 border-foreground font-mono font-bold uppercase tracking-widest text-xs hover:bg-purple-900 transition-all shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
-              >
-                Search
-              </button>
-            </div>
-          </div>
-          {/* Category Pills */}
-          <div className="flex flex-wrap gap-3">
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => handleCategoryChange(category)}
-                className={`px-5 py-2 font-mono font-bold uppercase tracking-widest text-xs border-2 border-foreground transition-all shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 ${selectedCategory === category
-                  ? "bg-purple-900 text-white"
-                  : "bg-background text-foreground"
-                  }`}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
+          <SearchBar
+            id="my-blogs-search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onSubmit={handleSearch}
+            placeholder="SEARCH BLOGS BY TITLE..."
+            buttonLabel="Search"
+            disabled={blogsLoading}
+          />
+          <CategoryPills
+            categories={categories}
+            selectedCategory={selectedCategory}
+            onSelect={handleCategoryChange}
+          />
         </div>
 
         {/* Blog Table */}
         {blogsLoading && blogs.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden p-6">
+          <div className="bg-background border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] overflow-hidden p-6">
             <div className="space-y-4">
               {[...Array(5)].map((_, i) => (
                 <div key={i} className="flex items-center space-x-4">
-                  <Skeleton className="h-4 w-1/3" />
-                  <Skeleton className="h-4 w-1/6" />
-                  <Skeleton className="h-4 w-1/6" />
-                  <Skeleton className="h-4 w-1/6" />
+                  <Skeleton className="h-4 w-1/3 rounded-none" />
+                  <Skeleton className="h-4 w-1/6 rounded-none" />
+                  <Skeleton className="h-4 w-1/6 rounded-none" />
+                  <Skeleton className="h-4 w-1/6 rounded-none" />
                 </div>
               ))}
             </div>
           </div>
         ) : blogs.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-xl text-gray-600 mb-4">No blogs found</p>
-            <p className="text-gray-500">
-              Try adjusting your search or create a new blog.
+          <div className="text-center py-16 bg-background border-2 border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)] my-6">
+            <h3 className="text-2xl font-extrabold text-foreground mb-4 uppercase tracking-tight">
+              {submittedSearch || selectedCategory !== "All" ? "SYSTEM.NO_MATCH" : "SYSTEM.EMPTY_INDEX"}
+            </h3>
+            <p className="text-gray-600 font-mono text-sm mb-6 uppercase tracking-wider">
+              {submittedSearch || selectedCategory !== "All"
+                ? `No blogs matched current filters / search query.`
+                : "No blogs found in your index."}
             </p>
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+              <Link
+                href="/my-blogs/create"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-purple-900 text-white border-2 border-foreground font-mono font-bold uppercase tracking-widest text-xs shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
+              >
+                <Plus className="w-4 h-4" />
+                CREATE NEW BLOG
+              </Link>
+              {(submittedSearch || selectedCategory !== "All") && (
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSubmittedSearch("");
+                    setSelectedCategory("All");
+                    setCurrentPage(1);
+                  }}
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-background text-foreground border-2 border-foreground font-mono font-bold uppercase tracking-widest text-xs shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
+                >
+                  RESET FILTERS
+                </button>
+              )}
+            </div>
           </div>
         ) : (
           <>
@@ -470,46 +401,15 @@ export default function MyBlogsPage() {
               </div>
             </div>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-8 mb-16">
-                <button
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1 || isFetchingBlogs}
-                  className="flex items-center gap-2 px-4 py-2 font-mono font-bold uppercase tracking-widest text-xs border-2 border-foreground bg-background text-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 hover:bg-purple-900 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  PREV
-                </button>
-
-                <div className="flex items-center gap-2">
-                  {[...Array(totalPages)].map((_, index) => {
-                    const page = index + 1;
-                    return (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`w-10 h-10 flex items-center justify-center font-mono font-bold text-sm border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all ${currentPage === page
-                          ? "bg-purple-900 text-white"
-                          : "bg-background text-foreground"
-                          }`}
-                      >
-                        {page}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <button
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages || isFetchingBlogs}
-                  className="flex items-center gap-2 px-4 py-2 font-mono font-bold uppercase tracking-widest text-xs border-2 border-foreground bg-background text-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 hover:bg-purple-900 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
-                  NEXT
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            )}
+            {/* Pagination — shared brutalist component */}
+            <div className="mb-16">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                disabled={isFetchingBlogs}
+              />
+            </div>
           </>
         )}
 
@@ -608,46 +508,13 @@ export default function MyBlogsPage() {
             </div>
           )}
 
-          {/* Playlist Pagination */}
-          {playlistTotalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-8">
-              <button
-                onClick={() => setPlaylistPage((prev) => Math.max(prev - 1, 1))}
-                disabled={playlistPage === 1 || playlistsLoading}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
-              >
-                <ChevronLeft className="w-5 h-5" />
-                Previous
-              </button>
-
-              <div className="flex items-center gap-2">
-                {[...Array(playlistTotalPages)].map((_, index) => {
-                  const page = index + 1;
-                  return (
-                    <button
-                      key={page}
-                      onClick={() => setPlaylistPage(page)}
-                      className={`w-10 h-10 flex items-center justify-center rounded-lg font-bold transition-all duration-300 ${playlistPage === page
-                        ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/30"
-                        : "bg-white text-gray-700 border border-gray-300 hover:border-indigo-500 hover:text-indigo-600"
-                        }`}
-                    >
-                      {page}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <button
-                onClick={() => setPlaylistPage((prev) => Math.min(prev + 1, playlistTotalPages))}
-                disabled={playlistPage === playlistTotalPages || playlistsLoading}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
-              >
-                Next
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          )}
+          {/* Playlist Pagination — brutalist shared component */}
+          <Pagination
+            currentPage={playlistPage}
+            totalPages={playlistTotalPages}
+            onPageChange={setPlaylistPage}
+            disabled={playlistsLoading}
+          />
         </div>
 
 

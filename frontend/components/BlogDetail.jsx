@@ -951,13 +951,19 @@ export default function BlogDetailPage() {
                 {/* Main Content Wrapper */}
                 <div className="w-full max-w-5xl px-4 mx-auto pb-20">
                     {/* Back Button Outside Container */}
-                    <Link
-                        href={backUrl}
+                    <button
+                        onClick={() => {
+                            if (typeof window !== 'undefined' && window.history.length > 1) {
+                                router.back();
+                            } else {
+                                router.push('/blogs');
+                            }
+                        }}
                         className="inline-flex items-center gap-2 font-mono font-bold uppercase tracking-widest text-black hover:text-purple-900 mb-6 transition-all hover:translate-x-[-4px]"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         RETURN
-                    </Link>
+                    </button>
 
                     {/* Main Blog Container */}
                     <article className="bg-white border-[4px] border-black relative z-10 flex flex-col">
