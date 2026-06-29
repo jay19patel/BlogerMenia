@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
+import LinkedInProvider from "next-auth/providers/linkedin";
 import connectToDatabase from "@/lib/mongodb";
 import User from "@/models/User";
 
@@ -9,6 +10,23 @@ export const authOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
+    LinkedInProvider({
+      clientId: process.env.LINKEDIN_CLIENT_ID,
+      clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
+      authorization: {
+        params: { scope: "openid profile email w_member_social" },
+      },
+      issuer: "https://www.linkedin.com/oauth",
+      jwks_endpoint: "https://www.linkedin.com/oauth/openid/jwks",
+      profile(profile) {
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email,
+          image: profile.picture,
+        };
+      },
     }),
     CredentialsProvider({
       name: "Credentials",
@@ -57,12 +75,10 @@ export const authOptions = {
     async signIn({ user, account, profile }) {
       if (account.provider === "google") {
         await connectToDatabase();
-        
-        // Check if user exists
+
         const existingUser = await User.findOne({ email: user.email });
-        
+
         if (!existingUser) {
-          // Create new user for Google login
           const newUser = await User.create({
             email: user.email,
             full_name: user.name,
@@ -75,14 +91,42 @@ export const authOptions = {
         } else {
           user.id = existingUser._id.toString();
           user.role = existingUser.role;
-          
-          // Link google id if not linked
+
           if (!existingUser.googleId) {
             existingUser.googleId = profile.sub;
             await existingUser.save();
           }
         }
       }
+
+      if (account.provider === "linkedin") {
+        await connectToDatabase();
+
+        const existingUser = await User.findOne({ email: user.email });
+
+        if (!existingUser) {
+          // New user — create account via LinkedIn login
+          const newUser = await User.create({
+            email: user.email,
+            full_name: user.name,
+            username: user.email.split('@')[0],
+            linkedinId: profile.sub,
+            linkedin_access_token: account.access_token,
+            profile_image: user.image || "",
+          });
+          user.id = newUser._id.toString();
+          user.role = newUser.role;
+        } else {
+          user.id = existingUser._id.toString();
+          user.role = existingUser.role;
+
+          // Link LinkedIn and refresh token on every login
+          const updates = { linkedin_access_token: account.access_token };
+          if (!existingUser.linkedinId) updates.linkedinId = profile.sub;
+          await User.findByIdAndUpdate(existingUser._id, updates);
+        }
+      }
+
       return true;
     },
     async jwt({ token, user, trigger, session }) {

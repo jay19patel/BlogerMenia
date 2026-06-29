@@ -5,6 +5,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { Plus, Eye, Heart, Star, ListMusic } from "lucide-react";
+
+// LinkedIn SVG icon
+const LinkedInIcon = ({ className }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+  </svg>
+);
 import Link from "next/link";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -30,6 +37,9 @@ export default function MyBlogsPage() {
   const [profileLoading, setProfileLoading] = useState(true);
   const [deletingPlaylistId, setDeletingPlaylistId] = useState(null);
   const [deletingBlogId, setDeletingBlogId] = useState(null);
+  const [linkedinLinked, setLinkedinLinked] = useState(false);
+  const [linkedinSharedPosts, setLinkedinSharedPosts] = useState([]);
+  const [sharingToLinkedIn, setSharingToLinkedIn] = useState(null);
 
   const [categories, setCategories] = useState(["All"]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
@@ -50,7 +60,7 @@ export default function MyBlogsPage() {
     }
   }, [authLoading, isAuthenticated, router]);
 
-  // Fetch User Profile (for stats)
+  // Fetch User Profile (for stats + LinkedIn status)
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user?.email) return;
@@ -58,6 +68,8 @@ export default function MyBlogsPage() {
         setProfileLoading(true);
         const profile = await api.getUserProfileByEmail(user.email);
         setUserProfile(profile);
+        setLinkedinLinked(!!profile.linkedinId);
+        setLinkedinSharedPosts(profile.linkedin_shared_posts || []);
       } catch (error) {
         console.error("Error fetching user profile:", error);
       } finally {
@@ -193,6 +205,38 @@ export default function MyBlogsPage() {
       setDeletingPlaylistId(null);
     }
   };
+  const handleShareToLinkedIn = async (blog) => {
+    if (!linkedinLinked) {
+      toast.error("Connect LinkedIn first from your Profile settings.");
+      return;
+    }
+    setSharingToLinkedIn(blog.slug);
+    try {
+      const blogUrl = `${window.location.origin}/blogs/${blog.author?.email || user?.email}/${blog.slug}`;
+      const res = await fetch("/api/linkedin/share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          blogSlug: blog.slug,
+          blogTitle: blog.title,
+          blogExcerpt: blog.excerpt || "",
+          blogUrl,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.detail || "Failed to share on LinkedIn");
+        return;
+      }
+      setLinkedinSharedPosts((prev) => [...prev, blog.slug]);
+      toast.success("Shared to LinkedIn!");
+    } catch {
+      toast.error("Failed to share on LinkedIn");
+    } finally {
+      setSharingToLinkedIn(null);
+    }
+  };
+
   const handleSearch = () => {
     setCurrentPage(1);
     setSubmittedSearch(searchQuery.trim());
@@ -384,12 +428,29 @@ export default function MyBlogsPage() {
                           </td>
                         )}
                         <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 flex-wrap">
                             <Link href={`/my-blogs/edit/${blog.slug}`} className="text-purple-900 font-mono font-bold text-xs uppercase tracking-widest hover:underline decoration-2 underline-offset-4">Edit</Link>
                             <Link href={(blog.author?.email || blog.author_email || blog.authorUsername) ? `/blogs/${(blog.author?.email || blog.author_email || blog.authorUsername)}/${blog.slug}` : `/blogs/${blog.slug}`} className="text-foreground font-mono font-bold text-xs uppercase tracking-widest hover:underline decoration-2 underline-offset-4">View</Link>
                             <button onClick={() => handleDeleteBlog(blog.slug || blog.id, blog.title)} disabled={deletingBlogId === (blog.slug || blog.id)} className="text-red-600 font-mono font-bold text-xs uppercase tracking-widest hover:underline decoration-2 underline-offset-4 disabled:opacity-50">
                               {deletingBlogId === (blog.slug || blog.id) ? '...' : 'Delete'}
                             </button>
+                            {/* LinkedIn Share */}
+                            {linkedinSharedPosts.includes(blog.slug) ? (
+                              <span className="flex items-center gap-1 text-[#0A66C2] font-mono font-bold text-xs uppercase tracking-widest">
+                                <LinkedInIcon className="w-3 h-3" />
+                                Shared
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => handleShareToLinkedIn(blog)}
+                                disabled={sharingToLinkedIn === blog.slug || !linkedinLinked}
+                                title={!linkedinLinked ? "Connect LinkedIn in Profile settings" : "Share on LinkedIn"}
+                                className="flex items-center gap-1 text-[#0A66C2] font-mono font-bold text-xs uppercase tracking-widest hover:underline decoration-2 underline-offset-4 disabled:opacity-40 disabled:cursor-not-allowed"
+                              >
+                                <LinkedInIcon className="w-3 h-3" />
+                                {sharingToLinkedIn === blog.slug ? '...' : 'Share'}
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>

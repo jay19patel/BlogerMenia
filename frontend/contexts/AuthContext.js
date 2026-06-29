@@ -28,6 +28,15 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const loginWithLinkedIn = async () => {
+    try {
+      await signIn('linkedin', { redirect: true, callbackUrl: '/' });
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
   const login = async (email, password) => {
     try {
       const result = await signIn('credentials', {
@@ -87,6 +96,7 @@ export function AuthProvider({ children }) {
     loading: status === 'loading',
     login,
     loginWithGoogle,
+    loginWithLinkedIn,
     register,
     logout,
     updateProfile,

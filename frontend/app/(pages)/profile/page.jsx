@@ -2,19 +2,24 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { Camera, User, Mail, FileText, Save, MessageSquare, Sparkles } from "lucide-react";
+import { Camera, User, Mail, FileText, Save, MessageSquare, Sparkles, Link2, Link2Off, ToggleLeft, ToggleRight } from "lucide-react";
 import TestimonialModal from "@/components/TestimonialModal";
 import { getImageUrl } from "@/lib/utils";
 import Image from "next/image";
+import { Suspense } from "react";
 
-export default function ProfilePage() {
+function ProfilePageContent() {
   const { user, token, updateProfile, isAuthenticated, loading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [isTestimonialModalOpen, setIsTestimonialModalOpen] = useState(false);
+  const [linkedinLinked, setLinkedinLinked] = useState(false);
+  const [linkedinAutoPost, setLinkedinAutoPost] = useState(false);
+  const [linkedinLoading, setLinkedinLoading] = useState(false);
   const [formData, setFormData] = useState({
     full_name: "",
     headline: "",
@@ -42,6 +47,8 @@ export default function ProfilePage() {
           bio: fullUser.bio || "",
           profile_image: fullUser.profile_image || fullUser.profile_image_url || user.profile_image || "",
         });
+        setLinkedinLinked(!!fullUser.linkedinId);
+        setLinkedinAutoPost(!!fullUser.linkedin_auto_post);
       } catch (err) {
         console.error("Failed to fetch full profile", err);
         setFormData({
@@ -55,6 +62,30 @@ export default function ProfilePage() {
 
     fetchProfile();
   }, [user]);
+
+  // Show toast based on LinkedIn OAuth redirect result
+  useEffect(() => {
+    const linkedin = searchParams.get("linkedin");
+    if (!linkedin) return;
+
+    const messages = {
+      connected: ["LinkedIn connected successfully!", "success"],
+      denied: ["LinkedIn connection was cancelled.", "info"],
+      already_linked: ["This LinkedIn account is already linked to another user.", "error"],
+      invalid_state: ["Invalid OAuth state. Please try again.", "error"],
+      token_failed: ["Could not get LinkedIn token. Please try again.", "error"],
+      profile_failed: ["Could not fetch LinkedIn profile. Please try again.", "error"],
+      error: ["LinkedIn connection failed. Please try again.", "error"],
+    };
+
+    const [message, type] = messages[linkedin] || ["LinkedIn: unknown response", "info"];
+    toast[type](message);
+
+    // Clean the query param from URL without reload
+    const url = new URL(window.location.href);
+    url.searchParams.delete("linkedin");
+    window.history.replaceState({}, "", url.toString());
+  }, [searchParams]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -89,6 +120,43 @@ export default function ProfilePage() {
         }));
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleLinkedInConnect = () => {
+    window.location.href = "/api/linkedin/connect";
+  };
+
+  const handleLinkedInDisconnect = async () => {
+    if (!confirm("Disconnect LinkedIn? Auto-posting will be disabled.")) return;
+    setLinkedinLoading(true);
+    try {
+      const res = await fetch("/api/linkedin/disconnect", { method: "POST" });
+      if (!res.ok) throw new Error("Failed to disconnect");
+      setLinkedinLinked(false);
+      setLinkedinAutoPost(false);
+      toast.success("LinkedIn disconnected");
+    } catch {
+      toast.error("Failed to disconnect LinkedIn");
+    } finally {
+      setLinkedinLoading(false);
+    }
+  };
+
+  const handleAutoPostToggle = async () => {
+    const next = !linkedinAutoPost;
+    setLinkedinAutoPost(next);
+    try {
+      const res = await fetch("/api/linkedin/auto-post", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ auto_post: next }),
+      });
+      if (!res.ok) throw new Error("Failed to update");
+      toast.success(next ? "Auto-post to LinkedIn enabled" : "Auto-post to LinkedIn disabled");
+    } catch {
+      setLinkedinAutoPost(!next); // revert
+      toast.error("Failed to update auto-post setting");
     }
   };
 
@@ -337,6 +405,87 @@ export default function ProfilePage() {
           </div>
         </div>
 
+        {/* LinkedIn Integration Section */}
+        <div className="bg-background border-2 border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)] overflow-hidden mb-12 relative">
+          <div className="absolute top-0 left-0 right-0 h-2 bg-[#0A66C2] border-b-2 border-foreground"></div>
+          <div className="p-8 md:p-10 pt-12">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-6 border-b-2 border-foreground pb-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-[#0A66C2] border-2 border-foreground flex items-center justify-center shrink-0 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]">
+                  <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-xl font-extrabold text-foreground uppercase tracking-tight">LinkedIn Integration</h3>
+                  <p className="text-gray-600 font-mono text-xs uppercase tracking-widest mt-1">
+                    {linkedinLinked ? "Account connected" : "Connect to enable sharing"}
+                  </p>
+                </div>
+                {linkedinLinked && (
+                  <span className="px-3 py-1 text-[10px] font-mono font-bold bg-[#0A66C2] text-white border-2 border-foreground uppercase tracking-widest shadow-[2px_2px_0px_0px_rgba(13,17,23,1)]">
+                    ✓ Linked
+                  </span>
+                )}
+              </div>
+
+              {linkedinLinked ? (
+                <button
+                  onClick={handleLinkedInDisconnect}
+                  disabled={linkedinLoading}
+                  className="flex items-center gap-2 px-5 py-2 bg-background text-red-600 border-2 border-red-600 font-mono font-bold uppercase tracking-widest text-xs shadow-[4px_4px_0px_0px_rgba(220,38,38,0.4)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Link2Off className="w-4 h-4" />
+                  Disconnect
+                </button>
+              ) : (
+                <button
+                  onClick={handleLinkedInConnect}
+                  disabled={linkedinLoading}
+                  className="flex items-center gap-2 px-5 py-2 bg-[#0A66C2] text-white border-2 border-foreground font-mono font-bold uppercase tracking-widest text-xs shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:bg-[#004182] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Link2 className="w-4 h-4" />
+                  Connect LinkedIn
+                </button>
+              )}
+            </div>
+
+            {/* Auto-post toggle — only visible when LinkedIn is connected */}
+            {linkedinLinked && (
+              <div className="flex items-center justify-between py-4 px-2">
+                <div>
+                  <p className="text-sm font-extrabold text-foreground uppercase tracking-tight font-mono">
+                    Auto-Post New Blogs
+                  </p>
+                  <p className="text-xs font-mono text-gray-600 mt-1 uppercase tracking-widest">
+                    Automatically share new blogs to LinkedIn when published
+                  </p>
+                </div>
+                <button
+                  onClick={handleAutoPostToggle}
+                  className="flex items-center gap-2 text-foreground hover:text-[#0A66C2] transition-colors"
+                  title={linkedinAutoPost ? "Disable auto-post" : "Enable auto-post"}
+                >
+                  {linkedinAutoPost ? (
+                    <ToggleRight className="w-10 h-10 text-[#0A66C2]" />
+                  ) : (
+                    <ToggleLeft className="w-10 h-10 text-gray-400" />
+                  )}
+                  <span className="text-xs font-mono font-bold uppercase tracking-widest">
+                    {linkedinAutoPost ? "ON" : "OFF"}
+                  </span>
+                </button>
+              </div>
+            )}
+
+            {!linkedinLinked && (
+              <p className="text-xs font-mono text-gray-500 uppercase tracking-widest text-center py-2">
+                Connect LinkedIn to share blogs and enable auto-posting
+              </p>
+            )}
+          </div>
+        </div>
+
         {/* Support the Community Section */}
         <div className="bg-background border-2 border-foreground p-8 md:p-10 shadow-[8px_8px_0px_0px_rgba(13,17,23,1)] relative overflow-hidden group mb-12">
           {/* Decorative Pattern */}
@@ -370,5 +519,20 @@ export default function ProfilePage() {
         user={user}
       />
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className="w-full h-screen flex items-center justify-center">
+        <div className="flex items-center justify-center gap-3 bg-background px-6 py-4 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]">
+          <span className="h-5 w-5 border-2 border-foreground border-r-transparent animate-spin"></span>
+          <span className="font-mono font-bold text-sm uppercase tracking-widest text-foreground">Loading System...</span>
+        </div>
+      </div>
+    }>
+      <ProfilePageContent />
+    </Suspense>
   );
 }

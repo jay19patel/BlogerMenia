@@ -63,7 +63,22 @@ const UserSchema = new mongoose.Schema({
   },
   googleId: {
     type: String,
-  }
+  },
+  linkedinId: {
+    type: String,
+  },
+  linkedin_access_token: {
+    type: String,
+    select: false,
+  },
+  linkedin_auto_post: {
+    type: Boolean,
+    default: false,
+  },
+  linkedin_shared_posts: {
+    type: [String],
+    default: [],
+  },
 }, {
   timestamps: true,
 });
