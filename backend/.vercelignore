@@ -1,9 +1,0 @@
-.env
-.env.*
-.venv/
-uploads/
-__pycache__/
-*.pyc
-*.pyo
-*.db
-*.sqlite3

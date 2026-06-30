@@ -1,29 +1,16 @@
 // ─────────────────────────────────────────────────────────────────────────────
-//  API client
-//  - Blog / category / stats / AI-chat  → FastAPI (port 8000)
-//  - Auth / user / media / playlists    → Next.js API routes (same origin)
+//  API client — all endpoints now served by Next.js (same origin)
+//  Blog / category / stats / AI-chat / playlists / interactions → /api/v1/...
+//  Auth / user / media / content                                → /api/...
 // ─────────────────────────────────────────────────────────────────────────────
 
 const NEXT_API = '/api';
 
-function getFastApiBase() {
-  const configured = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-  const clean = configured.replace(/\/+$/, '');
-
-  if (typeof window === 'undefined') return clean;
-
-  try {
-    const url = new URL(clean);
-    if (url.hostname === 'backend' || url.hostname === '0.0.0.0') {
-      return `${window.location.protocol}//${window.location.hostname}:8000`;
-    }
-    return url.toString().replace(/\/+$/, '');
-  } catch {
-    return `${window.location.protocol}//${window.location.hostname}:8000`;
-  }
-}
-
-const FASTAPI_BASE = getFastApiBase();
+// All traffic is now same-origin Next.js routes.
+// For server-side calls (SSR), use the full NEXTAUTH_URL; browser uses ''.
+const FASTAPI_BASE = typeof window !== 'undefined'
+  ? ''
+  : (process.env.NEXTAUTH_URL || 'http://localhost:3000').replace(/\/+$/, '');
 
 const BLOG_API = `${FASTAPI_BASE}/api/v1/blogs`;
 const PLAYLIST_API = `${FASTAPI_BASE}/api/v1/playlists`;
@@ -100,7 +87,7 @@ async function handleResponse(response) {
 
 function fetchErrorMessage(error, url) {
   if (error instanceof TypeError) {
-    return `Could not reach FastAPI at ${url}. Make sure backend is running on ${FASTAPI_BASE}.`;
+    return `Could not reach API at ${url}. Check that the server is running.`;
   }
   return error.message || 'Request failed';
 }
@@ -368,7 +355,7 @@ export const api = {
 
   async generateBlog(userMessage, sessionId = null) {
     const headers = await authHeaders();
-    const res = await fetch(`${FASTAPI_BASE}/chat/`, {
+    const res = await fetch(`${FASTAPI_BASE}/api/chat/`, {
       method: 'POST',
       headers,
       body: JSON.stringify({ message: userMessage, session_id: sessionId }),
@@ -377,14 +364,12 @@ export const api = {
   },
 
   async getSessionState(sessionId) {
-    const res = await fetch(`${FASTAPI_BASE}/session/${sessionId}/`, { method: 'GET', headers: jsonHeaders() });
+    const res = await fetch(`${FASTAPI_BASE}/api/session/${sessionId}/`, { method: 'GET', headers: jsonHeaders() });
     return handleResponse(res);
   },
 
   async saveGeneratedBlog(sessionId) {
-    // Push session blog state to FastAPI → then save via blog endpoint
-    const headers = await authHeaders();
-    const sessionRes = await fetch(`${FASTAPI_BASE}/session/${sessionId}/`, { headers: jsonHeaders() });
+    const sessionRes = await fetch(`${FASTAPI_BASE}/api/session/${sessionId}/`, { headers: jsonHeaders() });
     if (!sessionRes.ok) throw new Error('Session not found');
     const { blog_state } = await sessionRes.json();
     if (!blog_state) throw new Error('No blog in session to save');
@@ -392,7 +377,7 @@ export const api = {
   },
 
   async deleteSession(sessionId) {
-    const res = await fetch(`${FASTAPI_BASE}/session/${sessionId}/`, { method: 'DELETE', headers: jsonHeaders() });
+    const res = await fetch(`${FASTAPI_BASE}/api/session/${sessionId}/`, { method: 'DELETE', headers: jsonHeaders() });
     return handleResponse(res);
   },
 
