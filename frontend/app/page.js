@@ -229,141 +229,123 @@ export default function Home() {
   return (
     <>
       {/* Hero Section */}
-      <section className="pt-0 lg:pt-12 lg:px-8 h-full overflow-visible border-b border-border">
-        <div className="bg-background border border-border py-12 lg:py-20 mx-5 lg:mx-0 relative">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 gap-14 items-center lg:grid-cols-12 lg:gap-24">
-              <div className="w-full xl:col-span-6 lg:col-span-6">
-                <div className="flex items-center text-sm font-mono text-gray-500 justify-center lg:justify-start mb-6">
-                  <span className="bg-foreground text-background py-1 px-3 text-xs font-semibold uppercase tracking-widest border border-foreground mr-4">
-                    SYS-01
-                  </span>
+      <section className="py-16 lg:py-24 border-b border-border">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 gap-12 items-center lg:grid-cols-12 lg:gap-16">
+            <div className="w-full lg:col-span-6">
+              <div className="flex items-center justify-center lg:justify-start mb-5">
+                <span className="bg-primary/10 text-primary rounded-full px-3 py-1 text-xs font-medium">
                   AI-Powered Technical Publishing
-                </div>
-                <h1 className="py-4 text-center text-foreground font-extrabold text-5xl lg:text-left leading-tight font-sans tracking-tight">
-                  Transform ideas into <br />
-                  <span className="text-gray-500 font-serif italic">robust tech blogs</span> with AI
-                </h1>
-                <p className="text-gray-600 text-lg text-center lg:text-left mt-4 mb-8 font-mono text-sm leading-relaxed max-w-lg">
-                  Deploy professional, insightful blogs powered by specialized AI. Scale your knowledge distribution with zero fuss and instant rendering.
-                </p>
-                <div className="relative my-8">
-                  <form onSubmit={handleSearchBlogs}>
-                    <div className="relative flex items-center h-auto md:h-14 flex-col md:flex-row justify-between border-2 border-foreground bg-background focus-within:ring-2 focus-within:ring-foreground transition-all">
-                      <input
-                        type="text"
-                        name="search"
-                        value={searchQuery}
-                        onChange={handleSearchChange}
-                        placeholder="query search index..."
-                        className="text-sm font-mono flex-1 py-4 px-6 bg-transparent placeholder:text-gray-400 focus:outline-none w-full text-foreground"
-                      />
-                      <button
-                        type="submit"
-                        disabled={isSearching}
-                        className="bg-foreground py-4 px-8 text-sm font-bold text-background hover:bg-gray-800 transition-colors w-full md:w-auto uppercase tracking-wider font-mono disabled:opacity-50"
-                      >
-                        {isSearching ? "Exec..." : "Exec"}
-                      </button>
-                    </div>
-                  </form>
-
-                  {/* Search Results Dropdown */}
-                  {searchResults.length > 0 && searchQuery.trim() !== "" && (
-                    <div className="absolute top-full left-0 right-0 mt-0 bg-background border-2 border-t-0 border-foreground shadow-sm z-50 max-h-80 overflow-y-auto">
-                      {searchResults.map((blog) => {
-                        const authorIdentifier = blog.author?.email || blog.author_email || blog.authorUsername || blog.author?.username || blog.author?.id || 'unknown';
-                        const blogUrl = `/blogs/${encodeURIComponent(authorIdentifier)}/${blog.slug}`;
-                        const displayDate = formatDate(getBlogDate(blog), "Date");
-
-                        return (
-                          <Link
-                            key={blog.slug}
-                            href={blogUrl}
-                            className="block px-5 py-3 border-b border-border last:border-b-0 hover:bg-gray-100 transition-colors group"
-                          >
-                            <div className="flex justify-between items-start gap-4">
-                              <p className="text-foreground font-semibold text-sm group-hover:underline transition-all line-clamp-1">{blog.title}</p>
-                              <span className="text-[10px] font-mono text-gray-500 uppercase whitespace-nowrap mt-1">{displayDate}</span>
-                            </div>
-                          </Link>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center gap-6 mt-10 border-t border-border pt-8">
-                  <div className="flex flex-col gap-1">
-                    <p className="text-[10px] text-gray-500 font-mono uppercase tracking-widest">Active Users</p>
-                    <p className="text-xl font-bold text-foreground font-mono">{stats.active_users > 0 ? stats.active_users.toLocaleString() : '0'}</p>
-                  </div>
-                  <div className="h-8 w-px bg-border"></div>
-                  <div className="flex flex-col gap-1">
-                    <p className="text-[10px] text-gray-500 font-mono uppercase tracking-widest">Deployments</p>
-                    <p className="text-xl font-bold text-foreground font-mono">{stats.blogs_published > 0 ? stats.blogs_published.toLocaleString() : '0'}</p>
-                  </div>
-                  <div className="h-8 w-px bg-border"></div>
-                  <div className="flex flex-col gap-1">
-                    <p className="text-[10px] text-gray-500 font-mono uppercase tracking-widest">Total Hits</p>
-                    <p className="text-xl font-bold text-foreground font-mono">{stats.total_views > 0 ? stats.total_views.toLocaleString() : '0'}</p>
-                  </div>
-                </div>
+                </span>
               </div>
+              <h1 className="text-center text-foreground font-bold text-5xl lg:text-left leading-tight tracking-tight mb-4">
+                Transform ideas into{" "}
+                <span className="text-muted-foreground font-serif italic">robust tech blogs</span>{" "}
+                with AI
+              </h1>
+              <p className="text-muted-foreground text-base text-center lg:text-left mb-8 leading-relaxed max-w-lg">
+                Deploy professional, insightful blogs powered by specialized AI. Scale your knowledge distribution with zero fuss and instant rendering.
+              </p>
+              <div className="relative my-6">
+                <form onSubmit={handleSearchBlogs}>
+                  <div className="flex h-11 rounded-md border border-border bg-muted/40 focus-within:ring-2 focus-within:ring-primary/40 focus-within:border-primary transition-all overflow-hidden">
+                    <input
+                      type="text"
+                      name="search"
+                      value={searchQuery}
+                      onChange={handleSearchChange}
+                      placeholder="Search blogs..."
+                      className="flex-1 px-4 bg-transparent text-foreground placeholder:text-muted-foreground text-sm focus:outline-none"
+                    />
+                    <button
+                      type="submit"
+                      disabled={isSearching}
+                      className="px-5 bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors shrink-0 disabled:opacity-50"
+                    >
+                      {isSearching ? "Searching..." : "Search"}
+                    </button>
+                  </div>
+                </form>
 
-              <div className="w-full lg:col-span-6 flex justify-center lg:justify-end">
-                <div className="relative w-full max-w-xl">
-                  {/* Terminal Style Card */}
-                  <div className="relative border-2 border-foreground bg-foreground p-0 shadow-[8px_8px_0px_0px_rgba(88,28,135,1)]">
-                    {/* Terminal Header */}
-                    <div className="flex items-center gap-2.5 px-4 py-3 border-b border-gray-700 bg-gray-900">
-                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                      <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                      <div className="flex-1 ml-4 text-center">
-                        <p className="text-[10px] text-gray-400 font-mono">root@blogermenia:~</p>
-                      </div>
+                {searchResults.length > 0 && searchQuery.trim() !== "" && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-md shadow-lg z-50 max-h-72 overflow-y-auto">
+                    {searchResults.map((blog) => {
+                      const authorIdentifier = blog.author?.email || blog.author_email || blog.authorUsername || blog.author?.username || blog.author?.id || 'unknown';
+                      const blogUrl = `/blogs/${encodeURIComponent(authorIdentifier)}/${blog.slug}`;
+                      const displayDate = formatDate(getBlogDate(blog), "Date");
+                      return (
+                        <Link
+                          key={blog.slug}
+                          href={blogUrl}
+                          className="block px-4 py-3 border-b border-border last:border-b-0 hover:bg-muted transition-colors group"
+                        >
+                          <div className="flex justify-between items-start gap-4">
+                            <p className="text-foreground text-sm group-hover:text-primary transition-colors line-clamp-1">{blog.title}</p>
+                            <span className="text-xs text-muted-foreground whitespace-nowrap mt-0.5">{displayDate}</span>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-6 mt-8 pt-6 border-t border-border">
+                {[
+                  { label: "Writers", value: stats.active_users },
+                  { label: "Blogs", value: stats.blogs_published },
+                  { label: "Total Views", value: stats.total_views },
+                ].map(({ label, value }, i, arr) => (
+                  <div key={label} className="flex items-center gap-6">
+                    <div className="flex flex-col">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider">{label}</p>
+                      <p className="text-xl font-bold text-foreground">{value > 0 ? value.toLocaleString() : '0'}</p>
                     </div>
+                    {i < arr.length - 1 && <div className="h-8 w-px bg-border" />}
+                  </div>
+                ))}
+              </div>
+            </div>
 
-                    {/* Chat-like generator inside terminal */}
-                    <div className="flex flex-col gap-4 bg-[#0D1117] p-4 h-[320px] overflow-y-auto">
-                      <div ref={messagesRef} className="flex flex-col gap-4 font-mono text-xs">
-                        {displayedMessages.map((m, idx) => {
-                          let displayText = m.displayedContent;
-                          const isTypingThisMessage = idx === currentTypingIndex && m.isTyping;
-                          if (isTypingThisMessage) {
-                            displayText = typingProgress;
-                          }
-
-                          return (
-                            <div key={idx} className={m.align === "right" ? "flex justify-end" : "flex justify-start"}>
-                              <div className={
-                                m.align === "right"
-                                  ? "max-w-[90%] text-green-400 px-0 py-1"
-                                  : "max-w-[90%] text-gray-300 px-0 py-1"
-                              }>
-                                <span className="text-gray-500 mr-2">{m.align === "right" ? ">" : "$"}</span>
-                                {m.pending ? (
-                                  <span className="inline-flex items-center gap-1">
-                                    processing
-                                    <span className="inline-flex gap-1">
-                                      <span className="w-1 h-1 bg-current animate-pulse"></span>
-                                      <span className="w-1 h-1 bg-current animate-pulse delay-75"></span>
-                                      <span className="w-1 h-1 bg-current animate-pulse delay-150"></span>
-                                    </span>
+            <div className="w-full lg:col-span-6 flex justify-center lg:justify-end">
+              <div className="relative w-full max-w-xl">
+                <div className="bg-card border border-border rounded-xl overflow-hidden shadow-xl shadow-primary/5">
+                  <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-muted/40">
+                    <div className="size-3 rounded-full bg-red-400"></div>
+                    <div className="size-3 rounded-full bg-yellow-400"></div>
+                    <div className="size-3 rounded-full bg-green-400"></div>
+                    <p className="text-xs text-muted-foreground font-mono ml-3">root@blogermenia:~</p>
+                  </div>
+                  <div className="flex flex-col gap-4 bg-[#0D1117] p-4 h-80 overflow-y-auto">
+                    <div ref={messagesRef} className="flex flex-col gap-4 font-mono text-xs">
+                      {displayedMessages.map((m, idx) => {
+                        let displayText = m.displayedContent;
+                        const isTypingThisMessage = idx === currentTypingIndex && m.isTyping;
+                        if (isTypingThisMessage) displayText = typingProgress;
+                        return (
+                          <div key={idx} className={m.align === "right" ? "flex justify-end" : "flex justify-start"}>
+                            <div className={m.align === "right" ? "max-w-[90%] text-green-400 py-1" : "max-w-[90%] text-gray-300 py-1"}>
+                              <span className="text-gray-500 mr-2">{m.align === "right" ? ">" : "$"}</span>
+                              {m.pending ? (
+                                <span className="inline-flex items-center gap-1">
+                                  processing
+                                  <span className="inline-flex gap-1">
+                                    <span className="w-1 h-1 bg-current animate-pulse"></span>
+                                    <span className="w-1 h-1 bg-current animate-pulse delay-75"></span>
+                                    <span className="w-1 h-1 bg-current animate-pulse delay-150"></span>
                                   </span>
-                                ) : (
-                                  <div className="inline-block whitespace-pre-wrap">
-                                    {displayText}
-                                    {isTypingThisMessage && displayText.length < m.content.length && (
-                                      <span className="inline-block w-2 h-3 bg-gray-400 ml-1 animate-pulse"></span>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
+                                </span>
+                              ) : (
+                                <div className="inline-block whitespace-pre-wrap">
+                                  {displayText}
+                                  {isTypingThisMessage && displayText.length < m.content.length && (
+                                    <span className="inline-block w-2 h-3 bg-gray-400 ml-1 animate-pulse"></span>
+                                  )}
+                                </div>
+                              )}
                             </div>
-                          );
-                        })}
-                      </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -374,114 +356,73 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section className="py-24 border-b border-border">
+      <section className="py-20 border-b border-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-14 border-b-2 border-foreground pb-8">
-            <h2 className="text-4xl font-extrabold text-foreground tracking-tight mb-4 uppercase">
-              Engineered for Scale
-            </h2>
-            <p className="text-base font-mono text-gray-500 max-w-2xl">
-              Transform your thoughts into well-crafted blogs effortlessly. Share knowledge, engage with readers, and build your digital presence on a platform that respects developers.
+          <div className="mb-12">
+            <h2 className="text-3xl font-bold text-foreground mb-3">Engineered for Scale</h2>
+            <p className="text-muted-foreground text-base max-w-2xl">
+              Transform your thoughts into well-crafted blogs effortlessly. Share knowledge, engage with readers, and build your digital presence.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border-2 border-foreground bg-foreground">
-            <div className="bg-background border-r-2 border-b-2 md:border-b-0 border-foreground p-8 flex flex-col hover:bg-indigo-50 transition-colors">
-              <div className="text-indigo-600 mb-6 border-2 border-foreground p-3 w-fit shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] bg-white">
-                <BookOpen className="w-8 h-8" strokeWidth={1.5} />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {[
+              { icon: BookOpen, title: "AI Generation", desc: "Create engaging, well-structured blogs in minutes. Leverage AI to banish writer's block." },
+              { icon: Users, title: "Reach Readers", desc: "Share your knowledge with readers worldwide. Build your presence through great content." },
+              { icon: TrendingUp, title: "Curated Feeds", desc: "Explore trending tech blogs. Learn, get inspired, and stay updated with fresh perspectives." },
+            ].map(({ icon: Icon, title, desc }) => (
+              <div key={title} className="bg-card border border-border rounded-xl p-8 flex flex-col hover:border-primary/30 hover:shadow-md hover:shadow-primary/5 transition-all">
+                <div className="bg-primary/10 text-primary rounded-lg p-3 w-fit mb-6">
+                  <Icon className="size-6" strokeWidth={1.5} />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-3">{title}</h3>
+                <p className="text-sm text-muted-foreground grow leading-relaxed">{desc}</p>
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-4 uppercase">
-                AI Generation
-              </h3>
-              <p className="text-sm font-mono text-gray-600 flex-grow leading-relaxed">
-                Create engaging, well-structured blogs in minutes. Leverage our LLM pipelines to banish writer&apos;s block.
-              </p>
-            </div>
-
-            <div className="bg-background border-r-2 border-b-2 md:border-b-0 border-foreground p-8 flex flex-col hover:bg-purple-50 transition-colors">
-              <div className="text-purple-600 mb-6 border-2 border-foreground p-3 w-fit shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] bg-white">
-                <Users className="w-8 h-8" strokeWidth={1.5} />
-              </div>
-              <h3 className="text-xl font-bold text-foreground mb-4 uppercase">
-                Audience Distribution
-              </h3>
-              <p className="text-sm font-mono text-gray-600 flex-grow leading-relaxed">
-                Reach and engage with readers worldwide. Build your thought leadership through precision content sharing.
-              </p>
-            </div>
-
-            <div className="bg-background p-8 flex flex-col hover:bg-pink-50 transition-colors">
-              <div className="text-pink-600 mb-6 border-2 border-foreground p-3 w-fit shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] bg-white">
-                <TrendingUp className="w-8 h-8" strokeWidth={1.5} />
-              </div>
-              <h3 className="text-xl font-bold text-foreground mb-4 uppercase">
-                Curated Feeds
-              </h3>
-              <p className="text-sm font-mono text-gray-600 flex-grow leading-relaxed">
-                Explore trending tech blogs. Learn, get inspired, and stay updated with fresh architectural perspectives.
-              </p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* My Bookmarks (logged-in users with at least one bookmark) */}
+      {/* My Bookmarks */}
       {isAuthenticated && (bookmarksLoading || bookmarks.length > 0) && (
-        <section className="py-20 border-b border-border">
+        <section className="py-16 border-b border-border">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 border-b-2 border-foreground pb-6">
-              <div>
-                <h2 className="text-3xl font-extrabold text-foreground uppercase tracking-tight flex items-center gap-3">
-                  <Bookmark className="w-7 h-7 text-purple-700" />
-                  My Bookmarks
-                </h2>
-                <p className="text-gray-500 font-mono text-sm mt-2">Resume reading from where you left off.</p>
-              </div>
+            <div className="flex items-center gap-2 mb-8">
+              <Bookmark className="size-5 text-primary" />
+              <h2 className="text-2xl font-bold text-foreground">My Bookmarks</h2>
             </div>
+            <p className="text-muted-foreground text-sm mb-8 -mt-5">Resume reading from where you left off.</p>
 
             {bookmarksLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[...Array(4)].map((_, i) => (
-                  <Skeleton key={i} className="h-56 w-full border-2 border-foreground rounded-none" />
+                  <Skeleton key={i} className="h-52 w-full" />
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {bookmarks.map((bm) => {
                   const authorKey = bm.author_email || bm.author_username || 'unknown';
                   const href = `/blogs/${encodeURIComponent(authorKey)}/${bm.blog_slug}`;
                   const cover = bm.blog_thumbnail ? getImageUrl(bm.blog_thumbnail) : null;
                   return (
-                    <Link
-                      key={bm.id}
-                      href={href}
-                      className="group block bg-background border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(88,28,135,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all overflow-hidden"
-                    >
-                      <div className="relative aspect-video bg-purple-50 border-b-2 border-foreground overflow-hidden">
+                    <Link key={bm.id} href={href} className="group block bg-card border border-border rounded-lg overflow-hidden hover:border-primary/40 hover:shadow-md transition-all">
+                      <div className="relative aspect-video bg-muted overflow-hidden">
                         {cover ? (
-                          <Image
-                            src={cover}
-                            alt={bm.blog_title || 'Bookmarked blog'}
-                            fill
-                            sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-                            className="object-cover transition-all duration-500 group-hover:scale-105"
-                            unoptimized
-                          />
+                          <Image src={cover} alt={bm.blog_title || 'Bookmarked blog'} fill sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw" className="object-cover group-hover:scale-105 transition-transform duration-300" unoptimized />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-foreground text-background">
-                            <p className="text-[10px] font-mono font-bold uppercase tracking-widest opacity-70">No cover</p>
+                          <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground">
+                            <p className="text-xs">No cover</p>
                           </div>
                         )}
-                        <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-1 bg-purple-700 text-white border-2 border-foreground font-mono text-[10px] font-bold uppercase tracking-widest">
-                          <Bookmark className="w-3 h-3 fill-current" />
+                        <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-0.5 bg-primary/90 text-primary-foreground rounded-full text-xs">
+                          <Bookmark className="size-3 fill-current" />
                           Saved
                         </span>
                       </div>
-                      <div className="p-5 flex flex-col gap-2">
-                        <h3 className="text-base font-extrabold text-foreground uppercase tracking-tight line-clamp-2 group-hover:text-purple-700 transition-colors">
-                          {bm.blog_title || 'Untitled'}
-                        </h3>
-                        <p className="font-mono text-[11px] uppercase tracking-widest text-gray-500 truncate">
-                          Resume at: <span className="text-purple-700">{bm.section_title || bm.section_id}</span>
+                      <div className="p-4 flex flex-col gap-1.5">
+                        <h3 className="text-sm font-semibold text-foreground line-clamp-2">{bm.blog_title || 'Untitled'}</h3>
+                        <p className="text-xs text-muted-foreground truncate">
+                          Resume at: <span className="text-primary">{bm.section_title || bm.section_id}</span>
                         </p>
                       </div>
                     </Link>
@@ -494,104 +435,82 @@ export default function Home() {
       )}
 
       {/* Featured Blogs Section */}
-      <section className="py-20 border-b border-border bg-gray-50/50">
+      <section className="py-16 border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 border-b-2 border-foreground pb-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
             <div>
-              <h2 className="text-3xl font-extrabold text-foreground uppercase tracking-tight">Top Queries</h2>
-              <p className="text-gray-500 font-mono text-sm mt-2">Highest throughput reads from the cluster.</p>
+              <h2 className="text-2xl font-bold text-foreground">Featured Blogs</h2>
+              <p className="text-muted-foreground text-sm mt-1">Hand-picked reads from our editors.</p>
             </div>
-            <Link href="/blogs" className="text-sm font-bold text-background bg-foreground px-4 py-2 hover:bg-gray-800 uppercase tracking-widest inline-flex items-center gap-2 transition-all shadow-[4px_4px_0px_0px_rgba(200,200,200,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1">
-              View All Logs <ArrowRight className="w-4 h-4" />
+            <Link href="/blogs" className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground border border-border rounded-md px-3 py-1.5 hover:bg-muted transition-colors">
+              View All <ArrowRight className="size-4" />
             </Link>
           </div>
 
           {loading ? (
-            <div className="space-y-6">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="flex flex-col md:flex-row gap-6 bg-background border-2 border-foreground p-4 animate-pulse">
-                  <div className="md:w-1/3 h-48 md:h-40 bg-gray-200"></div>
-                  <div className="flex-1 space-y-4 py-2">
-                    <div className="h-6 bg-gray-200 w-3/4"></div>
-                    <div className="h-4 bg-gray-200 w-1/2"></div>
-                    <div className="h-4 bg-gray-200 w-full"></div>
-                  </div>
-                </div>
-              ))}
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-44 w-full" />)}
             </div>
           ) : featuredBlogs.length > 0 ? (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {featuredBlogs.map((blog) => (
                 <HorizontalBlogCard key={blog.slug} blog={blog} />
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 border-2 border-dashed border-gray-300">
-              <p className="text-gray-500 font-mono">No telemetry data available.</p>
+            <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed border-border">
+              <p className="text-muted-foreground text-sm">No featured blogs yet.</p>
             </div>
           )}
         </div>
       </section>
 
       {/* Public Playlists Section */}
-      <section className="py-20 border-b border-border">
+      <section className="py-16 border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 border-b-2 border-foreground pb-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
             <div>
-              <h2 className="text-3xl font-extrabold text-foreground uppercase tracking-tight">Tracks</h2>
-              <p className="text-gray-500 font-mono text-sm mt-2">Curated sequential documentation series.</p>
+              <h2 className="text-2xl font-bold text-foreground">Playlists</h2>
+              <p className="text-muted-foreground text-sm mt-1">Curated blog series to learn step by step.</p>
             </div>
-            <Link href="/playlists" className="text-sm font-bold text-background bg-foreground px-4 py-2 hover:bg-gray-800 uppercase tracking-widest inline-flex items-center gap-2 transition-all shadow-[4px_4px_0px_0px_rgba(200,200,200,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1">
-              List Tracks <ArrowRight className="w-4 h-4" />
+            <Link href="/playlists" className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground border border-border rounded-md px-3 py-1.5 hover:bg-muted transition-colors">
+              Browse All <ArrowRight className="size-4" />
             </Link>
           </div>
 
           {playlistsLoading ? (
-            <div className="space-y-6">
-              {[...Array(3)].map((_, i) => (
-                <Skeleton key={i} className="h-40 w-full border-2 border-foreground rounded-none" />
-              ))}
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-44 w-full" />)}
             </div>
           ) : playlists.length > 0 ? (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {playlists.map((playlist) => (
-                <Link key={playlist.slug} href={`/playlists/${playlist.owner?.email || playlist.owner?.username}/${playlist.slug}`} className="group block bg-background border-2 border-foreground overflow-hidden hover:shadow-[8px_8px_0px_0px_rgba(88,28,135,1)] transition-all md:h-48 relative">
-                  <div className="flex flex-col md:flex-row h-full">
-                    <div className="md:w-1/3 relative border-b-2 md:border-b-0 md:border-r-2 border-foreground bg-gray-100 flex items-center justify-center shrink-0">
+                <Link key={playlist.slug} href={`/playlists/${playlist.owner?.email || playlist.owner?.username}/${playlist.slug}`} className="group block bg-card border border-border rounded-lg overflow-hidden hover:border-primary/40 hover:shadow-md hover:shadow-primary/5 transition-all">
+                  <div className="flex flex-col md:flex-row">
+                    <div className="md:w-2/5 relative min-h-44 bg-muted shrink-0 overflow-hidden">
                       {playlist.cover_image || playlist.thumbnail ? (
-                        <Image
-                          src={getImageUrl((playlist.cover_image || playlist.thumbnail)?.file_path || (playlist.cover_image || playlist.thumbnail))}
-                          alt={playlist.name}
-                          fill
-                          sizes="(max-width: 768px) 100vw, 33vw"
-                          className="object-cover transition-all duration-500"
-                          unoptimized
-                        />
+                        <Image src={getImageUrl((playlist.cover_image || playlist.thumbnail)?.file_path || (playlist.cover_image || playlist.thumbnail))} alt={playlist.name} fill sizes="(max-width: 768px) 100vw, 40vw" className="object-cover group-hover:scale-105 transition-transform duration-300" unoptimized />
                       ) : (
-                        <div className="w-full h-full bg-foreground flex items-center justify-center p-4 text-center text-background font-mono font-bold text-sm">
-                          {playlist.name}
-                        </div>
+                        <div className="w-full h-full bg-muted flex items-center justify-center p-4 text-muted-foreground text-sm font-medium">{playlist.name}</div>
                       )}
                     </div>
-                    <div className="flex-1 p-6 md:p-8 flex flex-col justify-center">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="bg-indigo-100 text-indigo-800 text-[10px] font-mono px-2 py-0.5 border border-indigo-200">TRACK</span>
+                    <div className="flex-1 p-5 md:p-6 flex flex-col justify-between">
+                      <div>
+                        <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-xs font-medium mb-3 inline-block">Playlist</span>
+                        <h3 className="text-lg font-semibold text-foreground mb-2">{playlist.name}</h3>
+                        <p className="text-muted-foreground text-sm line-clamp-2 leading-relaxed max-w-2xl">
+                          {playlist.description || "Explore this carefully curated collection of articles."}
+                        </p>
                       </div>
-                      <h3 className="text-xl font-extrabold text-foreground group-hover:text-indigo-600 transition-colors mb-2 uppercase tracking-tight">
-                        {playlist.name}
-                      </h3>
-                      <p className="text-gray-600 font-mono text-xs line-clamp-2 mb-6 leading-relaxed max-w-2xl">
-                        {playlist.description || "Explore this carefully curated collection of articles focused on specific topics."}
-                      </p>
-                      <div className="flex items-center gap-8 mt-auto border-t border-gray-200 pt-4">
+                      <div className="flex items-center gap-5 mt-4 pt-4 border-t border-border">
                         <div className="flex flex-col">
-                          <span className="text-base font-bold text-foreground font-mono">{playlist.blog_count || 0}</span>
-                          <span className="text-[10px] text-gray-400 uppercase tracking-widest font-mono mt-1">Articles</span>
+                          <span className="font-semibold text-base text-foreground">{playlist.blog_count || 0}</span>
+                          <span className="text-xs text-muted-foreground">Blogs</span>
                         </div>
-                        <div className="h-8 w-px bg-gray-200"></div>
+                        <div className="h-6 w-px bg-border" />
                         <div className="flex flex-col">
-                          <span className="text-base font-bold text-foreground font-mono">{(playlist.total_views || 0).toLocaleString()}</span>
-                          <span className="text-[10px] text-gray-400 uppercase tracking-widest font-mono mt-1">Total Views</span>
+                          <span className="font-semibold text-base text-foreground">{(playlist.total_views || 0).toLocaleString()}</span>
+                          <span className="text-xs text-muted-foreground">Views</span>
                         </div>
                       </div>
                     </div>
@@ -600,97 +519,61 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 border-2 border-dashed border-gray-300">
-              <p className="text-gray-500 font-mono">No tracks found.</p>
+            <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed border-border">
+              <p className="text-muted-foreground text-sm">No playlists found.</p>
             </div>
           )}
         </div>
       </section>
 
       {/* Top Authors Section */}
-      <section className="py-20 bg-gray-50/50">
+      <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 border-b-2 border-foreground pb-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
             <div>
-              <h2 className="text-3xl font-extrabold text-foreground uppercase tracking-tight">Architects</h2>
-              <p className="text-gray-500 font-mono text-sm mt-2">The engineers behind the documentation.</p>
+              <h2 className="text-2xl font-bold text-foreground">Top Authors</h2>
+              <p className="text-muted-foreground text-sm mt-1">The writers behind the best content.</p>
             </div>
-            <Link href="/creators" className="text-sm font-bold text-background bg-foreground px-4 py-2 hover:bg-gray-800 uppercase tracking-widest inline-flex items-center gap-2 transition-all shadow-[4px_4px_0px_0px_rgba(200,200,200,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1">
-              All Architects <ArrowRight className="w-4 h-4" />
+            <Link href="/creators" className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground border border-border rounded-md px-3 py-1.5 hover:bg-muted transition-colors">
+              All Authors <ArrowRight className="size-4" />
             </Link>
           </div>
 
           {authorsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {[...Array(4)].map((_, i) => (
-                <Skeleton key={i} className="h-40 w-full border-2 border-foreground rounded-none" />
-              ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-36 w-full" />)}
             </div>
           ) : topAuthors.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {topAuthors.map((author) => (
-                <Link
-                  key={author.email}
-                  href={`/blogs/${author.email}`}
-                  className="group block bg-background border-2 border-foreground hover:shadow-[6px_6px_0px_0px_rgba(88,28,135,1)] transition-all md:h-48"
-                >
-                  <div className="flex flex-col sm:flex-row h-full">
-                    {/* Left Side: Avatar */}
-                    <div className="relative w-full sm:w-1/3 shrink-0 border-b-2 sm:border-b-0 sm:border-r-2 border-foreground bg-indigo-50 flex flex-col justify-center items-center p-6">
-                      <div className="w-20 h-20 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(88,28,135,1)] bg-white overflow-hidden relative">
+                <Link key={author.email} href={`/blogs/${author.email}`} className="group block bg-card border border-border rounded-lg overflow-hidden hover:border-primary/40 hover:shadow-md hover:shadow-primary/5 transition-all">
+                  <div className="flex flex-col sm:flex-row">
+                    <div className="relative w-full sm:w-1/3 shrink-0 bg-muted/40 flex flex-col justify-center items-center p-6">
+                      <div className="size-20 rounded-full ring-2 ring-border overflow-hidden relative">
                         {author.profile_image ? (
-                          <Image
-                            src={getImageUrl(author.profile_image?.file_path || author.profile_image)}
-                            alt={author.full_name || author.email}
-                            fill
-                            sizes="80px"
-                            className="object-cover transition-all"
-                            unoptimized
-                          />
+                          <Image src={getImageUrl(author.profile_image?.file_path || author.profile_image)} alt={author.full_name || author.email} fill sizes="80px" className="object-cover" unoptimized />
                         ) : (
-                          <div className="w-full h-full bg-foreground flex items-center justify-center text-background">
-                            <span className="font-mono font-bold text-4xl uppercase tracking-widest">
-                              {(author.full_name?.[0] || author.email?.[0] || 'U')}
-                            </span>
+                          <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary rounded-full">
+                            <span className="font-bold text-2xl">{author.full_name?.[0] || author.email?.[0] || 'U'}</span>
                           </div>
                         )}
                       </div>
                     </div>
-
-                    {/* Right Side: Content */}
-                    <div className="flex-1 flex flex-col justify-center p-6">
-                      <div className="mb-4 border-b border-gray-200 pb-4">
-                        <h3 className="font-extrabold text-xl text-foreground uppercase truncate group-hover:text-indigo-600 transition-colors tracking-tight">
-                          {author.full_name || author.email?.split('@')[0] || "User"}
-                        </h3>
-                        <p className="font-mono text-[10px] text-gray-500 truncate mb-2 uppercase">
-                          {author.email}
-                        </p>
-                        {author.headline && (
-                          <p className="text-xs text-gray-600 line-clamp-1 italic font-serif">
-                            &quot;{author.headline}&quot;
-                          </p>
-                        )}
+                    <div className="flex-1 flex flex-col justify-center p-5">
+                      <div className="mb-3 border-b border-border pb-3">
+                        <h3 className="font-semibold text-lg text-foreground truncate">{author.full_name || author.email?.split('@')[0] || "User"}</h3>
+                        <p className="text-xs text-muted-foreground truncate mb-1">{author.email}</p>
+                        {author.headline && <p className="text-xs text-muted-foreground line-clamp-1 italic">{author.headline}</p>}
                       </div>
-
-                      {/* Stats Row */}
-                      <div className="flex flex-row items-center gap-6">
+                      <div className="flex items-center gap-5">
                         <div className="flex flex-col">
-                          <span className="font-bold text-lg text-foreground font-mono leading-none">
-                            {author.blog_count || 0}
-                          </span>
-                          <span className="text-[9px] text-gray-400 uppercase tracking-widest font-mono mt-1">
-                            Deployments
-                          </span>
+                          <span className="font-semibold text-base text-foreground">{author.blog_count || 0}</span>
+                          <span className="text-xs text-muted-foreground">Blogs</span>
                         </div>
-                        <div className="h-6 w-px bg-gray-200"></div>
+                        <div className="h-6 w-px bg-border" />
                         <div className="flex flex-col">
-                          <span className="font-bold text-lg text-foreground font-mono leading-none">
-                            {(author.total_views || 0).toLocaleString()}
-                          </span>
-                          <span className="text-[9px] text-gray-400 uppercase tracking-widest font-mono mt-1">
-                            Hits
-                          </span>
+                          <span className="font-semibold text-base text-foreground">{(author.total_views || 0).toLocaleString()}</span>
+                          <span className="text-xs text-muted-foreground">Views</span>
                         </div>
                       </div>
                     </div>
@@ -699,8 +582,8 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 border-2 border-dashed border-gray-300">
-              <p className="text-gray-500 font-mono">No authors found.</p>
+            <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed border-border">
+              <p className="text-muted-foreground text-sm">No authors found.</p>
             </div>
           )}
         </div>

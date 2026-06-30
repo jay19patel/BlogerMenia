@@ -37,9 +37,9 @@ export default function CreateBlogPage() {
   if (loading || (isAuthenticated && !user) || !isAuthenticated) {
     return (
       <div className="w-full h-screen flex items-center justify-center">
-        <div className="flex items-center justify-center gap-3 bg-background px-6 py-4 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]">
-          <span className="h-5 w-5 border-2 border-foreground border-r-transparent animate-spin"></span>
-          <span className="font-mono font-bold text-sm uppercase tracking-widest text-foreground">Loading System...</span>
+        <div className="bg-muted rounded-md px-6 py-3 text-muted-foreground text-sm flex items-center gap-3">
+          <span className="size-4 border-2 border-border border-t-primary rounded-full animate-spin" />
+          Loading...
         </div>
       </div>
     );

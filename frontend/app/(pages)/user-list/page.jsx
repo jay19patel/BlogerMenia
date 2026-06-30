@@ -91,9 +91,9 @@ export default function UserListPage() {
   if (authLoading || !isAuthenticated || user?.role !== "Admin") {
     return (
       <div className="w-full h-screen flex items-center justify-center">
-        <div className="flex items-center justify-center gap-3 bg-background px-6 py-4 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]">
-          <span className="h-5 w-5 border-2 border-foreground border-r-transparent animate-spin"></span>
-          <span className="font-mono font-bold text-sm uppercase tracking-widest text-foreground">Loading System...</span>
+        <div className="bg-muted rounded-md px-6 py-3 text-muted-foreground text-sm flex items-center gap-3">
+          <span className="size-4 border-2 border-border border-t-primary rounded-full animate-spin" />
+          Loading...
         </div>
       </div>
     );
@@ -102,131 +102,87 @@ export default function UserListPage() {
   return (
     <div className="min-h-[calc(100vh-4rem)] py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
         <div className="mb-8">
-          <Link
-            href="/profile"
-            className="inline-flex items-center gap-2 text-foreground hover:text-purple-900 mb-6 font-mono font-bold uppercase tracking-widest text-xs hover:translate-x-[-2px] transition-all"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            BACK TO PROFILE
+          <Link href="/profile" className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mb-5">
+            <ArrowLeft className="size-4" />Back to Profile
           </Link>
-          <div className="mb-10 text-center lg:text-left border-b-2 border-foreground pb-6">
-            <h1 className="text-4xl md:text-5xl font-extrabold text-foreground mb-3 tracking-tight uppercase flex items-center gap-3 justify-center lg:justify-start">
-              <span className="p-2 border-2 border-foreground bg-purple-900 text-white shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]">
-                <Users className="w-8 h-8" />
-              </span>
-              SYSTEM.USERS
+          <div className="mb-8 pb-6 border-b border-border">
+            <h1 className="text-3xl font-bold text-foreground mb-1 flex items-center gap-3">
+              <span className="bg-primary/10 text-primary rounded-lg p-2"><Users className="size-6" /></span>
+              User Management
             </h1>
-            <p className="font-mono text-sm uppercase tracking-widest text-gray-600">
-              Manage all users in the system
-            </p>
+            <p className="text-muted-foreground text-sm">Manage all users in the system</p>
           </div>
         </div>
 
-        {/* User Table */}
-        <div className="bg-background border-2 border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)] overflow-hidden">
+        <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
           {loading ? (
             <div className="p-12 text-center">
-              <p className="text-gray-600 font-mono">Loading users...</p>
+              <div className="flex items-center justify-center gap-3 text-muted-foreground text-sm">
+                <span className="size-4 border-2 border-border border-t-primary rounded-full animate-spin" />
+                Loading users...
+              </div>
             </div>
           ) : users.length === 0 ? (
             <div className="p-12 text-center">
-              <Users className="w-16 h-16 text-foreground mx-auto mb-4" />
-              <p className="text-foreground font-mono text-lg font-bold uppercase tracking-widest">No users found</p>
+              <Users className="size-12 text-muted-foreground mx-auto mb-4 opacity-40" />
+              <p className="text-muted-foreground">No users found</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-purple-900 border-b-2 border-foreground text-background font-mono">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/60 border-b border-border">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-widest">
-                      User
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-widest">
-                      Email
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-widest">
-                      Role
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-widest">
-                      Status
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-widest">
-                      Joined
-                    </th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">User</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Email</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Role</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Joined</th>
                   </tr>
                 </thead>
-                <tbody className="bg-background divide-y-2 divide-foreground">
+                <tbody className="divide-y divide-border">
                   {users.map((u) => (
-                    <tr key={u.id} className="hover:bg-purple-50 transition-colors group">
-                      <td className="px-6 py-4 whitespace-nowrap">
+                    <tr key={u.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3.5 whitespace-nowrap">
                         <div className="flex items-center gap-3">
-                          <Avatar className="w-10 h-10 rounded-none border border-foreground shrink-0">
-                            <AvatarImage src={getImageUrl(u.profile_image)} className="rounded-none" />
-                            <AvatarFallback className="bg-foreground text-background rounded-none font-bold">
-                              {u.full_name?.[0] || u.email?.[0] || "U"}
-                            </AvatarFallback>
+                          <Avatar className="size-9 shrink-0">
+                            <AvatarImage src={getImageUrl(u.profile_image)} />
+                            <AvatarFallback>{u.full_name?.[0] || u.email?.[0] || "U"}</AvatarFallback>
                           </Avatar>
                           <div>
-                            <div className="text-sm font-bold text-foreground">
+                            <div className="font-medium text-foreground">
                               {u.full_name || u.email.split('@')[0]}
-                              {u.is_active ? (
-                                <span className="ml-2 text-xs text-green-600 font-mono font-bold uppercase">[Active]</span>
-                              ) : (
-                                <span className="ml-2 text-xs text-gray-500 font-mono font-bold uppercase">[Inactive]</span>
-                              )}
                             </div>
-                            <div className="text-xs font-mono text-gray-500">{u.email}</div>
+                            <div className="text-xs text-muted-foreground">{u.email}</div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-foreground font-mono">{u.email}</div>
+                      <td className="px-4 py-3.5 whitespace-nowrap">
+                        <div className="text-muted-foreground">{u.email}</div>
                         {u.is_google_user && (
-                          <div className="text-[10px] font-mono font-bold text-purple-900 uppercase">Google Auth</div>
+                          <div className="text-xs text-primary mt-0.5">Google Auth</div>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-3 py-1 text-[10px] font-mono font-bold border-2 border-foreground uppercase tracking-widest inline-block ${u.role === 'Admin'
-                            ? 'bg-purple-900 text-white'
-                            : 'bg-foreground text-background'
-                          }`}>
+                      <td className="px-4 py-3.5 whitespace-nowrap">
+                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${u.role === 'Admin' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
                           {u.role}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-4 py-3.5 whitespace-nowrap">
                         <button
                           onClick={() => u.is_active ? handleDeactivateUser(u.id) : handleActivateUser(u.id)}
                           disabled={processingIds.has(u.id)}
-                          className={`flex items-center justify-center gap-1.5 px-3 py-1.5 border-2 border-foreground font-mono font-bold text-[10px] uppercase tracking-widest shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all disabled:opacity-50 disabled:cursor-not-allowed ${u.is_active
-                              ? 'bg-green-400 text-foreground'
-                              : 'bg-background text-foreground'
-                            }`}
+                          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${u.is_active ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}
                         >
                           {u.is_active ? (
-                            <>
-                              <Eye className="w-3.5 h-3.5" />
-                              <span>
-                                {processingIds.has(u.id) ? '...' : 'Active'}
-                              </span>
-                            </>
+                            <><Eye className="size-3" />{processingIds.has(u.id) ? '…' : 'Active'}</>
                           ) : (
-                            <>
-                              <UserCheck className="w-3.5 h-3.5" />
-                              <span>
-                                {processingIds.has(u.id) ? '...' : 'Inactive'}
-                              </span>
-                            </>
+                            <><UserCheck className="size-3" />{processingIds.has(u.id) ? '…' : 'Inactive'}</>
                           )}
                         </button>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-foreground">
-                        {new Date(u.created_at).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric'
-                        })}
+                      <td className="px-4 py-3.5 whitespace-nowrap text-muted-foreground">
+                        {new Date(u.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                       </td>
                     </tr>
                   ))}

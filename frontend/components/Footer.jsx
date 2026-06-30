@@ -1,64 +1,62 @@
 import Link from "next/link";
-
 import { Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 export default function Footer() {
   return (
-    <footer className="bg-background border-t-2 border-foreground mt-auto shadow-[0px_-4px_0px_0px_rgba(13,17,23,1)]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-          {/* Brand and Description */}
-          <div className="text-center md:text-left">
-            <Link href="/" className="inline-block mb-4 group transition-all">
-              <span className="bg-purple-900 text-white font-extrabold text-2xl tracking-tight px-4 py-1 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] group-hover:shadow-none group-hover:translate-x-[4px] group-hover:translate-y-[4px] transition-all">
+    <footer className="bg-background border-t border-border mt-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="flex flex-col md:flex-row justify-between items-start gap-8">
+          {/* Brand */}
+          <div>
+            <Link href="/" className="inline-block mb-3">
+              <span className="bg-primary text-primary-foreground font-bold text-base px-3 py-1 rounded-md">
                 BlogerMenia
               </span>
             </Link>
-            <p className="font-mono text-xs uppercase tracking-widest text-gray-700 max-w-md">
-              INIT.CREATE / SHARE / EXPLORE
+            <p className="text-muted-foreground text-sm">
+              Create · Share · Explore
             </p>
           </div>
 
-          {/* Social Media Icons */}
-          <div className="flex items-center space-x-3">
-            <a
-              href="#"
-              className="text-foreground hover:bg-foreground hover:text-background border-2 border-transparent hover:border-foreground p-2 transition-all shadow-[2px_2px_0px_0px_transparent] hover:shadow-[2px_2px_0px_0px_rgba(13,17,23,1)]"
-              aria-label="Facebook"
-            >
-              <Facebook size={18} strokeWidth={2.5} />
+          {/* Nav Links */}
+          <div className="flex flex-wrap gap-6">
+            <Link href="/blogs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Blogs
+            </Link>
+            <Link href="/playlists" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Playlists
+            </Link>
+            <Link href="/creators" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Creators
+            </Link>
+            <Link href="/contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Contact
+            </Link>
+          </div>
+
+          {/* Social Icons */}
+          <div className="flex items-center gap-2">
+            <a href="#" className="text-muted-foreground hover:text-foreground p-2 rounded-md hover:bg-muted transition-colors" aria-label="Facebook">
+              <Facebook size={16} />
             </a>
-            <a
-              href="#"
-              className="text-foreground hover:bg-foreground hover:text-background border-2 border-transparent hover:border-foreground p-2 transition-all shadow-[2px_2px_0px_0px_transparent] hover:shadow-[2px_2px_0px_0px_rgba(13,17,23,1)]"
-              aria-label="Twitter"
-            >
-              <Twitter size={18} strokeWidth={2.5} />
+            <a href="#" className="text-muted-foreground hover:text-foreground p-2 rounded-md hover:bg-muted transition-colors" aria-label="Twitter">
+              <Twitter size={16} />
             </a>
-            <a
-              href="#"
-              className="text-foreground hover:bg-foreground hover:text-background border-2 border-transparent hover:border-foreground p-2 transition-all shadow-[2px_2px_0px_0px_transparent] hover:shadow-[2px_2px_0px_0px_rgba(13,17,23,1)]"
-              aria-label="Instagram"
-            >
-              <Instagram size={18} strokeWidth={2.5} />
+            <a href="#" className="text-muted-foreground hover:text-foreground p-2 rounded-md hover:bg-muted transition-colors" aria-label="Instagram">
+              <Instagram size={16} />
             </a>
-            <a
-              href="#"
-              className="text-foreground hover:bg-foreground hover:text-background border-2 border-transparent hover:border-foreground p-2 transition-all shadow-[2px_2px_0px_0px_transparent] hover:shadow-[2px_2px_0px_0px_rgba(13,17,23,1)]"
-              aria-label="LinkedIn"
-            >
-              <Linkedin size={18} strokeWidth={2.5} />
+            <a href="#" className="text-muted-foreground hover:text-foreground p-2 rounded-md hover:bg-muted transition-colors" aria-label="LinkedIn">
+              <Linkedin size={16} />
             </a>
           </div>
         </div>
 
-        {/* Copyright */}
-        <div className="mt-8 pt-8 border-t-2 border-foreground">
-          <p className="text-center font-mono font-bold text-[10px] uppercase tracking-widest text-foreground">
-            © {new Date().getFullYear()} BlogerMenia. SYS.ALL_RIGHTS_RESERVED | 
-            <span className="ml-2">DEV: <a href="https://njstudio.com" target="_blank" rel="noopener noreferrer" className="bg-foreground text-background px-1 py-0.5 hover:bg-purple-900 transition-colors">NJTechStudio</a></span>
-          </p>
-        </div>
+        <Separator className="my-6" />
+
+        <p className="text-center text-muted-foreground text-xs">
+          © {new Date().getFullYear()} BlogerMenia. All rights reserved.
+        </p>
       </div>
     </footer>
   );

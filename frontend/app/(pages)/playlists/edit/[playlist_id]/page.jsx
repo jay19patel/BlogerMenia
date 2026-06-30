@@ -176,9 +176,9 @@ export default function EditPlaylistPage() {
     if (loading) {
         return (
             <div className="w-full h-screen flex items-center justify-center">
-                <div className="flex items-center justify-center gap-3 bg-background px-6 py-4 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]">
-                    <span className="h-5 w-5 border-2 border-foreground border-r-transparent animate-spin"></span>
-                    <span className="font-mono font-bold text-sm uppercase tracking-widest text-foreground">Loading...</span>
+                <div className="bg-muted rounded-md px-6 py-3 text-muted-foreground text-sm flex items-center gap-3">
+                    <span className="size-4 border-2 border-border border-t-primary rounded-full animate-spin" />
+                    Loading...
                 </div>
             </div>
         );
@@ -187,9 +187,9 @@ export default function EditPlaylistPage() {
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <div className="flex items-center gap-3 bg-background px-6 py-4 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]">
-                    <Loader2 className="w-6 h-6 animate-spin text-foreground" />
-                    <span className="font-mono font-bold text-sm uppercase tracking-widest text-foreground">Loading Playlist...</span>
+                <div className="bg-muted rounded-md px-6 py-3 text-muted-foreground text-sm flex items-center gap-3">
+                    <Loader2 className="size-4 animate-spin" />
+                    Loading playlist...
                 </div>
             </div>
         );
@@ -198,9 +198,9 @@ export default function EditPlaylistPage() {
     if (!playlist) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <div className="text-center">
-                    <p className="font-mono font-bold text-foreground uppercase tracking-widest mb-4">Playlist not found.</p>
-                    <Link href="/my-blogs" className="text-purple-900 font-mono font-bold underline">
+                <div className="text-center bg-card border border-border rounded-xl p-10 shadow-sm">
+                    <p className="text-muted-foreground mb-4">Playlist not found.</p>
+                    <Link href="/my-blogs" className="text-primary hover:underline underline-offset-2 text-sm font-medium">
                         Back to My Blogs
                     </Link>
                 </div>
@@ -211,306 +211,176 @@ export default function EditPlaylistPage() {
     const ownerIdentifier = user?.username || user?.email?.split('@')[0] || user?.email;
 
     return (
-        <div className="min-h-screen py-10 bg-background">
+        <div className="min-h-screen py-10">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 border-b-2 border-foreground pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                     <div>
-                        <Link
-                            href="/my-blogs"
-                            className="inline-flex items-center gap-2 text-foreground hover:text-purple-900 mb-4 font-mono font-bold uppercase tracking-widest text-sm hover:translate-x-[-4px] transition-all"
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                            BACK TO DASHBOARD
+                        <Link href="/my-blogs" className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mb-4">
+                            <ArrowLeft className="size-4" />Back to Dashboard
                         </Link>
-                        <h1 className="text-4xl font-extrabold text-foreground tracking-tighter flex items-center gap-3 uppercase">
-                            <span className="p-2 border-2 border-foreground bg-purple-900 text-white shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]">
-                                <ListMusic className="w-8 h-8" />
-                            </span>
-                            MANAGE PLAYLIST
+                        <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+                            <span className="bg-primary/10 text-primary rounded-lg p-2"><ListMusic className="size-6" /></span>
+                            Edit Playlist
                         </h1>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <Link
-                            href={`/playlists/${ownerIdentifier}/${playlist?.slug}`}
-                            className="px-6 py-3 border-2 border-foreground bg-background text-foreground font-mono font-bold uppercase tracking-widest text-[10px] hover:bg-purple-900 hover:text-white transition-all flex items-center gap-2 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1"
-                            target="_blank"
-                        >
-                            <Eye className="w-4 h-4" />
-                            PREVIEW
-                        </Link>
-                    </div>
+                    <Link href={`/playlists/${ownerIdentifier}/${playlist?.slug}`} target="_blank" className="inline-flex items-center gap-2 px-4 py-2 border border-border rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+                        <Eye className="size-4" />Preview
+                    </Link>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    {/* Left Column: Playlist Details */}
-                    <div className="lg:col-span-4 space-y-8">
-                        <div className="bg-background border-2 border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)] overflow-hidden sticky top-8 p-8">
-                            <h2 className="text-2xl font-extrabold text-foreground mb-6 flex items-center gap-2 uppercase tracking-tighter border-b-2 border-foreground pb-2">
-                                Playlist Details
-                            </h2>
-
-                            <div className="space-y-6">
-                                {/* Cover Image Upload */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    {/* Left: Details */}
+                    <div className="lg:col-span-4">
+                        <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden sticky top-8 p-6">
+                            <h2 className="text-base font-semibold text-foreground mb-5 pb-4 border-b border-border">Playlist Details</h2>
+                            <div className="space-y-5">
+                                {/* Cover Image */}
                                 <div>
-                                    <label className="block text-xs font-mono font-bold text-foreground uppercase tracking-widest mb-3">
-                                        Cover Image
-                                    </label>
-                                    <div
-                                        onClick={() => document.getElementById('playlist-image-edit').click()}
-                                        className="relative group overflow-hidden mb-4 aspect-video bg-background border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] flex items-center justify-center cursor-pointer hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
-                                    >
+                                    <label className="block text-sm font-medium text-foreground mb-2">Cover Image</label>
+                                    <div onClick={() => document.getElementById('playlist-image-edit').click()} className="relative overflow-hidden mb-3 aspect-video bg-muted border border-border rounded-lg flex items-center justify-center cursor-pointer hover:bg-muted/80 transition-colors">
                                         {imagePreview ? (
                                             <Image src={imagePreview} alt="Preview" fill sizes="100vw" className="object-cover" />
                                         ) : (
                                             <div className="text-center">
-                                                <Upload className="w-10 h-10 text-foreground mx-auto mb-2" />
-                                                <p className="text-[10px] font-mono font-bold text-foreground uppercase tracking-wider">CLICK TO UPLOAD</p>
+                                                <Upload className="size-8 text-muted-foreground mx-auto mb-2" />
+                                                <p className="text-xs text-muted-foreground">Click to upload</p>
                                             </div>
                                         )}
                                     </div>
-                                    <input
-                                        id="playlist-image-edit"
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleImageChange}
-                                        className="hidden"
-                                    />
+                                    <input id="playlist-image-edit" type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
                                 </div>
 
                                 {/* Name */}
                                 <div>
-                                    <label className="block text-xs font-mono font-bold text-foreground uppercase tracking-widest mb-2">
-                                        Playlist Name
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={name}
-                                        onChange={(e) => setName(e.target.value)}
-                                        className="w-full px-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all font-mono font-bold text-sm"
-                                    />
+                                    <label className="block text-sm font-medium text-foreground mb-1.5">Title</label>
+                                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full px-3 py-2.5 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all text-sm text-foreground" />
                                 </div>
 
                                 {/* Slug */}
-                                <div className="space-y-2">
-                                    <label className="block text-xs font-mono font-bold text-foreground uppercase tracking-widest">
-                                        Custom Slug
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={slug}
-                                        onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[\s_-]+/g, '-').replace(/[^\w-]/g, ''))}
-                                        placeholder="playlist-url-slug"
-                                        className="w-full px-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all text-sm font-mono"
-                                    />
-                                    <p className="text-[10px] font-mono font-bold text-foreground pl-1 uppercase tracking-widest">
-                                        URL: /playlists/{ownerIdentifier}/<span className="text-purple-900">{slug}</span>
+                                <div>
+                                    <label className="block text-sm font-medium text-foreground mb-1.5">URL Slug</label>
+                                    <input type="text" value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[\s_-]+/g, '-').replace(/[^\w-]/g, ''))} placeholder="playlist-url-slug" className="w-full px-3 py-2.5 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all text-sm font-mono text-muted-foreground" />
+                                    <p className="text-xs text-muted-foreground mt-1.5 font-mono truncate">
+                                        /playlists/{ownerIdentifier}/<span className="text-primary">{slug}</span>
                                     </p>
                                 </div>
 
                                 {/* Description */}
                                 <div>
-                                    <label className="block text-xs font-mono font-bold text-foreground uppercase tracking-widest mb-2">
-                                        Description
-                                    </label>
-                                    <textarea
-                                        value={description}
-                                        onChange={(e) => setDescription(e.target.value)}
-                                        rows={3}
-                                        className="w-full px-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all resize-none text-sm font-mono"
-                                    />
+                                    <label className="block text-sm font-medium text-foreground mb-1.5">Description</label>
+                                    <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="w-full px-3 py-2.5 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none text-sm text-foreground" />
                                 </div>
 
                                 {/* Visibility */}
-                                <div className="flex items-center justify-between p-4 bg-background border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]">
+                                <div className="flex items-center justify-between p-3 bg-muted/40 rounded-lg border border-border">
                                     <div>
-                                        <p className="text-sm font-mono font-bold text-foreground uppercase tracking-widest">Visibility</p>
-                                        <p className="text-xs font-mono text-foreground">{isPublic ? 'PUBLIC' : 'PRIVATE'}</p>
+                                        <p className="text-sm font-medium text-foreground">Visibility</p>
+                                        <p className="text-xs text-muted-foreground">{isPublic ? 'Public' : 'Private'}</p>
                                     </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsPublic(!isPublic)}
-                                        className={`relative inline-flex h-6 w-11 items-center transition-colors border-2 border-foreground ${isPublic ? 'bg-green-400' : 'bg-background'}`}
-                                    >
-                                        <span className={`inline-block h-4 w-4 transform bg-foreground transition-transform ${isPublic ? 'translate-x-5' : 'translate-x-1'}`} />
+                                    <button type="button" onClick={() => setIsPublic(!isPublic)} className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${isPublic ? 'bg-primary' : 'bg-muted-foreground/30'}`}>
+                                        <span className={`inline-block size-3.5 rounded-full bg-white shadow transition-transform ${isPublic ? 'translate-x-4' : 'translate-x-0.5'}`} />
                                     </button>
                                 </div>
 
-                                <button
-                                    type="button"
-                                    onClick={handleUpdatePlaylist}
-                                    disabled={isSaving}
-                                    className="w-full py-4 bg-foreground text-background border-2 border-foreground font-mono font-bold uppercase tracking-widest hover:bg-purple-900 transition-all shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                                    SAVE PLAYLIST
+                                <button type="button" onClick={handleUpdatePlaylist} disabled={isSaving} className="w-full py-2.5 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    {isSaving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+                                    {isSaving ? 'Saving...' : 'Save Changes'}
                                 </button>
                             </div>
                         </div>
                     </div>
 
-                    {/* Right Column: Blog Management */}
-                    <div className="lg:col-span-8 space-y-8">
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-
+                    {/* Right: Blog Management */}
+                    <div className="lg:col-span-8">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
                             {/* Included Blogs */}
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between mb-2">
-                                    <h2 className="text-xl font-extrabold text-foreground flex items-center gap-2 uppercase tracking-tighter">
-                                        Included Blogs
-                                        <span className="px-3 py-1 bg-foreground text-background border-2 border-foreground font-mono font-bold text-xs">{blogs.length}</span>
-                                    </h2>
+                            <div>
+                                <div className="flex items-center gap-2 mb-4">
+                                    <h2 className="text-base font-semibold text-foreground">Included</h2>
+                                    <span className="bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs font-medium">{blogs.length}</span>
                                 </div>
-
-                                <div className="space-y-4 max-h-[800px] overflow-y-auto pr-2">
+                                <div className="space-y-2 max-h-200 overflow-y-auto">
                                     {blogs.length > 0 ? (
                                         blogs.map((blog, idx) => (
-                                            <div
-                                                key={getBlogId(blog)}
-                                                className="group bg-background p-4 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex items-center gap-4"
-                                            >
-                                                <div className="relative w-16 h-16 bg-background overflow-hidden shrink-0 border-2 border-foreground">
-                                                    <Image
-                                                        src={getImageUrl(blog.thumbnail)}
-                                                        fill
-                                                        sizes="64px"
-                                                        className="object-cover"
-                                                        alt=""
-                                                        onError={(e) => { e.target.style.display = 'none'; }}
-                                                    />
+                                            <div key={getBlogId(blog)} className="bg-card border border-border rounded-lg p-3 flex items-center gap-3 hover:border-primary/30 transition-colors">
+                                                <div className="relative size-12 rounded-md overflow-hidden bg-muted shrink-0">
+                                                    <Image src={getImageUrl(blog.thumbnail)} fill sizes="48px" className="object-cover" alt="" onError={(e) => { e.target.style.display = 'none'; }} />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-[10px] font-mono font-bold text-foreground uppercase tracking-widest mb-1 border-b-2 border-foreground pb-1 inline-block">
-                                                        #{idx + 1}
-                                                    </p>
-                                                    <h4 className="text-sm font-bold text-foreground truncate">{blog.title}</h4>
+                                                    <p className="text-xs text-muted-foreground mb-0.5">#{idx + 1}</p>
+                                                    <h4 className="text-sm font-medium text-foreground truncate">{blog.title}</h4>
                                                 </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleRemoveBlog(blog)}
-                                                    className="p-2 border-2 border-foreground bg-background text-foreground hover:bg-red-500 hover:text-white transition-all shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
-                                                    title="Remove from playlist"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
+                                                <button type="button" onClick={() => handleRemoveBlog(blog)} className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors" title="Remove">
+                                                    <Trash2 className="size-4" />
                                                 </button>
                                             </div>
                                         ))
                                     ) : (
-                                        <div className="text-center py-20 bg-background border-2 border-dashed border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)]">
-                                            <BookOpen className="w-12 h-12 text-foreground mx-auto mb-3" />
-                                            <p className="text-sm font-mono font-bold text-foreground px-6 uppercase tracking-widest">NO BLOGS IN THIS PLAYLIST YET.</p>
+                                        <div className="text-center py-16 bg-muted/30 rounded-lg border border-dashed border-border">
+                                            <BookOpen className="size-10 text-muted-foreground mx-auto mb-3 opacity-40" />
+                                            <p className="text-sm text-muted-foreground">No blogs in this playlist yet.</p>
                                         </div>
                                     )}
                                 </div>
                             </div>
 
                             {/* Available Blogs */}
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between mb-2">
-                                    <h2 className="text-xl font-extrabold text-foreground flex items-center gap-2 uppercase tracking-tighter">
-                                        Add Content
-                                        <span className="font-mono text-xs border-l-2 border-foreground pl-2 ml-2">| {totalBlogs} TOTAL</span>
-                                    </h2>
+                            <div>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="text-base font-semibold text-foreground">Add Blogs <span className="text-muted-foreground text-sm font-normal">({totalBlogs})</span></h2>
+                                </div>
+                                <div className="relative mb-3">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                                    <input type="text" placeholder="Search your blogs..." value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} className="w-full pl-9 pr-4 py-2.5 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all text-sm placeholder:text-muted-foreground" />
                                 </div>
 
-                                {/* Search */}
-                                <div className="relative">
-                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground" />
-                                    <input
-                                        type="text"
-                                        placeholder="SEARCH YOUR ARTICLES..."
-                                        value={searchQuery}
-                                        onChange={(e) => {
-                                            setSearchQuery(e.target.value);
-                                            setCurrentPage(1);
-                                        }}
-                                        className="w-full pl-11 pr-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all font-mono font-bold text-sm uppercase tracking-widest"
-                                    />
-                                </div>
-
-                                {/* Blog List */}
-                                <div className="space-y-3 min-h-[400px]">
+                                <div className="space-y-2 min-h-100">
                                     {loadingBlogs ? (
                                         [...Array(5)].map((_, i) => (
-                                            <div key={i} className="animate-pulse bg-background p-4 border-2 border-foreground flex items-center gap-4">
-                                                <div className="w-12 h-12 bg-gray-200 border-2 border-foreground"></div>
+                                            <div key={i} className="animate-pulse bg-muted rounded-lg p-3 flex items-center gap-3">
+                                                <div className="size-12 rounded-md bg-muted-foreground/20" />
                                                 <div className="flex-1 space-y-2">
-                                                    <div className="h-3 bg-gray-200 border-2 border-foreground w-1/3"></div>
-                                                    <div className="h-3 bg-gray-200 border-2 border-foreground w-2/3"></div>
+                                                    <div className="h-3 bg-muted-foreground/20 rounded w-2/3" />
+                                                    <div className="h-2.5 bg-muted-foreground/20 rounded w-1/3" />
                                                 </div>
                                             </div>
                                         ))
                                     ) : availableBlogs.length > 0 ? (
                                         availableBlogs.map((blog) => (
-                                            <div
-                                                key={getBlogId(blog)}
-                                                className={`bg-background p-4 border-2 transition-all flex items-center gap-4 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 ${
-                                                    blog.isAdded ? 'border-purple-900 bg-purple-50' : 'border-foreground'
-                                                }`}
-                                            >
-                                                <div className="relative w-12 h-12 bg-background overflow-hidden shrink-0 border-2 border-foreground">
-                                                    <Image
-                                                        src={getImageUrl(blog.thumbnail)}
-                                                        fill
-                                                        sizes="48px"
-                                                        className="object-cover"
-                                                        alt=""
-                                                        onError={(e) => { e.target.style.display = 'none'; }}
-                                                    />
+                                            <div key={getBlogId(blog)} className={`p-3 rounded-lg border transition-all flex items-center gap-3 ${blog.isAdded ? 'border-primary/50 bg-primary/5' : 'border-border bg-card hover:border-primary/30 hover:bg-muted/40'}`}>
+                                                <div className="relative size-12 rounded-md overflow-hidden bg-muted shrink-0">
+                                                    <Image src={getImageUrl(blog.thumbnail)} fill sizes="48px" className="object-cover" alt="" onError={(e) => { e.target.style.display = 'none'; }} />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <h4 className="text-xs font-extrabold text-foreground truncate uppercase">{blog.title}</h4>
-                                                    <p className="text-[10px] font-mono text-foreground mt-1 font-bold">{formatDate(blog.createdAt || blog.created_at)}</p>
+                                                    <h4 className="text-sm font-medium text-foreground truncate">{blog.title}</h4>
+                                                    <p className="text-xs text-muted-foreground mt-0.5">{formatDate(blog.createdAt || blog.created_at)}</p>
                                                 </div>
                                                 {blog.isAdded ? (
-                                                    <div className="p-2 border-2 border-foreground bg-purple-900 text-white shadow-[2px_2px_0px_0px_rgba(13,17,23,1)]">
-                                                        <ChevronRight className="w-4 h-4" />
-                                                    </div>
+                                                    <div className="p-1.5 rounded-md bg-primary/10 text-primary"><ChevronRight className="size-4" /></div>
                                                 ) : (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleAddBlog(blog)}
-                                                        className="p-2 border-2 border-foreground bg-background text-foreground hover:bg-purple-900 hover:text-white transition-all shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
-                                                        title="Add to playlist"
-                                                    >
-                                                        <Plus className="w-4 h-4" />
+                                                    <button type="button" onClick={() => handleAddBlog(blog)} className="p-1.5 rounded-md bg-muted text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors" title="Add to playlist">
+                                                        <Plus className="size-4" />
                                                     </button>
                                                 )}
                                             </div>
                                         ))
                                     ) : (
-                                        <div className="text-center py-20 bg-background border-2 border-dashed border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)]">
-                                            <Search className="w-8 h-8 text-foreground mx-auto mb-3" />
-                                            <p className="text-xs font-mono font-bold text-foreground uppercase tracking-widest">
-                                                {searchQuery ? 'NO ARTICLES FOUND MATCHING YOUR SEARCH.' : 'NO BLOGS FOUND.'}
-                                            </p>
+                                        <div className="text-center py-16 bg-muted/30 rounded-lg border border-dashed border-border">
+                                            <Search className="size-8 text-muted-foreground mx-auto mb-3 opacity-40" />
+                                            <p className="text-sm text-muted-foreground">{searchQuery ? 'No blogs found.' : 'No blogs yet.'}</p>
                                         </div>
                                     )}
                                 </div>
 
-                                {/* Pagination */}
                                 {Math.ceil(totalBlogs / BLOGS_PER_PAGE) > 1 && (
                                     <div className="flex items-center justify-between pt-4">
-                                        <button
-                                            type="button"
-                                            disabled={currentPage === 1 || loadingBlogs}
-                                            onClick={() => setCurrentPage(prev => prev - 1)}
-                                            className="p-2 border-2 border-foreground bg-background text-foreground shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-purple-900 hover:text-white disabled:opacity-50 transition-all font-mono font-bold text-[10px] uppercase tracking-widest flex items-center gap-1"
-                                        >
-                                            <ChevronLeft className="w-4 h-4" />
-                                            PREV
+                                        <button type="button" disabled={currentPage === 1 || loadingBlogs} onClick={() => setCurrentPage(p => p - 1)} className="flex items-center gap-1.5 px-3 h-8 rounded-md border border-border text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-40">
+                                            <ChevronLeft className="size-4" />Prev
                                         </button>
-                                        <span className="text-[10px] font-mono font-bold text-foreground uppercase tracking-widest border-2 border-foreground px-3 py-1 shadow-[2px_2px_0px_0px_rgba(13,17,23,1)]">
-                                            {currentPage} / {Math.ceil(totalBlogs / BLOGS_PER_PAGE)}
-                                        </span>
-                                        <button
-                                            type="button"
-                                            disabled={currentPage === Math.ceil(totalBlogs / BLOGS_PER_PAGE) || loadingBlogs}
-                                            onClick={() => setCurrentPage(prev => prev + 1)}
-                                            className="p-2 border-2 border-foreground bg-background text-foreground shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-purple-900 hover:text-white disabled:opacity-50 transition-all font-mono font-bold text-[10px] uppercase tracking-widest flex items-center gap-1"
-                                        >
-                                            NEXT
-                                            <ChevronRight className="w-4 h-4" />
+                                        <span className="text-xs text-muted-foreground">{currentPage} / {Math.ceil(totalBlogs / BLOGS_PER_PAGE)}</span>
+                                        <button type="button" disabled={currentPage === Math.ceil(totalBlogs / BLOGS_PER_PAGE) || loadingBlogs} onClick={() => setCurrentPage(p => p + 1)} className="flex items-center gap-1.5 px-3 h-8 rounded-md border border-border text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-40">
+                                            Next<ChevronRight className="size-4" />
                                         </button>
                                     </div>
                                 )}

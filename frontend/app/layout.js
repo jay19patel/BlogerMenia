@@ -42,10 +42,10 @@ export default function RootLayout({ children }) {
                 </main>
                 <Footer />
               </GridBackground>
-              <Toaster 
-                position="bottom-right" 
+              <Toaster
+                position="bottom-right"
                 toastOptions={{
-                  className: 'bg-background border-2 border-foreground text-foreground font-mono font-bold uppercase tracking-widest text-xs shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] rounded-none !p-4',
+                  className: 'bg-card border border-border text-foreground text-sm rounded-lg shadow-lg',
                 }}
               />
             </AuthProvider>

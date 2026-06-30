@@ -1,78 +1,64 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Eye, Heart } from "lucide-react";
-import { getBlogDate, getImageUrl, formatDate } from "../lib/utils";
+import { getBlogDate, getImageUrl, getBlogUrl, formatDate } from "../lib/utils";
 
 export default function HorizontalBlogCard({ blog }) {
-    // Construct URL
-    const getBlogUrl = () => {
-        const authorIdentifier = blog.author?.email || blog.authorEmail || blog.authorUsername || blog.author?.username || blog.author?.id || blog.author;
-        if (authorIdentifier) {
-            return `/blogs/${encodeURIComponent(authorIdentifier)}/${blog.slug}`;
-        }
-        return `/blogs/unknown/${blog.slug}`;
-    };
-
     const imagePath = blog.thumbnail?.file_path || blog.thumbnail || blog.image;
 
     return (
-        <Link href={getBlogUrl()} className="block group h-full">
-            <div className="bg-background border-2 border-foreground hover:shadow-[8px_8px_0px_0px_rgba(88,28,135,1)] hover:-translate-y-1 hover:-translate-x-1 transition-all duration-300 flex flex-col md:flex-row h-full">
-                {/* Image Section - Left side on desktop */}
-                <div className="md:w-1/3 relative min-h-[200px] border-b-2 md:border-b-0 md:border-r-2 border-foreground bg-background flex-shrink-0 overflow-hidden">
+        <Link href={getBlogUrl(blog)} className="block group h-full">
+            <div className="bg-card border border-border rounded-lg flex flex-col md:flex-row h-full overflow-hidden hover:border-primary/40 hover:shadow-md hover:shadow-primary/5 transition-all duration-200">
+                {/* Image — left on desktop */}
+                <div className="md:w-2/5 relative min-h-44 bg-muted shrink-0 overflow-hidden">
                     {imagePath ? (
                         <Image
                             src={getImageUrl(imagePath)}
                             alt={blog.title}
                             fill
-                            sizes="(min-width: 768px) 33vw, 100vw"
-                            className="object-cover transition-all duration-500 group-hover:scale-105"
+                            sizes="(min-width: 768px) 40vw, 100vw"
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                     ) : (
-                        <div className="w-full h-full bg-foreground flex items-center justify-center text-background">
-                            <p className="font-mono font-bold uppercase tracking-widest text-xs opacity-50">SYS.NO_IMG</p>
+                        <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground">
+                            <p className="text-xs">No image</p>
                         </div>
                     )}
                 </div>
 
-                {/* Content Section - Right side */}
+                {/* Content — right */}
                 <div className="flex-1 p-5 md:p-6 flex flex-col justify-between">
                     <div>
-                        <div className="flex items-center gap-3 mb-3">
-                            <span className="bg-foreground text-background group-hover:bg-purple-900 transition-colors px-2 py-0.5 text-[10px] uppercase font-mono font-bold tracking-widest">
+                        <div className="flex items-center gap-2 mb-3">
+                            <span className="text-xs text-muted-foreground">
                                 {formatDate(getBlogDate(blog), "Date")}
                             </span>
                             {blog.category && (
-                                <span className="border-2 border-foreground px-2 py-0.5 text-[10px] uppercase font-mono font-bold tracking-widest text-foreground group-hover:border-purple-900 group-hover:text-purple-900 transition-colors">
+                                <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-xs font-medium">
                                     {blog.category}
                                 </span>
                             )}
                         </div>
-                        <h3 className="text-xl md:text-2xl font-extrabold text-foreground mb-3 line-clamp-2 group-hover:text-purple-900 transition-colors uppercase tracking-tight leading-tight">
+                        <h3 className="text-lg md:text-xl font-semibold text-foreground mb-2 line-clamp-2 leading-snug">
                             {blog.title}
                         </h3>
-                        <p className="text-gray-700 font-mono text-[11px] md:text-xs line-clamp-3 leading-relaxed mb-4">
+                        <p className="text-muted-foreground text-sm line-clamp-3 leading-relaxed mb-4">
                             {blog.description || blog.excerpt}
                         </p>
                     </div>
 
                     {/* Footer / Stats */}
-                    <div className="flex items-center justify-between border-t-2 border-foreground pt-4 mt-auto group-hover:border-purple-900 transition-colors">
-                        {/* Author Info */}
-                        <div className="flex items-center gap-2">
-                            <span className="text-[11px] font-mono font-bold uppercase text-foreground group-hover:text-purple-900 transition-colors truncate max-w-[150px]">
-                                {blog.author?.full_name || blog.authorFullName || blog.authorUsername || "Author"}
-                            </span>
-                        </div>
-
-                        {/* Stats */}
-                        <div className="flex items-center gap-4 text-[10px] font-mono font-bold uppercase text-foreground group-hover:text-purple-900 transition-colors">
-                            <div className="flex items-center gap-1.5">
-                                <Eye className="w-3.5 h-3.5" strokeWidth={2.5} />
+                    <div className="flex items-center justify-between border-t border-border pt-3 mt-auto">
+                        <span className="text-sm font-medium text-foreground truncate max-w-36">
+                            {blog.author?.full_name || blog.authorFullName || blog.authorUsername || "Author"}
+                        </span>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                                <Eye className="w-3.5 h-3.5" strokeWidth={2} />
                                 <span>{(blog.views || 0).toLocaleString()}</span>
                             </div>
-                            <div className="flex items-center gap-1.5">
-                                <Heart className="w-3.5 h-3.5" strokeWidth={2.5} />
+                            <div className="flex items-center gap-1">
+                                <Heart className="w-3.5 h-3.5" strokeWidth={2} />
                                 <span>{(blog.likes || 0).toLocaleString()}</span>
                             </div>
                         </div>

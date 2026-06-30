@@ -4,13 +4,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
-import { formatDate } from '@/lib/utils';
-import { ArrowLeft, BookOpen, Loader2, Eye, Heart, ChevronRight } from 'lucide-react';
+import { ArrowLeft, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import BlogCard from '@/components/BlogCard';
 import { getImageUrl } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 export default function PlaylistDetailPage() {
   const params = useParams();
@@ -28,24 +29,18 @@ export default function PlaylistDetailPage() {
     try {
       setIsLoading(true);
       const data = await api.getPlaylist(playlistSlug, authToken);
-
-      // Hydrate blogs if they are just strings (IDs) or partially populated objects
       if (data && Array.isArray(data.blogs) && data.blogs.length > 0) {
         const firstBlog = data.blogs[0];
         const needsHydration = typeof firstBlog === 'string' || !firstBlog.created_at || typeof firstBlog.category === 'string';
-
         if (needsHydration) {
           const blogPromises = data.blogs.map(blog => {
             const identifier = typeof blog === 'string' ? blog : blog.slug;
             return api.getBlogBySlug(identifier, authToken, false);
           });
           const results = await Promise.allSettled(blogPromises);
-          data.blogs = results
-            .filter(result => result.status === 'fulfilled' && result.value)
-            .map(result => result.value);
+          data.blogs = results.filter(r => r.status === 'fulfilled' && r.value).map(r => r.value);
         }
       }
-
       setPlaylist(data);
     } catch (error) {
       console.error('Error fetching playlist:', error);
@@ -55,16 +50,14 @@ export default function PlaylistDetailPage() {
     }
   }, [playlistSlug, authToken]);
 
-  useEffect(() => {
-    fetchPlaylist();
-  }, [fetchPlaylist]);
+  useEffect(() => { fetchPlaylist(); }, [fetchPlaylist]);
 
   if (isLoading) {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center bg-background">
-        <div className="flex items-center justify-center gap-3 bg-background px-6 py-4 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]">
-            <span className="h-5 w-5 border-2 border-foreground border-r-transparent animate-spin"></span>
-            <span className="font-mono font-bold text-sm uppercase tracking-widest text-foreground">Loading Collection...</span>
+      <div className="min-h-[80vh] flex items-center justify-center">
+        <div className="bg-muted rounded-md px-6 py-3 text-muted-foreground text-sm flex items-center gap-3">
+          <span className="size-4 border-2 border-border border-t-primary rounded-full animate-spin" />
+          Loading...
         </div>
       </div>
     );
@@ -72,106 +65,76 @@ export default function PlaylistDetailPage() {
 
   if (!playlist) {
     return (
-      <div className="min-h-screen py-16 px-4 bg-background">
-        <div className="max-w-4xl mx-auto text-center border-2 border-foreground p-12 shadow-[8px_8px_0px_0px_rgba(13,17,23,1)]">
-          <h1 className="text-3xl font-extrabold text-foreground mb-6 uppercase tracking-tight">
-            SYSTEM.404_PLAYLIST
-          </h1>
-          <Link
-            href={`/blogs/${username}`}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-foreground text-background font-mono font-bold uppercase tracking-widest text-xs hover:bg-purple-900 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Return to Directory
-          </Link>
+      <div className="min-h-screen py-16 px-4">
+        <div className="max-w-lg mx-auto text-center bg-card border border-border rounded-xl p-12 shadow-sm">
+          <h1 className="text-2xl font-bold text-foreground mb-4">Playlist not found</h1>
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/blogs/${username}`}><ArrowLeft className="size-4" />Back</Link>
+          </Button>
         </div>
       </div>
     );
   }
+
+  const coverSrc = getImageUrl(
+    typeof (playlist.cover_image || playlist.thumbnail) === 'string'
+      ? (playlist.cover_image || playlist.thumbnail)
+      : (playlist.cover_image?.file_path || playlist.thumbnail?.file_path || null)
+  );
+  const totalPages = Math.ceil((playlist.blogs?.length || 0) / BLOGS_PER_PAGE);
 
   return (
     <div className="py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back Button */}
         <button
-          onClick={() => {
-            if (typeof window !== 'undefined' && window.history.length > 1) {
-              router.back();
-            } else {
-              router.push(`/blogs/${username}`);
-            }
-          }}
-          className="inline-flex items-center gap-2 text-foreground hover:bg-foreground hover:text-background border-2 border-transparent hover:border-foreground px-3 py-1 font-mono font-bold uppercase tracking-widest text-xs transition-all mb-6"
+          onClick={() => { if (typeof window !== 'undefined' && window.history.length > 1) router.back(); else router.push(`/blogs/${username}`); }}
+          className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mb-6"
         >
-          <ArrowLeft className="w-4 h-4" />
-          Back to {playlist?.owner?.full_name || username}'s Articles
+          <ArrowLeft className="size-4" />
+          Back to {playlist?.owner?.full_name || username}
         </button>
 
-        {/* Playlist Profile Section */}
-        <div className="relative mb-12 border-2 border-foreground p-8 bg-background shadow-[8px_8px_0px_0px_#581c87] min-h-[16rem]">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-stretch">
-            {/* Left Column: Cover Image */}
-            <div className="lg:col-span-5 relative">
-              <div className="relative w-full h-full min-h-[12rem] border-2 border-foreground bg-zinc-100 overflow-hidden">
-                {(typeof (playlist.cover_image || playlist.thumbnail) === 'string' ? (playlist.cover_image || playlist.thumbnail) : (playlist.cover_image?.file_path || playlist.thumbnail?.file_path)) ? (
-                  <Image
-                    src={getImageUrl(typeof (playlist.cover_image || playlist.thumbnail) === 'string' ? (playlist.cover_image || playlist.thumbnail) : (playlist.cover_image?.file_path || playlist.thumbnail?.file_path))}
-                    alt={playlist.name}
-                    fill
-                    className="object-cover transition-all duration-500"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-foreground text-background">
-                    <p className="font-mono font-bold uppercase tracking-widest text-6xl opacity-50">SYS.NO_IMG</p>
-                  </div>
-                )}
-              </div>
+        {/* Playlist Header */}
+        <div className="bg-card border border-border rounded-xl overflow-hidden mb-10 shadow-sm">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
+            {/* Cover Image */}
+            <div className="lg:col-span-4 relative min-h-56 bg-muted">
+              {coverSrc ? (
+                <Image src={coverSrc} alt={playlist.name} fill className="object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground min-h-56">
+                  <BookOpen className="size-12 opacity-30" />
+                </div>
+              )}
             </div>
 
-            {/* Right Column: Name, Description & Stats Cluster */}
-            <div className="lg:col-span-7 flex flex-col justify-between py-1">
+            {/* Info */}
+            <div className="lg:col-span-8 p-7 md:p-9 flex flex-col justify-between">
               <div>
-                <h3 className="font-extrabold text-4xl text-foreground mb-2 uppercase tracking-tighter">
-                  {playlist.name}
-                </h3>
-                <p className="font-mono font-bold text-xs uppercase tracking-widest text-purple-900 border-b-2 border-foreground inline-block pb-1 mb-6 hover:text-foreground transition-colors">
+                <span className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-medium mb-3 inline-block">Playlist</span>
+                <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2 leading-tight">{playlist.name}</h1>
+                <p className="text-sm text-primary hover:underline underline-offset-2 mb-4">
                   <Link href={`/blogs/${playlist.owner?.email || username}`}>
-                    Playlist by {playlist.owner?.full_name || playlist.owner?.email || username}
+                    by {playlist.owner?.full_name || playlist.owner?.email || username}
                   </Link>
                 </p>
                 {playlist.description && (
-                  <p className="font-mono text-sm leading-relaxed text-gray-700 line-clamp-3">
-                    {playlist.description}
-                  </p>
+                  <p className="text-muted-foreground text-sm leading-relaxed line-clamp-3">{playlist.description}</p>
                 )}
               </div>
 
-              {/* Minimalism Stats Cluster */}
-              <div className="flex flex-row items-center gap-10 mt-8 pt-6 border-t-2 border-foreground">
-                <div className="flex flex-col">
-                  <span className="font-extrabold text-3xl text-foreground leading-none">
-                    {playlist.blog_count || 0}
-                  </span>
-                  <span className="text-[10px] font-mono font-bold text-foreground uppercase tracking-widest mt-2">
-                    Blogs
-                  </span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-extrabold text-3xl text-foreground leading-none">
-                    {(playlist.total_views || 0).toLocaleString()}
-                  </span>
-                  <span className="text-[10px] font-mono font-bold text-foreground uppercase tracking-widest mt-2">
-                    Views
-                  </span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-extrabold text-3xl text-foreground leading-none">
-                    {(playlist.total_likes || 0).toLocaleString()}
-                  </span>
-                  <span className="text-[10px] font-mono font-bold text-foreground uppercase tracking-widest mt-2">
-                    Likes
-                  </span>
-                </div>
+              <div className="flex items-center gap-8 mt-7 pt-5 border-t border-border">
+                {[
+                  { value: playlist.blog_count || 0, label: "Blogs" },
+                  { value: (playlist.total_views || 0).toLocaleString(), label: "Views" },
+                  { value: (playlist.total_likes || 0).toLocaleString(), label: "Likes" },
+                ].map(({ value, label }) => (
+                  <div key={label} className="flex flex-col">
+                    <span className="font-bold text-2xl text-foreground leading-none">{value}</span>
+                    <span className="text-xs text-muted-foreground uppercase tracking-wider mt-1.5">{label}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -180,88 +143,66 @@ export default function PlaylistDetailPage() {
         {/* Blogs Grid */}
         {playlist.blogs && playlist.blogs.length > 0 ? (
           <div>
-            <h2 className="text-2xl md:text-3xl font-extrabold text-foreground mb-6 uppercase tracking-tight">
-              SYSTEM.RECORDS [{playlist.blogs.length}]
+            <h2 className="text-lg font-semibold text-foreground mb-5">
+              {playlist.blogs.length} blog{playlist.blogs.length !== 1 ? 's' : ''}
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[400px]">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {playlist.blogs
                 .slice((currentPage - 1) * BLOGS_PER_PAGE, currentPage * BLOGS_PER_PAGE)
                 .map((blog, idx) => {
                   const globalIndex = (currentPage - 1) * BLOGS_PER_PAGE + idx;
                   return (
-                    <div key={blog._id || blog.id || blog.slug || idx} className="relative group">
-                      <div className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center bg-foreground text-background border-2 border-background rounded-full font-mono font-bold text-sm">
+                    <div key={blog._id || blog.id || blog.slug || idx} className="relative">
+                      <span className="absolute top-3 right-3 z-10 bg-primary text-primary-foreground text-xs font-medium rounded-full size-6 flex items-center justify-center shadow-sm">
                         {globalIndex + 1}
-                      </div>
-                      <div className="relative">
-                        <BlogCard blog={blog} />
-                      </div>
+                      </span>
+                      <BlogCard blog={blog} />
                     </div>
                   );
                 })}
             </div>
 
-            {/* Pagination Controls */}
-            {playlist.blogs.length > BLOGS_PER_PAGE && (
-              <div className="flex items-center justify-center gap-3 mt-12">
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-10">
                 <button
-                  onClick={() => {
-                    setCurrentPage(prev => Math.max(prev - 1, 1));
-                    window.scrollTo({ top: 400, behavior: 'smooth' });
-                  }}
+                  onClick={() => { setCurrentPage(p => Math.max(p - 1, 1)); window.scrollTo({ top: 400, behavior: 'smooth' }); }}
                   disabled={currentPage === 1}
-                  className="flex items-center gap-1 px-3 py-2 bg-background border-2 border-foreground text-foreground font-mono font-bold uppercase tracking-widest text-[10px] hover:bg-purple-900 hover:text-white shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="flex items-center gap-1.5 px-3 h-8 rounded-md border border-border text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  <ArrowLeft className="w-4 h-4" />
+                  <ChevronLeft className="size-4" />Prev
                 </button>
-
-                <div className="flex items-center gap-2">
-                  {[...Array(Math.ceil(playlist.blogs.length / BLOGS_PER_PAGE))].map((_, i) => (
+                <div className="flex items-center gap-1">
+                  {[...Array(totalPages)].map((_, i) => (
                     <button
                       key={i}
-                      onClick={() => {
-                        setCurrentPage(i + 1);
-                        window.scrollTo({ top: 400, behavior: 'smooth' });
-                      }}
-                      className={`w-9 h-9 border-2 border-foreground font-mono font-bold text-xs transition-all ${currentPage === i + 1
-                        ? "bg-foreground text-background shadow-[2px_2px_0px_0px_rgba(13,17,23,1)]"
-                        : "bg-background text-foreground hover:bg-purple-900 hover:text-white shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5"
-                        }`}
+                      onClick={() => { setCurrentPage(i + 1); window.scrollTo({ top: 400, behavior: 'smooth' }); }}
+                      className={cn(
+                        "size-8 flex items-center justify-center rounded-md text-sm font-medium transition-colors",
+                        currentPage === i + 1 ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      )}
                     >
                       {i + 1}
                     </button>
                   ))}
                 </div>
-
                 <button
-                  onClick={() => {
-                    setCurrentPage(prev => Math.min(prev + 1, Math.ceil(playlist.blogs.length / BLOGS_PER_PAGE)));
-                    window.scrollTo({ top: 400, behavior: 'smooth' });
-                  }}
-                  disabled={currentPage === Math.ceil(playlist.blogs.length / BLOGS_PER_PAGE)}
-                  className="flex items-center gap-1 px-3 py-2 bg-background border-2 border-foreground text-foreground font-mono font-bold uppercase tracking-widest text-[10px] hover:bg-purple-900 hover:text-white shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  onClick={() => { setCurrentPage(p => Math.min(p + 1, totalPages)); window.scrollTo({ top: 400, behavior: 'smooth' }); }}
+                  disabled={currentPage === totalPages}
+                  className="flex items-center gap-1.5 px-3 h-8 rounded-md border border-border text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  <span className="text-sm">Next</span>
-                  <ChevronRight className="w-4 h-4" />
+                  Next<ChevronRight className="size-4" />
                 </button>
               </div>
             )}
           </div>
         ) : (
-          <div className="text-center py-16 bg-background border-2 border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)]">
-            <BookOpen className="w-16 h-16 mx-auto text-foreground mb-4 opacity-50" />
-            <h3 className="text-2xl font-extrabold text-foreground mb-2 uppercase tracking-tight">
-              SYSTEM.EMPTY
-            </h3>
-            <p className="text-gray-600 mb-6 font-mono text-sm">
-              No records found in this collection.
-            </p>
-            <Link
-              href={`/blogs/${username}`}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-foreground text-background font-mono font-bold uppercase tracking-widest text-xs hover:bg-purple-900 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
-            >
-              Go to Articles
-            </Link>
+          <div className="text-center py-16 bg-muted/30 rounded-lg border border-dashed border-border">
+            <BookOpen className="size-12 mx-auto text-muted-foreground mb-4 opacity-40" />
+            <p className="text-lg font-semibold text-foreground mb-2">No blogs yet</p>
+            <p className="text-muted-foreground text-sm mb-6">No blogs have been added to this playlist.</p>
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/blogs/${username}`}>Browse Blogs</Link>
+            </Button>
           </div>
         )}
       </div>

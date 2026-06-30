@@ -8,8 +8,8 @@ import { api } from "@/lib/api";
 import LoaderCard from "@/components/ui/loader";
 import { getImageUrl } from "@/lib/utils";
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
 
-// Import Swiper styles
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -37,9 +37,9 @@ export default function Testimonial() {
 
   if (loading) {
     return (
-      <section className="py-24 border-b border-border bg-background">
+      <section className="py-20 border-b border-border bg-background">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-center min-h-[400px]">
+          <div className="flex items-center justify-center min-h-80">
             <LoaderCard message="Fetching feedback data…" />
           </div>
         </div>
@@ -50,61 +50,42 @@ export default function Testimonial() {
   if (testimonials.length === 0) return null;
 
   return (
-    <section className="py-24 border-b border-border bg-background">
+    <section className="py-20 border-b border-border bg-background">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        
+
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-14 border-b-2 border-foreground pb-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">
           <div>
-            <div className="inline-flex items-center text-sm font-mono text-gray-500 mb-6">
-              <span className="bg-foreground text-background py-1 px-3 text-xs font-semibold uppercase tracking-widest border border-foreground mr-4">
-                SYS-FBK
-              </span>
-              User Analytics
-            </div>
-            <h2 className="text-4xl font-extrabold text-foreground uppercase tracking-tight">
-              Deployment Feedback
+            <span className="inline-flex items-center bg-primary/10 text-primary rounded-full px-3 py-1 text-xs font-medium mb-4">
+              Reviews
+            </span>
+            <h2 className="text-3xl font-bold text-foreground">
+              What Our Users Say
             </h2>
-            <p className="text-gray-500 font-mono text-sm mt-4 max-w-2xl">
-              Telemetry and reviews from verified architects and system engineers using BlogerMenia.
+            <p className="text-muted-foreground text-sm mt-2 max-w-2xl">
+              Reviews and feedback from writers and readers who use BlogerMenia every day.
             </p>
           </div>
 
-          {/* Slider Controls */}
-          <div className="flex items-center gap-4 mt-6 md:mt-0">
-            <button
-              ref={prevRef}
-              className="flex justify-center items-center border-2 border-foreground bg-background w-12 h-12 transition-all duration-300 hover:bg-foreground hover:text-background shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1"
-              aria-label="Previous testimonial"
-            >
-              <ChevronLeft className="h-6 w-6 stroke-[3]" />
-            </button>
-            <button
-              ref={nextRef}
-              className="flex justify-center items-center border-2 border-foreground bg-background w-12 h-12 transition-all duration-300 hover:bg-foreground hover:text-background shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1"
-              aria-label="Next testimonial"
-            >
-              <ChevronRight className="h-6 w-6 stroke-[3]" />
-            </button>
+          <div className="flex items-center gap-2 mt-4 md:mt-0">
+            <Button ref={prevRef} variant="outline" size="icon" aria-label="Previous testimonial">
+              <ChevronLeft className="size-4" />
+            </Button>
+            <Button ref={nextRef} variant="outline" size="icon" aria-label="Next testimonial">
+              <ChevronRight className="size-4" />
+            </Button>
           </div>
         </div>
 
-        {/* Swiper Area */}
+        {/* Swiper */}
         <div className="w-full">
           <Swiper
             modules={[Navigation, Autoplay, Pagination]}
-            spaceBetween={30}
+            spaceBetween={20}
             slidesPerView={1}
             loop={testimonials.length > 2}
-            autoplay={{
-              delay: 6000,
-              disableOnInteraction: false,
-            }}
-            pagination={{
-              clickable: true,
-              dynamicBullets: true,
-              bulletActiveClass: 'swiper-pagination-bullet-active-brutalist',
-            }}
+            autoplay={{ delay: 6000, disableOnInteraction: false }}
+            pagination={{ clickable: true, dynamicBullets: true }}
             onBeforeInit={(swiper) => {
               swiper.params.navigation.prevEl = prevRef.current;
               swiper.params.navigation.nextEl = nextRef.current;
@@ -114,17 +95,13 @@ export default function Testimonial() {
               768: { slidesPerView: 2 },
               1024: { slidesPerView: 3 },
             }}
-            className="testimonial-swiper !pb-16"
+            className="testimonial-swiper pb-14!"
           >
             <style jsx global>{`
-              /* Allow vertical overflow so cards can translate up on hover
-                 without being clipped, while still hiding horizontal overflow
-                 so the slide animation looks correct. Extra top padding keeps
-                 the shadow visible too. */
               .testimonial-swiper {
                 overflow-x: clip !important;
                 overflow-y: visible !important;
-                padding-top: 16px !important;
+                padding-top: 4px !important;
               }
               .testimonial-swiper .swiper-wrapper {
                 align-items: stretch;
@@ -135,20 +112,13 @@ export default function Testimonial() {
               .testimonial-swiper .swiper-pagination {
                 bottom: 0 !important;
               }
-              .testimonial-swiper .swiper-pagination-bullet-active-brutalist {
-                background: #000 !important;
-                border: 2px solid #000 !important;
-                width: 20px !important;
-                height: 8px !important;
-                border-radius: 0 !important;
-                transition: all 0.2s ease;
+              .testimonial-swiper .swiper-pagination-bullet-active {
+                background: oklch(0.55 0.22 280) !important;
+                width: 16px !important;
+                border-radius: 4px !important;
               }
               .testimonial-swiper .swiper-pagination-bullet {
-                background: transparent;
-                border: 2px solid #ccc;
-                width: 12px;
-                height: 12px;
-                border-radius: 0;
+                background: oklch(0.90 0.005 270);
                 opacity: 1;
               }
             `}</style>
@@ -161,38 +131,32 @@ export default function Testimonial() {
 
               return (
                 <SwiperSlide key={index} className="h-auto">
-                  <div className="bg-background border-2 border-foreground p-8 flex flex-col relative group transition-all duration-300 hover:-translate-y-2 hover:shadow-[8px_8px_0px_0px_rgba(88,28,135,1)] h-full">
-                    
-                    <div className="absolute top-6 right-6 text-gray-200 group-hover:text-indigo-100 transition-colors">
-                      <Quote className="w-12 h-12 fill-current" />
-                    </div>
+                  <div className="bg-card border border-border rounded-xl p-6 flex flex-col h-full hover:border-primary/30 transition-all">
+                    <Quote className="size-8 text-primary/15 fill-current mb-4" />
 
-                    <div className="flex items-center gap-5 mb-8 border-b-2 border-gray-100 pb-6 relative z-10">
-                      <div className="relative w-16 h-16 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] bg-white overflow-hidden shrink-0">
+                    <p className="text-muted-foreground text-sm leading-relaxed flex-1 mb-6">
+                      "{content}"
+                    </p>
+
+                    <div className="flex items-center gap-3 border-t border-border pt-4">
+                      <div className="relative size-12 rounded-full overflow-hidden ring-2 ring-border shrink-0">
                         <Image
                           fill
-                          sizes="64px"
-                          className="object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
-                          src={image ? getImageUrl(image?.file_path || image) : `https://ui-avatars.com/api/?name=${name}&background=0D1117&color=fff&rounded=false&bold=true`}
+                          sizes="48px"
+                          className="object-cover"
+                          src={image ? getImageUrl(image?.file_path || image) : `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6366f1&color=fff&rounded=true&bold=true`}
                           alt={name}
                         />
                       </div>
-                      <div className="min-w-0 pr-8">
-                        <h4 className="text-foreground font-black uppercase text-lg mb-1 truncate tracking-tight">
+                      <div className="min-w-0">
+                        <h4 className="text-foreground font-semibold text-sm truncate">
                           {name}
                         </h4>
-                        <div className="inline-block px-2 py-1 bg-gray-100 border border-gray-300 text-[10px] font-mono text-gray-600 uppercase tracking-widest">
+                        <span className="text-xs text-muted-foreground bg-muted rounded-full px-2 py-0.5">
                           {designation}
-                        </div>
+                        </span>
                       </div>
                     </div>
-
-                    <div className="flex-grow relative z-10">
-                      <p className="text-gray-700 font-mono text-sm leading-relaxed">
-                        "{content}"
-                      </p>
-                    </div>
- 
                   </div>
                 </SwiperSlide>
               );

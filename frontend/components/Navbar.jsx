@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-
 import { Menu, LogOut } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,7 +15,18 @@ import {
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import { getImageUrl } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+
+const NAV_LINKS = [
+  { href: "/", label: "Home", match: (p) => p === "/" },
+  { href: "/blogs", label: "Blogs", match: (p) => p?.startsWith("/blogs") },
+  { href: "/playlists", label: "Playlists", match: (p) => p?.startsWith("/playlists") },
+  { href: "/creators", label: "Creators", match: (p) => p?.startsWith("/creators") },
+  { href: "/contact", label: "Contact", match: (p) => p === "/contact" },
+];
 
 export default function Navbar() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -32,96 +42,75 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-background border-b-2 border-foreground sticky top-0 z-50 shadow-[0px_4px_0px_0px_rgba(13,17,23,1)]">
+    <nav className="bg-background/90 backdrop-blur-md border-b border-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-14">
           {/* Logo */}
-          <Link href="/" className="flex items-center h-full group transition-all">
-            <span className="bg-purple-900 text-white font-extrabold text-xl tracking-tight px-3 py-1 border-2 border-foreground shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] group-hover:shadow-none group-hover:translate-x-[2px] group-hover:translate-y-[2px] transition-all">
+          <Link href="/" className="flex items-center">
+            <span className="bg-primary text-primary-foreground font-bold text-base px-3 py-1 rounded-md">
               BlogerMenia
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            <Link
-              href="/"
-              className={`transition-all duration-200 font-mono text-xs uppercase tracking-widest font-bold px-3 py-1 ${pathname === "/"
-                ? "bg-foreground text-background"
-                : "text-foreground hover:bg-gray-100"
-                }`}
-            >
-              Home
-            </Link>
-            <Link
-              href="/blogs"
-              className={`transition-all duration-200 font-mono text-xs uppercase tracking-widest font-bold px-3 py-1 ${pathname?.startsWith("/blogs")
-                ? "bg-foreground text-background"
-                : "text-foreground hover:bg-gray-100"
-                }`}
-            >
-              Blogs
-            </Link>
-            <Link
-              href="/playlists"
-              className={`transition-all duration-200 font-mono text-xs uppercase tracking-widest font-bold px-3 py-1 ${pathname?.startsWith("/playlists")
-                ? "bg-foreground text-background"
-                : "text-foreground hover:bg-gray-100"
-                }`}
-            >
-              Tracks
-            </Link>
-            <Link
-              href="/creators"
-              className={`transition-all duration-200 font-mono text-xs uppercase tracking-widest font-bold px-3 py-1 ${pathname?.startsWith("/creators")
-                ? "bg-foreground text-background"
-                : "text-foreground hover:bg-gray-100"
-                }`}
-            >
-              Architects
-            </Link>
-            <Link
-              href="/contact"
-              className={`transition-all duration-200 font-mono text-xs uppercase tracking-widest font-bold px-3 py-1 ${pathname === "/contact"
-                ? "bg-foreground text-background"
-                : "text-foreground hover:bg-gray-100"
-                }`}
-            >
-              Contact
-            </Link>
+          <div className="hidden md:flex items-center gap-1">
+            {NAV_LINKS.map(({ href, label, match }) => (
+              <Link
+                key={href}
+                href={href}
+                className={cn(
+                  "px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+                  match(pathname)
+                    ? "text-foreground bg-muted"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                )}
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
 
+          {/* Auth Section */}
+          <div className="hidden md:flex items-center gap-3">
             {loading ? (
-              <div className="flex items-center gap-4">
-                <Skeleton className="h-4 w-16 bg-gray-200" />
-                <Skeleton className="h-9 w-24 bg-gray-200" />
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-8 w-20" />
               </div>
             ) : isAuthenticated ? (
               <div className="relative">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-2 text-foreground hover:bg-gray-100 px-3 py-1 font-mono font-bold text-xs uppercase tracking-widest transition-colors"
+                  className="flex items-center gap-2 text-sm text-foreground hover:bg-muted px-2 py-1.5 rounded-md transition-colors"
                 >
-                  <Avatar className="w-6 h-6 rounded-none border border-foreground">
+                  <Avatar className="size-7">
                     <AvatarImage src={getImageUrl(user?.profile_image)} alt={user?.full_name || user?.username} />
-                    <AvatarFallback className="bg-foreground text-background rounded-none">
+                    <AvatarFallback>
                       {user?.full_name?.[0] || user?.username?.[0] || user?.email?.[0] || "U"}
                     </AvatarFallback>
                   </Avatar>
-                  <span>{user?.full_name || user?.username || "User"}</span>
+                  <span className="font-medium">{user?.full_name || user?.username || "User"}</span>
                 </button>
 
-                {/* User Dropdown Menu */}
                 {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-background border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] py-2">
-                    <div className="px-4 py-2 border-b-2 border-foreground mb-2">
-                      <p className="text-xs font-mono font-bold uppercase text-foreground">
+                  <div className="absolute right-0 mt-2 w-52 bg-card border border-border rounded-lg shadow-lg py-1 z-50">
+                    <div className="px-3 py-2 mb-1">
+                      <p className="text-sm font-medium text-foreground truncate">
                         {user?.full_name || user?.username}
                       </p>
-                      <p className="text-[10px] font-mono text-gray-500 truncate">{user?.email}</p>
+                      <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                     </div>
+                    <Separator />
+                    <Link
+                      href="/my-blogs"
+                      className="block px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                      onClick={() => setShowUserMenu(false)}
+                    >
+                      My Blogs
+                    </Link>
                     <Link
                       href="/profile"
-                      className="block px-4 py-2 text-xs font-mono font-bold uppercase tracking-widest text-foreground hover:bg-gray-100 transition-colors"
+                      className="block px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
                       onClick={() => setShowUserMenu(false)}
                     >
                       Profile Settings
@@ -129,24 +118,18 @@ export default function Navbar() {
                     {user?.role === "Admin" && (
                       <Link
                         href="/user-list"
-                        className="block px-4 py-2 text-xs font-mono font-bold uppercase tracking-widest text-foreground hover:bg-gray-100 transition-colors"
+                        className="block px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
                         onClick={() => setShowUserMenu(false)}
                       >
                         User List
                       </Link>
                     )}
-                    <Link
-                      href="/my-blogs"
-                      className="block px-4 py-2 text-xs font-mono font-bold uppercase tracking-widest text-foreground hover:bg-gray-100 transition-colors"
-                      onClick={() => setShowUserMenu(false)}
-                    >
-                      My Blogs
-                    </Link>
+                    <Separator />
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-xs font-mono font-bold uppercase tracking-widest text-foreground hover:bg-gray-100 flex items-center gap-2 mt-2 border-t-2 border-foreground pt-2"
+                      className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-muted flex items-center gap-2 transition-colors"
                     >
-                      <LogOut className="w-4 h-4" />
+                      <LogOut className="size-4" />
                       Logout
                     </button>
                   </div>
@@ -154,170 +137,112 @@ export default function Navbar() {
               </div>
             ) : (
               <>
-                <Link
-                  href="/login"
-                  className="font-mono text-xs uppercase tracking-widest font-bold text-foreground hover:bg-gray-100 px-4 py-1.5 border-2 border-foreground transition-colors shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5"
-                >
-                  Login
-                </Link>
-                <Link
-                  href="/register"
-                  className="font-mono text-xs uppercase tracking-widest font-bold bg-foreground text-background px-4 py-1.5 border-2 border-foreground transition-colors hover:bg-gray-800 shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5"
-                >
-                  Get Started
-                </Link>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/login">Login</Link>
+                </Button>
+                <Button size="sm" asChild>
+                  <Link href="/register">Get Started</Link>
+                </Button>
               </>
             )}
           </div>
 
-          {/* Mobile Menu Button with Sheet */}
+          {/* Mobile Menu */}
           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
-              <button className="md:hidden text-foreground border-2 border-foreground p-1 shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:translate-y-[1px] hover:translate-x-[1px] hover:shadow-none transition-all">
-                <Menu size={24} />
+              <button className="md:hidden text-foreground p-2 rounded-md hover:bg-muted transition-colors">
+                <Menu size={20} />
               </button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[400px] bg-background border-l-2 border-foreground">
+            <SheetContent side="right" className="w-70 sm:w-80">
               <SheetHeader>
-                <SheetTitle className="text-left text-2xl font-extrabold text-foreground uppercase tracking-tight">
-                  Menu
+                <SheetTitle className="text-left">
+                  <span className="bg-primary text-primary-foreground font-bold text-sm px-2.5 py-1 rounded-md">
+                    BlogerMenia
+                  </span>
                 </SheetTitle>
               </SheetHeader>
 
-              <div className="mt-8 space-y-2">
-                <Link
-                  href="/"
-                  onClick={() => setIsSheetOpen(false)}
-                  className={`block py-3 px-4 font-mono font-bold uppercase tracking-widest text-xs transition-colors border-2 ${pathname === "/"
-                    ? "bg-foreground text-background border-foreground"
-                    : "text-foreground border-transparent hover:border-foreground"
-                    }`}
-                >
-                  Home
-                </Link>
-                <Link
-                  href="/blogs"
-                  onClick={() => setIsSheetOpen(false)}
-                  className={`block py-3 px-4 font-mono font-bold uppercase tracking-widest text-xs transition-colors border-2 ${pathname?.startsWith("/blogs")
-                    ? "bg-foreground text-background border-foreground"
-                    : "text-foreground border-transparent hover:border-foreground"
-                    }`}
-                >
-                  Blogs
-                </Link>
-                <Link
-                  href="/playlists"
-                  onClick={() => setIsSheetOpen(false)}
-                  className={`block py-3 px-4 font-mono font-bold uppercase tracking-widest text-xs transition-colors border-2 ${pathname?.startsWith("/playlists")
-                    ? "bg-foreground text-background border-foreground"
-                    : "text-foreground border-transparent hover:border-foreground"
-                    }`}
-                >
-                  Tracks
-                </Link>
-                <Link
-                  href="/creators"
-                  onClick={() => setIsSheetOpen(false)}
-                  className={`block py-3 px-4 font-mono font-bold uppercase tracking-widest text-xs transition-colors border-2 ${pathname?.startsWith("/creators")
-                    ? "bg-foreground text-background border-foreground"
-                    : "text-foreground border-transparent hover:border-foreground"
-                    }`}
-                >
-                  Architects
-                </Link>
-                <Link
-                  href="/contact"
-                  onClick={() => setIsSheetOpen(false)}
-                  className={`block py-3 px-4 font-mono font-bold uppercase tracking-widest text-xs transition-colors border-2 ${pathname === "/contact"
-                    ? "bg-foreground text-background border-foreground"
-                    : "text-foreground border-transparent hover:border-foreground"
-                    }`}
-                >
-                  Contact
-                </Link>
+              <div className="mt-6 flex flex-col gap-1">
+                {NAV_LINKS.map(({ href, label, match }) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={() => setIsSheetOpen(false)}
+                    className={cn(
+                      "px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
+                      match(pathname)
+                        ? "text-foreground bg-muted"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                    )}
+                  >
+                    {label}
+                  </Link>
+                ))}
+
+                <Separator className="my-2" />
 
                 {loading ? (
-                  <div className="pt-4 space-y-4 border-t border-gray-200">
-                    <div className="flex items-center gap-3 px-2">
-                      <Skeleton className="w-12 h-12 rounded-full" />
-                      <div className="space-y-2">
-                        <Skeleton className="h-4 w-32" />
-                        <Skeleton className="h-3 w-40" />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Skeleton className="h-10 w-full rounded-lg" />
-                      <Skeleton className="h-10 w-full rounded-lg" />
-                    </div>
+                  <div className="space-y-2 px-1">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
                   </div>
                 ) : isAuthenticated ? (
                   <>
-                    <div className="pt-4 pb-4 border-t-2 border-foreground mt-4">
-                      <div className="flex items-center gap-3 px-2 pb-4">
-                        <Avatar className="w-12 h-12 rounded-none border-2 border-foreground">
-                          <AvatarImage src={getImageUrl(user?.profile_image)} alt={user?.full_name || user?.username} />
-                          <AvatarFallback className="bg-foreground text-background rounded-none font-bold">
-                            {user?.full_name?.[0] || user?.username?.[0] || user?.email?.[0] || "U"}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-extrabold text-foreground uppercase tracking-tight">
-                            {user?.full_name || user?.username}
-                          </p>
-                          <p className="text-xs font-mono text-gray-500">{user?.email}</p>
-                        </div>
+                    <div className="flex items-center gap-3 px-3 py-2">
+                      <Avatar className="size-9">
+                        <AvatarImage src={getImageUrl(user?.profile_image)} alt={user?.full_name || user?.username} />
+                        <AvatarFallback>
+                          {user?.full_name?.[0] || user?.username?.[0] || user?.email?.[0] || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {user?.full_name || user?.username}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                       </div>
-                      <Link
-                        href="/profile"
-                        onClick={() => setIsSheetOpen(false)}
-                        className="block py-3 px-4 text-xs font-mono font-bold uppercase tracking-widest text-foreground hover:bg-gray-100 transition-colors mb-2 border-2 border-transparent hover:border-foreground"
-                      >
-                        Profile Settings
-                      </Link>
-                      {user?.role === "Admin" && (
-                        <Link
-                          href="/user-list"
-                          onClick={() => setIsSheetOpen(false)}
-                          className="block py-3 px-4 text-xs font-mono font-bold uppercase tracking-widest text-foreground hover:bg-gray-100 transition-colors mb-2 border-2 border-transparent hover:border-foreground"
-                        >
-                          User List
-                        </Link>
-                      )}
-                      <Link
-                        href="/my-blogs"
-                        onClick={() => setIsSheetOpen(false)}
-                        className="block py-3 px-4 text-xs font-mono font-bold uppercase tracking-widest text-foreground hover:bg-gray-100 transition-colors mb-2 border-2 border-transparent hover:border-foreground"
-                      >
-                        My Blogs
-                      </Link>
-                      <button
-                        onClick={handleLogout}
-                        className="w-full py-3 px-4 text-left text-xs font-mono font-bold uppercase tracking-widest text-foreground hover:bg-gray-100 transition-colors flex items-center gap-2 border-2 border-transparent hover:border-foreground"
-                      >
-                        <LogOut className="w-5 h-5" />
-                        <span>Logout</span>
-                      </button>
                     </div>
+                    <Separator className="my-1" />
+                    <Link
+                      href="/my-blogs"
+                      onClick={() => setIsSheetOpen(false)}
+                      className="px-3 py-2.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    >
+                      My Blogs
+                    </Link>
+                    <Link
+                      href="/profile"
+                      onClick={() => setIsSheetOpen(false)}
+                      className="px-3 py-2.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    >
+                      Profile Settings
+                    </Link>
+                    {user?.role === "Admin" && (
+                      <Link
+                        href="/user-list"
+                        onClick={() => setIsSheetOpen(false)}
+                        className="px-3 py-2.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      >
+                        User List
+                      </Link>
+                    )}
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-2 px-3 py-2.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors w-full text-left"
+                    >
+                      <LogOut className="size-4" />
+                      Logout
+                    </button>
                   </>
                 ) : (
-                  <div className="pt-4 space-y-3 border-t-2 border-foreground mt-4">
-                    <Link
-                      href="/login"
-                      onClick={() => setIsSheetOpen(false)}
-                      className={`block py-3 px-4 font-mono font-bold uppercase tracking-widest text-xs text-center border-2 transition-colors ${pathname === "/login"
-                        ? "bg-foreground text-background border-foreground"
-                        : "text-foreground border-foreground hover:bg-gray-100"
-                        }`}
-                    >
-                      Login
-                    </Link>
-                    <Link
-                      href="/register"
-                      onClick={() => setIsSheetOpen(false)}
-                      className="block py-3 px-4 bg-foreground text-background font-mono font-bold uppercase tracking-widest text-xs text-center border-2 border-foreground hover:bg-gray-800 transition-colors"
-                    >
-                      Get Started
-                    </Link>
+                  <div className="flex flex-col gap-2">
+                    <Button variant="outline" asChild onClick={() => setIsSheetOpen(false)}>
+                      <Link href="/login">Login</Link>
+                    </Button>
+                    <Button asChild onClick={() => setIsSheetOpen(false)}>
+                      <Link href="/register">Get Started</Link>
+                    </Button>
                   </div>
                 )}
               </div>

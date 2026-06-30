@@ -70,7 +70,7 @@ export default function PlaylistsList() {
 
     const breadcrumbItems = [
         { label: "Home", href: "/" },
-        { label: "Tracks", href: null },
+        { label: "Playlists", href: null },
     ];
 
     if (isLoading) {
@@ -79,7 +79,7 @@ export default function PlaylistsList() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="relative h-40 sm:h-48 lg:h-56">
                         <div className="absolute inset-0 flex items-center justify-center">
-                            <LoaderCard message="Fetching tracks…" />
+                            <LoaderCard message="Loading playlists…" />
                         </div>
                     </div>
                 </div>
@@ -93,12 +93,12 @@ export default function PlaylistsList() {
                 <Breadcrumb items={breadcrumbItems} />
 
                 {/* Page Header — identical structure to BlogsList */}
-                <div className="mb-12 border-b-2 border-foreground pb-8 mt-8">
-                    <h1 className="text-4xl md:text-5xl font-extrabold text-foreground mb-4 uppercase tracking-tight">
-                        Tracks
+                <div className="mb-10 mt-8">
+                    <h1 className="text-4xl font-bold text-foreground mb-2">
+                        Playlists
                     </h1>
-                    <p className="text-lg text-gray-600 font-mono">
-                        Curated sequential documentation series and inspiration from our architects.
+                    <p className="text-muted-foreground text-lg">
+                        Curated blog series to help you learn step by step.
                     </p>
                 </div>
 
@@ -109,16 +109,16 @@ export default function PlaylistsList() {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onSubmit={handleSearch}
-                        placeholder="QUERY TRACK INDEX..."
-                        buttonLabel="Exec"
+                        placeholder="Search playlists..."
+                        buttonLabel="Search"
                         disabled={isFetching}
                     />
                 </div>
 
                 {/* Count row — identical structure to BlogsList */}
                 <div className="mb-8 flex items-center justify-between border-b border-border pb-4">
-                    <p className="text-foreground font-mono text-sm uppercase tracking-widest">
-                        Results: {totalPlaylists} {totalPlaylists !== 1 ? "Tracks" : "Track"} Found
+                    <p className="text-muted-foreground text-sm">
+                        {totalPlaylists} {totalPlaylists !== 1 ? "playlists" : "playlist"} found
                     </p>
                 </div>
 
@@ -142,22 +142,19 @@ export default function PlaylistsList() {
                         />
                     </>
                 ) : (
-                    /* Empty state — identical to BlogsList */
-                    <div className="text-center py-16 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]">
-                        <p className="text-xl text-foreground font-mono font-bold uppercase tracking-widest mb-4">
-                            No Tracks Matched Query
-                        </p>
-                        <p className="text-gray-500 font-mono text-sm mb-8">
+                    <div className="text-center py-16 bg-muted/30 rounded-lg border border-dashed border-border">
+                        <p className="text-lg font-semibold text-foreground mb-2">No playlists found</p>
+                        <p className="text-muted-foreground text-sm mb-6">
                             {submittedSearch
-                                ? `No tracks matching "${submittedSearch}". Try a different search.`
-                                : "No public tracks found."}
+                                ? `No playlists matching "${submittedSearch}". Try a different search.`
+                                : "No public playlists found."}
                         </p>
                         {submittedSearch && (
                             <button
                                 onClick={() => { setSearchQuery(""); setSubmittedSearch(""); setCurrentPage(1); }}
-                                className="px-6 py-3 bg-foreground text-background border-2 border-foreground font-mono font-bold uppercase tracking-widest text-xs shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:bg-purple-900 hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
+                                className="px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-md hover:bg-muted transition-colors"
                             >
-                                Reset Search
+                                Reset search
                             </button>
                         )}
                     </div>
@@ -184,22 +181,22 @@ function PlaylistCard({ playlist }) {
 
     return (
         <Link href={href} className="block group h-full">
-            <div className="bg-background border-2 border-foreground hover:shadow-[8px_8px_0px_0px_rgba(88,28,135,1)] hover:-translate-y-1 hover:-translate-x-1 transition-all duration-300 flex flex-col md:flex-row h-full">
+            <div className="bg-card border border-border rounded-lg flex flex-col md:flex-row h-full overflow-hidden hover:border-primary/40 hover:shadow-md hover:shadow-primary/5 transition-all duration-200">
 
-                {/* Image — same proportions as HorizontalBlogCard */}
-                <div className="md:w-1/3 relative min-h-[200px] border-b-2 md:border-b-0 md:border-r-2 border-foreground bg-background flex-shrink-0 overflow-hidden">
+                {/* Image */}
+                <div className="md:w-2/5 relative min-h-44 bg-muted shrink-0 overflow-hidden">
                     {imageSrc ? (
                         <Image
                             src={imageSrc}
                             alt={playlist.name}
                             fill
-                            sizes="(min-width: 768px) 33vw, 100vw"
-                            className="object-cover transition-all duration-500 group-hover:scale-105"
+                            sizes="(min-width: 768px) 40vw, 100vw"
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
                             unoptimized
                         />
                     ) : (
-                        <div className="w-full h-full bg-foreground flex items-center justify-center text-background">
-                            <p className="font-mono font-bold uppercase tracking-widest text-xs opacity-50">SYS.NO_IMG</p>
+                        <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground">
+                            <p className="text-xs">No image</p>
                         </div>
                     )}
                 </div>
@@ -207,45 +204,41 @@ function PlaylistCard({ playlist }) {
                 {/* Content */}
                 <div className="flex-1 p-5 md:p-6 flex flex-col justify-between">
                     <div>
-                        {/* Category tag + visibility — same style as HorizontalBlogCard date/category tags */}
-                        <div className="flex items-center gap-3 mb-3">
-                            <span className="bg-foreground text-background group-hover:bg-purple-900 transition-colors px-2 py-0.5 text-[10px] uppercase font-mono font-bold tracking-widest">
-                                TRACK
+                        <div className="flex items-center gap-2 mb-3">
+                            <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-xs font-medium">
+                                Track
                             </span>
                             {playlist.is_public === false && (
-                                <span className="border-2 border-foreground px-2 py-0.5 text-[10px] uppercase font-mono font-bold tracking-widest text-foreground">
-                                    PRIVATE
+                                <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs font-medium">
+                                    Private
                                 </span>
                             )}
                         </div>
 
-                        <h3 className="text-xl md:text-2xl font-extrabold text-foreground mb-3 line-clamp-2 group-hover:text-purple-900 transition-colors uppercase tracking-tight leading-tight">
+                        <h3 className="text-lg md:text-xl font-semibold text-foreground mb-2 line-clamp-2 leading-snug">
                             {playlist.name}
                         </h3>
-                        <p className="text-gray-700 font-mono text-[11px] md:text-xs line-clamp-3 leading-relaxed mb-4">
+                        <p className="text-muted-foreground text-sm line-clamp-3 leading-relaxed mb-4">
                             {playlist.description || "Explore this curated sequential documentation series."}
                         </p>
                     </div>
 
-                    {/* Footer stats — same structure as HorizontalBlogCard */}
-                    <div className="flex items-center justify-between border-t-2 border-foreground pt-4 mt-auto group-hover:border-purple-900 transition-colors">
-                        {/* Author */}
-                        <span className="text-[11px] font-mono font-bold uppercase text-foreground group-hover:text-purple-900 transition-colors truncate max-w-[150px]">
-                            {playlist.owner?.full_name || playlist.owner?.email?.split("@")[0] || "Architect"}
+                    <div className="flex items-center justify-between border-t border-border pt-3 mt-auto">
+                        <span className="text-sm font-medium text-foreground truncate max-w-36">
+                            {playlist.owner?.full_name || playlist.owner?.email?.split("@")[0] || "Author"}
                         </span>
 
-                        {/* Stats */}
-                        <div className="flex items-center gap-4 text-[10px] font-mono font-bold uppercase text-foreground group-hover:text-purple-900 transition-colors">
-                            <div className="flex items-center gap-1.5">
-                                <BookOpen className="w-3.5 h-3.5" strokeWidth={2.5} />
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                                <BookOpen className="w-3.5 h-3.5" strokeWidth={2} />
                                 <span>{playlist.blog_count || playlist.blogs?.length || 0}</span>
                             </div>
-                            <div className="flex items-center gap-1.5">
-                                <Eye className="w-3.5 h-3.5" strokeWidth={2.5} />
+                            <div className="flex items-center gap-1">
+                                <Eye className="w-3.5 h-3.5" strokeWidth={2} />
                                 <span>{(playlist.total_views || 0).toLocaleString()}</span>
                             </div>
-                            <div className="flex items-center gap-1.5">
-                                <Heart className="w-3.5 h-3.5" strokeWidth={2.5} />
+                            <div className="flex items-center gap-1">
+                                <Heart className="w-3.5 h-3.5" strokeWidth={2} />
                                 <span>{(playlist.total_likes || 0).toLocaleString()}</span>
                             </div>
                         </div>

@@ -1,16 +1,8 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-/**
- * Shared brutalist pagination component.
- *
- * Props:
- *   currentPage  — number (1-indexed)
- *   totalPages   — number
- *   onPageChange — (page: number) => void
- *   disabled     — boolean (optional) — grays out all buttons during fetching
- */
 export default function Pagination({ currentPage, totalPages, onPageChange, disabled = false }) {
   if (totalPages <= 1) return null;
 
@@ -40,25 +32,26 @@ export default function Pagination({ currentPage, totalPages, onPageChange, disa
   const range = getPaginationRange(currentPage, totalPages);
 
   return (
-    <div className="flex items-center justify-center gap-2 mt-12 font-mono">
-      {/* Prev */}
+    <div className="flex items-center justify-center gap-1.5 mt-12">
       <button
         onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
         disabled={currentPage === 1 || disabled}
         aria-label="Previous page"
-        className="flex items-center gap-1 px-3 py-2 bg-background border-2 border-foreground text-foreground font-mono font-bold uppercase tracking-widest text-[10px] hover:bg-purple-900 hover:text-white shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        className={cn(
+          "flex items-center gap-1.5 px-3 h-8 rounded-md border border-border text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors",
+          "disabled:opacity-40 disabled:cursor-not-allowed"
+        )}
       >
-        <ChevronLeft className="w-4 h-4" />
+        <ChevronLeft className="size-4" />
         Prev
       </button>
 
-      {/* Page numbers */}
       <div className="flex items-center gap-1">
         {range.map((page, index) => {
           if (page === "...") {
             return (
-              <span key={`dots-${index}`} className="px-2 text-foreground font-bold text-sm">
-                ...
+              <span key={`dots-${index}`} className="px-2 text-muted-foreground text-sm">
+                …
               </span>
             );
           }
@@ -69,11 +62,13 @@ export default function Pagination({ currentPage, totalPages, onPageChange, disa
               disabled={disabled}
               aria-label={`Page ${page}`}
               aria-current={currentPage === page ? "page" : undefined}
-              className={`w-10 h-10 flex items-center justify-center border-2 border-foreground font-bold text-sm transition-all ${
+              className={cn(
+                "size-8 flex items-center justify-center rounded-md text-sm font-medium transition-colors",
                 currentPage === page
-                  ? "bg-foreground text-background shadow-[2px_2px_0px_0px_rgba(88,28,135,1)]"
-                  : "bg-background text-foreground hover:bg-purple-900 hover:text-white shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5"
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                "disabled:opacity-40 disabled:cursor-not-allowed"
+              )}
             >
               {page}
             </button>
@@ -81,15 +76,17 @@ export default function Pagination({ currentPage, totalPages, onPageChange, disa
         })}
       </div>
 
-      {/* Next */}
       <button
         onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}
         disabled={currentPage === totalPages || disabled}
         aria-label="Next page"
-        className="flex items-center gap-1 px-3 py-2 bg-background border-2 border-foreground text-foreground font-mono font-bold uppercase tracking-widest text-[10px] hover:bg-purple-900 hover:text-white shadow-[2px_2px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        className={cn(
+          "flex items-center gap-1.5 px-3 h-8 rounded-md border border-border text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors",
+          "disabled:opacity-40 disabled:cursor-not-allowed"
+        )}
       >
         Next
-        <ChevronRight className="w-4 h-4" />
+        <ChevronRight className="size-4" />
       </button>
     </div>
   );

@@ -16,12 +16,12 @@ import React from 'react';
 const Flowchart = ({ section }) => {
     const getStepColor = (color) => {
         switch (color) {
-            case 'blue': return 'bg-blue-300 text-black';
-            case 'indigo': return 'bg-indigo-300 text-black';
-            case 'violet': return 'bg-violet-300 text-black';
-            case 'purple': return 'bg-purple-300 text-black';
-            case 'pink': return 'bg-pink-300 text-black';
-            default: return 'bg-yellow-300 text-black';
+            case 'blue': return 'bg-blue-100 text-blue-700';
+            case 'indigo': return 'bg-indigo-100 text-indigo-700';
+            case 'violet': return 'bg-violet-100 text-violet-700';
+            case 'purple': return 'bg-purple-100 text-purple-700';
+            case 'pink': return 'bg-pink-100 text-pink-700';
+            default: return 'bg-primary/10 text-primary';
         }
     };
 
@@ -31,13 +31,13 @@ const Flowchart = ({ section }) => {
         return (
             <div key={step.id} className={`relative flex flex-col ${isBranch ? 'flex-1' : 'w-full'}`}>
                 <div className="relative flex gap-4 group">
-                    {/* Brutalist Connector Line (Dashed) */}
+                    {/* Connector Line */}
                     {!isBranch && stepIndex < totalInFlow - 1 && (
-                        <div className="absolute top-10 bottom-[-1.5rem] left-5 w-0 border-l-[4px] border-dashed border-black z-0" />
+                        <div className="absolute top-10 bottom-[-1.5rem] left-5 w-0 border-l-2 border-dashed border-border z-0" />
                     )}
 
-                    {/* Node - Neo-brutalist Square */}
-                    <div className={`relative z-10 ${isBranch ? 'w-8 h-8' : 'w-10 h-10'} border-[3px] border-black flex items-center justify-center shrink-0 transition-all duration-300 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] group-hover:translate-x-[-2px] group-hover:translate-y-[-2px] group-hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] ${getStepColor(step.color)}`}>
+                    {/* Node */}
+                    <div className={`relative z-10 ${isBranch ? 'size-8' : 'size-10'} border border-border rounded-lg flex items-center justify-center shrink-0 transition-all duration-200 ${getStepColor(step.color)}`}>
                         {!isBranch ? (
                             <span className="text-sm font-mono font-extrabold tracking-tighter">{(stepIndex + 1).toString().padStart(2, '0')}</span>
                         ) : (
@@ -48,18 +48,18 @@ const Flowchart = ({ section }) => {
                     {/* Content Area */}
                     <div className="flex-1 pt-1 ml-1">
                         <div className="flex items-center gap-2">
-                            <h4 className={`${isBranch ? 'text-[14px]' : 'text-base'} font-extrabold text-black uppercase tracking-tight group-hover:underline decoration-[2px] underline-offset-2`}>
+                            <h4 className={`${isBranch ? 'text-sm' : 'text-base'} font-semibold text-foreground`}>
                                 {step.title}
                             </h4>
                         </div>
-                        <p className={`${isBranch ? 'text-[12px]' : 'text-[14px]'} text-black leading-snug mt-1 font-mono font-medium opacity-90`}>
+                        <p className={`${isBranch ? 'text-xs' : 'text-sm'} text-muted-foreground leading-snug mt-1`}>
                             {step.description}
                         </p>
 
                         {/* Brutalist Branching UI */}
                         {hasBranches && (
                             <div className="mt-4 pt-6 border-t-[4px] border-dashed border-black relative">
-                                <div className="absolute top-[-10px] left-0 bg-white px-2 font-mono text-[10px] font-bold uppercase tracking-widest text-black border-[2px] border-black">BRANCHES</div>
+                                <div className="absolute -top-2.5 left-0 bg-background px-2 text-xs font-medium text-muted-foreground border border-border rounded">Branches</div>
                                 <div className="flex flex-col sm:flex-row gap-6 mt-2">
                                     {step.branches.map((branch, bIdx) => renderStep(branch, bIdx, true))}
                                 </div>
@@ -73,9 +73,9 @@ const Flowchart = ({ section }) => {
     };
 
     return (
-        <div className="relative p-6 bg-white border-[4px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mt-2 mb-2">
-            <div className="absolute top-[-14px] right-4 bg-purple-900 px-3 py-1 font-mono text-[10px] text-white font-bold uppercase tracking-widest border-[2px] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                FLOWCHART
+        <div className="relative p-6 bg-muted/20 border border-border rounded-lg mt-2 mb-2">
+            <div className="absolute -top-2.5 right-4 bg-primary text-primary-foreground px-2.5 py-0.5 text-xs font-medium rounded-full">
+                Flowchart
             </div>
             <div className="relative flex flex-col pt-2">
                 {section.steps?.map((step, stepIndex) => renderStep(step, stepIndex, false, section.steps.length))}
@@ -504,14 +504,14 @@ export default function BlogDetailPage() {
     };
 
     const renderParagraphBlock = (section, index, headingOnly = false) => (
-        <div key={index} id={`section-${index}`} className="mb-12">
+        <div key={index} id={`section-${index}`} className="mb-10">
             {section.title && (
-                <h3 className="text-2xl font-extrabold text-black uppercase tracking-tighter mb-4 border-b-[4px] border-black pb-2 inline-block">
+                <h3 className="text-xl font-semibold text-foreground mb-4">
                     {section.title}
                 </h3>
             )}
             {!headingOnly && section.content && (
-                <p className="text-black text-base leading-relaxed whitespace-pre-wrap font-medium">
+                <p className="text-foreground/90 text-base leading-relaxed whitespace-pre-wrap">
                     {section.content}
                 </p>
             )}
@@ -549,15 +549,15 @@ export default function BlogDetailPage() {
                 return (
                     <div key={index} id={`section-${index}`} className="mb-12">
                         {section.title && (
-                            <h3 className="text-2xl font-extrabold text-black uppercase tracking-tighter mb-4 border-b-[4px] border-black pb-2 inline-block">
+                            <h3 className="text-xl font-semibold text-foreground mb-4">
                                 {section.title}
                             </h3>
                         )}
-                        <ul className="space-y-4">
+                        <ul className="space-y-3">
                             {listItems.map((item, itemIndex) => (
-                                <li key={itemIndex} className="flex items-start gap-4 p-4 border-[4px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
-                                    <div className="w-3 h-3 bg-purple-900 border-[2px] border-black mt-1.5 flex-shrink-0" />
-                                    <span className="text-black font-bold text-base">{item}</span>
+                                <li key={itemIndex} className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg border border-border">
+                                    <div className="size-2 rounded-full bg-primary mt-1.5 shrink-0" />
+                                    <span className="text-foreground/90 text-base">{item}</span>
                                 </li>
                             ))}
                         </ul>
@@ -569,32 +569,26 @@ export default function BlogDetailPage() {
                 return (
                     <div key={index} id={`section-${index}`} className="mb-12">
                         {section.title && (
-                            <h3 className="text-2xl font-extrabold text-black uppercase tracking-tighter mb-4 border-b-[4px] border-black pb-2 inline-block">
+                            <h3 className="text-xl font-semibold text-foreground mb-4">
                                 {section.title}
                             </h3>
                         )}
-                        <div className="overflow-x-auto border-[4px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white">
+                        <div className="overflow-x-auto border border-border rounded-lg">
                             <table className="min-w-full">
-                                <thead className="bg-gray-100 text-black border-b-[4px] border-black">
+                                <thead className="bg-muted">
                                     <tr>
                                         {tableData.headers.map((header, headerIndex) => (
-                                            <th
-                                                key={headerIndex}
-                                                className="px-6 py-4 text-left font-mono font-bold uppercase tracking-widest text-sm border-r-[4px] border-black last:border-r-0"
-                                            >
+                                            <th key={headerIndex} className="px-4 py-3 text-left font-medium text-foreground text-sm border-r border-border last:border-r-0">
                                                 {header}
                                             </th>
                                         ))}
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y-[2px] divide-black bg-white">
+                                <tbody className="divide-y divide-border">
                                     {tableData.rows.map((row, rowIndex) => (
-                                        <tr key={rowIndex} className="hover:bg-gray-50 transition-colors">
+                                        <tr key={rowIndex} className="hover:bg-muted/40 transition-colors">
                                             {row.map((cell, cellIndex) => (
-                                                <td
-                                                    key={cellIndex}
-                                                    className="px-6 py-4 whitespace-nowrap font-medium text-sm text-black border-r-[4px] border-black last:border-r-0"
-                                                >
+                                                <td key={cellIndex} className="px-4 py-3 text-sm text-foreground/90 border-r border-border last:border-r-0">
                                                     {cell}
                                                 </td>
                                             ))}
@@ -610,11 +604,11 @@ export default function BlogDetailPage() {
                 return (
                     <div key={index} id={`section-${index}`} className="mb-12">
                         {section.title && (
-                            <h3 className="text-2xl font-extrabold text-black uppercase tracking-tighter mb-4 border-b-[4px] border-black pb-2 inline-block">
+                            <h3 className="text-xl font-semibold text-foreground mb-4">
                                 {section.title}
                             </h3>
                         )}
-                        <blockquote className="border-l-[8px] border-purple-900 bg-white p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-xl font-extrabold text-black leading-relaxed">
+                        <blockquote className="border-l-4 border-primary bg-primary/5 rounded-r-lg p-5 text-lg font-medium text-foreground leading-relaxed italic">
                             {section.content}
                         </blockquote>
                     </div>
@@ -624,17 +618,17 @@ export default function BlogDetailPage() {
                 return (
                     <div key={index} id={`section-${index}`} className="mb-12">
                         {section.title && (
-                            <h3 className="text-2xl font-extrabold text-black uppercase tracking-tighter mb-4 border-b-[4px] border-black pb-2 inline-block">
+                            <h3 className="text-xl font-semibold text-foreground mb-4">
                                 {section.title}
                             </h3>
                         )}
-                        <div className="bg-yellow-100 border-[4px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6 relative group">
-                            <AlertCircle className="absolute right-4 top-4 w-6 h-6 text-yellow-600 z-10" />
-                            <div className="relative z-10">
-                                <span className="inline-block px-3 py-1 bg-black text-yellow-100 font-mono font-bold uppercase tracking-widest text-xs mb-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-[2px] border-black">
-                                    IMPORTANT NOTE
+                        <div className="bg-primary/5 border-l-4 border-primary rounded-r-lg p-5 relative">
+                            <AlertCircle className="absolute right-4 top-4 size-5 text-primary" />
+                            <div>
+                                <span className="inline-block bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-medium mb-3">
+                                    Important Note
                                 </span>
-                                <p className="text-black font-extrabold text-lg leading-relaxed whitespace-pre-wrap pr-8">
+                                <p className="text-foreground text-base leading-relaxed whitespace-pre-wrap pr-8">
                                     {section.content}
                                 </p>
                             </div>
@@ -646,7 +640,7 @@ export default function BlogDetailPage() {
                 return (
                     <div key={index} id={`section-${index}`} className="mb-12">
                         {section.title && (
-                            <h3 className="text-2xl font-extrabold text-black uppercase tracking-tighter mb-4 border-b-[4px] border-black pb-2 inline-block">
+                            <h3 className="text-xl font-semibold text-foreground mb-4">
                                 {section.title}
                             </h3>
                         )}
@@ -657,18 +651,18 @@ export default function BlogDetailPage() {
                                     href={normalizeReferenceUrl(link.url)}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="group flex border-[4px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all relative overflow-hidden"
+                                    className="group flex bg-card border border-border rounded-lg hover:border-primary/40 hover:shadow-md transition-all overflow-hidden"
                                 >
-                                    <div className="p-5 flex-1 flex flex-col justify-center">
-                                        <h4 className="font-extrabold text-lg text-blue-700 uppercase tracking-tight underline group-hover:text-blue-800 mb-1">
+                                    <div className="p-4 flex-1 flex flex-col justify-center">
+                                        <h4 className="font-medium text-base text-primary group-hover:underline underline-offset-2 mb-1">
                                             {link.text}
                                         </h4>
-                                        <p className="text-black font-medium text-sm">
+                                        <p className="text-muted-foreground text-sm">
                                             {link.description}
                                         </p>
                                     </div>
-                                    <div className="w-16 border-l-[4px] border-black flex items-center justify-center bg-gray-50 group-hover:bg-gray-200 transition-colors shrink-0">
-                                        <ExternalLink className="w-5 h-5 text-black" />
+                                    <div className="w-12 border-l border-border flex items-center justify-center bg-muted shrink-0">
+                                        <ExternalLink className="size-4 text-muted-foreground" />
                                     </div>
                                 </a>
                             ))}
@@ -681,33 +675,24 @@ export default function BlogDetailPage() {
                 return (
                     <div key={index} id={`section-${index}`} className="mb-12">
                         {section.title && (
-                            <h3 className="text-2xl font-extrabold text-black uppercase tracking-tighter mb-4 border-b-[4px] border-black pb-2 inline-block">
+                            <h3 className="text-xl font-semibold text-foreground mb-4">
                                 {section.title}
                             </h3>
                         )}
                         {sectionImage && (
-                            <div className="border-[4px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white overflow-hidden p-2">
-                                <div className="border-[4px] border-black relative group">
-                                    <Image
-                                        src={getImageUrl(sectionImage)}
-                                        alt={section.attachment?.filename || section.title || 'Section image'}
-                                        width={1200}
-                                        height={675}
-                                        sizes="(min-width: 1024px) 896px, 100vw"
-                                        className="w-full h-auto object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-500"
-                                    />
-                                </div>
-                                {section.caption && (
-                                    <div className="mt-4 p-4 bg-black text-white border-[4px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                                        <p className="font-mono font-bold uppercase tracking-widest text-xs text-center">
-                                            {section.caption}
-                                        </p>
-                                    </div>
-                                )}
-                                {section.description && !section.caption && (
-                                    <div className="mt-4 p-4 bg-black text-white border-[4px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                                        <p className="font-mono font-bold uppercase tracking-widest text-xs text-center">
-                                            {section.description}
+                            <div className="border border-border rounded-lg overflow-hidden">
+                                <Image
+                                    src={getImageUrl(sectionImage)}
+                                    alt={section.attachment?.filename || section.title || 'Section image'}
+                                    width={1200}
+                                    height={675}
+                                    sizes="(min-width: 1024px) 896px, 100vw"
+                                    className="w-full h-auto object-cover"
+                                />
+                                {(section.caption || section.description) && (
+                                    <div className="px-4 py-2 bg-muted border-t border-border">
+                                        <p className="text-xs text-muted-foreground text-center">
+                                            {section.caption || section.description}
                                         </p>
                                     </div>
                                 )}
@@ -722,21 +707,21 @@ export default function BlogDetailPage() {
                 return (
                     <div key={index} id={`section-${index}`} className="mb-12">
                         {section.title && (
-                            <h3 className="text-2xl font-extrabold text-black uppercase tracking-tighter mb-4 border-b-[4px] border-black pb-2 inline-block">
+                            <h3 className="text-xl font-semibold text-foreground mb-4">
                                 {section.title}
                             </h3>
                         )}
-                        <div className="relative group border-[4px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-[#1e1e1e]">
+                        <div className="relative group border border-border rounded-lg overflow-hidden bg-[#1e1e1e]">
                             {/* Code header */}
-                            <div className="bg-black border-b-[4px] border-black px-4 py-3 flex items-center justify-between z-10">
+                            <div className="bg-[#161616] border-b border-white/10 px-4 py-2.5 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-white text-xs font-mono font-bold uppercase tracking-widest bg-[#1e1e1e] px-3 py-1 border-[2px] border-white">
+                                    <span className="text-white/60 text-xs font-mono">
                                         {section.language}
                                     </span>
                                 </div>
                                 <button
                                     onClick={() => copyCode(formatCode(section.content), codeIndex)}
-                                    className="flex items-center gap-2 px-3 py-1 bg-white text-black border-[2px] border-transparent hover:border-black hover:bg-yellow-200 hover:text-black text-xs font-mono font-bold uppercase transition-all shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]"
+                                    className="flex items-center gap-1.5 px-2.5 py-1 text-white/60 hover:text-white bg-white/10 hover:bg-white/20 rounded text-xs font-medium transition-all"
                                     title="Copy code"
                                 >
                                     {isCopied ? (
@@ -780,12 +765,12 @@ export default function BlogDetailPage() {
                 return (
                     <div key={index} id={`section-${index}`} className="mb-12">
                         {section.title && (
-                            <h3 className="text-2xl font-extrabold text-black uppercase tracking-tighter mb-4 border-b-[4px] border-black pb-2 inline-block">
+                            <h3 className="text-xl font-semibold text-foreground mb-4">
                                 {section.title}
                             </h3>
                         )}
-                        <div className="border-[4px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white p-2">
-                            <div className="aspect-video border-[4px] border-black relative bg-black">
+                        <div className="border border-border rounded-lg overflow-hidden">
+                            <div className="aspect-video relative bg-black">
                                 <iframe
                                     src={`https://www.youtube.com/embed/${section.videoId}`}
                                     title={section.videoTitle || section.title}
@@ -796,10 +781,8 @@ export default function BlogDetailPage() {
                                 />
                             </div>
                             {section.description && (
-                                <div className="mt-4 p-4 border-[4px] border-dashed border-black bg-gray-50">
-                                    <p className="font-bold text-black text-center font-mono text-sm uppercase tracking-wider">
-                                        {section.description}
-                                    </p>
+                                <div className="px-4 py-2 bg-muted border-t border-border">
+                                    <p className="text-muted-foreground text-sm text-center">{section.description}</p>
                                 </div>
                             )}
                         </div>
@@ -810,14 +793,14 @@ export default function BlogDetailPage() {
                 return (
                     <div key={index} id={`section-${index}`} className="mb-12">
                         {section.title && (
-                            <div className="flex items-center justify-between mb-6 border-b-[4px] border-black pb-2">
-                                <h3 className="text-2xl font-extrabold text-black uppercase tracking-tighter flex items-center gap-3">
-                                    <span className="w-7 h-7 bg-purple-900 border-[2px] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center shrink-0">
-                                        <GitBranch className="w-4 h-4 text-white" />
+                            <div className="flex items-center justify-between mb-5 pb-4 border-b border-border">
+                                <h3 className="text-xl font-semibold text-foreground flex items-center gap-2">
+                                    <span className="bg-primary/10 text-primary rounded-md p-1 shrink-0">
+                                        <GitBranch className="size-4" />
                                     </span>
                                     {section.title}
                                 </h3>
-                                <span className="font-mono font-bold uppercase tracking-widest text-white bg-black px-2 py-1.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-[2px] border-black text-[10px]">Interactive Flow</span>
+                                <span className="bg-muted text-muted-foreground rounded-full px-2.5 py-0.5 text-xs font-medium">Flow</span>
                             </div>
                         )}
                         <Flowchart section={section} />
@@ -832,9 +815,9 @@ export default function BlogDetailPage() {
     if (isLoading) {
         return (
             <div className="w-full h-screen flex items-center justify-center">
-                <div className="flex items-center justify-center gap-3 bg-background px-6 py-4 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]">
-                    <span className="h-5 w-5 border-2 border-foreground border-r-transparent animate-spin"></span>
-                    <span className="font-mono font-bold text-sm uppercase tracking-widest text-foreground">Loading System...</span>
+                <div className="flex items-center justify-center gap-3 bg-card border border-border rounded-md px-6 py-4 shadow-sm">
+                    <span className="size-5 border-2 border-border border-t-primary rounded-full animate-spin"></span>
+                    <span className="text-muted-foreground text-sm">Loading…</span>
                 </div>
             </div>
         );
@@ -843,12 +826,12 @@ export default function BlogDetailPage() {
     if (isError || !blog) {
         return (
             <div className="min-h-[80vh] flex items-center justify-center px-4">
-                <div className="bg-background border-2 border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)] p-12 text-center max-w-2xl w-full">
-                    <h1 className="text-4xl font-extrabold text-foreground mb-4 uppercase tracking-tight">SYSTEM.404_NOT_FOUND</h1>
-                    <p className="font-mono text-sm uppercase tracking-widest text-gray-600 mb-8">The requested blog post doesn't exist or is corrupted.</p>
-                    <Link href="/blogs" className="inline-flex items-center gap-2 px-6 py-3 bg-foreground text-background font-mono font-bold uppercase tracking-widest text-xs hover:bg-purple-900 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all">
-                        <ArrowLeft className="w-4 h-4" />
-                        Return to Directory
+                <div className="bg-card border border-border rounded-xl p-12 text-center max-w-lg w-full shadow-lg">
+                    <h1 className="text-2xl font-bold text-foreground mb-3">Blog not found</h1>
+                    <p className="text-muted-foreground text-sm mb-8">The requested blog post doesn&apos;t exist or is unavailable.</p>
+                    <Link href="/blogs" className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors">
+                        <ArrowLeft className="size-4" />
+                        Back to Blogs
                     </Link>
                 </div>
             </div>
@@ -862,65 +845,59 @@ export default function BlogDetailPage() {
                 {tableOfContents.length > 0 && (
                     <button
                         onClick={() => setShowTOC(true)}
-                        className="fixed bottom-6 left-6 z-40 bg-white border-[4px] border-black hover:bg-gray-100 text-black px-5 py-2 font-mono font-bold uppercase tracking-widest transition-all duration-300 flex items-center gap-2 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1"
+                        className="fixed bottom-6 left-6 z-40 bg-card border border-border rounded-lg hover:bg-muted text-foreground px-4 py-2 text-sm font-medium transition-all flex items-center gap-2 shadow-lg"
                     >
-                        <Menu className="w-5 h-5" />
-                        <span className="hidden md:inline">TOC</span>
+                        <Menu className="size-4" />
+                        <span className="hidden md:inline">Contents</span>
                     </button>
                 )}
 
                 {/* TOC Sheet Overlay */}
                 {showTOC && (
-                    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" onClick={() => setShowTOC(false)}>
+                    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" onClick={() => setShowTOC(false)}>
                         <div
-                            className="absolute left-0 top-0 bottom-0 w-full sm:w-96 bg-white border-r-[4px] border-black overflow-y-auto transform transition-transform duration-300 ease-out shadow-2xl"
+                            className="absolute left-0 top-0 bottom-0 w-full sm:w-80 bg-card border-r border-border overflow-y-auto shadow-2xl"
                             onClick={e => e.stopPropagation()}
                         >
-                            <div className="p-6">
-                                <div className="flex items-center justify-between mb-6 pb-4 border-b-[4px] border-black">
-                                    <h3 className="text-2xl font-extrabold text-black flex items-center gap-2 uppercase tracking-tighter">
-                                        <Menu className="w-6 h-6 text-black" />
-                                        Index
+                            <div className="p-5">
+                                <div className="flex items-center justify-between mb-5 pb-4 border-b border-border">
+                                    <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+                                        <Menu className="size-4" />
+                                        Contents
                                     </h3>
                                     <button
                                         onClick={() => setShowTOC(false)}
-                                        className="p-2 hover:bg-gray-100 transition-colors border-[4px] border-transparent hover:border-black"
+                                        className="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground"
                                     >
-                                        <svg className="w-5 h-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
                                         </svg>
                                     </button>
                                 </div>
 
                                 {bookmark?.section_id && (
-                                    <div className="mb-4 p-3 border-[3px] border-purple-900 bg-purple-50 flex items-center gap-2">
-                                        <BookmarkCheck className="w-4 h-4 text-purple-900 flex-shrink-0" />
-                                        <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-purple-900 truncate">
+                                    <div className="mb-4 p-3 border border-primary/30 bg-primary/5 rounded-md flex items-center gap-2">
+                                        <BookmarkCheck className="size-4 text-primary shrink-0" />
+                                        <span className="text-xs text-primary truncate">
                                             Saved: {bookmark.section_title || bookmark.section_id}
                                         </span>
                                     </div>
                                 )}
-                                <nav className="space-y-4">
+                                <nav className="space-y-1">
                                     {tableOfContents.map((item, index) => {
                                         const isActive = activeSection === item.id;
                                         const isBookmarked = bookmark?.section_id === item.id;
                                         return (
-                                            <div
-                                                key={item.id}
-                                                className={`flex items-stretch transition-all duration-300 border-[4px] ${isActive
-                                                    ? 'bg-black border-black shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] translate-y-[-2px]'
-                                                    : 'border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-y-1 hover:translate-x-1'
-                                                    }`}
-                                            >
+                                            <div key={item.id} className={`flex items-stretch rounded-md transition-colors ${isActive ? 'bg-primary/10' : 'hover:bg-muted'}`}>
                                                 <button
                                                     onClick={() => scrollToSection(item.id)}
-                                                    className={`flex-1 text-left px-4 py-3 text-sm font-bold ${isActive ? 'text-white' : 'text-black'}`}
+                                                    className={`flex-1 text-left px-3 py-2 text-sm ${isActive ? 'text-primary font-medium' : 'text-foreground'}`}
                                                 >
-                                                    <div className="flex items-start gap-3">
-                                                        <span className={`text-xs font-mono mt-0.5 flex-shrink-0 ${isActive ? 'text-gray-300' : 'text-gray-500'}`}>
+                                                    <div className="flex items-start gap-2">
+                                                        <span className="text-xs text-muted-foreground mt-0.5 shrink-0 font-mono">
                                                             {(index + 1).toString().padStart(2, '0')}
                                                         </span>
-                                                        <span className="flex-1 uppercase tracking-tight">{item.title}</span>
+                                                        <span className="flex-1">{item.title}</span>
                                                     </div>
                                                 </button>
                                                 <button
@@ -928,16 +905,9 @@ export default function BlogDetailPage() {
                                                     disabled={bookmarkBusy}
                                                     title={isBookmarked ? 'Remove bookmark' : 'Bookmark this section'}
                                                     aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark this section'}
-                                                    className={`px-3 flex items-center justify-center border-l-[4px] border-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isBookmarked
-                                                        ? 'bg-purple-900 text-white hover:bg-purple-800'
-                                                        : isActive
-                                                            ? 'bg-gray-800 text-white hover:bg-purple-900'
-                                                            : 'bg-white text-black hover:bg-purple-100'
-                                                        }`}
+                                                    className={`px-2 flex items-center justify-center rounded-r-md transition-colors disabled:opacity-50 ${isBookmarked ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                                                 >
-                                                    {isBookmarked
-                                                        ? <BookmarkCheck className="w-4 h-4 fill-current" />
-                                                        : <Bookmark className="w-4 h-4" />}
+                                                    {isBookmarked ? <BookmarkCheck className="size-4 fill-current" /> : <Bookmark className="size-4" />}
                                                 </button>
                                             </div>
                                         );
@@ -959,49 +929,45 @@ export default function BlogDetailPage() {
                                 router.push('/blogs');
                             }
                         }}
-                        className="inline-flex items-center gap-2 font-mono font-bold uppercase tracking-widest text-black hover:text-purple-900 mb-6 transition-all hover:translate-x-[-4px]"
+                        className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground mb-6 transition-colors"
                     >
-                        <ArrowLeft className="w-4 h-4" />
-                        RETURN
+                        <ArrowLeft className="size-4" />
+                        Back
                     </button>
 
                     {/* Main Blog Container */}
-                    <article className="bg-white border-[4px] border-black relative z-10 flex flex-col">
+                    <article className="bg-card border border-border rounded-xl relative z-10 flex flex-col overflow-hidden shadow-sm">
                         {/* Featured Image */}
-                        <div className="relative h-[450px] w-full border-b-[4px] border-black bg-black">
+                        <div className="relative h-96 w-full bg-muted">
                             {(blog.thumbnail || blog.image) ? (
                                 <Image
                                     src={getImageUrl(blog.thumbnail || blog.image)}
                                     alt={blog.title}
                                     fill
-                                    className="object-cover grayscale-[40%] opacity-80"
+                                    className="object-cover"
                                     priority
                                 />
                             ) : (
-                                <div className="w-full h-full bg-black flex items-center justify-center text-white">
-                                    <p className="text-6xl font-mono font-bold uppercase tracking-widest opacity-50">SYS.NO_IMG</p>
+                                <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground">
+                                    <p className="text-sm">No image</p>
                                 </div>
                             )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-
-                            {/* Overlay Content */}
-                            <div className="absolute inset-0 flex flex-col justify-end p-8 md:p-12 z-20">
-                                <div className="max-w-4xl">
-                                    <div className="flex flex-wrap gap-3 mb-6">
-                                        <span className="px-3 py-1 bg-white text-black text-[10px] uppercase font-mono font-bold tracking-widest border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+                            <div className="absolute inset-0 flex flex-col justify-end p-8 md:p-10 z-10">
+                                <div className="max-w-3xl">
+                                    <div className="flex flex-wrap gap-2 mb-4">
+                                        <span className="bg-primary/90 text-primary-foreground rounded-full px-3 py-0.5 text-xs font-medium backdrop-blur-sm">
                                             {blog.category_name || (blog.category ? (typeof blog.category === 'object' ? blog.category.name : blog.category) : 'General')}
                                         </span>
                                         {blog.featured && (
-                                            <span className="px-3 py-1 bg-purple-900 text-white text-[10px] uppercase font-mono font-bold tracking-widest border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                                                FEATURED
-                                            </span>
+                                            <span className="bg-amber-500/90 text-white rounded-full px-3 py-0.5 text-xs font-medium">Featured</span>
                                         )}
                                     </div>
-                                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 uppercase tracking-tighter leading-[1.1] text-white">
+                                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-3 leading-tight text-white">
                                         {blog.title}
                                     </h1>
                                     {(blog.subtitle || blog.description || blog.excerpt) && (
-                                        <p className="text-sm font-mono text-gray-200 uppercase tracking-widest leading-relaxed">
+                                        <p className="text-sm text-white/80 leading-relaxed">
                                             {blog.subtitle || blog.description || blog.excerpt}
                                         </p>
                                     )}
@@ -1010,22 +976,22 @@ export default function BlogDetailPage() {
                         </div>
 
                         {/* Meta Information Bar */}
-                        <div className="flex flex-wrap items-center gap-x-8 gap-y-4 p-6 border-b-[4px] border-black bg-white">
-                            <div className="flex items-center gap-2 text-black font-mono uppercase text-xs font-bold tracking-widest">
-                                <Calendar className="w-4 h-4" />
+                        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 px-6 py-4 border-b border-border">
+                            <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
+                                <Calendar className="size-4" />
                                 <span>{formatDate(getBlogDate(blog), "Date")}</span>
                             </div>
-                            <div className="flex items-center gap-2 text-black font-mono uppercase text-xs font-bold tracking-widest">
-                                <User className="w-4 h-4" />
+                            <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
+                                <User className="size-4" />
                                 <Link href={authorIdentifier ? `/blogs/${encodeURIComponent(authorIdentifier)}` : `/blogs`}>
-                                    <span className="cursor-pointer hover:underline hover:text-purple-900 transition-colors">
+                                    <span className="cursor-pointer hover:text-foreground hover:underline underline-offset-2 transition-colors">
                                         {typeof blog.author === 'object' ? (blog.author.full_name || blog.author_email || blog.author.username || blog.authorUsername) : blog.author}
                                     </span>
                                 </Link>
                             </div>
                             {blog.views !== undefined && (
-                                <div className="flex items-center gap-2 text-black font-mono uppercase text-xs font-bold tracking-widest">
-                                    <Eye className="w-4 h-4" />
+                                <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
+                                    <Eye className="size-4" />
                                     <span>{blog.views.toLocaleString()}</span>
                                 </div>
                             )}
@@ -1033,29 +999,20 @@ export default function BlogDetailPage() {
                                 <button
                                     onClick={handleLike}
                                     disabled={isLiking}
-                                    className={`flex items-center gap-2 font-mono uppercase text-xs font-bold tracking-widest transition-all duration-300 ${isLikedState
-                                        ? 'text-purple-900 hover:text-purple-700'
-                                        : 'text-black hover:text-purple-900'
-                                        } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                    className={`flex items-center gap-1.5 text-sm transition-colors ${isLikedState ? 'text-primary' : 'text-muted-foreground hover:text-foreground'} disabled:opacity-50`}
                                     title="Like this blog"
                                 >
-                                    <Heart
-                                        className={`w-4 h-4 transition-all duration-300 ${isLikedState ? 'fill-current' : ''
-                                            } ${isLiking ? 'animate-pulse' : ''}`}
-                                    />
+                                    <Heart className={`size-4 transition-all ${isLikedState ? 'fill-current' : ''} ${isLiking ? 'animate-pulse' : ''}`} />
                                     <span>{likesCount.toLocaleString()}</span>
                                 </button>
                             )}
                         </div>
 
-                        {/* Tags (if any) */}
+                        {/* Tags */}
                         {blog.tags && blog.tags.length > 0 && (
-                            <div className="px-8 md:px-12 pt-8 pb-4 bg-white border-b-[4px] border-black flex flex-wrap gap-3">
+                            <div className="px-6 pt-5 pb-2 border-b border-border flex flex-wrap gap-2">
                                 {blog.tags.map((tag, index) => (
-                                    <span
-                                        key={index}
-                                        className="px-3 py-1 bg-black text-white text-[10px] font-mono font-bold uppercase tracking-widest"
-                                    >
+                                    <span key={index} className="bg-muted text-muted-foreground rounded-full px-2.5 py-0.5 text-xs font-medium">
                                         #{tag}
                                     </span>
                                 ))}
@@ -1063,15 +1020,13 @@ export default function BlogDetailPage() {
                         )}
 
                         {/* Article Content Wrapper */}
-                        <div className="p-8 md:p-16 bg-white">
-                            
+                        <div className="p-8 md:p-12">
+
                             {/* Introduction */}
                             {blog.content?.introduction && (
-                                <div id="introduction" className="mb-12">
-                                    <h3 className="text-3xl font-extrabold text-black uppercase tracking-tighter mb-6 border-b-[4px] border-black pb-2 inline-block">
-                                        INTRODUCTION
-                                    </h3>
-                                    <p className="text-black text-lg leading-relaxed whitespace-pre-wrap font-medium">
+                                <div id="introduction" className="mb-10">
+                                    <h3 className="text-xl font-semibold text-foreground mb-4">Introduction</h3>
+                                    <p className="text-foreground/90 text-base leading-relaxed whitespace-pre-wrap">
                                         {blog.content.introduction}
                                     </p>
                                 </div>
@@ -1082,11 +1037,9 @@ export default function BlogDetailPage() {
 
                             {/* Conclusion */}
                             {blog.content?.conclusion && (
-                                <div id="conclusion" className="mt-16 pt-12 border-t-[4px] border-black">
-                                    <h3 className="text-3xl font-extrabold text-black uppercase tracking-tighter mb-6 border-b-[4px] border-black pb-2 inline-block">
-                                        CONCLUSION
-                                    </h3>
-                                    <p className="text-black text-lg leading-relaxed whitespace-pre-wrap font-medium">
+                                <div id="conclusion" className="mt-12 pt-10 border-t border-border">
+                                    <h3 className="text-xl font-semibold text-foreground mb-4">Conclusion</h3>
+                                    <p className="text-foreground/90 text-base leading-relaxed whitespace-pre-wrap">
                                         {blog.content.conclusion}
                                     </p>
                                 </div>
@@ -1096,41 +1049,41 @@ export default function BlogDetailPage() {
 
                     {/* Related Blogs Section */}
                     {suggestedBlogs.length > 0 && (
-                        <div className="mt-20">
-                            <h2 className="text-4xl font-extrabold mb-8 text-black uppercase tracking-tighter border-b-[4px] border-black pb-4 inline-block">RELATED QUERIES</h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="mt-16">
+                            <h2 className="text-xl font-bold text-foreground mb-6">Related Posts</h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                 {suggestedBlogs.map((item, idx) => (
-                                    <Link 
-                                        key={idx} 
+                                    <Link
+                                        key={idx}
                                         href={`/blogs/${encodeURIComponent(item.author?.email || item.author_email || item.authorUsername || item.author?.username || item.author?.id || 'unknown')}/${item.slug}`}
-                                        className="group block bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(88,28,135,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex flex-col h-full overflow-hidden"
+                                        className="group flex flex-col bg-card border border-border rounded-lg overflow-hidden hover:border-primary/40 hover:shadow-md transition-all h-full"
                                     >
-                                        <div className="relative aspect-video overflow-hidden bg-purple-50 border-b-2 border-black">
+                                        <div className="relative aspect-video overflow-hidden bg-muted">
                                             {(item.thumbnail || item.image) ? (
                                                 <Image
                                                     src={getImageUrl(item.thumbnail || item.image)}
                                                     alt={item.title}
                                                     fill
                                                     sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-                                                    className="object-cover grayscale-[30%] group-hover:grayscale-0 transition-all duration-500"
+                                                    className="object-cover group-hover:scale-105 transition-transform duration-300"
                                                 />
                                             ) : (
-                                                <div className="w-full h-full bg-purple-100 flex items-center justify-center">
-                                                    <p className="text-purple-900 text-[10px] font-mono font-bold uppercase tracking-widest opacity-50">Sys-Log</p>
+                                                <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground">
+                                                    <p className="text-xs">No image</p>
                                                 </div>
                                             )}
                                             {(item.category_name || item.category) && (
                                                 <div className="absolute top-2 left-2">
-                                                    <span className="inline-flex items-center px-2 py-1 text-[10px] font-mono font-bold uppercase tracking-widest bg-white text-black border-2 border-black">
+                                                    <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-xs font-medium backdrop-blur-sm">
                                                         {item.category_name || (typeof item.category === 'object' ? item.category?.name : item.category)}
                                                     </span>
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="p-6 flex-1 flex flex-col">
-                                            <h3 className="text-lg font-extrabold text-black mb-3 line-clamp-2 uppercase tracking-tight group-hover:text-purple-900 transition-colors">{item.title}</h3>
+                                        <div className="p-4 flex-1 flex flex-col">
+                                            <h3 className="text-sm font-semibold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors">{item.title}</h3>
                                             {item.excerpt && (
-                                                <p className="text-black font-medium text-sm line-clamp-2 leading-relaxed mt-auto opacity-80">{item.excerpt}</p>
+                                                <p className="text-muted-foreground text-xs line-clamp-2 leading-relaxed mt-auto">{item.excerpt}</p>
                                             )}
                                         </div>
                                     </Link>

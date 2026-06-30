@@ -45,3 +45,18 @@ export function formatDate(dateString, fallback = "N/A") {
 export function getBlogDate(blog) {
   return blog?.publishedDate || blog?.published_date || blog?.created_at || blog?.createdAt || blog?.added_at || blog?.date;
 }
+
+export function getBlogUrl(blog) {
+  const authorIdentifier =
+    blog?.author?.email ||
+    blog?.author_email ||
+    blog?.authorEmail ||
+    blog?.authorUsername ||
+    blog?.author?.username ||
+    blog?.author?.id ||
+    blog?.author;
+  if (authorIdentifier) {
+    return `/blogs/${encodeURIComponent(authorIdentifier)}/${blog.slug}`.replace(/([^:]\/)\/+/g, "$1");
+  }
+  return `/blogs/unknown/${blog.slug}`;
+}

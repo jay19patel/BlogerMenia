@@ -35,9 +35,7 @@ export default async function UserBlogsPage({ params }) {
   return (
     <Suspense fallback={
       <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="border-2 border-foreground p-8 shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]">
-          <p className="font-mono font-bold text-xs uppercase tracking-widest text-foreground">Loading Profile...</p>
-        </div>
+        <div className="bg-muted rounded-md px-6 py-3 text-muted-foreground text-sm">Loading...</div>
       </div>
     }>
       <UserBlogsList username={username} />

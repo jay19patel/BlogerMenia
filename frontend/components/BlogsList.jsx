@@ -117,7 +117,7 @@ export default function BlogsList() {
 
     const breadcrumbItems = [
         { label: "Home", href: "/" },
-        { label: "System Logs", href: null },
+        { label: "Blogs", href: null },
     ];
 
     if (isLoading) {
@@ -126,7 +126,7 @@ export default function BlogsList() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="relative h-40 sm:h-48 lg:h-56">
                         <div className="absolute inset-0 flex items-center justify-center">
-                            <LoaderCard message="Fetching logs…" />
+                            <LoaderCard message="Loading blogs…" />
                         </div>
                     </div>
                 </div>
@@ -139,12 +139,12 @@ export default function BlogsList() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <Breadcrumb items={breadcrumbItems} />
 
-                <div className="mb-12 border-b-2 border-foreground pb-8 mt-8">
-                    <h1 className="text-4xl md:text-5xl font-extrabold text-foreground mb-4 uppercase tracking-tight">
-                        System Logs
+                <div className="mb-10 mt-8">
+                    <h1 className="text-4xl font-bold text-foreground mb-2">
+                        All Blogs
                     </h1>
-                    <p className="text-lg text-gray-600 font-mono">
-                        Query the cluster for engineering insights and technical documentation.
+                    <p className="text-muted-foreground text-lg">
+                        Discover stories, insights, and expertise from writers on any topic.
                     </p>
                 </div>
 
@@ -155,8 +155,8 @@ export default function BlogsList() {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onSubmit={handleSearch}
-                        placeholder="QUERY INDEX..."
-                        buttonLabel="Exec"
+                        placeholder="Search blogs..."
+                        buttonLabel="Search"
                         disabled={isFetchingBlogs}
                     />
                     <CategoryPills
@@ -167,8 +167,8 @@ export default function BlogsList() {
                 </div>
 
                 <div className="mb-8 flex items-center justify-between border-b border-border pb-4">
-                    <p className="text-foreground font-mono text-sm uppercase tracking-widest">
-                        Results: {totalBlogs} {totalBlogs !== 1 ? "Logs" : "Log"} Found
+                    <p className="text-muted-foreground text-sm">
+                        {totalBlogs} {totalBlogs !== 1 ? "blogs" : "blog"} found
                     </p>
                 </div>
 
@@ -190,14 +190,14 @@ export default function BlogsList() {
                         />
                     </>
                 ) : (
-                    <div className="text-center py-16 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]">
-                        <p className="text-xl text-foreground font-mono font-bold uppercase tracking-widest mb-4">
-                            {submittedSearch || selectedCategory !== "All" ? "SYS.NO_MATCH" : "SYS.EMPTY_LOGS"}
+                    <div className="text-center py-16 bg-muted/30 rounded-lg border border-dashed border-border">
+                        <p className="text-lg font-semibold text-foreground mb-2">
+                            {submittedSearch || selectedCategory !== "All" ? "No results found" : "No blogs yet"}
                         </p>
-                        <p className="text-gray-500 font-mono text-sm mb-6">
+                        <p className="text-muted-foreground text-sm mb-6">
                             {submittedSearch || selectedCategory !== "All"
-                                ? `No logs matched query / category filters. Try adjusting your criteria.`
-                                : "No logs found in this index."}
+                                ? "No blogs matched your search or filters. Try adjusting your criteria."
+                                : "No blogs have been published yet."}
                         </p>
                         {(submittedSearch || selectedCategory !== "All") && (
                             <button
@@ -207,9 +207,9 @@ export default function BlogsList() {
                                     setSelectedCategory("All");
                                     setCurrentPage(1);
                                 }}
-                                className="px-6 py-3 bg-foreground text-background border-2 border-foreground font-mono font-bold uppercase tracking-widest text-xs shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:bg-purple-900 hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
+                                className="px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-md hover:bg-muted transition-colors"
                             >
-                                Reset Filters
+                                Reset filters
                             </button>
                         )}
                     </div>

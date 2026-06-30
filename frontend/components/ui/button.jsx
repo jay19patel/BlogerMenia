@@ -5,31 +5,29 @@ import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-none border-2 border-foreground text-xs font-mono font-bold uppercase tracking-widest transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-foreground",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-1",
   {
     variants: {
       variant: {
         default:
-          "bg-foreground text-background shadow-[3px_3px_0px_0px_rgba(13,17,23,1)] dark:shadow-[3px_3px_0px_0px_rgba(250,249,246,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none hover:bg-foreground/90",
+          "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
         destructive:
-          "bg-destructive text-white shadow-[3px_3px_0px_0px_rgba(13,17,23,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none hover:bg-destructive/90",
+          "bg-destructive text-white hover:bg-destructive/90 shadow-sm",
         outline:
-          "bg-background text-foreground hover:bg-accent",
+          "border border-border bg-transparent text-foreground hover:bg-muted",
         secondary:
-          "bg-background text-foreground shadow-[3px_3px_0px_0px_rgba(13,17,23,1)] dark:shadow-[3px_3px_0px_0px_rgba(250,249,246,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none hover:bg-gray-100",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost:
-          "border-transparent bg-transparent hover:bg-accent hover:text-accent-foreground",
-        link: "border-transparent bg-transparent text-primary underline-offset-4 hover:underline shadow-none hover:shadow-none p-0",
-        purple:
-          "bg-purple-900 text-white shadow-[3px_3px_0px_0px_rgba(13,17,23,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none hover:bg-purple-800",
+          "text-foreground hover:bg-muted bg-transparent border-transparent",
+        link: "text-primary underline-offset-4 hover:underline border-transparent bg-transparent shadow-none p-0",
       },
       size: {
-        default: "h-10 px-5 py-2",
-        sm: "h-8 px-3 py-1 text-[10px]",
-        lg: "h-12 px-6 py-3 text-sm",
-        icon: "size-10 flex items-center justify-center",
-        "icon-sm": "size-8 flex items-center justify-center",
-        "icon-lg": "size-12 flex items-center justify-center",
+        default: "h-9 px-4 py-2",
+        sm: "h-8 px-3 text-xs",
+        lg: "h-10 px-6",
+        icon: "size-9 flex items-center justify-center",
+        "icon-sm": "size-7 flex items-center justify-center",
+        "icon-lg": "size-11 flex items-center justify-center",
       },
     },
     defaultVariants: {
@@ -59,7 +57,7 @@ function Button({
     >
       {loading ? (
         <>
-          <span className="h-3 w-3 border-2 border-current border-r-transparent animate-spin shrink-0"></span>
+          <span className="size-4 border-2 border-border border-t-primary-foreground rounded-full animate-spin shrink-0"></span>
           <span>Loading...</span>
         </>
       ) : (
