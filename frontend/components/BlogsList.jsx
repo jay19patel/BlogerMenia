@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import HorizontalBlogCard from "@/components/HorizontalBlogCard";
 import Breadcrumb from "@/components/Breadcrumb";
 import SearchBar from "@/components/ui/search-bar";
@@ -28,13 +29,6 @@ export default function BlogsList() {
     const [selectedCategory, setSelectedCategory] = useState(initialCategory);
     const [currentPage, setCurrentPage] = useState(initialPage);
 
-    // Data States
-    const [categories, setCategories] = useState(["All"]);
-    const [allBlogs, setAllBlogs] = useState([]);
-    const [totalBlogs, setTotalBlogs] = useState(0);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isFetchingBlogs, setIsFetchingBlogs] = useState(false);
-
     // Sync URL when state changes — use replace to avoid polluting Back button history
     const updateUrl = useCallback((page, search, category) => {
         const params = new URLSearchParams();
@@ -47,40 +41,34 @@ export default function BlogsList() {
     }, [pathname, router]);
 
     // Fetch Categories
-    useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                const response = await api.getBlogCategories();
-                const categoriesList = response.results || response.categories || [];
-                setCategories(["All", ...categoriesList.map(c => typeof c === 'string' ? c : c.name)]);
-            } catch (error) {
-                console.error("Error fetching categories:", error);
-            }
-        };
-        fetchCategories();
-    }, []);
+    const { data: categoriesData } = useQuery({
+        queryKey: ["categories"],
+        queryFn: async () => {
+            const response = await api.getBlogCategories();
+            return response.results || response.categories || [];
+        },
+        staleTime: 1000 * 60 * 5, // 5 minutes
+    });
+
+    const categories = ["All", ...(categoriesData ? categoriesData.map(c => typeof c === 'string' ? c : c.name) : [])];
 
     // Fetch Blogs
+    const skip = (currentPage - 1) * BLOGS_PER_PAGE;
+    const search = submittedSearch && submittedSearch.trim().length > 0 ? submittedSearch.trim() : null;
+    const filter = selectedCategory === "All" ? null : selectedCategory;
+
+    const { data: blogsData, isLoading, isFetching: isFetchingBlogs } = useQuery({
+        queryKey: ["blogs", search, skip, filter],
+        queryFn: async () => {
+            return await api.getBlogs(search, skip, BLOGS_PER_PAGE, filter);
+        },
+        staleTime: 1000 * 60 * 5,
+    });
+
+    const allBlogs = blogsData?.blogs || [];
+    const totalBlogs = blogsData?.total || 0;
+
     useEffect(() => {
-        const fetchBlogs = async () => {
-            setIsFetchingBlogs(true);
-            try {
-                const skip = (currentPage - 1) * BLOGS_PER_PAGE;
-                const search = submittedSearch && submittedSearch.trim().length > 0 ? submittedSearch.trim() : null;
-                const filter = selectedCategory === "All" ? null : selectedCategory;
-
-                const response = await api.getBlogs(search, skip, BLOGS_PER_PAGE, filter);
-                setAllBlogs(response.blogs || []);
-                setTotalBlogs(response.total || 0);
-            } catch (error) {
-                console.error("Error fetching blogs:", error);
-            } finally {
-                setIsLoading(false);
-                setIsFetchingBlogs(false);
-            }
-        };
-
-        fetchBlogs();
         updateUrl(currentPage, submittedSearch, selectedCategory);
     }, [currentPage, submittedSearch, selectedCategory, updateUrl]);
 

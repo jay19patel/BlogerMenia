@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import BlogCard from "@/components/BlogCard";
 import Breadcrumb from "@/components/Breadcrumb";
 import ProfileHeader from "@/components/ProfileHeader";
@@ -37,16 +38,6 @@ export default function UserBlogsList({ username }) {
 
     const isOwner = user?.email === username;
 
-    const [userProfile, setUserProfile] = useState(null);
-    const [categories, setCategories] = useState(["All"]);
-    const [playlists, setPlaylists] = useState([]);
-    const [allBlogs, setAllBlogs] = useState([]);
-    const [totalBlogs, setTotalBlogs] = useState(0);
-
-    const [profileLoading, setProfileLoading] = useState(true);
-    const [blogsLoading, setBlogsLoading] = useState(true);
-    const [isFetchingBlogs, setIsFetchingBlogs] = useState(false);
-
     const updateUrl = useCallback((page, search, category) => {
         const params = new URLSearchParams();
         if (page > 1) params.set("page", page.toString());
@@ -56,68 +47,58 @@ export default function UserBlogsList({ username }) {
         router.replace(newUrl, { scroll: false });
     }, [pathname, router]);
 
-    useEffect(() => {
-        const fetchProfile = async () => {
-            try {
-                const profile = await api.getUserProfileByEmail(username);
-                setUserProfile(profile);
-            } catch (error) {
-                console.error("Error fetching User profile:", error);
-            } finally {
-                setProfileLoading(false);
-            }
-        };
-        if (username) fetchProfile();
-    }, [username]);
+    const { data: userProfile, isLoading: profileLoading } = useQuery({
+        queryKey: ["userProfile", username],
+        queryFn: async () => await api.getUserProfileByEmail(username),
+        enabled: !!username,
+        staleTime: 1000 * 60 * 5,
+    });
 
-    useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                const response = await api.getBlogCategories(username);
-                const categoriesList = response.results || response.categories || [];
-                setCategories(["All", ...categoriesList.map(c => typeof c === 'string' ? c : c.name)]);
-            } catch (error) {
-                console.error("Error fetching categories:", error);
-            }
-        };
-        if (username) fetchCategories();
-    }, [username]);
+    const { data: categoriesData } = useQuery({
+        queryKey: ["categories", username],
+        queryFn: async () => {
+            const response = await api.getBlogCategories(username);
+            return response.results || response.categories || [];
+        },
+        enabled: !!username,
+        staleTime: 1000 * 60 * 5,
+    });
+    
+    const categories = ["All", ...(categoriesData ? categoriesData.map(c => typeof c === 'string' ? c : c.name) : [])];
 
-    const fetchPlaylists = useCallback(async () => {
-        if (!username || !userProfile) return;
-        try {
-            const authorId = userProfile.id || userProfile._id;
+    const authorId = userProfile?.id || userProfile?._id;
+
+    const { data: playlistsData } = useQuery({
+        queryKey: ["playlists", username, authorId, isOwner, token],
+        queryFn: async () => {
             const response = await api.getUserPlaylistsByEmail(username, authorId, token, isOwner);
-            setPlaylists(response.playlists || []);
-        } catch (error) {
-            console.error("Error fetching User playlists:", error);
-        }
-    }, [username, token, userProfile, isOwner]);
+            return response.playlists || [];
+        },
+        enabled: !!username && !!authorId,
+        staleTime: 1000 * 60 * 5,
+    });
 
-    useEffect(() => { fetchPlaylists(); }, [fetchPlaylists]);
+    const playlists = playlistsData || [];
+
+    const skip = (currentPage - 1) * BLOGS_PER_PAGE;
+    const search = submittedSearch && submittedSearch.trim().length >= 3 ? submittedSearch.trim() : null;
+    const filter = selectedCategory === "All" ? null : selectedCategory;
+
+    const { data: blogsData, isLoading: blogsLoading, isFetching: isFetchingBlogs } = useQuery({
+        queryKey: ["blogs", username, authorId, search, skip, filter],
+        queryFn: async () => {
+            return await api.getBlogs(search, skip, BLOGS_PER_PAGE, filter, authorId);
+        },
+        enabled: !!userProfile,
+        staleTime: 1000 * 60 * 5,
+    });
+
+    const allBlogs = blogsData?.blogs || [];
+    const totalBlogs = blogsData?.total || 0;
 
     useEffect(() => {
-        const fetchBlogs = async () => {
-            if (!userProfile) return;
-            setIsFetchingBlogs(true);
-            try {
-                const skip = (currentPage - 1) * BLOGS_PER_PAGE;
-                const search = submittedSearch && submittedSearch.trim().length >= 3 ? submittedSearch.trim() : null;
-                const filter = selectedCategory === "All" ? null : selectedCategory;
-                const authorId = userProfile.id || userProfile._id;
-                const response = await api.getBlogs(search, skip, BLOGS_PER_PAGE, filter, authorId);
-                setAllBlogs(response.blogs || []);
-                setTotalBlogs(response.total || 0);
-            } catch (error) {
-                console.error("Error fetching blogs:", error);
-            } finally {
-                setBlogsLoading(false);
-                setIsFetchingBlogs(false);
-            }
-        };
-        if (userProfile) fetchBlogs();
         updateUrl(currentPage, submittedSearch, selectedCategory);
-    }, [currentPage, submittedSearch, selectedCategory, updateUrl, userProfile]);
+    }, [currentPage, submittedSearch, selectedCategory, updateUrl]);
 
     const transformedBlogs = allBlogs.map((blog) => ({
         slug: blog.slug,

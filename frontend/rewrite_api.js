@@ -1,4 +1,6 @@
-// ─────────────────────────────────────────────────────────────────────────────
+const fs = require('fs');
+
+const content = `// ─────────────────────────────────────────────────────────────────────────────
 //  API client — All requests are now mapped entirely to Next.js Server Actions
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -189,7 +191,6 @@ export const api = {
   },
 
   // ── AI Chat ─────────────────────────────────────────────────────
-  // (Assuming you still want to handle chat via api fetch if you prefer, or we can leave them out if unused)
   async generateBlog(userMessage, sessionId = null) {
     return await generateBlogAction(userMessage, sessionId);
   },
@@ -278,8 +279,12 @@ export const api = {
   },
 
   async submitTestimonial(token, data) {
+    // mapped to contact for now as per minimal setup
     return await submitContactFormAction(data);
   },
 
   clearBackendToken,
 };
+`;
+
+fs.writeFileSync('lib/api.js', content);

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { BookOpen, Eye, Heart } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -26,11 +27,6 @@ export default function PlaylistsList() {
     const [submittedSearch, setSubmittedSearch] = useState(initialSearch);
     const [currentPage, setCurrentPage] = useState(initialPage);
 
-    const [allPlaylists, setAllPlaylists] = useState([]);
-    const [totalPlaylists, setTotalPlaylists] = useState(0);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isFetching, setIsFetching] = useState(false);
-
     // router.replace so filter changes don't pollute Back button history
     const updateUrl = useCallback((page, search) => {
         const params = new URLSearchParams();
@@ -40,24 +36,21 @@ export default function PlaylistsList() {
         router.replace(newUrl, { scroll: false });
     }, [pathname, router]);
 
-    useEffect(() => {
-        const fetchPlaylists = async () => {
-            setIsFetching(true);
-            try {
-                const skip = (currentPage - 1) * PLAYLISTS_PER_PAGE;
-                const search = submittedSearch && submittedSearch.trim().length > 0 ? submittedSearch.trim() : null;
-                const response = await api.getPlaylists(search, skip, PLAYLISTS_PER_PAGE);
-                setAllPlaylists(response.results || response.playlists || []);
-                setTotalPlaylists(response.total || 0);
-            } catch (error) {
-                console.error("Error fetching playlists:", error);
-            } finally {
-                setIsLoading(false);
-                setIsFetching(false);
-            }
-        };
+    const skip = (currentPage - 1) * PLAYLISTS_PER_PAGE;
+    const search = submittedSearch && submittedSearch.trim().length > 0 ? submittedSearch.trim() : null;
 
-        fetchPlaylists();
+    const { data, isLoading, isFetching } = useQuery({
+        queryKey: ["playlists", search, skip],
+        queryFn: async () => {
+            return await api.getPlaylists(search, skip, PLAYLISTS_PER_PAGE);
+        },
+        staleTime: 1000 * 60 * 5,
+    });
+
+    const allPlaylists = data?.results || data?.playlists || [];
+    const totalPlaylists = data?.total || 0;
+
+    useEffect(() => {
         updateUrl(currentPage, submittedSearch);
     }, [currentPage, submittedSearch, updateUrl]);
 

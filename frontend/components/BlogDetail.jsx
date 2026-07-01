@@ -5,12 +5,14 @@ import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
 import { ExternalLink, AlertCircle, Copy, Check, Menu, ArrowLeft, Calendar, User, Eye, Heart, ArrowRight, ArrowDown, Layers, Zap, Cloud, Cpu, Database, RefreshCw, GitBranch, Bookmark, BookmarkCheck } from 'lucide-react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { api } from '@/lib/api';
 import { getBlogDate, getImageUrl, formatDate } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import LoaderCard from '@/components/ui/loader';
 import React from 'react';
 
 const Flowchart = ({ section }) => {
@@ -117,11 +119,6 @@ export default function BlogDetailPage() {
     const slug = params.slug;
     const username = params.username;
 
-    const [blog, setBlog] = useState(null);
-    const [suggestedBlogs, setSuggestedBlogs] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isError, setIsError] = useState(false);
-
     const [activeSection, setActiveSection] = useState('');
     const [showTOC, setShowTOC] = useState(false);
     const [copiedIndex, setCopiedIndex] = useState(null);
@@ -134,79 +131,70 @@ export default function BlogDetailPage() {
     const [bookmarkBusy, setBookmarkBusy] = useState(false);
     const [bookmarkRestored, setBookmarkRestored] = useState(false);
 
-    // Define authorIdentifier for use in JSX and effects
+    // 1. Fetch Blog Data Using React Query
+    const { data: blog, isLoading, isError } = useQuery({
+        queryKey: ['blog', slug, token],
+        queryFn: async () => {
+            if (!slug) return null;
+            const data = await api.getBlogBySlug(slug, token);
+            if (!data) throw new Error('Blog not found');
+
+            // Normalize content structure
+            const normalizedContent = data.content || {
+                introduction: data.introduction,
+                sections: data.sections || [],
+                conclusion: data.conclusion
+            };
+            if (Array.isArray(normalizedContent.sections)) {
+                normalizedContent.sections = normalizedContent.sections.map((section) => {
+                    if (section?.type !== 'links' || !Array.isArray(section.links)) {
+                        return section;
+                    }
+                    return {
+                        ...section,
+                        links: section.links.map((link) => ({
+                            ...link,
+                            url: normalizeReferenceUrl(link?.url),
+                        })),
+                    };
+                });
+                
+                // Inject a sample youtube section for demonstration if it's the requested blog
+                if (data.slug === 'distributed-sqlite-at-the-edge' && !normalizedContent.sections.some(s => s.type === 'youtube')) {
+                    normalizedContent.sections.push({
+                        type: 'youtube',
+                        title: 'Video Demonstration',
+                        videoId: 'dQw4w9WgXcQ',
+                        description: 'A comprehensive video overview of distributed databases.'
+                    });
+                }
+            }
+
+            return {
+                ...data,
+                likes: toLikeCount(data.likes),
+                is_liked: Boolean(data.is_liked),
+                content: data.content || {
+                    introduction: normalizedContent.introduction,
+                    sections: normalizedContent.sections || [],
+                    conclusion: normalizedContent.conclusion
+                }
+            };
+        },
+        enabled: !!slug,
+        staleTime: 1000 * 60 * 5,
+    });
+
     const authorIdentifier = blog?.author?.email || blog?.author_email || blog?.authorUsername || blog?.author?.username || blog?.author?.id;
 
     // Always go back to /blogs
     const backUrl = '/blogs';
 
-    // 1. Fetch Blog Data Using useEffect
-    useEffect(() => {
-        const fetchBlog = async () => {
-            if (!slug) return;
-            setIsLoading(true);
-            setIsError(false);
-            try {
-                const data = await api.getBlogBySlug(slug, token);
-                if (!data) throw new Error('Blog not found');
-
-                // Normalize content structure
-                const normalizedContent = data.content || {
-                    introduction: data.introduction,
-                    sections: data.sections || [],
-                    conclusion: data.conclusion
-                };
-                if (Array.isArray(normalizedContent.sections)) {
-                    normalizedContent.sections = normalizedContent.sections.map((section) => {
-                        if (section?.type !== 'links' || !Array.isArray(section.links)) {
-                            return section;
-                        }
-                        return {
-                            ...section,
-                            links: section.links.map((link) => ({
-                                ...link,
-                                url: normalizeReferenceUrl(link?.url),
-                            })),
-                        };
-                    });
-                    
-                    // Inject a sample youtube section for demonstration if it's the requested blog
-                    if (data.slug === 'distributed-sqlite-at-the-edge' && !normalizedContent.sections.some(s => s.type === 'youtube')) {
-                        normalizedContent.sections.push({
-                            type: 'youtube',
-                            title: 'Video Demonstration',
-                            videoId: 'dQw4w9WgXcQ', // Sample Rickroll or any valid ID
-                            description: 'A comprehensive video overview of distributed databases.'
-                        });
-                    }
-                }
-
-                setBlog({
-                    ...data,
-                    likes: toLikeCount(data.likes),
-                    is_liked: Boolean(data.is_liked),
-                    content: data.content || {
-                        introduction: normalizedContent.introduction,
-                        sections: normalizedContent.sections || [],
-                        conclusion: normalizedContent.conclusion
-                    }
-                });
-            } catch (err) {
-                console.error("Error fetching blog:", err);
-                setIsError(true);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchBlog();
-    }, [slug, token]);
-
     // 2. Fetch Suggested Blogs
-    useEffect(() => {
-        const fetchSuggested = async () => {
-            if (!blog) return;
-
+    const { data: suggestedBlogsData } = useQuery({
+        queryKey: ['suggestedBlogs', slug, username, token, blog?.id || blog?._id],
+        queryFn: async () => {
+            if (!blog) return [];
             let relatedBlogs = [];
 
             // Try fetching from playlists if token exists
@@ -230,11 +218,9 @@ export default function BlogDetailPage() {
                             const blogPromises = targets.map(async (b) => {
                                 if (!b.slug) return null;
                                 try {
-                                    // Use api.getBlogBySlug but handle 404 gracefully
                                     const res = await api.getBlogBySlug(b.slug);
                                     return res;
                                 } catch (err) {
-                                    // Should be silent for 404
                                     return {
                                         id: b.blog_id,
                                         slug: b.slug,
@@ -251,7 +237,6 @@ export default function BlogDetailPage() {
                         }
                     }
                 } catch (e) {
-                    // Ignore 404 errors (no playlists found) or auth errors silently
                     if (e.message && (e.message.includes('404') || e.status === 404)) {
                         // silent
                     } else {
@@ -273,11 +258,13 @@ export default function BlogDetailPage() {
                     console.error('Suggested fetch error:', e);
                 }
             }
-            setSuggestedBlogs(relatedBlogs);
-        };
+            return relatedBlogs;
+        },
+        enabled: !!blog,
+        staleTime: 1000 * 60 * 5,
+    });
 
-        fetchSuggested();
-    }, [blog, token, slug, username]);
+    const suggestedBlogs = suggestedBlogsData || [];
 
     // 3. Local state sync for likes
     useEffect(() => {
@@ -288,28 +275,23 @@ export default function BlogDetailPage() {
     }, [blog]);
 
     // 3b. Hydrate has_liked + bookmark from the server when authenticated.
-    // The blog endpoint is anonymous + cached, so per-user state comes from
-    // a separate /interaction/ call.
+    const { data: interactionData } = useQuery({
+        queryKey: ['blogInteraction', slug],
+        queryFn: async () => await api.getBlogInteraction(slug),
+        enabled: !!blog && !!isAuthenticated,
+        staleTime: 1000 * 60 * 5,
+    });
+
     useEffect(() => {
-        if (!blog || !isAuthenticated) {
-            setBookmark(null);
-            return;
-        }
-        let cancelled = false;
-        (async () => {
-            try {
-                const data = await api.getBlogInteraction(blog.slug);
-                if (cancelled) return;
-                if (typeof data.has_liked === 'boolean') {
-                    setIsLikedState(data.has_liked);
-                }
-                setBookmark(data.bookmark || null);
-            } catch (err) {
-                console.error('Failed to load blog interaction:', err);
+        if (interactionData) {
+            if (typeof interactionData.has_liked === 'boolean') {
+                setIsLikedState(interactionData.has_liked);
             }
-        })();
-        return () => { cancelled = true; };
-    }, [blog, isAuthenticated]);
+            setBookmark(interactionData.bookmark || null);
+        } else if (!isAuthenticated) {
+            setBookmark(null);
+        }
+    }, [interactionData, isAuthenticated]);
 
     // 4. Handle Redirects
     useEffect(() => {
@@ -814,11 +796,8 @@ export default function BlogDetailPage() {
 
     if (isLoading) {
         return (
-            <div className="w-full h-screen flex items-center justify-center">
-                <div className="flex items-center justify-center gap-3 bg-card border border-border rounded-md px-6 py-4 shadow-sm">
-                    <span className="size-5 border-2 border-border border-t-primary rounded-full animate-spin"></span>
-                    <span className="text-muted-foreground text-sm">Loading…</span>
-                </div>
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <LoaderCard message="Loading blog details..." />
             </div>
         );
     }

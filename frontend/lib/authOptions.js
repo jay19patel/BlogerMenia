@@ -1,4 +1,3 @@
-import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import LinkedInProvider from "next-auth/providers/linkedin";
@@ -159,7 +158,3 @@ export const authOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET || "fallback_secret_for_development_only",
 };
-
-const handler = NextAuth(authOptions);
-
-export { handler as GET, handler as POST };

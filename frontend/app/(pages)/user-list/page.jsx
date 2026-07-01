@@ -5,7 +5,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { Users, Eye, UserCheck, ArrowLeft } from "lucide-react";
+import { Shield, ShieldAlert, Mail, User, Activity, ToggleLeft, ToggleRight, Trash2, Users, Eye, UserCheck, ArrowLeft } from "lucide-react";
+import LoaderCard from "@/components/ui/loader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { getImageUrl } from "@/lib/utils";
@@ -90,11 +91,8 @@ export default function UserListPage() {
 
   if (authLoading || !isAuthenticated || user?.role !== "Admin") {
     return (
-      <div className="w-full h-screen flex items-center justify-center">
-        <div className="bg-muted rounded-md px-6 py-3 text-muted-foreground text-sm flex items-center gap-3">
-          <span className="size-4 border-2 border-border border-t-primary rounded-full animate-spin" />
-          Loading...
-        </div>
+      <div className="flex items-center justify-center min-h-[80vh]">
+        <LoaderCard message="Loading admin panel..." />
       </div>
     );
   }
@@ -117,11 +115,8 @@ export default function UserListPage() {
 
         <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
           {loading ? (
-            <div className="p-12 text-center">
-              <div className="flex items-center justify-center gap-3 text-muted-foreground text-sm">
-                <span className="size-4 border-2 border-border border-t-primary rounded-full animate-spin" />
-                Loading users...
-              </div>
+            <div className="py-20 flex justify-center">
+              <LoaderCard message="Loading users..." />
             </div>
           ) : users.length === 0 ? (
             <div className="p-12 text-center">

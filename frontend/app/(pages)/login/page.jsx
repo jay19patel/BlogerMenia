@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, Suspense } from "react";
+import LoaderCard from "@/components/ui/loader";
 import { Mail, Lock, Eye, EyeOff, BookOpen, Users, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -183,9 +184,9 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="w-full min-h-[calc(100vh-4rem)] flex items-center justify-center">
-        <div className="bg-muted rounded-md px-6 py-3 text-muted-foreground text-sm">Loading...</div>
-      </div>
+        <div className="flex justify-center mt-12 py-10">
+          <LoaderCard message="Loading..." />
+        </div>
     }>
       <LoginForm />
     </Suspense>

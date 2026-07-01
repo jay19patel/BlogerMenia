@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { User, Mail, FileText, Save, MessageSquare, Sparkles, Link2, Link2Off, ToggleLeft, ToggleRight } from "lucide-react";
 import TestimonialModal from "@/components/TestimonialModal";
 import { getImageUrl } from "@/lib/utils";
+import LoaderCard from "@/components/ui/loader";
 import Image from "next/image";
 import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
@@ -142,8 +143,8 @@ function ProfilePageContent() {
 
   if (authLoading || !isAuthenticated || (isAuthenticated && !user)) {
     return (
-      <div className="w-full h-screen flex items-center justify-center">
-        <div className="bg-muted rounded-md px-6 py-3 text-muted-foreground text-sm">Loading...</div>
+      <div className="min-h-[80vh] flex items-center justify-center">
+        <LoaderCard message="Loading..." />
       </div>
     );
   }
@@ -301,8 +302,8 @@ function ProfilePageContent() {
 export default function ProfilePage() {
   return (
     <Suspense fallback={
-      <div className="w-full h-screen flex items-center justify-center">
-        <div className="bg-muted rounded-md px-6 py-3 text-muted-foreground text-sm">Loading...</div>
+      <div className="flex justify-center mt-12 py-10">
+        <LoaderCard message="Loading..." />
       </div>
     }>
       <ProfilePageContent />

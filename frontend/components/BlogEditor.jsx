@@ -793,19 +793,19 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
   if (isLoadingData) {
     return (
       <div className="w-full h-screen flex items-center justify-center">
-        <div className="flex items-center justify-center gap-3 bg-background px-6 py-4 border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(13,17,23,1)]">
-          <span className="h-5 w-5 border-2 border-foreground border-r-transparent animate-spin"></span>
-          <span className="font-mono font-bold text-sm uppercase tracking-widest text-foreground">Loading System...</span>
+        <div className="flex items-center justify-center gap-3 bg-muted rounded-md px-6 py-3 text-muted-foreground text-sm">
+          <span className="size-4 border-2 border-border border-t-primary rounded-full animate-spin" />
+          Loading...
         </div>
       </div>
     );
   }
 
   return (
-    <div className="py-8 bg-background min-h-screen border-t-2 border-foreground">
+    <div className="py-8 bg-background min-h-screen">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Chat Section */}
-        <div className="mb-6 bg-background border-2 border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)] p-6">
+        <div className="mb-6 bg-card border border-border rounded-xl shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
@@ -817,8 +817,8 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
               </div>
             </div>
             {isEditMode && (
-              <div className="text-xs font-mono font-bold uppercase text-purple-900 bg-purple-100 px-3 py-1 border-[2px] border-purple-900">
-                AI GEN WILL OVERWRITE FIELDS
+              <div className="text-xs font-medium text-primary bg-primary/10 rounded-full px-3 py-1">
+                AI gen will overwrite fields
               </div>
             )}
             <button
@@ -911,7 +911,7 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
                   onChange={(e) => setChatMessage(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && handleChatSend()}
                   placeholder="Type your blog idea or description..."
-                  className="flex-1 px-4 py-3 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="flex-1 px-4 py-2.5 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm text-foreground placeholder:text-muted-foreground"
                   disabled={isGenerating}
                 />
                 <button
@@ -928,59 +928,54 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
         </div>
 
         {/* Header */}
-        <div className="mb-8 flex items-center justify-between border-b-2 border-foreground pb-4">
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border">
           <div>
             <Link
               href="/my-blogs"
-              className="flex items-center gap-2 text-foreground font-mono font-bold uppercase tracking-widest text-sm hover:text-purple-900 hover:translate-x-[-4px] transition-all mb-2"
+              className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mb-2"
             >
-              <ArrowLeft className="w-4 h-4" />
-              BACK TO MY BLOGS
+              <ArrowLeft className="size-4" />
+              Back to My Blogs
             </Link>
-            <h1 className="text-4xl font-extrabold text-foreground uppercase tracking-tighter">CREATE NEW BLOG</h1>
+            <h1 className="text-2xl font-bold text-foreground">{isEditMode ? "Edit Blog" : "Create New Blog"}</h1>
           </div>
           <div className="flex items-center gap-3">
-            <label className="flex items-center gap-2 px-6 py-3 border-2 border-foreground bg-purple-900 text-white font-mono font-bold uppercase tracking-widest text-sm shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all cursor-pointer">
-              <Upload className="w-5 h-5" />
+            <label className="inline-flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-md text-sm font-medium hover:bg-secondary/80 transition-colors cursor-pointer">
+              <Upload className="size-4" />
               Load JSON
-              <input
-                type="file"
-                accept=".json"
-                onChange={handleLoadJSON}
-                className="hidden"
-              />
+              <input type="file" accept=".json" onChange={handleLoadJSON} className="hidden" />
             </label>
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex items-center gap-2 px-6 py-3 border-2 border-foreground bg-background text-foreground font-mono font-bold uppercase tracking-widest text-sm shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 hover:bg-purple-900 hover:text-white transition-all disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Save className="w-5 h-5" />
-              {saving ? "SAVING..." : "SAVE BLOG"}
+              <Save className="size-4" />
+              {saving ? "Saving..." : "Save Blog"}
             </button>
           </div>
         </div>
 
         {/* Basic Information */}
-        <div className="bg-background border-2 border-foreground shadow-[8px_8px_0px_0px_rgba(13,17,23,1)] p-6 mb-8">
-          <h2 className="text-2xl font-extrabold text-foreground mb-6 uppercase tracking-tighter border-b-2 border-foreground pb-2">Basic Information</h2>
+        <div className="bg-card border border-border rounded-xl shadow-sm p-6 mb-6">
+          <h2 className="text-lg font-semibold text-foreground mb-5 pb-4 border-b border-border">Basic Information</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-mono font-bold uppercase tracking-widest text-foreground mb-1">
+              <label className="block text-sm font-medium text-foreground mb-1.5">
                 Title *
               </label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all font-mono text-sm"
+                className="w-full px-3 py-2.5 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm text-foreground placeholder:text-muted-foreground"
                 placeholder="Enter blog title"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="block text-xs font-mono font-bold uppercase tracking-widest text-foreground">
+                  <label className="block text-sm font-medium text-foreground mb-1.5">
                     Slug *
                   </label>
                   {autoSlug && (
@@ -994,12 +989,12 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
                     setSlug(e.target.value);
                     setAutoSlug(false); // Disable auto-generation when manually edited
                   }}
-                  className="w-full px-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all font-mono text-sm"
+                  className="w-full px-3 py-2.5 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm text-foreground placeholder:text-muted-foreground"
                   placeholder="blog-slug-url"
                 />
               </div>
               <div>
-                <label className="block text-xs font-mono font-bold uppercase tracking-widest text-foreground mb-1">
+                <label className="block text-sm font-medium text-foreground mb-1.5">
                   Category *
                 </label>
                 <CategorySelect
@@ -1012,31 +1007,31 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
               </div>
             </div>
             <div>
-              <label className="block text-xs font-mono font-bold uppercase tracking-widest text-foreground mb-1">
+              <label className="block text-sm font-medium text-foreground mb-1.5">
                 Subtitle
               </label>
               <input
                 type="text"
                 value={subtitle}
                 onChange={(e) => setSubtitle(e.target.value)}
-                className="w-full px-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all font-mono text-sm"
+                className="w-full px-3 py-2.5 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm text-foreground placeholder:text-muted-foreground"
                 placeholder="Enter subtitle"
               />
             </div>
             <div>
-              <label className="block text-xs font-mono font-bold uppercase tracking-widest text-foreground mb-1">
+              <label className="block text-sm font-medium text-foreground mb-1.5">
                 Excerpt
               </label>
               <textarea
                 value={excerpt}
                 onChange={(e) => setExcerpt(e.target.value)}
-                className="w-full px-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all font-mono text-sm"
+                className="w-full px-3 py-2.5 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm text-foreground placeholder:text-muted-foreground"
                 rows="3"
                 placeholder="Short description"
               />
             </div>
             <div>
-              <label className="block text-xs font-mono font-bold uppercase tracking-widest text-foreground mb-1">
+              <label className="block text-sm font-medium text-foreground mb-1.5">
                 Featured Image *
               </label>
               <div className="flex flex-col gap-4">
@@ -1085,66 +1080,55 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
               </div>
             </div>
             <div>
-              <label className="block text-xs font-mono font-bold uppercase tracking-widest text-foreground mb-1">
+              <label className="block text-sm font-medium text-foreground mb-1.5">
                 Tags (comma separated)
               </label>
               <input
                 type="text"
                 value={tags}
                 onChange={(e) => setTags(e.target.value)}
-                className="w-full px-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all font-mono text-sm"
+                className="w-full px-3 py-2.5 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm text-foreground placeholder:text-muted-foreground"
                 placeholder="JavaScript, React, Next.js"
               />
             </div>
             <div className="flex items-center gap-2 mt-4 mb-2">
-              <label className="flex items-center cursor-pointer group">
-                <div className="relative">
-                  <input
-                    type="checkbox"
-                    id="featured"
-                    checked={featured}
-                    onChange={(e) => setFeatured(e.target.checked)}
-                    className="sr-only"
-                  />
-                  <div className={`w-5 h-5 border-2 border-foreground transition-all ${featured ? 'bg-purple-900 shadow-[2px_2px_0px_0px_rgba(13,17,23,1)]' : 'bg-background group-hover:bg-gray-100 shadow-[2px_2px_0px_0px_rgba(13,17,23,1)]'}`}>
-                    {featured && (
-                      <svg className="w-4 h-4 text-white mx-auto mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </div>
-                </div>
-                <span className="ml-3 text-xs font-mono font-bold uppercase tracking-widest text-foreground">
-                  Feature this blog
-                </span>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  id="featured"
+                  checked={featured}
+                  onChange={(e) => setFeatured(e.target.checked)}
+                  className="accent-primary size-4 rounded"
+                />
+                <span className="text-sm font-medium text-foreground">Feature this blog</span>
               </label>
             </div>
           </div>
         </div>
 
         {/* Introduction */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Introduction</h2>
+        <div className="bg-card border border-border rounded-xl shadow-sm p-6 mb-6">
+          <h2 className="text-base font-semibold text-foreground mb-4">Introduction</h2>
           <textarea
             value={introduction}
             onChange={(e) => setIntroduction(e.target.value)}
-            className="w-full px-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all font-mono text-sm"
+            className="w-full px-3 py-2.5 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm text-foreground placeholder:text-muted-foreground"
             rows="4"
             placeholder="Write the introduction for your blog..."
           />
         </div>
 
         {/* Sections */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
+        <div className="bg-card border border-border rounded-xl shadow-sm p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Content Sections</h2>
+            <h2 className="text-base font-semibold text-foreground">Content Sections</h2>
           </div>
 
           <div className="space-y-4">
             {sections.map((section, index) => (
               <div
                 key={section.id}
-                className="bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all p-4 space-y-4"
+                className="bg-background border border-border rounded-lg p-4 space-y-4"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -1175,7 +1159,7 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono font-bold uppercase tracking-widest text-foreground mb-1">
+                  <label className="block text-sm font-medium text-foreground mb-1.5">
                     Section Title
                   </label>
                   <input
@@ -1184,7 +1168,7 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
                     onChange={(e) =>
                       updateSection(section.id, "title", e.target.value)
                     }
-                    className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm text-foreground placeholder:text-muted-foreground"
                     placeholder="Section title"
                   />
                 </div>
@@ -1196,7 +1180,7 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
                     onChange={(e) =>
                       updateSection(section.id, "content", e.target.value)
                     }
-                    className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm text-foreground placeholder:text-muted-foreground"
                     rows="4"
                     placeholder="Write your content..."
                   />
@@ -1212,7 +1196,7 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
                           onChange={(e) =>
                             updateBulletItem(section.id, itemIndex, e.target.value)
                           }
-                          className="flex-1 px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          className="flex-1 px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm text-foreground placeholder:text-muted-foreground"
                           placeholder="Bullet point"
                         />
                         <button
@@ -1225,7 +1209,7 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
                     ))}
                     <button
                       onClick={() => addBulletItem(section.id)}
-                      className="flex items-center gap-2 px-3 py-2 text-sm bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all hover:bg-gray-50"
+                      className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground border border-border rounded-md hover:bg-muted transition-colors"
                     >
                       <Plus className="w-4 h-4" />
                       Add Bullet Point
@@ -1241,7 +1225,7 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
                       onChange={(e) =>
                         updateSection(section.id, "language", e.target.value)
                       }
-                      className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm text-foreground placeholder:text-muted-foreground"
                       placeholder="Language (e.g., javascript, python)"
                     />
                     <textarea
@@ -1249,7 +1233,7 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
                       onChange={(e) =>
                         updateSection(section.id, "content", e.target.value)
                       }
-                      className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm text-foreground font-mono"
                       rows="8"
                       placeholder="Paste your code here..."
                     />
@@ -1259,7 +1243,7 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
                 {section.type === "table" && (
                   <div className="space-y-2">
                     <div>
-                      <label className="block text-xs font-mono font-bold uppercase tracking-widest text-foreground mb-1">
+                      <label className="block text-sm font-medium text-foreground mb-1.5">
                         Headers
                       </label>
                       <div className="flex gap-2">
@@ -1271,14 +1255,14 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
                             onChange={(e) =>
                               updateTableHeader(section.id, headerIndex, e.target.value)
                             }
-                            className="flex-1 px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="flex-1 px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm text-foreground placeholder:text-muted-foreground"
                             placeholder={`Header ${headerIndex + 1}`}
                           />
                         ))}
                       </div>
                     </div>
                     <div>
-                      <label className="block text-xs font-mono font-bold uppercase tracking-widest text-foreground mb-1">
+                      <label className="block text-sm font-medium text-foreground mb-1.5">
                         Rows
                       </label>
                       <div className="space-y-2">
@@ -1297,7 +1281,7 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
                                     e.target.value
                                   )
                                 }
-                                className="flex-1 px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="flex-1 px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm text-foreground placeholder:text-muted-foreground"
                                 placeholder={`Cell ${rowIndex + 1}-${colIndex + 1}`}
                               />
                             ))}
@@ -1312,7 +1296,7 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
                       </div>
                       <button
                         onClick={() => addTableRow(section.id)}
-                        className="mt-2 flex items-center gap-2 px-3 py-2 text-sm bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all hover:bg-gray-50"
+                        className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground border border-border rounded-md hover:bg-muted transition-colors"
                       >
                         <Plus className="w-4 h-4" />
                         Add Row
@@ -1329,7 +1313,7 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
                       onChange={(e) =>
                         updateSection(section.id, "videoId", e.target.value)
                       }
-                      className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm text-foreground placeholder:text-muted-foreground"
                       placeholder="YouTube Video ID"
                     />
                     <input
@@ -1338,7 +1322,7 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
                       onChange={(e) =>
                         updateSection(section.id, "videoTitle", e.target.value)
                       }
-                      className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm text-foreground placeholder:text-muted-foreground"
                       placeholder="Video Title"
                     />
                     <textarea
@@ -1346,7 +1330,7 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
                       onChange={(e) =>
                         updateSection(section.id, "description", e.target.value)
                       }
-                      className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm text-foreground placeholder:text-muted-foreground"
                       rows="2"
                       placeholder="Video description"
                     />
@@ -1359,7 +1343,7 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
                     onChange={(e) =>
                       updateSection(section.id, "content", e.target.value)
                     }
-                    className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm text-foreground placeholder:text-muted-foreground"
                     rows="3"
                     placeholder="Write your note or callout..."
                   />
@@ -1375,7 +1359,7 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
                           onChange={(e) =>
                             updateLink(section.id, linkIndex, "text", e.target.value)
                           }
-                          className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm text-foreground placeholder:text-muted-foreground"
                           placeholder="Link text"
                         />
                         <input
@@ -1387,7 +1371,7 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
                           onBlur={(e) =>
                             updateLink(section.id, linkIndex, "url", normalizeLinkUrl(e.target.value))
                           }
-                          className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm text-foreground placeholder:text-muted-foreground"
                           placeholder="URL"
                         />
                         <input
@@ -1396,7 +1380,7 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
                           onChange={(e) =>
                             updateLink(section.id, linkIndex, "description", e.target.value)
                           }
-                          className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm text-foreground placeholder:text-muted-foreground"
                           placeholder="Description"
                         />
                         <button
@@ -1410,7 +1394,7 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
                     ))}
                     <button
                       onClick={() => addLink(section.id)}
-                      className="flex items-center gap-2 px-3 py-2 text-sm bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all hover:bg-gray-50"
+                      className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground border border-border rounded-md hover:bg-muted transition-colors"
                     >
                       <Plus className="w-4 h-4" />
                       Add Link
@@ -1421,7 +1405,7 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
                 {section.type === "image" && (
                   <div className="space-y-4">
                     <div className="flex flex-col gap-3">
-                      <label className="block text-xs font-mono font-bold uppercase tracking-widest text-foreground">
+                      <label className="block text-sm font-medium text-foreground mb-1.5">
                         Section Image
                       </label>
                       <div
@@ -1470,7 +1454,7 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
                       onChange={(e) =>
                         updateSection(section.id, "description", e.target.value)
                       }
-                      className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm text-foreground placeholder:text-muted-foreground"
                       rows="2"
                       placeholder="Image description or caption"
                     />
@@ -1497,13 +1481,13 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
                               type="text"
                               value={step.title}
                               onChange={(e) => updateFlowchartStep(section.id, sIdx, "title", e.target.value)}
-                              className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm text-foreground placeholder:text-muted-foreground"
                               placeholder="Step title"
                             />
                             <select
                               value={step.color}
                               onChange={(e) => updateFlowchartStep(section.id, sIdx, "color", e.target.value)}
-                              className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm text-foreground placeholder:text-muted-foreground"
                             >
                               <option value="blue">Blue</option>
                               <option value="indigo">Indigo</option>
@@ -1516,7 +1500,7 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
                           <textarea
                             value={step.description}
                             onChange={(e) => updateFlowchartStep(section.id, sIdx, "description", e.target.value)}
-                            className="w-full px-3 py-2 bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3"
+                            className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm text-foreground placeholder:text-muted-foreground mb-3"
                             rows="2"
                             placeholder="Step description"
                           />
@@ -1596,7 +1580,7 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
                   <button
                     key={sectionType.value}
                     onClick={() => addSection(sectionType.value)}
-                    className="flex items-center gap-2 px-3 py-2 text-sm bg-background border-2 border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] font-mono text-sm transition-all hover:bg-gray-50 transition-colors"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground border border-border rounded-md hover:bg-muted hover:text-foreground transition-colors"
                   >
                     <Icon className="w-4 h-4" />
                     {sectionType.label}
@@ -1608,23 +1592,23 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
         </div>
 
         {/* Conclusion */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Conclusion</h2>
+        <div className="bg-card border border-border rounded-xl shadow-sm p-6 mb-6">
+          <h2 className="text-base font-semibold text-foreground mb-4">Conclusion</h2>
           <textarea
             value={conclusion}
             onChange={(e) => setConclusion(e.target.value)}
-            className="w-full px-4 py-3 bg-background border-2 border-foreground focus:outline-none focus:ring-0 focus:border-foreground focus:shadow-[4px_4px_0px_0px_rgba(13,17,23,1)] transition-all font-mono text-sm"
+            className="w-full px-3 py-2.5 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm text-foreground placeholder:text-muted-foreground"
             rows="4"
             placeholder="Write the conclusion for your blog..."
           />
         </div>
 
         {/* Save Button */}
-        <div className="flex justify-end gap-4">
+        <div className="flex justify-end gap-3 pb-8">
           <button
             type="button"
             onClick={() => router.push("/my-blogs")}
-            className="px-6 py-3 border-[4px] border-black text-black font-mono font-bold uppercase tracking-widest text-xs hover:bg-gray-100 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1"
+            className="px-4 py-2 border border-border rounded-md text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
           >
             Cancel
           </button>
@@ -1632,9 +1616,9 @@ export default function BlogEditor({ initialData = null, isEditMode = false, isL
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="px-6 py-3 bg-purple-900 text-white border-[4px] border-black font-mono font-bold uppercase tracking-widest text-xs hover:bg-black transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 flex items-center gap-2 disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Save className="w-4 h-4" />
+            <Save className="size-4" />
             {saving ? "Saving..." : (isEditMode ? "Update Blog" : "Publish Blog")}
           </button>
         </div>

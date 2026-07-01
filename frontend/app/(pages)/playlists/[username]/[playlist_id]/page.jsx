@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { ArrowLeft, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
@@ -12,6 +13,7 @@ import BlogCard from '@/components/BlogCard';
 import { getImageUrl } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import LoaderCard from '@/components/ui/loader';
 
 export default function PlaylistDetailPage() {
   const params = useParams();
@@ -20,14 +22,12 @@ export default function PlaylistDetailPage() {
   const playlistSlug = params.playlist_id;
   const username = params.username;
 
-  const [playlist, setPlaylist] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const BLOGS_PER_PAGE = 6;
 
-  const fetchPlaylist = useCallback(async () => {
-    try {
-      setIsLoading(true);
+  const { data: playlist, isLoading } = useQuery({
+    queryKey: ['playlist', playlistSlug, authToken],
+    queryFn: async () => {
       const data = await api.getPlaylist(playlistSlug, authToken);
       if (data && Array.isArray(data.blogs) && data.blogs.length > 0) {
         const firstBlog = data.blogs[0];
@@ -41,24 +41,16 @@ export default function PlaylistDetailPage() {
           data.blogs = results.filter(r => r.status === 'fulfilled' && r.value).map(r => r.value);
         }
       }
-      setPlaylist(data);
-    } catch (error) {
-      console.error('Error fetching playlist:', error);
-      toast.error('Failed to load playlist');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [playlistSlug, authToken]);
-
-  useEffect(() => { fetchPlaylist(); }, [fetchPlaylist]);
+      return data;
+    },
+    enabled: !!playlistSlug,
+    staleTime: 1000 * 60 * 5,
+  });
 
   if (isLoading) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center">
-        <div className="bg-muted rounded-md px-6 py-3 text-muted-foreground text-sm flex items-center gap-3">
-          <span className="size-4 border-2 border-border border-t-primary rounded-full animate-spin" />
-          Loading...
-        </div>
+        <LoaderCard message="Loading playlist..." />
       </div>
     );
   }

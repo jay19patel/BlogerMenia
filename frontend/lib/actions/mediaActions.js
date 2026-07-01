@@ -1,9 +1,10 @@
-import { NextResponse } from 'next/server';
-import { verifyBearerToken } from '@/lib/apiAuth';
+'use server';
+
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/authOptions';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
-
-// ─── GCS Upload Helper ───────────────────────────────────────────────────────
+import fs from 'fs';
 
 let _gcsClient = null;
 
@@ -30,8 +31,6 @@ async function uploadToGcs(buffer, gcsPath, contentType) {
   return `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${gcsPath}`;
 }
 
-// ─── Image Compression with sharp ───────────────────────────────────────────
-
 async function compressImage(buffer) {
   const sharp = (await import('sharp')).default;
   return sharp(buffer)
@@ -40,25 +39,21 @@ async function compressImage(buffer) {
     .toBuffer();
 }
 
-// ─── POST /api/v1/media/upload ───────────────────────────────────────────────
-
-export async function POST(request) {
+export async function uploadImageAction(formData) {
   try {
-    const { user, error } = await verifyBearerToken(request);
-    if (error) return error;
+    const session = await getServerSession(authOptions);
+    if (!session?.user) throw new Error('Not authenticated');
 
-    const formData = await request.formData();
     const file = formData.get('file');
     const folder = formData.get('folder') || 'uploads';
 
     if (!file || typeof file === 'string') {
-      return NextResponse.json({ detail: 'No file provided' }, { status: 400 });
+      throw new Error('No file provided');
     }
 
     const arrayBuffer = await file.arrayBuffer();
     let buffer = Buffer.from(arrayBuffer);
 
-    // Determine file type and whether to compress
     const originalName = file.name || 'upload.jpg';
     const ext = path.extname(originalName).toLowerCase();
     const isImage = /^image\//.test(file.type || '') || ['.jpg', '.jpeg', '.png', '.webp', '.gif'].includes(ext);
@@ -81,18 +76,15 @@ export async function POST(request) {
     if (process.env.GCS_BUCKET_NAME) {
       publicUrl = await uploadToGcs(buffer, gcsPath, contentType);
     } else {
-      // Local fallback: write to /public/uploads
-      const fs = await import('fs');
-      const os = await import('os');
       const localDir = path.join(process.cwd(), 'public', 'uploads', folder);
       fs.mkdirSync(localDir, { recursive: true });
       fs.writeFileSync(path.join(localDir, fileName), buffer);
       publicUrl = `/uploads/${folder}/${fileName}`;
     }
 
-    return NextResponse.json({ url: publicUrl, file_path: publicUrl, public_id: gcsPath });
+    return { url: publicUrl, file_path: publicUrl, public_id: gcsPath };
   } catch (err) {
-    console.error('Media upload error:', err);
-    return NextResponse.json({ detail: `Upload failed: ${err.message}` }, { status: 500 });
+    console.error('uploadImageAction error:', err);
+    throw new Error(`Upload failed: ${err.message}`);
   }
 }
