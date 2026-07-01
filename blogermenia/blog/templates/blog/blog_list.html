@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}All Blogs - Blogermenia{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mt-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Latest Blogs</h1>
+        {% if user.is_authenticated %}
+        <a href="{% url 'blog_create' %}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+            Write a Blog
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="space-y-6">
+        {% for blog in blogs %}
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">
+                <a href="{% url 'blog_detail' blog.pk %}" class="hover:text-indigo-600 transition-colors">{{ blog.title }}</a>
+            </h2>
+            <p class="text-sm text-gray-500 mb-4">
+                By <a href="{% url 'user_profile' blog.author.pk %}" class="font-medium text-indigo-600 hover:underline">{{ blog.author.username }}</a> &middot; {{ blog.created_at|date:"M d, Y" }}
+            </p>
+            <p class="text-gray-700">{{ blog.content|truncatewords:30 }}</p>
+            <div class="mt-4">
+                <a href="{% url 'blog_detail' blog.pk %}" class="text-indigo-600 hover:text-indigo-800 font-medium text-sm">Read more &rarr;</a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-10 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+            <p class="text-gray-500">No blogs published yet.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

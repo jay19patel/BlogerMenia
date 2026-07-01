@@ -1,0 +1,11 @@
+[project]
+name = "blogermenia-djnago"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "django>=6.0.6",
+    "django-allauth[socialaccount]>=65.18.0",
+    "requests>=2.34.2",
+]

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}{{ profile_user.username }}'s Profile - Blogermenia{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto mt-8">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8 text-center">
+        <div class="mx-auto h-24 w-24 rounded-full bg-indigo-100 flex items-center justify-center mb-4">
+            <span class="text-3xl font-bold text-indigo-700">{{ profile_user.username.0|upper }}</span>
+        </div>
+        <h1 class="text-3xl font-bold text-gray-900">{{ profile_user.username }}</h1>
+        <p class="text-gray-500 mt-2">Joined {{ profile_user.date_joined|date:"M Y" }}</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Playlists Column -->
+        <div class="lg:col-span-1">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Playlists</h2>
+            <div class="space-y-4">
+                {% for playlist in user_playlists %}
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                    <h3 class="font-bold text-lg"><a href="{% url 'playlist_detail' playlist.pk %}" class="hover:text-indigo-600">{{ playlist.title }}</a></h3>
+                    <p class="text-sm text-gray-500">{{ playlist.blogs.count }} Blogs</p>
+                </div>
+                {% empty %}
+                <p class="text-gray-500 italic">No playlists created.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Blogs Column -->
+        <div class="lg:col-span-2">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Published Blogs</h2>
+            <div class="space-y-6">
+                {% for blog in user_blogs %}
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">
+                        <a href="{% url 'blog_detail' blog.pk %}" class="hover:text-indigo-600">{{ blog.title }}</a>
+                    </h3>
+                    <p class="text-sm text-gray-500 mb-4">{{ blog.created_at|date:"M d, Y" }}</p>
+                    <p class="text-gray-700">{{ blog.content|truncatewords:25 }}</p>
+                    <div class="mt-4">
+                        <a href="{% url 'blog_detail' blog.pk %}" class="text-indigo-600 hover:text-indigo-800 font-medium text-sm">Read full blog &rarr;</a>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-gray-500 italic">No blogs published yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
