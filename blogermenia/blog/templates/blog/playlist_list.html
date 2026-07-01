@@ -15,7 +15,11 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         {% for playlist in playlists %}
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            {% if playlist.image %}
+            <img src="{{ playlist.image.url }}" alt="{{ playlist.title }}" class="w-full h-36 object-cover">
+            {% endif %}
+            <div class="p-6">
             <h2 class="text-xl font-bold text-gray-900 mb-2">
                 <a href="{% url 'playlist_detail' playlist.pk %}" class="hover:text-indigo-600 transition-colors">{{ playlist.title }}</a>
             </h2>
@@ -27,6 +31,7 @@
                 <span>{{ playlist.blogs.count }} Blogs</span>
                 <span class="mx-2">&middot;</span>
                 <a href="{% url 'playlist_detail' playlist.pk %}" class="hover:text-indigo-800">View Collection &rarr;</a>
+            </div>
             </div>
         </div>
         {% empty %}

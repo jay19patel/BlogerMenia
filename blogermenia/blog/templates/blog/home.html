@@ -1,27 +1,82 @@
 {% extends "base.html" %}
 
+{% block title %}Home - Blogermenia{% endblock %}
+
 {% block content %}
-<div class="bg-white rounded-lg shadow-sm border border-gray-100 p-12 text-center mt-10">
-    <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight sm:text-5xl">
-        Welcome to <span class="text-indigo-600">Blogermenia</span>
-    </h1>
-    <p class="mt-4 max-w-2xl text-xl text-gray-500 mx-auto">
-        Your ultimate destination for curated blogs and amazing content.
-    </p>
-    
-    {% if not user.is_authenticated %}
-    <div class="mt-8 flex justify-center space-x-4">
-        <a href="{% url 'account_signup' %}" class="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10 transition-colors">
-            Get started
-        </a>
-        <a href="{% url 'account_login' %}" class="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 md:py-4 md:text-lg md:px-10 transition-colors">
-            Log in
-        </a>
+<div class="space-y-12">
+
+    <!-- Hero -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-12 text-center">
+        <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight sm:text-5xl">
+            Welcome to <span class="text-indigo-600">Blogermenia</span>
+        </h1>
+        <p class="mt-4 max-w-2xl text-xl text-gray-500 mx-auto">
+            Your ultimate destination for curated blogs and amazing content.
+        </p>
+
+        {% if not user.is_authenticated %}
+        <div class="mt-8 flex justify-center space-x-4">
+            <a href="{% url 'account_signup' %}" class="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10 transition-colors">
+                Get started
+            </a>
+            <a href="{% url 'account_login' %}" class="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 md:py-4 md:text-lg md:px-10 transition-colors">
+                Log in
+            </a>
+        </div>
+        {% else %}
+        <div class="mt-6 flex justify-center space-x-4">
+            <a href="{% url 'blog_create' %}" class="inline-flex items-center px-6 py-3 rounded-md text-white bg-indigo-600 hover:bg-indigo-700 text-sm font-medium transition-colors">
+                Write a Blog
+            </a>
+            <a href="{% url 'blog_list' %}" class="inline-flex items-center px-6 py-3 rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 text-sm font-medium transition-colors">
+                Browse Blogs
+            </a>
+        </div>
+        {% endif %}
     </div>
-    {% else %}
-    <div class="mt-8">
-        <p class="text-lg text-gray-600">You are logged in! Explore the platform.</p>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
+            <p class="text-4xl font-extrabold text-indigo-600">{{ total_users }}</p>
+            <p class="mt-1 text-sm font-medium text-gray-500 uppercase tracking-wide">Members</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
+            <p class="text-4xl font-extrabold text-indigo-600">{{ total_blogs }}</p>
+            <p class="mt-1 text-sm font-medium text-gray-500 uppercase tracking-wide">Published Blogs</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
+            <p class="text-4xl font-extrabold text-indigo-600">{{ total_playlists }}</p>
+            <p class="mt-1 text-sm font-medium text-gray-500 uppercase tracking-wide">Playlists</p>
+        </div>
+    </div>
+
+    <!-- Recent Blogs -->
+    {% if recent_blogs %}
+    <div>
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">Recent Blogs</h2>
+            <a href="{% url 'blog_list' %}" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">View all &rarr;</a>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {% for blog in recent_blogs %}
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col">
+                {% if blog.image %}
+                <img src="{{ blog.image.url }}" alt="{{ blog.title }}" class="w-full h-40 object-cover">
+                {% endif %}
+                <div class="p-5 flex flex-col flex-grow">
+                    <h3 class="font-bold text-gray-900 mb-1">
+                        <a href="{% url 'blog_detail' blog.pk %}" class="hover:text-indigo-600 transition-colors">{{ blog.title }}</a>
+                    </h3>
+                    <p class="text-xs text-gray-500 mb-3">By {{ blog.author.username }} &middot; {{ blog.created_at|date:"M d, Y" }}</p>
+                    <p class="text-gray-700 text-sm flex-grow">{{ blog.content|truncatewords:20 }}</p>
+                    <a href="{% url 'blog_detail' blog.pk %}" class="mt-4 text-indigo-600 hover:text-indigo-800 text-sm font-medium">Read more &rarr;</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
     </div>
     {% endif %}
+
 </div>
 {% endblock content %}

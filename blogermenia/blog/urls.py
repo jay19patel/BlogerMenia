@@ -1,8 +1,14 @@
 from django.urls import path
 from .views.home_views import HomeView
-from .views.blog_views import BlogListView, BlogDetailView, BlogCreateView, BlogUpdateView, BlogDeleteView
-from .views.playlist_views import PlaylistListView, PlaylistDetailView, PlaylistCreateView, PlaylistUpdateView, PlaylistDeleteView
-from .views.profile_views import UserProfileView, UserListView
+from .views.blog_views import (
+    BlogListView, BlogDetailView, BlogCreateView,
+    BlogUpdateView, BlogDeleteView, BlogLikeView,
+)
+from .views.playlist_views import (
+    PlaylistListView, PlaylistDetailView, PlaylistCreateView,
+    PlaylistUpdateView, PlaylistDeleteView,
+)
+from .views.profile_views import UserProfileView, UserListView, ProfileUpdateView
 
 urlpatterns = [
     # Home
@@ -14,6 +20,7 @@ urlpatterns = [
     path('blogs/<int:pk>/', BlogDetailView.as_view(), name='blog_detail'),
     path('blogs/<int:pk>/update/', BlogUpdateView.as_view(), name='blog_update'),
     path('blogs/<int:pk>/delete/', BlogDeleteView.as_view(), name='blog_delete'),
+    path('blogs/<int:pk>/like/', BlogLikeView.as_view(), name='blog_like'),
 
     # Playlist URLs
     path('playlists/', PlaylistListView.as_view(), name='playlist_list'),
@@ -22,7 +29,8 @@ urlpatterns = [
     path('playlists/<int:pk>/update/', PlaylistUpdateView.as_view(), name='playlist_update'),
     path('playlists/<int:pk>/delete/', PlaylistDeleteView.as_view(), name='playlist_delete'),
 
-    # Profile URL
+    # Profile URLs
     path('accounts-list/', UserListView.as_view(), name='user_list'),
     path('profile/<int:pk>/', UserProfileView.as_view(), name='user_profile'),
+    path('profile/<int:pk>/edit/', ProfileUpdateView.as_view(), name='profile_edit'),
 ]

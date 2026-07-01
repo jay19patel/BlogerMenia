@@ -10,7 +10,7 @@
         {% if object %}Edit Blog{% else %}Create a New Blog{% endif %}
     </h1>
 
-    <form method="post" class="space-y-6">
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
         {% csrf_token %}
         
         {% for field in form %}
@@ -39,23 +39,19 @@
 
 <style>
     /* Basic styling for django form fields */
-    input[type="text"], textarea {
+    input[type="text"], input[type="url"], input[type="file"], textarea, select {
         width: 100%;
         padding: 0.5rem 0.75rem;
         border: 1px solid #d1d5db;
         border-radius: 0.375rem;
+        font-size: 0.875rem;
     }
-    input[type="text"]:focus, textarea:focus {
+    input[type="text"]:focus, input[type="url"]:focus, textarea:focus, select:focus {
         outline: none;
         border-color: #6366f1;
         box-shadow: 0 0 0 1px #6366f1;
     }
     textarea { min-height: 150px; }
-    select[multiple] {
-        width: 100%;
-        padding: 0.5rem;
-        border: 1px solid #d1d5db;
-        border-radius: 0.375rem;
-    }
+    select[multiple] { min-height: 120px; }
 </style>
 {% endblock %}

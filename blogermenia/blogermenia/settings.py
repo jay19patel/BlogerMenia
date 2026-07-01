@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
-    "allauth.socialaccount.providers.linkedin_oauth2",
+    "linkedin_oidc",  # custom OIDC-compatible LinkedIn provider (replaces allauth's linkedin_oauth2)
     "accounts",
     "blog",
 ]
@@ -126,6 +126,10 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
+# Media files (user uploads)
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
@@ -148,3 +152,12 @@ LOGOUT_REDIRECT_URL = "/"
 
 # Bypass the intermediate social login confirmation page (works for GET requests)
 SOCIALACCOUNT_LOGIN_ON_GET = True
+
+# Social account provider configuration
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': ['profile', 'email'],
+        'AUTH_PARAMS': {'access_type': 'online'},
+    },
+    # linkedin_oauth2 scopes are set in linkedin_oidc/provider.py get_default_scope()
+}
