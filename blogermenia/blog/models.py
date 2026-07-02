@@ -60,6 +60,11 @@ class Playlist(models.Model):
             self.slug = slug
         super().save(*args, **kwargs)
 
+    @property
+    def avatar_svg(self):
+        from .utils import generate_avatar
+        return generate_avatar(self.slug, style_name="shapes")
+
     def __str__(self):
         return self.title
 
@@ -99,6 +104,11 @@ class Blog(models.Model):
         if user.is_authenticated:
             return self.likes.filter(user=user).exists()
         return False
+
+    @property
+    def avatar_svg(self):
+        from .utils import generate_avatar
+        return generate_avatar(self.slug, style_name="shapes")
 
 
 class Like(models.Model):

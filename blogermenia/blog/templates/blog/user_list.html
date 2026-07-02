@@ -18,11 +18,11 @@
     <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
       {% for author in users %}
       <a href="{% url 'user_profile' author.username %}" class="group flex flex-col items-center text-center p-6 rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-lg hover:shadow-slate-200/50 transition-all">
-        <div class="w-16 h-16 rounded-full mb-4 overflow-hidden flex-shrink-0">
+        <div class="w-16 h-16 rounded-full mb-4 overflow-hidden flex-shrink-0 [&>svg]:w-full [&>svg]:h-full">
           {% if author.profile_picture %}
           <img src="{{ author.profile_picture.url }}" alt="{{ author.username }}" class="w-full h-full object-cover">
           {% else %}
-          <div class="w-full h-full bg-brand-100 flex items-center justify-center font-bold text-brand-700 text-xl mono">{{ author.username.0|upper }}</div>
+          {{ author.avatar_svg|safe }}
           {% endif %}
         </div>
         <h2 class="font-bold text-slate-900 group-hover:text-brand-700 transition-colors mb-0.5">

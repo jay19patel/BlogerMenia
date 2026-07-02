@@ -15,3 +15,8 @@ class CustomUser(AbstractUser):
 
     def has_linkedin_oauth(self):
         return self.socialaccount_set.filter(provider='linkedin_oauth2').exists()
+
+    @property
+    def avatar_svg(self):
+        from blog.utils import generate_avatar
+        return generate_avatar(self.username, style_name="big-smile")

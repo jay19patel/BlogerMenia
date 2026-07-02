@@ -9,4 +9,6 @@ dependencies = [
     "django-allauth[socialaccount]>=65.18.0",
     "requests>=2.34.2",
     "pillow>=11.0.0",
+    "dicebear-core>=10.3.0",
+    "dicebear-styles>=10.2.0",
 ]
