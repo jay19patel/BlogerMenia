@@ -1,6 +1,6 @@
 from django.views.generic import TemplateView
 from django.contrib.auth import get_user_model
-from ..models import Blog, Playlist
+from ..models import Blog, Playlist, Category
 
 User = get_user_model()
 
@@ -13,5 +13,22 @@ class HomeView(TemplateView):
         context['total_users'] = User.objects.count()
         context['total_blogs'] = Blog.objects.filter(is_published=True).count()
         context['total_playlists'] = Playlist.objects.count()
-        context['recent_blogs'] = Blog.objects.filter(is_published=True).order_by('-created_at')[:3]
+        context['recent_blogs'] = (
+            Blog.objects.filter(is_published=True)
+            .order_by('-created_at')
+            .select_related('author', 'category')[:6]
+        )
+        context['top_blogs'] = (
+            Blog.objects.filter(is_published=True)
+            .order_by('-read_count', '-created_at')
+            .select_related('author', 'category')[:3]
+        )
+        context['featured_playlists'] = (
+            Playlist.objects.order_by('-created_at')
+            .select_related('author')
+            .prefetch_related('blogs')[:4]
+        )
+        context['featured_users'] = (
+            User.objects.order_by('-date_joined')[:6]
+        )
         return context

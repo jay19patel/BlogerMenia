@@ -1,8 +1,52 @@
 {% extends "base.html" %}
 {% block title %}{{ blog.title }} — Inkwell{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  .article-body pre code.hljs { padding: 0 !important; background: transparent !important; }
+  .article-body pre {
+    background: #282c34;
+    border: 1px solid #1a1d23;
+    border-radius: 0.75rem;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+  }
+  .article-body code:not(pre code) {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8125rem;
+    background: #f1f5f9;
+    color: #e11d48;
+    border-radius: 0.25rem;
+    padding: 0.15rem 0.45rem;
+  }
+  .article-body h2 { font-size: 1.5rem; font-weight: 800; color: #0f172a; margin-top: 2.5rem; margin-bottom: 1rem; scroll-margin-top: 6rem; line-height: 1.25; }
+  .article-body h3 { font-size: 1.2rem; font-weight: 700; color: #1e293b; margin-top: 2rem; margin-bottom: 0.75rem; scroll-margin-top: 6rem; }
+  .article-body p { margin-bottom: 1.25rem; }
+  .article-body blockquote { border-left: 4px solid #10B981; background: rgba(236,253,245,0.6); border-radius: 0 0.75rem 0.75rem 0; padding: 1rem 1.25rem; margin: 1.5rem 0; font-style: italic; color: #334155; }
+  .article-body ul { list-style: disc; padding-left: 1.5rem; margin-bottom: 1.25rem; }
+  .article-body ol { list-style: decimal; padding-left: 1.5rem; margin-bottom: 1.25rem; }
+  .article-body li { margin-bottom: 0.4rem; }
+  .article-body ul li::marker { color: #10B981; }
+  .article-body table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; border-radius: 0.75rem; overflow: hidden; border: 1px solid #e2e8f0; }
+  .article-body th { background: #f8fafc; color: #64748b; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.75rem 1rem; text-align: left; }
+  .article-body td { padding: 0.75rem 1rem; border-top: 1px solid #f1f5f9; color: #475569; font-size: 0.875rem; }
+  .article-body tr:hover td { background: #f8fafc; }
+  .article-body img { border-radius: 1rem; max-width: 100%; margin: 1.5rem 0; }
+  .article-body figure { margin: 1.5rem 0; }
+  .article-body figcaption { font-size: 0.75rem; color: #94a3b8; margin-top: 0.625rem; text-align: center; }
+  .toc-link.active { color: #047857; font-weight: 600; }
+  .toc-link.active .toc-dot { background: #059669; }
+</style>
+{% endblock %}
+
 {% block content %}
 {% include "partials/header.html" %}
-{% include "partials/sidebar.html" %}
+{% include "partials/sidebar_detail.html" %}
 
 <main class="pt-16 lg:pl-64">
   <div class="max-w-3xl px-8 sm:px-14 py-14">
@@ -11,18 +55,26 @@
     <div class="flex items-center gap-2 text-sm text-slate-400 mb-6">
       <a href="{% url 'home' %}" class="hover:text-slate-600 transition-colors">Blogs</a>
       <span>/</span>
+      {% if blog.category %}
+      <a href="{% url 'blog_list' %}?category={{ blog.category.slug }}" class="hover:text-slate-600 transition-colors">{{ blog.category.name }}</a>
+      {% else %}
       <a href="{% url 'blog_list' %}" class="hover:text-slate-600 transition-colors">All Articles</a>
+      {% endif %}
     </div>
 
     <!-- Category badge -->
-    <span class="inline-block text-[11px] font-bold tracking-wide text-blue-600 bg-blue-50 rounded-full px-2.5 py-1 mb-5">BLOG</span>
+    {% if blog.category %}
+    <span class="inline-block text-[11px] font-bold tracking-wide {{ blog.category.text_class }} {{ blog.category.bg_class }} rounded-full px-2.5 py-1 mb-5 uppercase">{{ blog.category.name }}</span>
+    {% else %}
+    <span class="inline-block text-[11px] font-bold tracking-wide text-blue-600 bg-blue-50 rounded-full px-2.5 py-1 mb-5">ARTICLE</span>
+    {% endif %}
 
     <!-- Title -->
-    <h1 class="text-4xl sm:text-[44px] font-extrabold tracking-tight leading-[1.12] mb-6">
+    <h1 class="text-4xl sm:text-[42px] font-extrabold tracking-tight leading-[1.12] mb-6">
       {{ blog.title }}
     </h1>
 
-    <!-- Author bar -->
+    <!-- Author bar + actions -->
     <div class="flex items-center gap-3 text-sm text-slate-500 mb-10">
       <a href="{% url 'user_profile' blog.author.pk %}">
         {% if blog.author.profile_picture %}
@@ -37,15 +89,36 @@
         </p>
         <p class="text-xs text-slate-400">{{ blog.created_at|date:"M d, Y" }} · {{ blog.read_count }} reads · {{ like_count }} likes</p>
       </div>
+
+      <!-- Action buttons — right side -->
       <div class="ml-auto flex items-center gap-2">
         {% if user == blog.author %}
         <a href="{% url 'blog_update' blog.pk %}" class="px-3 py-1.5 text-xs font-medium border border-slate-200 rounded-lg text-slate-500 hover:text-slate-900 hover:border-slate-300 transition-colors">Edit</a>
         <a href="{% url 'blog_delete' blog.pk %}" class="px-3 py-1.5 text-xs font-medium border border-red-200 rounded-lg text-red-500 hover:bg-red-50 transition-colors">Delete</a>
         {% else %}
-        <button type="button" class="w-9 h-9 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:border-slate-300 transition-colors" title="Bookmark">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-        </button>
-        <button type="button" class="w-9 h-9 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:border-slate-300 transition-colors" title="Share">
+
+        <!-- Like button — inline in author bar -->
+        {% if user.is_authenticated %}
+        <form method="post" action="{% url 'blog_like' blog.pk %}" id="like-form">
+          {% csrf_token %}
+          <button type="submit" id="like-btn"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors
+            {% if user_liked %}bg-red-50 border-red-200 text-red-600 hover:bg-red-100{% else %}bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-900{% endif %}">
+            <span id="like-icon" class="text-sm">{% if user_liked %}♥{% else %}♡{% endif %}</span>
+            <span id="like-count">{{ like_count }}</span>
+          </button>
+        </form>
+        {% else %}
+        <a href="{% url 'account_login' %}" class="w-9 h-9 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:border-slate-300 transition-colors text-sm" title="Like">
+          ♡
+        </a>
+        {% endif %}
+
+        <!-- Share button -->
+        <button type="button"
+          class="w-9 h-9 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:border-slate-300 transition-colors"
+          title="Copy link"
+          onclick="navigator.clipboard?.writeText(window.location.href); this.setAttribute('title','Copied!')">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
         </button>
         {% endif %}
@@ -54,51 +127,55 @@
 
     <!-- Featured image -->
     {% if blog.image %}
-    <img src="{{ blog.image.url }}" alt="{{ blog.title }}" class="w-full h-72 rounded-2xl object-cover mb-10">
+    <figure class="mb-10">
+      <img src="{{ blog.image.url }}" alt="{{ blog.title }}" class="w-full h-72 sm:h-80 object-cover rounded-2xl">
+    </figure>
     {% else %}
-    <div class="h-72 rounded-2xl bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center mb-10">
+    <div class="h-64 rounded-2xl bg-gradient-to-br
+      {% if blog.pk|divisibleby:4 %}from-purple-400 to-fuchsia-600
+      {% elif blog.pk|divisibleby:3 %}from-blue-400 to-cyan-600
+      {% elif blog.pk|divisibleby:2 %}from-amber-400 to-orange-600
+      {% else %}from-emerald-400 to-teal-600{% endif %}
+      flex items-center justify-center mb-10">
       <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" class="opacity-80"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
     </div>
     {% endif %}
 
-    <!-- Article body -->
-    <article class="text-slate-700 text-[17px] leading-[1.85] space-y-6 whitespace-pre-wrap">{{ blog.content }}</article>
+    <!-- Article body — rendered as HTML for rich content support -->
+    <article id="article-body" class="article-body text-slate-700 text-[17px] leading-[1.85]">
+      {{ blog.content|safe }}
+    </article>
 
-    <!-- Playlists / tags -->
-    {% if blog.playlists.exists %}
+    <!-- Tags / playlists -->
     <div class="flex flex-wrap gap-2 mt-10 pt-8 border-t border-slate-100">
+      {% if blog.playlists.exists %}
       <span class="text-xs font-medium text-slate-400 mr-1 self-center">In playlists:</span>
       {% for playlist in blog.playlists.all %}
       <a href="{% url 'playlist_detail' playlist.pk %}" class="text-xs font-medium text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-full px-3 py-1.5 transition-colors">{{ playlist.title }}</a>
       {% endfor %}
-    </div>
-    {% else %}
-    <div class="flex flex-wrap gap-2 mt-10 pt-8 border-t border-slate-100">
-      <span class="text-xs font-medium text-slate-500 bg-slate-100 rounded-full px-3 py-1.5">#article</span>
-      <span class="text-xs font-medium text-slate-500 bg-slate-100 rounded-full px-3 py-1.5">#blog</span>
-      <span class="text-xs font-medium text-slate-500 bg-slate-100 rounded-full px-3 py-1.5">#inkwell</span>
-    </div>
-    {% endif %}
-
-    <!-- Like button -->
-    <div class="mt-8">
-      {% if user.is_authenticated %}
-      <form method="post" action="{% url 'blog_like' blog.pk %}" id="like-form">
-        {% csrf_token %}
-        <button type="submit" id="like-btn"
-          class="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-xl border text-sm font-semibold transition-colors
-          {% if user_liked %}bg-red-50 border-red-200 text-red-600 hover:bg-red-100{% else %}bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-900{% endif %}">
-          <span id="like-icon" class="text-base">{% if user_liked %}♥{% else %}♡{% endif %}</span>
-          <span id="like-count">{{ like_count }}</span>
-          <span id="like-label">{{ user_liked|yesno:"Liked,Like" }}</span>
-        </button>
-      </form>
       {% else %}
-      <p class="text-sm text-slate-500">
-        <a href="{% url 'account_login' %}" class="text-brand-600 hover:text-brand-700 font-medium">Log in</a> to like this article.
-        <span class="ml-2 text-slate-400">♡ {{ like_count }}</span>
-      </p>
+      {% if blog.category %}<span class="text-xs font-medium {{ blog.category.text_class }} {{ blog.category.bg_class }} rounded-full px-3 py-1.5">#{{ blog.category.slug }}</span>{% endif %}
+      <span class="text-xs font-medium text-slate-500 bg-slate-100 rounded-full px-3 py-1.5">#inkwell</span>
+      <span class="text-xs font-medium text-slate-500 bg-slate-100 rounded-full px-3 py-1.5">#writing</span>
       {% endif %}
+    </div>
+
+    <!-- Author card -->
+    <div class="mt-10 p-6 rounded-2xl bg-slate-50 border border-slate-100 flex items-start gap-5">
+      <a href="{% url 'user_profile' blog.author.pk %}" class="flex-shrink-0">
+        {% if blog.author.profile_picture %}
+        <img src="{{ blog.author.profile_picture.url }}" alt="{{ blog.author.username }}" class="w-14 h-14 rounded-2xl object-cover">
+        {% else %}
+        <span class="w-14 h-14 rounded-2xl bg-brand-500 flex items-center justify-center font-bold text-white text-xl mono">{{ blog.author.username.0|upper }}</span>
+        {% endif %}
+      </a>
+      <div>
+        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Written by</p>
+        <a href="{% url 'user_profile' blog.author.pk %}" class="font-bold text-slate-900 hover:text-brand-700 transition-colors">{{ blog.author.get_full_name|default:blog.author.username }}</a>
+        {% if blog.author.bio %}
+        <p class="text-sm text-slate-500 mt-1.5 leading-relaxed">{{ blog.author.bio|truncatewords:25 }}</p>
+        {% endif %}
+      </div>
     </div>
 
     <!-- More like this -->
@@ -108,23 +185,28 @@
       <div class="grid sm:grid-cols-2 gap-6">
         {% for related in related_blogs %}
         <a href="{% url 'blog_detail' related.pk %}" class="group block rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-lg hover:shadow-slate-200/50 transition-all overflow-hidden">
-          <div class="h-32 {% if related.image %}bg-slate-100{% elif forloop.counter|divisibleby:3 %}bg-gradient-to-br from-purple-400 to-fuchsia-600{% elif forloop.counter|divisibleby:2 %}bg-gradient-to-br from-blue-400 to-cyan-600{% else %}bg-gradient-to-br from-emerald-400 to-teal-600{% endif %} flex items-center justify-center">
+          <div class="h-32
+            {% if related.image %}bg-slate-100
+            {% elif forloop.counter|divisibleby:3 %}bg-gradient-to-br from-purple-400 to-fuchsia-600
+            {% elif forloop.counter|divisibleby:2 %}bg-gradient-to-br from-blue-400 to-cyan-600
+            {% else %}bg-gradient-to-br from-emerald-400 to-teal-600{% endif %}
+            flex items-center justify-center">
             {% if related.image %}
             <img src="{{ related.image.url }}" alt="{{ related.title }}" class="w-full h-full object-cover">
-            {% elif forloop.counter|divisibleby:3 %}
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="opacity-80"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>
-            {% elif forloop.counter|divisibleby:2 %}
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="opacity-80"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
             {% else %}
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="opacity-80"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
             {% endif %}
           </div>
           <div class="p-5">
+            {% if related.category %}
+            <span class="text-[11px] font-bold tracking-wide {{ related.category.text_class }} {{ related.category.bg_class }} rounded-full px-2.5 py-1 uppercase">{{ related.category.name }}</span>
+            {% else %}
             <span class="text-[11px] font-bold tracking-wide text-blue-600 bg-blue-50 rounded-full px-2.5 py-1">BLOG</span>
-            <h3 class="font-bold text-slate-900 text-base mt-3 group-hover:text-brand-700 transition-colors">{{ related.title }}</h3>
+            {% endif %}
+            <h3 class="font-bold text-slate-900 text-base mt-3 group-hover:text-brand-700 transition-colors leading-snug">{{ related.title }}</h3>
             <div class="flex items-center gap-2 text-xs text-slate-400 mt-2">
-              <span class="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center font-semibold text-slate-600 mono text-[9px]">{{ related.author.username.0|upper }}</span>
-              {{ related.author.get_full_name|default:related.author.username }} <span>·</span> {{ related.created_at|date:"M d" }}
+              <span class="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center font-semibold text-slate-600 text-[9px]">{{ related.author.username.0|upper }}</span>
+              {{ related.author.get_full_name|default:related.author.username }} · {{ related.created_at|date:"M d" }}
             </div>
           </div>
         </a>
@@ -139,6 +221,37 @@
 
 {% block scripts %}
 <script>
+hljs.highlightAll();
+
+// Build TOC from article h2s
+(function() {
+  const article = document.getElementById('article-body');
+  if (!article) return;
+  const headings = article.querySelectorAll('h2');
+  if (headings.length < 2) return;
+  const tocSection = document.getElementById('toc-section');
+  const tocList = document.getElementById('toc-list');
+  tocSection.classList.remove('hidden');
+  headings.forEach((h, i) => {
+    if (!h.id) h.id = 'section-' + i;
+    const li = document.createElement('li');
+    li.innerHTML = `<a href="#${h.id}" class="toc-link flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900 text-sm transition-colors">
+      <span class="toc-dot w-1.5 h-1.5 rounded-full bg-slate-300 flex-shrink-0"></span>
+      <span class="truncate">${h.textContent}</span>
+    </a>`;
+    tocList.appendChild(li);
+  });
+  const links = tocList.querySelectorAll('.toc-link');
+  const spy = () => {
+    let current = headings[0]?.id;
+    headings.forEach(h => { if (h.getBoundingClientRect().top < 120) current = h.id; });
+    links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + current));
+  };
+  document.addEventListener('scroll', spy, { passive: true });
+  spy();
+})();
+
+// Like AJAX
 document.getElementById('like-form')?.addEventListener('submit', function(e) {
   e.preventDefault();
   fetch(this.action, {
@@ -152,23 +265,14 @@ document.getElementById('like-form')?.addEventListener('submit', function(e) {
   .then(data => {
     const btn = document.getElementById('like-btn');
     const icon = document.getElementById('like-icon');
-    const label = document.getElementById('like-label');
     const count = document.getElementById('like-count');
-
     count.textContent = data.like_count;
-
     if (data.liked) {
-      btn.className = btn.className
-        .replace('bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-900', '')
-        .trim() + ' bg-red-50 border-red-200 text-red-600 hover:bg-red-100';
+      btn.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors bg-red-50 border-red-200 text-red-600 hover:bg-red-100';
       icon.textContent = '♥';
-      label.textContent = 'Liked';
     } else {
-      btn.className = btn.className
-        .replace('bg-red-50 border-red-200 text-red-600 hover:bg-red-100', '')
-        .trim() + ' bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-900';
+      btn.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-900';
       icon.textContent = '♡';
-      label.textContent = 'Like';
     }
   });
 });

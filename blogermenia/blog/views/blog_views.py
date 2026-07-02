@@ -3,7 +3,7 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.http import JsonResponse
-from ..models import Blog, Like
+from ..models import Blog, Like, Category
 from ..signals import blog_viewed
 
 
@@ -14,7 +14,18 @@ class BlogListView(ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        return Blog.objects.filter(is_published=True).order_by('-created_at').select_related('author')
+        qs = Blog.objects.filter(is_published=True).order_by('-created_at').select_related('author', 'category')
+        slug = self.request.GET.get('category')
+        if slug:
+            qs = qs.filter(category__slug=slug)
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        slug = self.request.GET.get('category')
+        if slug:
+            context['current_category'] = Category.objects.filter(slug=slug).first()
+        return context
 
 
 class BlogDetailView(DetailView):
@@ -43,7 +54,7 @@ class BlogDetailView(DetailView):
 
 class BlogCreateView(LoginRequiredMixin, CreateView):
     model = Blog
-    fields = ['title', 'content', 'image', 'playlists', 'is_published']
+    fields = ['title', 'content', 'image', 'category', 'playlists', 'is_published']
     template_name = 'blog/blog_form.html'
     success_url = reverse_lazy('blog_list')
 
@@ -54,7 +65,7 @@ class BlogCreateView(LoginRequiredMixin, CreateView):
 
 class BlogUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Blog
-    fields = ['title', 'content', 'image', 'playlists', 'is_published']
+    fields = ['title', 'content', 'image', 'category', 'playlists', 'is_published']
     template_name = 'blog/blog_form.html'
 
     def form_valid(self, form):

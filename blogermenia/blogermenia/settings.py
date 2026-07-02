@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
-    "allauth.socialaccount.providers.google",
     "linkedin_oidc",
     "blog",
 ]
@@ -71,6 +70,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "blogermenia.context_processors.global_context",
             ],
         },
     },
@@ -167,9 +167,5 @@ SOCIALACCOUNT_LOGIN_ON_GET = True
 
 # Social account provider configuration
 SOCIALACCOUNT_PROVIDERS = {
-    'google': {
-        'SCOPE': ['profile', 'email'],
-        'AUTH_PARAMS': {'access_type': 'online'},
-    },
     # linkedin_oauth2 scopes are set in linkedin_oidc/provider.py get_default_scope()
 }

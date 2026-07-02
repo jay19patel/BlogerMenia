@@ -1,25 +1,20 @@
 <aside class="fixed top-16 left-0 bottom-0 w-64 border-r border-slate-200 bg-white overflow-y-auto hidden lg:block">
   <nav class="p-5 flex flex-col gap-6 h-full">
 
+    <!-- BROWSE -->
     <div>
       <p class="text-[11px] font-semibold tracking-wider text-slate-400 mb-2 px-2">BROWSE</p>
       <ul class="flex flex-col gap-0.5">
         <li>
           <a href="{% url 'home' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium text-sm transition-colors {% if active == 'home' %}bg-brand-50 text-brand-700{% else %}text-slate-600 hover:bg-slate-50 hover:text-slate-900{% endif %}">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-            All Blogs
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Home
           </a>
         </li>
         <li>
           <a href="{% url 'blog_list' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium text-sm transition-colors {% if active == 'blog_list' %}bg-brand-50 text-brand-700{% else %}text-slate-600 hover:bg-slate-50 hover:text-slate-900{% endif %}">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-            Categories
-          </a>
-        </li>
-        <li>
-          <a href="#" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-sm transition-colors">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-            Bookmarks
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            All Blogs
           </a>
         </li>
         <li>
@@ -28,28 +23,41 @@
             Playlists
           </a>
         </li>
-        {% if user.is_authenticated %}
         <li>
-          <a href="{% url 'user_profile' user.pk %}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium text-sm transition-colors {% if active == 'profile' %}bg-brand-50 text-brand-700{% else %}text-slate-600 hover:bg-slate-50 hover:text-slate-900{% endif %}">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            Profile
+          <a href="{% url 'user_list' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium text-sm transition-colors {% if active == 'community' %}bg-brand-50 text-brand-700{% else %}text-slate-600 hover:bg-slate-50 hover:text-slate-900{% endif %}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Community
           </a>
         </li>
-        {% endif %}
       </ul>
     </div>
 
+    <!-- CATEGORIES -->
+    {% if all_categories %}
     <div>
-      <p class="text-[11px] font-semibold tracking-wider text-slate-400 mb-2 px-2">TOPICS</p>
+      <p class="text-[11px] font-semibold tracking-wider text-slate-400 mb-2 px-2">CATEGORIES</p>
       <ul class="flex flex-col gap-0.5">
-        <li><a href="{% url 'blog_list' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-sm transition-colors"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Technology</a></li>
-        <li><a href="{% url 'blog_list' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-sm transition-colors"><span class="w-2 h-2 rounded-full bg-rose-500"></span> Lifestyle</a></li>
-        <li><a href="{% url 'blog_list' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-sm transition-colors"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Business</a></li>
-        <li><a href="{% url 'blog_list' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-sm transition-colors"><span class="w-2 h-2 rounded-full bg-purple-500"></span> Design</a></li>
+        {% for cat in all_categories %}
+        <li>
+          <a href="{% url 'blog_list' %}?category={{ cat.slug }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium text-sm transition-colors {% if active_category == cat.slug %}bg-brand-50 text-brand-700{% else %}text-slate-600 hover:bg-slate-50 hover:text-slate-900{% endif %}">
+            <span class="w-2 h-2 rounded-full
+              {% if cat.color == 'blue' %}bg-blue-500
+              {% elif cat.color == 'rose' %}bg-rose-500
+              {% elif cat.color == 'amber' %}bg-amber-500
+              {% elif cat.color == 'purple' %}bg-purple-500
+              {% elif cat.color == 'teal' %}bg-teal-500
+              {% else %}bg-indigo-500{% endif %}"></span>
+            {{ cat.name }}
+            <span class="ml-auto text-[11px] text-slate-400">{{ cat.blogs.count }}</span>
+          </a>
+        </li>
+        {% endfor %}
       </ul>
     </div>
+    {% endif %}
 
     {% if user.is_authenticated %}
+    <!-- WRITE -->
     <div>
       <p class="text-[11px] font-semibold tracking-wider text-slate-400 mb-2 px-2">WRITE</p>
       <ul class="flex flex-col gap-0.5">
@@ -69,9 +77,14 @@
     </div>
     {% endif %}
 
+    <!-- ACCOUNT -->
     <div class="mt-auto pt-6 border-t border-slate-100 flex flex-col gap-0.5">
       <p class="text-[11px] font-semibold tracking-wider text-slate-400 mb-2 px-2">ACCOUNT</p>
       {% if user.is_authenticated %}
+      <a href="{% url 'user_profile' user.pk %}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium text-sm transition-colors {% if active == 'profile' %}bg-brand-50 text-brand-700{% else %}text-slate-600 hover:bg-slate-50 hover:text-slate-900{% endif %}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        My Profile
+      </a>
       <form method="post" action="{% url 'account_logout' %}">
         {% csrf_token %}
         <button type="submit" class="flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 font-medium text-sm transition-colors">
@@ -90,5 +103,6 @@
       </a>
       {% endif %}
     </div>
+
   </nav>
 </aside>

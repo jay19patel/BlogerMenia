@@ -1,5 +1,11 @@
 from django.contrib import admin
-from .models import Blog, Playlist, Like
+from .models import Blog, Playlist, Like, Category
+
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug', 'color')
+    prepopulated_fields = {'slug': ('name',)}
 
 
 @admin.register(Playlist)
@@ -11,8 +17,8 @@ class PlaylistAdmin(admin.ModelAdmin):
 
 @admin.register(Blog)
 class BlogAdmin(admin.ModelAdmin):
-    list_display = ('title', 'author', 'is_published', 'read_count', 'like_count', 'created_at')
-    list_filter = ('is_published', 'created_at', 'author')
+    list_display = ('title', 'author', 'category', 'is_published', 'read_count', 'like_count', 'created_at')
+    list_filter = ('is_published', 'category', 'created_at', 'author')
     search_fields = ('title', 'content', 'author__username')
     filter_horizontal = ('playlists',)
     readonly_fields = ('read_count',)
