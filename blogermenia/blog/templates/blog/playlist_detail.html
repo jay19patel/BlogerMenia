@@ -34,7 +34,7 @@
           {% else %}
           <span class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center font-semibold text-slate-600 mono text-[10px]">{{ playlist.author.username.0|upper }}</span>
           {% endif %}
-          <a href="{% url 'user_profile' playlist.author.pk %}" class="font-medium text-slate-700 hover:text-brand-600 transition-colors">{{ playlist.author.get_full_name|default:playlist.author.username }}</a>
+          <a href="{% url 'user_profile' playlist.author.username %}" class="font-medium text-slate-700 hover:text-brand-600 transition-colors">{{ playlist.author.get_full_name|default:playlist.author.username }}</a>
           <span>·</span>
           <span>updated {{ playlist.updated_at|date:"M d" }}</span>
         </div>
@@ -50,8 +50,8 @@
         {% endif %}
         {% endwith %}
         {% if user == playlist.author %}
-        <a href="{% url 'playlist_update' playlist.pk %}" class="inline-flex items-center gap-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 font-semibold text-sm px-5 py-3 rounded-xl transition-colors">Edit</a>
-        <a href="{% url 'playlist_delete' playlist.pk %}" class="inline-flex items-center gap-2 bg-white border border-red-200 text-red-500 hover:bg-red-50 font-semibold text-sm px-5 py-3 rounded-xl transition-colors">Delete</a>
+        <a href="{% url 'playlist_update' playlist.slug %}" class="inline-flex items-center gap-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 font-semibold text-sm px-5 py-3 rounded-xl transition-colors">Edit</a>
+        <a href="{% url 'playlist_delete' playlist.slug %}" class="inline-flex items-center gap-2 bg-white border border-red-200 text-red-500 hover:bg-red-50 font-semibold text-sm px-5 py-3 rounded-xl transition-colors">Delete</a>
         {% endif %}
       </div>
     </div>

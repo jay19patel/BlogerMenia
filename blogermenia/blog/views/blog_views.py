@@ -77,7 +77,7 @@ class BlogUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return self.request.user == self.get_object().author
 
     def get_success_url(self):
-        return reverse_lazy('blog_detail', kwargs={'pk': self.object.pk})
+        return reverse_lazy('blog_detail', kwargs={'slug': self.object.slug})
 
 
 class BlogDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):

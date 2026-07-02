@@ -20,7 +20,7 @@
   </div>
 
   {% if user.is_authenticated %}
-  <a href="{% url 'user_profile' user.pk %}" class="flex items-center flex-shrink-0">
+  <a href="{% url 'user_profile' user.username %}" class="flex items-center flex-shrink-0">
     {% if user.profile_picture %}
     <img src="{{ user.profile_picture.url }}" alt="{{ user.username }}" class="w-8 h-8 rounded-full object-cover ring-2 ring-transparent hover:ring-brand-500 transition-all">
     {% else %}

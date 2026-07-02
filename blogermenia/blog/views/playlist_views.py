@@ -41,7 +41,7 @@ class PlaylistUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return self.request.user == self.get_object().author
 
     def get_success_url(self):
-        return reverse_lazy('playlist_detail', kwargs={'pk': self.object.pk})
+        return reverse_lazy('playlist_detail', kwargs={'slug': self.object.slug})
 
 
 class PlaylistDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):

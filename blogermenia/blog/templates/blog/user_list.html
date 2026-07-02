@@ -17,7 +17,7 @@
 
     <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
       {% for author in users %}
-      <a href="{% url 'user_profile' author.pk %}" class="group flex flex-col items-center text-center p-6 rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-lg hover:shadow-slate-200/50 transition-all">
+      <a href="{% url 'user_profile' author.username %}" class="group flex flex-col items-center text-center p-6 rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-lg hover:shadow-slate-200/50 transition-all">
         <div class="w-16 h-16 rounded-full mb-4 overflow-hidden flex-shrink-0">
           {% if author.profile_picture %}
           <img src="{{ author.profile_picture.url }}" alt="{{ author.username }}" class="w-full h-full object-cover">

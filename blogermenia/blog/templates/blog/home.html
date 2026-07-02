@@ -102,7 +102,7 @@
     </div>
     <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {% for member in featured_users %}
-      <a href="{% url 'user_profile' member.pk %}" class="group flex items-center gap-4 bg-white border border-slate-100 hover:border-brand-200 hover:shadow-lg hover:shadow-brand-100/50 rounded-2xl p-5 transition-all">
+      <a href="{% url 'user_profile' member.username %}" class="group flex items-center gap-4 bg-white border border-slate-100 hover:border-brand-200 hover:shadow-lg hover:shadow-brand-100/50 rounded-2xl p-5 transition-all">
         {% if member.profile_picture %}<img src="{{ member.profile_picture.url }}" alt="{{ member.username }}" class="w-14 h-14 rounded-full object-cover flex-shrink-0 ring-2 ring-slate-50 group-hover:ring-brand-100 transition-colors">
         {% else %}<span class="w-14 h-14 rounded-full bg-brand-100 flex items-center justify-center font-bold text-brand-700 text-xl flex-shrink-0 mono ring-2 ring-slate-50 group-hover:ring-brand-100 transition-colors">{{ member.username.0|upper }}</span>{% endif %}
         <div class="min-w-0">

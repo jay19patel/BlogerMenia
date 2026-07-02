@@ -24,6 +24,8 @@ class UserProfileView(DetailView):
     model = User
     template_name = 'blog/profile.html'
     context_object_name = 'profile_user'
+    slug_field = 'username'
+    slug_url_kwarg = 'username'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -43,9 +45,11 @@ class ProfileUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = User
     fields = ['first_name', 'last_name', 'bio', 'about', 'profile_picture', 'linkedin_url', 'linkedin_connected']
     template_name = 'blog/profile_edit.html'
+    slug_field = 'username'
+    slug_url_kwarg = 'username'
 
     def test_func(self):
-        return self.request.user.pk == self.kwargs['pk']
+        return self.request.user.username == self.kwargs['username']
 
     def get_success_url(self):
-        return reverse_lazy('user_profile', kwargs={'pk': self.request.user.pk})
+        return reverse_lazy('user_profile', kwargs={'username': self.request.user.username})

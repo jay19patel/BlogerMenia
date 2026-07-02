@@ -35,7 +35,7 @@
 
     <div class="grid sm:grid-cols-2 gap-6">
       {% for playlist in playlists %}
-      <a href="{% url 'playlist_detail' playlist.pk %}" class="group block rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-lg hover:shadow-slate-200/50 transition-all overflow-hidden">
+      <a href="{% url 'playlist_detail' playlist.slug %}" class="group block rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-lg hover:shadow-slate-200/50 transition-all overflow-hidden">
         <div class="h-36 relative flex items-center justify-center
           {% if playlist.image %}bg-slate-100
           {% elif forloop.counter|divisibleby:4 %}bg-gradient-to-br from-purple-400 to-fuchsia-600

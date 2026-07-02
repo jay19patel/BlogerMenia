@@ -27,12 +27,12 @@ urlpatterns = [
     # Playlist URLs
     path('playlists/', PlaylistListView.as_view(), name='playlist_list'),
     path('playlists/create/', PlaylistCreateView.as_view(), name='playlist_create'),
-    path('playlists/<int:pk>/', PlaylistDetailView.as_view(), name='playlist_detail'),
-    path('playlists/<int:pk>/update/', PlaylistUpdateView.as_view(), name='playlist_update'),
-    path('playlists/<int:pk>/delete/', PlaylistDeleteView.as_view(), name='playlist_delete'),
+    path('playlists/<slug:slug>/', PlaylistDetailView.as_view(), name='playlist_detail'),
+    path('playlists/<slug:slug>/update/', PlaylistUpdateView.as_view(), name='playlist_update'),
+    path('playlists/<slug:slug>/delete/', PlaylistDeleteView.as_view(), name='playlist_delete'),
 
     # Profile URLs
     path('accounts-list/', UserListView.as_view(), name='user_list'),
-    path('profile/<int:pk>/', UserProfileView.as_view(), name='user_profile'),
-    path('profile/<int:pk>/edit/', ProfileUpdateView.as_view(), name='profile_edit'),
+    path('profile/<str:username>/', UserProfileView.as_view(), name='user_profile'),
+    path('profile/<str:username>/edit/', ProfileUpdateView.as_view(), name='profile_edit'),
 ]

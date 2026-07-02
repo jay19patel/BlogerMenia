@@ -27,7 +27,7 @@
   <div class="max-w-2xl px-8 sm:px-14 py-14">
 
     <div class="flex items-center gap-2 text-sm text-muted mb-6">
-      {% if user.is_authenticated %}<a href="{% url 'user_profile' user.pk %}" class="hover:text-ink">Profile</a><span>/</span>{% endif %}
+      {% if user.is_authenticated %}<a href="{% url 'user_profile' user.username %}" class="hover:text-ink">Profile</a><span>/</span>{% endif %}
       <span>Email addresses</span>
     </div>
 
