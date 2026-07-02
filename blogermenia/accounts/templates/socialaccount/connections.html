@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load socialaccount %}
+{% block title %}Connected Accounts — Inkwell{% endblock %}
+{% block content %}
+{% include "partials/header.html" %}
+{% include "partials/sidebar.html" with active="profile" %}
+
+<main class="pt-16 lg:pl-60">
+  <div class="max-w-2xl px-8 sm:px-14 py-14">
+
+    <div class="flex items-center gap-2 text-sm text-muted mb-6">
+      {% if user.is_authenticated %}<a href="{% url 'user_profile' user.pk %}" class="hover:text-ink">Profile</a><span>/</span>{% endif %}
+      <span>Connected accounts</span>
+    </div>
+
+    <h1 class="serif text-3xl font-semibold tracking-tight mb-8">Connected accounts</h1>
+
+    {% if form.accounts %}
+    <div class="bg-white border border-line rounded-lg p-6 mb-6">
+      <p class="text-sm text-muted mb-4">You can sign in using these connected accounts:</p>
+      <form method="POST" action="{% url 'socialaccount_connections' %}">
+        {% csrf_token %}
+        <div class="space-y-3 mb-5">
+          {% for acc in form.fields.account.choices %}
+          {% with account=acc.0.instance.get_provider_account %}
+          <label class="flex items-center gap-4 p-4 rounded-md border border-line hover:border-ink/20 cursor-pointer">
+            <input type="radio" name="account" value="{{ account.account.pk }}" class="accent-accent" style="width:auto;display:inline">
+            <div class="flex-1">
+              <p class="text-sm font-medium text-ink">{{ account }}</p>
+              <p class="text-xs text-muted mt-0.5">{{ account.get_brand.name }}</p>
+            </div>
+          </label>
+          {% endwith %}
+          {% endfor %}
+        </div>
+        <button type="submit" class="px-4 py-2 border border-red-200 text-red-500 hover:bg-red-50 text-sm font-medium rounded-md transition-colors">
+          Disconnect
+        </button>
+      </form>
+    </div>
+    {% else %}
+    <div class="bg-white border border-line rounded-lg p-6 mb-6 text-center">
+      <p class="text-sm text-muted">No third-party accounts connected yet.</p>
+    </div>
+    {% endif %}
+
+    <div class="bg-white border border-line rounded-lg p-6">
+      <h2 class="serif text-lg font-semibold tracking-tight mb-4">Add a connection</h2>
+      <div class="flex flex-wrap gap-3">
+        {% get_providers as socialaccount_providers %}
+        {% for provider in socialaccount_providers %}
+        <a href="{% provider_login_url provider.id process='connect' %}" class="inline-flex items-center gap-2 border border-line hover:border-ink/30 text-ink text-sm font-medium px-4 py-2 rounded-md transition-colors">
+          {{ provider.name }}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+</main>
+{% endblock %}

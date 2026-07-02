@@ -1,66 +1,89 @@
 {% extends "base.html" %}
-
-{% block title %}All Blogs - Blogermenia{% endblock %}
-
+{% block title %}All Articles — Inkwell{% endblock %}
 {% block content %}
-<div class="max-w-4xl mx-auto mt-8">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">Latest Blogs</h1>
-        {% if user.is_authenticated %}
-        <a href="{% url 'blog_create' %}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
-            Write a Blog
-        </a>
-        {% endif %}
+{% include "partials/header.html" %}
+{% include "partials/sidebar.html" with active="blog_list" %}
+
+<main class="pt-16 lg:pl-64">
+  <div class="max-w-5xl px-8 sm:px-14 py-16">
+
+    <!-- Page header -->
+    <div class="flex items-center justify-between mb-10">
+      <div>
+        <span class="inline-flex items-center gap-2 bg-brand-50 text-brand-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-4">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          All writing
+        </span>
+        <h1 class="text-3xl font-extrabold tracking-tight text-slate-900">Latest Articles</h1>
+      </div>
+      {% if user.is_authenticated %}
+      <a href="{% url 'blog_create' %}" class="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        Write a Post
+      </a>
+      {% endif %}
     </div>
 
-    <div class="space-y-6">
-        {% for blog in blogs %}
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            {% if blog.image %}
-            <img src="{{ blog.image.url }}" alt="{{ blog.title }}" class="w-full h-48 object-cover">
-            {% endif %}
-            <div class="p-6">
-                <h2 class="text-2xl font-bold text-gray-900 mb-2">
-                    <a href="{% url 'blog_detail' blog.pk %}" class="hover:text-indigo-600 transition-colors">{{ blog.title }}</a>
-                </h2>
-                <p class="text-sm text-gray-500 mb-4">
-                    By <a href="{% url 'user_profile' blog.author.pk %}" class="font-medium text-indigo-600 hover:underline">{{ blog.author.username }}</a>
-                    &middot; {{ blog.created_at|date:"M d, Y" }}
-                    &middot; {{ blog.read_count }} reads
-                    &middot; {{ blog.like_count }} likes
-                </p>
-                <p class="text-gray-700">{{ blog.content|truncatewords:30 }}</p>
-                <div class="mt-4">
-                    <a href="{% url 'blog_detail' blog.pk %}" class="text-indigo-600 hover:text-indigo-800 font-medium text-sm">Read more &rarr;</a>
-                </div>
-            </div>
+    <!-- Blog cards grid -->
+    <div class="grid sm:grid-cols-2 gap-6">
+      {% for blog in blogs %}
+      <a href="{% url 'blog_detail' blog.pk %}" class="group block rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-lg hover:shadow-slate-200/50 transition-all overflow-hidden">
+        <div class="h-40 {% if blog.image %}bg-slate-100{% elif forloop.counter|divisibleby:4 %}bg-gradient-to-br from-purple-400 to-fuchsia-600{% elif forloop.counter|divisibleby:3 %}bg-gradient-to-br from-blue-400 to-indigo-600{% elif forloop.counter|divisibleby:2 %}bg-gradient-to-br from-rose-400 to-pink-600{% else %}bg-gradient-to-br from-amber-400 to-orange-600{% endif %} flex items-center justify-center">
+          {% if blog.image %}
+          <img src="{{ blog.image.url }}" alt="{{ blog.title }}" class="w-full h-full object-cover">
+          {% elif forloop.counter|divisibleby:4 %}
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="opacity-80"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+          {% elif forloop.counter|divisibleby:3 %}
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="opacity-80"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M9 4v5"/></svg>
+          {% elif forloop.counter|divisibleby:2 %}
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="opacity-80"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          {% else %}
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="opacity-80"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          {% endif %}
         </div>
-        {% empty %}
-        <div class="text-center py-10 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-            <p class="text-gray-500">No blogs published yet.</p>
+        <div class="p-5">
+          <span class="text-[11px] font-bold tracking-wide text-blue-600 bg-blue-50 rounded-full px-2.5 py-1">BLOG</span>
+          <h2 class="font-bold text-slate-900 text-lg mt-3 mb-2 group-hover:text-brand-700 transition-colors">{{ blog.title }}</h2>
+          <p class="text-sm text-slate-500 leading-relaxed mb-4">{{ blog.content|truncatewords:20 }}</p>
+          <div class="flex items-center gap-2 text-xs text-slate-400">
+            <span class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center font-semibold text-slate-600 mono">{{ blog.author.username.0|upper }}</span>
+            <a href="{% url 'user_profile' blog.author.pk %}" class="hover:text-brand-600 transition-colors" onclick="event.stopPropagation()">{{ blog.author.get_full_name|default:blog.author.username }}</a>
+            <span>·</span> {{ blog.created_at|date:"M d" }}
+            <span>·</span> {{ blog.read_count }} reads
+            <span>·</span> {{ blog.like_count }} likes
+          </div>
         </div>
-        {% endfor %}
+      </a>
+      {% empty %}
+      <div class="col-span-2 text-center py-20 border border-dashed border-slate-200 rounded-2xl">
+        <svg class="mx-auto mb-4 w-10 h-10 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        <p class="text-slate-500 mb-4">No articles published yet.</p>
+        {% if user.is_authenticated %}
+        <a href="{% url 'blog_create' %}" class="inline-flex items-center gap-2 bg-slate-900 text-white text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-slate-800 transition-colors">Write the first one</a>
+        {% endif %}
+      </div>
+      {% endfor %}
     </div>
 
     <!-- Pagination -->
     {% if is_paginated %}
-    <div class="mt-8 flex justify-center items-center space-x-2">
-        {% if page_obj.has_previous %}
-        <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-2 rounded-md border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-            &larr; Previous
-        </a>
-        {% endif %}
-
-        <span class="px-4 py-2 text-sm text-gray-700">
-            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-        </span>
-
-        {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-2 rounded-md border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-            Next &rarr;
-        </a>
-        {% endif %}
+    <div class="mt-12 flex items-center justify-center gap-3">
+      {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}" class="inline-flex items-center gap-1.5 px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition-colors">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 5-7 7 7 7"/></svg>
+        Previous
+      </a>
+      {% endif %}
+      <span class="text-sm text-slate-400 px-2 mono">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}" class="inline-flex items-center gap-1.5 px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition-colors">
+        Next
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </a>
+      {% endif %}
     </div>
     {% endif %}
-</div>
+
+  </div>
+</main>
 {% endblock %}

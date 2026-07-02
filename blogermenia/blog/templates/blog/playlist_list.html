@@ -1,44 +1,84 @@
 {% extends "base.html" %}
-
-{% block title %}All Playlists - Blogermenia{% endblock %}
-
+{% block title %}Playlists — Inkwell{% endblock %}
 {% block content %}
-<div class="max-w-4xl mx-auto mt-8">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">Curated Playlists</h1>
+{% include "partials/header.html" %}
+{% include "partials/sidebar.html" with active="playlists" %}
+
+<main class="pt-16 lg:pl-64">
+  <div class="max-w-5xl px-8 sm:px-14 py-16">
+
+    <span class="inline-flex items-center gap-2 bg-brand-50 text-brand-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-8">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15V6"/><path d="M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/><path d="M12 12H3"/><path d="M16 6H3"/><path d="M12 18H3"/></svg>
+      curated reading, in order
+    </span>
+
+    <h1 class="text-5xl sm:text-6xl font-extrabold tracking-tight leading-[1.08] mb-6 max-w-2xl">
+      Playlists for <span class="text-brand-600">deep reading.</span>
+    </h1>
+
+    <p class="text-lg text-slate-500 leading-relaxed max-w-xl mb-14">
+      A playlist is a stack of articles worth reading in order — grouped by a writer around one real thread, not just a tag applied after the fact.
+    </p>
+
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-xl font-bold tracking-tight">All Playlists</h2>
+      <div class="flex items-center gap-3">
+        <span class="text-sm text-slate-400">{{ playlists|length }} playlist{{ playlists|length|pluralize }}</span>
         {% if user.is_authenticated %}
-        <a href="{% url 'playlist_create' %}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
-            Create Playlist
+        <a href="{% url 'playlist_create' %}" class="inline-flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+          New
         </a>
         {% endif %}
+      </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {% for playlist in playlists %}
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            {% if playlist.image %}
-            <img src="{{ playlist.image.url }}" alt="{{ playlist.title }}" class="w-full h-36 object-cover">
+    <div class="grid sm:grid-cols-2 gap-6">
+      {% for playlist in playlists %}
+      <a href="{% url 'playlist_detail' playlist.pk %}" class="group block rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-lg hover:shadow-slate-200/50 transition-all overflow-hidden">
+        <div class="h-36 relative flex items-center justify-center
+          {% if playlist.image %}bg-slate-100
+          {% elif forloop.counter|divisibleby:4 %}bg-gradient-to-br from-purple-400 to-fuchsia-600
+          {% elif forloop.counter|divisibleby:3 %}bg-gradient-to-br from-amber-400 to-orange-600
+          {% elif forloop.counter|divisibleby:2 %}bg-gradient-to-br from-blue-400 to-indigo-600
+          {% else %}bg-gradient-to-br from-emerald-400 to-teal-600{% endif %}">
+          {% if playlist.image %}
+          <img src="{{ playlist.image.url }}" alt="{{ playlist.title }}" class="w-full h-full object-cover">
+          {% elif forloop.counter|divisibleby:4 %}
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="opacity-85"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>
+          {% elif forloop.counter|divisibleby:3 %}
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="opacity-85"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          {% elif forloop.counter|divisibleby:2 %}
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="opacity-85"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          {% else %}
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="opacity-85"><path d="M21 15V6"/><path d="M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/><path d="M12 12H3"/><path d="M16 6H3"/><path d="M12 18H3"/></svg>
+          {% endif %}
+          <span class="absolute bottom-3 right-3 text-[11px] font-semibold text-white bg-black/25 backdrop-blur-sm rounded-full px-2.5 py-1">{{ playlist.blogs.count }} blog{{ playlist.blogs.count|pluralize }}</span>
+        </div>
+        <div class="p-5">
+          <h3 class="font-bold text-slate-900 text-lg mb-1.5 group-hover:text-brand-700 transition-colors">{{ playlist.title }}</h3>
+          <p class="text-sm text-slate-500 leading-relaxed mb-3">{{ playlist.description|truncatewords:16 }}</p>
+          <div class="flex items-center gap-2 text-xs text-slate-400">
+            {% if playlist.author.profile_picture %}
+            <img src="{{ playlist.author.profile_picture.url }}" alt="{{ playlist.author.username }}" class="w-5 h-5 rounded-full object-cover">
+            {% else %}
+            <span class="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center font-semibold text-slate-600 mono text-[9px]">{{ playlist.author.username.0|upper }}</span>
             {% endif %}
-            <div class="p-6">
-            <h2 class="text-xl font-bold text-gray-900 mb-2">
-                <a href="{% url 'playlist_detail' playlist.pk %}" class="hover:text-indigo-600 transition-colors">{{ playlist.title }}</a>
-            </h2>
-            <p class="text-sm text-gray-500 mb-4">
-                Curated by <a href="{% url 'user_profile' playlist.author.pk %}" class="font-medium text-indigo-600 hover:underline">{{ playlist.author.username }}</a>
-            </p>
-            <p class="text-gray-700 mb-4">{{ playlist.description|truncatewords:20 }}</p>
-            <div class="flex items-center text-sm text-indigo-600 font-medium">
-                <span>{{ playlist.blogs.count }} Blogs</span>
-                <span class="mx-2">&middot;</span>
-                <a href="{% url 'playlist_detail' playlist.pk %}" class="hover:text-indigo-800">View Collection &rarr;</a>
-            </div>
-            </div>
+            {{ playlist.author.get_full_name|default:playlist.author.username }} <span>·</span> updated {{ playlist.updated_at|date:"M d" }}
+          </div>
         </div>
-        {% empty %}
-        <div class="col-span-full text-center py-10 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-            <p class="text-gray-500">No playlists created yet.</p>
-        </div>
-        {% endfor %}
+      </a>
+      {% empty %}
+      <div class="col-span-2 text-center py-20 border border-dashed border-slate-200 rounded-2xl">
+        <svg class="mx-auto mb-4 w-10 h-10 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15V6"/><path d="M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/><path d="M12 12H3"/><path d="M16 6H3"/><path d="M12 18H3"/></svg>
+        <p class="text-slate-500 mb-4">No playlists yet.</p>
+        {% if user.is_authenticated %}
+        <a href="{% url 'playlist_create' %}" class="inline-flex items-center gap-2 bg-slate-900 text-white text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-slate-800 transition-colors">Create the first playlist</a>
+        {% endif %}
+      </div>
+      {% endfor %}
     </div>
-</div>
+
+  </div>
+</main>
 {% endblock %}

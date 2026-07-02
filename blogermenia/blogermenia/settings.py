@@ -38,12 +38,12 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",
+    "accounts",       # before allauth so our templates/account/ override allauth defaults via APP_DIRS
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
-    "linkedin_oidc",  # custom OIDC-compatible LinkedIn provider (replaces allauth's linkedin_oauth2)
-    "accounts",
+    "linkedin_oidc",
     "blog",
 ]
 
@@ -63,7 +63,7 @@ ROOT_URLCONF = "blogermenia.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / 'templates'],
+        "DIRS": [BASE_DIR / 'blogermenia' / 'templates'],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -146,9 +146,21 @@ AUTHENTICATION_BACKENDS = (
 
 ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
-ACCOUNT_EMAIL_VERIFICATION = "none" # Set to mandatory for production
+ACCOUNT_EMAIL_VERIFICATION = "none"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
+
+# Email — prints to terminal in dev; switch to SMTP for production
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+DEFAULT_FROM_EMAIL = "Inkwell <noreply@inkwell.dev>"
+
+# --- Production SMTP (uncomment & fill when deploying) ---
+# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# EMAIL_HOST = "smtp.gmail.com"
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = "your@gmail.com"
+# EMAIL_HOST_PASSWORD = "your-app-password"
 
 # Bypass the intermediate social login confirmation page (works for GET requests)
 SOCIALACCOUNT_LOGIN_ON_GET = True

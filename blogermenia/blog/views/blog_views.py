@@ -31,6 +31,13 @@ class BlogDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         context['user_liked'] = self.object.is_liked_by(self.request.user)
         context['like_count'] = self.object.like_count()
+        context['related_blogs'] = (
+            Blog.objects
+            .filter(is_published=True)
+            .exclude(pk=self.object.pk)
+            .order_by('-created_at')
+            .select_related('author')[:4]
+        )
         return context
 
 
