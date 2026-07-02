@@ -43,7 +43,7 @@
       <div class="flex sm:flex-col gap-3 sm:items-end">
         {% with first_blog=playlist.blogs.first %}
         {% if first_blog %}
-        <a href="{% url 'blog_detail' first_blog.pk %}" class="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm px-5 py-3 rounded-xl transition-colors">
+        <a href="{% url 'blog_detail' first_blog.slug %}" class="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm px-5 py-3 rounded-xl transition-colors">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
           Read All
         </a>
@@ -60,7 +60,7 @@
     <div class="flex flex-col divide-y divide-slate-100">
       {% for blog in playlist.blogs.all %}
       {% if blog.is_published or user == blog.author %}
-      <a href="{% url 'blog_detail' blog.pk %}" class="group flex items-center gap-4 py-4 px-3 -mx-3 rounded-xl hover:bg-slate-50/60 transition-colors">
+      <a href="{% url 'blog_detail' blog.slug %}" class="group flex items-center gap-4 py-4 px-3 -mx-3 rounded-xl hover:bg-slate-50/60 transition-colors">
         <span class="w-6 text-center text-sm font-semibold text-slate-300 group-hover:hidden">{{ forloop.counter }}</span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="text-brand-600 hidden group-hover:block w-6 flex-shrink-0"><path d="M8 5v14l11-7z"/></svg>
         <div class="w-16 h-16 rounded-lg flex-shrink-0 flex items-center justify-center

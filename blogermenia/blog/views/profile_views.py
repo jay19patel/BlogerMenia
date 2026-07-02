@@ -33,6 +33,7 @@ class UserProfileView(DetailView):
         context['user_playlists'] = Playlist.objects.filter(
             author=self.object
         ).order_by('-created_at')
+        context['user_saved_blogs'] = self.object.saved_blogs.filter(is_published=True).order_by('-created_at')
         context['has_linkedin_oauth'] = self.object.has_linkedin_oauth()
         context['is_own_profile'] = self.request.user == self.object
         return context
@@ -40,7 +41,7 @@ class UserProfileView(DetailView):
 
 class ProfileUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = User
-    fields = ['first_name', 'last_name', 'bio', 'about', 'profile_picture', 'linkedin_url']
+    fields = ['first_name', 'last_name', 'bio', 'about', 'profile_picture', 'linkedin_url', 'linkedin_connected']
     template_name = 'blog/profile_edit.html'
 
     def test_func(self):

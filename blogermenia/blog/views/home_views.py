@@ -32,3 +32,17 @@ class HomeView(TemplateView):
             User.objects.order_by('-date_joined')[:6]
         )
         return context
+
+
+from django.views.generic import CreateView
+from django.urls import reverse_lazy
+from ..forms import ContactForm
+from ..models import ContactEntry
+
+class ContactView(CreateView):
+    model = ContactEntry
+    form_class = ContactForm
+    template_name = 'blog/contact.html'
+    
+    def get_success_url(self):
+        return reverse_lazy('contact') + '?success=1'

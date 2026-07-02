@@ -27,11 +27,11 @@
   .article-body h2 { font-size: 1.5rem; font-weight: 800; color: #0f172a; margin-top: 2.5rem; margin-bottom: 1rem; scroll-margin-top: 6rem; line-height: 1.25; }
   .article-body h3 { font-size: 1.2rem; font-weight: 700; color: #1e293b; margin-top: 2rem; margin-bottom: 0.75rem; scroll-margin-top: 6rem; }
   .article-body p { margin-bottom: 1.25rem; }
-  .article-body blockquote { border-left: 4px solid #10B981; background: rgba(236,253,245,0.6); border-radius: 0 0.75rem 0.75rem 0; padding: 1rem 1.25rem; margin: 1.5rem 0; font-style: italic; color: #334155; }
+  .article-body blockquote { border-left: 4px solid #6366F1; background: rgba(238,242,255,0.6); border-radius: 0 0.75rem 0.75rem 0; padding: 1rem 1.25rem; margin: 1.5rem 0; font-style: italic; color: #334155; }
   .article-body ul { list-style: disc; padding-left: 1.5rem; margin-bottom: 1.25rem; }
   .article-body ol { list-style: decimal; padding-left: 1.5rem; margin-bottom: 1.25rem; }
   .article-body li { margin-bottom: 0.4rem; }
-  .article-body ul li::marker { color: #10B981; }
+  .article-body ul li::marker { color: #6366F1; }
   .article-body table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; border-radius: 0.75rem; overflow: hidden; border: 1px solid #e2e8f0; }
   .article-body th { background: #f8fafc; color: #64748b; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.75rem 1rem; text-align: left; }
   .article-body td { padding: 0.75rem 1rem; border-top: 1px solid #f1f5f9; color: #475569; font-size: 0.875rem; }
@@ -39,8 +39,8 @@
   .article-body img { border-radius: 1rem; max-width: 100%; margin: 1.5rem 0; }
   .article-body figure { margin: 1.5rem 0; }
   .article-body figcaption { font-size: 0.75rem; color: #94a3b8; margin-top: 0.625rem; text-align: center; }
-  .toc-link.active { color: #047857; font-weight: 600; }
-  .toc-link.active .toc-dot { background: #059669; }
+  .toc-link.active { color: #4338CA; font-weight: 600; }
+  .toc-link.active .toc-dot { background: #4F46E5; }
 </style>
 {% endblock %}
 
@@ -93,13 +93,13 @@
       <!-- Action buttons — right side -->
       <div class="ml-auto flex items-center gap-2">
         {% if user == blog.author %}
-        <a href="{% url 'blog_update' blog.pk %}" class="px-3 py-1.5 text-xs font-medium border border-slate-200 rounded-lg text-slate-500 hover:text-slate-900 hover:border-slate-300 transition-colors">Edit</a>
-        <a href="{% url 'blog_delete' blog.pk %}" class="px-3 py-1.5 text-xs font-medium border border-red-200 rounded-lg text-red-500 hover:bg-red-50 transition-colors">Delete</a>
+        <a href="{% url 'blog_update' blog.slug %}" class="px-3 py-1.5 text-xs font-medium border border-slate-200 rounded-lg text-slate-500 hover:text-slate-900 hover:border-slate-300 transition-colors">Edit</a>
+        <a href="{% url 'blog_delete' blog.slug %}" class="px-3 py-1.5 text-xs font-medium border border-red-200 rounded-lg text-red-500 hover:bg-red-50 transition-colors">Delete</a>
         {% else %}
 
         <!-- Like button — inline in author bar -->
         {% if user.is_authenticated %}
-        <form method="post" action="{% url 'blog_like' blog.pk %}" id="like-form">
+        <form method="post" action="{% url 'blog_like' blog.slug %}" id="like-form">
           {% csrf_token %}
           <button type="submit" id="like-btn"
             class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors
@@ -108,9 +108,20 @@
             <span id="like-count">{{ like_count }}</span>
           </button>
         </form>
+        <form method="post" action="{% url 'blog_save' blog.slug %}" id="save-form">
+          {% csrf_token %}
+          <button type="submit" id="save-btn"
+            class="w-9 h-9 rounded-full border flex items-center justify-center transition-colors text-sm
+            {% if user_saved %}bg-brand-50 border-brand-200 text-brand-600 hover:bg-brand-100{% else %}bg-white border-slate-200 text-slate-400 hover:text-slate-900 hover:border-slate-300{% endif %}" title="Save">
+            <svg id="save-icon" width="16" height="16" viewBox="0 0 24 24" fill="{% if user_saved %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+          </button>
+        </form>
         {% else %}
         <a href="{% url 'account_login' %}" class="w-9 h-9 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:border-slate-300 transition-colors text-sm" title="Like">
           ♡
+        </a>
+        <a href="{% url 'account_login' %}" class="w-9 h-9 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:border-slate-300 transition-colors text-sm" title="Save">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
         </a>
         {% endif %}
 
@@ -132,9 +143,9 @@
     </figure>
     {% else %}
     <div class="h-64 rounded-2xl bg-gradient-to-br
-      {% if blog.pk|divisibleby:4 %}from-purple-400 to-fuchsia-600
-      {% elif blog.pk|divisibleby:3 %}from-blue-400 to-cyan-600
-      {% elif blog.pk|divisibleby:2 %}from-amber-400 to-orange-600
+      {% if blog.slug|divisibleby:4 %}from-purple-400 to-fuchsia-600
+      {% elif blog.slug|divisibleby:3 %}from-blue-400 to-cyan-600
+      {% elif blog.slug|divisibleby:2 %}from-amber-400 to-orange-600
       {% else %}from-emerald-400 to-teal-600{% endif %}
       flex items-center justify-center mb-10">
       <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" class="opacity-80"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
@@ -273,6 +284,30 @@ document.getElementById('like-form')?.addEventListener('submit', function(e) {
     } else {
       btn.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-900';
       icon.textContent = '♡';
+    }
+  });
+});
+
+// Save AJAX
+document.getElementById('save-form')?.addEventListener('submit', function(e) {
+  e.preventDefault();
+  fetch(this.action, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': this.querySelector('[name=csrfmiddlewaretoken]').value,
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+  })
+  .then(r => r.json())
+  .then(data => {
+    const btn = document.getElementById('save-btn');
+    const icon = document.getElementById('save-icon');
+    if (data.saved) {
+      btn.className = 'w-9 h-9 rounded-full border flex items-center justify-center transition-colors text-sm bg-brand-50 border-brand-200 text-brand-600 hover:bg-brand-100';
+      icon.setAttribute('fill', 'currentColor');
+    } else {
+      btn.className = 'w-9 h-9 rounded-full border flex items-center justify-center transition-colors text-sm bg-white border-slate-200 text-slate-400 hover:text-slate-900 hover:border-slate-300';
+      icon.setAttribute('fill', 'none');
     }
   });
 });

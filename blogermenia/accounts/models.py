@@ -7,6 +7,8 @@ class CustomUser(AbstractUser):
     about = models.TextField(blank=True)
     profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
     linkedin_url = models.URLField(blank=True)
+    linkedin_connected = models.BooleanField(default=False)
+    saved_blogs = models.ManyToManyField('blog.Blog', related_name='saved_by', blank=True)
 
     def __str__(self):
         return self.username

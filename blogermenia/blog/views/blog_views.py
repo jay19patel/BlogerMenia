@@ -41,6 +41,7 @@ class BlogDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['user_liked'] = self.object.is_liked_by(self.request.user)
+        context['user_saved'] = self.request.user.is_authenticated and self.request.user.saved_blogs.filter(pk=self.object.pk).exists()
         context['like_count'] = self.object.like_count()
         context['related_blogs'] = (
             Blog.objects
@@ -89,8 +90,8 @@ class BlogDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
 
 class BlogLikeView(LoginRequiredMixin, View):
-    def post(self, request, pk):
-        blog = get_object_or_404(Blog, pk=pk, is_published=True)
+    def post(self, request, slug):
+        blog = get_object_or_404(Blog, slug=slug, is_published=True)
         like, created = Like.objects.get_or_create(blog=blog, user=request.user)
         if not created:
             like.delete()
@@ -100,4 +101,21 @@ class BlogLikeView(LoginRequiredMixin, View):
 
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'liked': liked, 'like_count': blog.like_count()})
-        return redirect('blog_detail', pk=pk)
+        return redirect('blog_detail', slug=blog.slug)
+
+
+class BlogSaveView(LoginRequiredMixin, View):
+    def post(self, request, slug):
+        blog = get_object_or_404(Blog, slug=slug, is_published=True)
+        user = request.user
+        
+        if user.saved_blogs.filter(pk=blog.pk).exists():
+            user.saved_blogs.remove(blog)
+            saved = False
+        else:
+            user.saved_blogs.add(blog)
+            saved = True
+            
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'saved': saved})
+        return redirect('blog_detail', slug=blog.slug)

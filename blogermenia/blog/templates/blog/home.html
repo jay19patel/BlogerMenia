@@ -11,7 +11,7 @@
     <div class="absolute inset-0 bg-gradient-to-br from-brand-50 via-white to-slate-50 pointer-events-none"></div>
     <div class="absolute top-0 right-0 w-96 h-96 bg-brand-500/5 rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
     <div class="relative max-w-2xl">
-      <span class="inline-flex items-center gap-2 bg-brand-50 text-brand-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-6">
+      <span class="inline-flex items-center gap-2 bg-brand-50 text-brand-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-6 ring-1 ring-brand-500/20">
         <span class="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse"></span>
         New articles every week
       </span>
@@ -55,47 +55,38 @@
     </div>
   </section>
 
-  <!-- RECENT BLOGS -->
+  <!-- TOP BLOGS -->
+  {% if top_blogs %}
   <section class="px-8 sm:px-14 py-16 border-b border-slate-100">
     <div class="flex items-center justify-between mb-8">
       <div>
-        <p class="text-[11px] font-semibold tracking-wider text-slate-400 mb-1.5">RECENTLY PUBLISHED</p>
-        <h2 class="text-2xl font-extrabold tracking-tight text-slate-900">Latest Articles</h2>
+        <p class="text-[11px] font-semibold tracking-wider text-slate-400 mb-1.5">MOST READ</p>
+        <h2 class="text-2xl font-extrabold tracking-tight text-slate-900">Top Blogs</h2>
       </div>
-      <a href="{% url 'blog_list' %}" class="text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors flex items-center gap-1.5">
-        View all
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-      </a>
     </div>
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {% for blog in recent_blogs %}
-      <a href="{% url 'blog_detail' blog.pk %}" class="group block rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-lg hover:shadow-slate-200/50 transition-all overflow-hidden">
-        <div class="h-36
+    <div class="flex flex-col divide-y divide-slate-100">
+      {% for blog in top_blogs %}
+      <a href="{% url 'blog_detail' blog.slug %}" class="group flex items-center gap-5 py-5 hover:bg-slate-50/60 -mx-3 px-3 rounded-xl transition-colors">
+        <span class="text-3xl font-extrabold text-slate-200 mono w-10 flex-shrink-0 select-none">{{ forloop.counter }}</span>
+        <div class="w-20 h-14 rounded-xl flex-shrink-0 flex items-center justify-center
           {% if blog.image %}bg-slate-100
-          {% elif forloop.counter|divisibleby:4 %}bg-gradient-to-br from-purple-400 to-fuchsia-600
-          {% elif forloop.counter|divisibleby:3 %}bg-gradient-to-br from-blue-400 to-indigo-600
-          {% elif forloop.counter|divisibleby:2 %}bg-gradient-to-br from-rose-400 to-pink-600
-          {% else %}bg-gradient-to-br from-amber-400 to-orange-600{% endif %}
-          flex items-center justify-center">
-          {% if blog.image %}<img src="{{ blog.image.url }}" alt="{{ blog.title }}" class="w-full h-full object-cover">
-          {% else %}<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" class="opacity-80"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>{% endif %}
+          {% elif forloop.counter == 1 %}bg-gradient-to-br from-brand-400 to-indigo-600
+          {% elif forloop.counter == 2 %}bg-gradient-to-br from-indigo-400 to-purple-600
+          {% else %}bg-gradient-to-br from-blue-400 to-brand-600{% endif %}">
+          {% if blog.image %}<img src="{{ blog.image.url }}" alt="{{ blog.title }}" class="w-full h-full object-cover rounded-xl">
+          {% else %}<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-book-open opacity-80"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>{% endif %}
         </div>
-        <div class="p-5">
-          {% if blog.category %}<span class="text-[11px] font-bold tracking-wide {{ blog.category.text_class }} {{ blog.category.bg_class }} rounded-full px-2.5 py-1 uppercase">{{ blog.category.name }}</span>
-          {% else %}<span class="text-[11px] font-bold tracking-wide text-slate-500 bg-slate-100 rounded-full px-2.5 py-1">ARTICLE</span>{% endif %}
-          <h3 class="font-bold text-slate-900 text-base mt-3 mb-2 group-hover:text-brand-700 transition-colors leading-snug">{{ blog.title }}</h3>
-          <div class="flex items-center gap-2 text-xs text-slate-400">
-            {% if blog.author.profile_picture %}<img src="{{ blog.author.profile_picture.url }}" alt="{{ blog.author.username }}" class="w-5 h-5 rounded-full object-cover">
-            {% else %}<span class="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center font-semibold text-slate-600 text-[9px]">{{ blog.author.username.0|upper }}</span>{% endif %}
-            {{ blog.author.get_full_name|default:blog.author.username }} · {{ blog.created_at|date:"M d" }}
-          </div>
+        <div class="flex-1 min-w-0">
+          {% if blog.category %}<span class="text-[11px] font-bold tracking-wide {{ blog.category.text_class }} {{ blog.category.bg_class }} rounded-full px-2 py-0.5 uppercase">{{ blog.category.name }}</span>{% endif %}
+          <h3 class="font-bold text-slate-900 text-base mt-1.5 truncate group-hover:text-brand-700 transition-colors">{{ blog.title }}</h3>
+          <p class="text-xs text-slate-400 mt-1">{{ blog.author.get_full_name|default:blog.author.username }} · {{ blog.read_count }} reads · {{ blog.like_count }} likes</p>
         </div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-slate-300 group-hover:text-slate-500 transition-colors flex-shrink-0"><path d="M9 18l6-6-6-6"/></svg>
       </a>
-      {% empty %}
-      <div class="col-span-3 text-center py-14 text-slate-400 text-sm">No articles yet — be the first to write one.</div>
       {% endfor %}
     </div>
   </section>
+  {% endif %}
 
   <!-- COMMUNITY -->
   <section class="px-8 sm:px-14 py-16 bg-slate-50/60 border-b border-slate-100">
@@ -111,9 +102,9 @@
     </div>
     <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {% for member in featured_users %}
-      <a href="{% url 'user_profile' member.pk %}" class="group flex items-center gap-4 bg-white border border-slate-100 hover:border-slate-200 hover:shadow-md hover:shadow-slate-200/50 rounded-2xl p-4 transition-all">
-        {% if member.profile_picture %}<img src="{{ member.profile_picture.url }}" alt="{{ member.username }}" class="w-12 h-12 rounded-xl object-cover flex-shrink-0">
-        {% else %}<span class="w-12 h-12 rounded-xl bg-brand-500 flex items-center justify-center font-bold text-white text-lg flex-shrink-0 mono">{{ member.username.0|upper }}</span>{% endif %}
+      <a href="{% url 'user_profile' member.pk %}" class="group flex items-center gap-4 bg-white border border-slate-100 hover:border-brand-200 hover:shadow-lg hover:shadow-brand-100/50 rounded-2xl p-5 transition-all">
+        {% if member.profile_picture %}<img src="{{ member.profile_picture.url }}" alt="{{ member.username }}" class="w-14 h-14 rounded-full object-cover flex-shrink-0 ring-2 ring-slate-50 group-hover:ring-brand-100 transition-colors">
+        {% else %}<span class="w-14 h-14 rounded-full bg-brand-100 flex items-center justify-center font-bold text-brand-700 text-xl flex-shrink-0 mono ring-2 ring-slate-50 group-hover:ring-brand-100 transition-colors">{{ member.username.0|upper }}</span>{% endif %}
         <div class="min-w-0">
           <p class="font-semibold text-slate-900 truncate group-hover:text-brand-700 transition-colors">{{ member.get_full_name|default:member.username }}</p>
           <p class="text-xs text-slate-400 mt-0.5">@{{ member.username }}</p>
@@ -126,75 +117,7 @@
     </div>
   </section>
 
-  <!-- TOP BLOGS -->
-  {% if top_blogs %}
-  <section class="px-8 sm:px-14 py-16 border-b border-slate-100">
-    <div class="flex items-center justify-between mb-8">
-      <div>
-        <p class="text-[11px] font-semibold tracking-wider text-slate-400 mb-1.5">MOST READ</p>
-        <h2 class="text-2xl font-extrabold tracking-tight text-slate-900">Top Blogs</h2>
-      </div>
-    </div>
-    <div class="flex flex-col divide-y divide-slate-100">
-      {% for blog in top_blogs %}
-      <a href="{% url 'blog_detail' blog.pk %}" class="group flex items-center gap-5 py-5 hover:bg-slate-50/60 -mx-3 px-3 rounded-xl transition-colors">
-        <span class="text-3xl font-extrabold text-slate-200 mono w-10 flex-shrink-0 select-none">{{ forloop.counter }}</span>
-        <div class="w-20 h-14 rounded-xl flex-shrink-0 flex items-center justify-center
-          {% if blog.image %}bg-slate-100
-          {% elif forloop.counter == 1 %}bg-gradient-to-br from-amber-400 to-orange-600
-          {% elif forloop.counter == 2 %}bg-gradient-to-br from-blue-400 to-indigo-600
-          {% else %}bg-gradient-to-br from-emerald-400 to-teal-600{% endif %}">
-          {% if blog.image %}<img src="{{ blog.image.url }}" alt="{{ blog.title }}" class="w-full h-full object-cover rounded-xl">
-          {% else %}<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" class="opacity-80"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>{% endif %}
-        </div>
-        <div class="flex-1 min-w-0">
-          {% if blog.category %}<span class="text-[11px] font-bold tracking-wide {{ blog.category.text_class }} {{ blog.category.bg_class }} rounded-full px-2 py-0.5 uppercase">{{ blog.category.name }}</span>{% endif %}
-          <h3 class="font-bold text-slate-900 text-base mt-1.5 truncate group-hover:text-brand-700 transition-colors">{{ blog.title }}</h3>
-          <p class="text-xs text-slate-400 mt-1">{{ blog.author.get_full_name|default:blog.author.username }} · {{ blog.read_count }} reads · {{ blog.like_count }} likes</p>
-        </div>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-slate-300 group-hover:text-slate-500 transition-colors flex-shrink-0"><path d="M9 18l6-6-6-6"/></svg>
-      </a>
-      {% endfor %}
-    </div>
-  </section>
-  {% endif %}
 
-  <!-- PLAYLISTS -->
-  {% if featured_playlists %}
-  <section class="px-8 sm:px-14 py-16 bg-slate-50/60 border-b border-slate-100">
-    <div class="flex items-center justify-between mb-8">
-      <div>
-        <p class="text-[11px] font-semibold tracking-wider text-slate-400 mb-1.5">CURATED READING</p>
-        <h2 class="text-2xl font-extrabold tracking-tight text-slate-900">Playlists</h2>
-      </div>
-      <a href="{% url 'playlist_list' %}" class="text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors flex items-center gap-1.5">
-        View all
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-      </a>
-    </div>
-    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-      {% for playlist in featured_playlists %}
-      <a href="{% url 'playlist_detail' playlist.pk %}" class="group block rounded-2xl overflow-hidden border border-slate-100 hover:border-slate-200 hover:shadow-lg hover:shadow-slate-200/50 transition-all">
-        <div class="relative h-32
-          {% if playlist.image %}bg-slate-100
-          {% elif forloop.counter|divisibleby:4 %}bg-gradient-to-br from-indigo-400 to-purple-600
-          {% elif forloop.counter|divisibleby:3 %}bg-gradient-to-br from-teal-400 to-cyan-600
-          {% elif forloop.counter|divisibleby:2 %}bg-gradient-to-br from-amber-400 to-rose-500
-          {% else %}bg-gradient-to-br from-emerald-400 to-teal-600{% endif %}
-          flex items-center justify-center">
-          {% if playlist.image %}<img src="{{ playlist.image.url }}" alt="{{ playlist.title }}" class="w-full h-full object-cover">
-          {% else %}<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" class="opacity-80"><path d="M21 15V6"/><path d="M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/><path d="M12 12H3"/><path d="M16 6H3"/><path d="M12 18H3"/></svg>{% endif %}
-          <span class="absolute bottom-2 right-2 bg-black/50 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{{ playlist.blogs.count }} blogs</span>
-        </div>
-        <div class="p-4 bg-white">
-          <h3 class="font-bold text-slate-900 truncate group-hover:text-brand-700 transition-colors">{{ playlist.title }}</h3>
-          <p class="text-xs text-slate-400 mt-1">by {{ playlist.author.get_full_name|default:playlist.author.username }}</p>
-        </div>
-      </a>
-      {% endfor %}
-    </div>
-  </section>
-  {% endif %}
 
   <!-- TESTIMONIALS -->
   <section class="px-8 sm:px-14 py-16 border-b border-slate-100">

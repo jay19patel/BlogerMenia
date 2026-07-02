@@ -58,10 +58,23 @@ class Blog(models.Model):
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='blogs')
     playlists = models.ManyToManyField(Playlist, related_name='blogs', blank=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='blogs')
+    slug = models.SlugField(max_length=255, unique=True, blank=True)
     is_published = models.BooleanField(default=True)
     read_count = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            import uuid
+            base_slug = slugify(self.title)
+            slug = base_slug
+            counter = 1
+            while Blog.objects.filter(slug=slug).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.title
@@ -85,3 +98,19 @@ class Like(models.Model):
 
     def __str__(self):
         return f"{self.user.username} likes {self.blog.title}"
+
+
+class ContactEntry(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    subject = models.CharField(max_length=200)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name_plural = "Contact Entries"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name} - {self.subject}"
