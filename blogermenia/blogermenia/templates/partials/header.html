@@ -23,7 +23,7 @@
     {% if user.profile_picture %}
     <img src="{{ user.profile_picture.url }}" alt="{{ user.username }}" class="w-8 h-8 rounded-full object-cover ring-2 ring-transparent hover:ring-brand-500 transition-all">
     {% else %}
-    <span class="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center font-semibold text-brand-700 mono text-xs ring-2 ring-transparent hover:ring-brand-500 transition-all">{{ user.username.0|upper }}</span>
+    <div class="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center font-semibold text-brand-700 mono text-xs ring-2 ring-transparent hover:ring-brand-500 transition-all">{{ user.username.0|upper }}</div>
     {% endif %}
   </a>
   {% endif %}
