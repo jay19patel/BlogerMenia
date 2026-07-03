@@ -16,6 +16,7 @@ dependencies = [
     "chromadb>=1.5.9",
     "celery[redis]>=5.4.0",
     "redis>=5.2.0",
+    "flower>=2.0.0",
     "linkedin-api-client",
 ]
 

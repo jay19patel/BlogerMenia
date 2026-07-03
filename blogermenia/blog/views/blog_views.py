@@ -119,6 +119,23 @@ def _editor_context(user, blog=None):
     }
 
 
+def _dispatch_linkedin_share(request, blog):
+    """Queue an async LinkedIn share if the author opted in via the form checkbox.
+
+    Fire-and-forget: the Celery task records the post URL on the blog when it
+    finishes. Guarded so we never queue for an unpublished blog, an already
+    shared blog, or a user without a connected LinkedIn account.
+    """
+    if request.POST.get('post_to_linkedin') != 'on':
+        return
+    if not (blog.is_published and not blog.posted_on_linkedin and request.user.has_linkedin_oauth()):
+        return
+
+    from accounts.tasks import post_to_linkedin_task
+    post_to_linkedin_task.delay(request.user.id, blog.id, request.build_absolute_uri('/'))
+    messages.info(request, "Your blog is being shared to LinkedIn and will appear shortly.")
+
+
 class BlogCreateView(LoginRequiredMixin, View):
     template_name = 'blog/blog_form.html'
 
@@ -135,18 +152,8 @@ class BlogCreateView(LoginRequiredMixin, View):
         blog.save()
         if request.POST.getlist('playlists'):
             blog.playlists.set(request.POST.getlist('playlists'))
-            
-        # LinkedIn auto-post via checkbox
-        post_to_linkedin = request.POST.get('post_to_linkedin') == 'on'
-        if blog.is_published and post_to_linkedin and not blog.posted_on_linkedin:
-            from accounts.tasks import post_to_linkedin_task
-            domain_url = request.build_absolute_uri('/')
-            linkedin_url = post_to_linkedin_task(request.user.id, blog.id, domain_url)
-            if linkedin_url:
-                blog.posted_on_linkedin = True
-                blog.linkedin_post_url = linkedin_url
-                blog.save()
-            
+
+        _dispatch_linkedin_share(request, blog)
         return redirect('blog_detail', slug=blog.slug)
 
 
@@ -164,7 +171,6 @@ class BlogUpdateView(LoginRequiredMixin, UserPassesTestMixin, View):
 
     def post(self, request, slug):
         blog = self.get_object()
-        was_published = blog.is_published
         _parse_structured_post(request, blog)
         if not blog.title:
             ctx = _editor_context(request.user, blog)
@@ -172,18 +178,8 @@ class BlogUpdateView(LoginRequiredMixin, UserPassesTestMixin, View):
             return render(request, self.template_name, ctx)
         blog.save()
         blog.playlists.set(request.POST.getlist('playlists'))
-        
-        # LinkedIn auto-post via checkbox
-        post_to_linkedin = request.POST.get('post_to_linkedin') == 'on'
-        if blog.is_published and post_to_linkedin and not blog.posted_on_linkedin:
-            from accounts.tasks import post_to_linkedin_task
-            domain_url = request.build_absolute_uri('/')
-            linkedin_url = post_to_linkedin_task(request.user.id, blog.id, domain_url)
-            if linkedin_url:
-                blog.posted_on_linkedin = True
-                blog.linkedin_post_url = linkedin_url
-                blog.save()
-            
+
+        _dispatch_linkedin_share(request, blog)
         return redirect('blog_detail', slug=blog.slug)
 
 
@@ -237,11 +233,15 @@ class BlogShareLinkedInView(LoginRequiredMixin, UserPassesTestMixin, View):
         if not request.user.has_linkedin_oauth():
             messages.error(request, "Please connect your LinkedIn account first.")
             return redirect('blog_detail', slug=blog.slug)
-            
+        if not blog.is_published:
+            messages.error(request, "Publish the blog before sharing it on LinkedIn.")
+            return redirect('blog_detail', slug=blog.slug)
+        if blog.posted_on_linkedin:
+            messages.info(request, "This blog has already been shared on LinkedIn.")
+            return redirect('blog_detail', slug=blog.slug)
+
         from accounts.tasks import post_to_linkedin_task
-        domain_url = request.build_absolute_uri('/')
-        linkedin_url = post_to_linkedin_task(request.user.id, blog.id, domain_url)
-        
+        linkedin_url = post_to_linkedin_task(request.user.id, blog.id, request.build_absolute_uri('/'))
         if linkedin_url:
             blog.posted_on_linkedin = True
             blog.linkedin_post_url = linkedin_url
@@ -249,6 +249,5 @@ class BlogShareLinkedInView(LoginRequiredMixin, UserPassesTestMixin, View):
             messages.success(request, "Successfully shared to LinkedIn!")
         else:
             messages.error(request, "Failed to share on LinkedIn. Check logs.")
-            
         return redirect('blog_detail', slug=blog.slug)
 

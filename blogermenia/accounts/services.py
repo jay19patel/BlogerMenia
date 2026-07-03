@@ -5,6 +5,7 @@ from allauth.socialaccount.models import SocialToken
 
 logger = logging.getLogger(__name__)
 
+
 class LinkedInService:
     def __init__(self, user):
         self.user = user
@@ -12,44 +13,60 @@ class LinkedInService:
 
     def _get_token(self):
         return SocialToken.objects.filter(
-            account__user=self.user, 
+            account__user=self.user,
             account__provider__in=['linkedin', 'linkedin_oauth2']
         ).first()
 
     def sync_profile(self):
         """
-        Fetches the latest profile data from LinkedIn extra_data and applies it to the user.
-        Also turns on auto-posting by default.
+        Applies the cached LinkedIn profile data (from allauth ``extra_data``,
+        populated at login) onto the user.
+
+        Runs on every login, but is careful to only apply one-time defaults
+        (like enabling auto-post) on the *first* connection — it never
+        overrides a choice the user has since made in their profile settings.
         """
         if not self.token:
             logger.warning(f"LinkedInService: No token found for user {self.user.username}")
             return False
 
-        # Set auto post to True by default when they sync
-        self.user.auto_post_to_linkedin = True
-        
         try:
             extra_data = self.token.account.extra_data
-            
-            # 1. Save profile picture from extra_data
+            first_connect = not self.user.linkedin_connected
+
+            # Mark the OAuth link as active (used across the UI instead of
+            # re-querying socialaccount every time).
+            self.user.linkedin_connected = True
+
+            # Opt the user into auto-posting only the first time they connect.
+            # On later logins we respect whatever they set in profile settings.
+            if first_connect:
+                self.user.auto_post_to_linkedin = True
+
+            # 1. Save profile picture from extra_data (first time only).
             picture_url = extra_data.get('picture')
             if picture_url and not self.user.profile_picture:
-                img_resp = requests.get(picture_url)
-                if img_resp.status_code == 200:
-                    self.user.profile_picture.save(
-                        f"{self.user.username}_linkedin.jpg", 
-                        ContentFile(img_resp.content), 
-                        save=False
-                    )
-            
-            # 2. Verify Email Address automatically if LinkedIn says it's verified
+                try:
+                    img_resp = requests.get(picture_url, timeout=5)
+                    if img_resp.status_code == 200:
+                        self.user.profile_picture.save(
+                            f"{self.user.username}_linkedin.jpg",
+                            ContentFile(img_resp.content),
+                            save=False
+                        )
+                except requests.RequestException as e:
+                    logger.warning(f"Could not fetch LinkedIn picture for {self.user.username}: {e}")
+
+            # 2. Trust LinkedIn's verified email and mark ours verified too.
             if extra_data.get('email_verified'):
                 from allauth.account.models import EmailAddress
-                email_obj = EmailAddress.objects.filter(user=self.user, email__iexact=self.user.email).first()
+                email_obj = EmailAddress.objects.filter(
+                    user=self.user, email__iexact=self.user.email
+                ).first()
                 if email_obj and not email_obj.verified:
                     email_obj.verified = True
                     email_obj.save()
-                    
+
             self.user.save()
             logger.info(f"LinkedIn profile synced successfully for {self.user.username}")
             return True
@@ -57,60 +74,72 @@ class LinkedInService:
             logger.error(f"Error syncing LinkedIn profile for {self.user.username}: {e}")
             return False
 
+    def _build_post_text(self, blog, blog_url):
+        """Compose the LinkedIn share text from the blog's own fields."""
+        parts = [blog.title.strip()]
+
+        summary = (blog.excerpt or blog.subtitle or '').strip()
+        if summary:
+            parts.append(summary)
+
+        parts.append(f"Read the full post here: {blog_url}")
+
+        if blog.tags:
+            hashtags = " ".join(
+                f"#{str(tag).strip().replace(' ', '')}"
+                for tag in blog.tags[:5] if str(tag).strip()
+            )
+            if hashtags:
+                parts.append(hashtags)
+
+        return "\n\n".join(parts)
+
     def create_post(self, blog, domain_url):
         """
-        Creates a UGC post on the user's LinkedIn profile containing a link to the blog.
+        Publishes a UGC post linking to ``blog`` on the user's LinkedIn feed.
+
+        Whether posting is *allowed* (checkbox, profile opt-in, manual share)
+        is decided by the caller — this method only enforces hard invariants
+        (connected account, published blog). Returns the post URL on success,
+        or ``None`` for a skip. Transient LinkedIn API failures are raised so
+        the Celery task can retry them.
         """
-        if not self.user.auto_post_to_linkedin:
-            logger.info(f"LinkedIn post skipped: auto_post_to_linkedin is False for {self.user.username}")
-            return False
-            
-        if not blog.is_published:
-            logger.info(f"LinkedIn post skipped: blog is not published yet.")
-            return False
-            
         if not self.token:
-            logger.warning(f"LinkedIn post failed: No token found for {self.user.username}")
-            return False
+            logger.warning(f"LinkedIn post skipped: no token for {self.user.username}")
+            return None
 
-        sub = self.token.account.uid
-        author_urn = f"urn:li:person:{sub}"
+        if not blog.is_published:
+            logger.info(f"LinkedIn post skipped: blog '{blog.slug}' is not published.")
+            return None
 
-        # Fallback values to prevent API validation errors
+        author_urn = f"urn:li:person:{self.token.account.uid}"
         blog_url = f"{domain_url.rstrip('/')}{blog.get_absolute_url()}"
-        title = blog.title if blog.title else "New Blog Post"
-        
-        text = f"Hello World! Check out my new blog post: {title}\n\n{blog_url}"
-        
+        text = self._build_post_text(blog, blog_url)
+
         payload = {
             "author": author_urn,
             "lifecycleState": "PUBLISHED",
             "specificContent": {
                 "com.linkedin.ugc.ShareContent": {
-                    "shareCommentary": {
-                        "text": text
-                    },
-                    "shareMediaCategory": "NONE"
+                    "shareCommentary": {"text": text},
+                    "shareMediaCategory": "NONE",
                 }
             },
             "visibility": {
                 "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"
-            }
+            },
         }
-        
-        try:
-            from linkedin_api.clients.restli.client import RestliClient
-            restli_client = RestliClient()
-            
-            response = restli_client.create(
-                resource_path="/ugcPosts",
-                entity=payload,
-                access_token=self.token.token
-            )
-            
-            url = f"https://www.linkedin.com/feed/update/{response.entity_id}/"
-            logger.info(f"Successfully posted blog {blog.slug} to LinkedIn for {self.user.username}. Post URL: {url}")
-            return url
-        except Exception as e:
-            logger.error(f"Error posting to LinkedIn for {self.user.username} via RestliClient: {e}")
-            return None
+
+        from linkedin_api.clients.restli.client import RestliClient
+        restli_client = RestliClient()
+        response = restli_client.create(
+            resource_path="/ugcPosts",
+            entity=payload,
+            access_token=self.token.token,
+        )
+
+        url = f"https://www.linkedin.com/feed/update/{response.entity_id}/"
+        logger.info(
+            f"Posted blog '{blog.slug}' to LinkedIn for {self.user.username}. URL: {url}"
+        )
+        return url
