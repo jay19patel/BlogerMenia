@@ -175,8 +175,16 @@ DEFAULT_FROM_EMAIL = "Inkwell <noreply@inkwell.dev>"
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
 # Social account provider configuration
+SOCIALACCOUNT_STORE_TOKENS = True
 SOCIALACCOUNT_PROVIDERS = {
-    # linkedin_oauth2 scopes are set in linkedin_oidc/provider.py get_default_scope()
+    "linkedin_oauth2": {
+        "SCOPE": [
+            "openid",
+            "profile",
+            "email",
+            "w_member_social",
+        ],
+    }
 }
 
 

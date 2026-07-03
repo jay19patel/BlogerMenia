@@ -52,13 +52,13 @@ class ProfileUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = User
     # 'linkedin_connected' is deliberately NOT here: it reflects a real OAuth
     # connection and must be set by the LinkedIn flow, not self-declared by a user.
-    fields = ['first_name', 'last_name', 'bio', 'about', 'profile_picture', 'linkedin_url']
+    fields = ['first_name', 'last_name', 'bio', 'about', 'profile_picture', 'linkedin_url', 'auto_post_to_linkedin']
     template_name = 'blog/profile_edit.html'
     slug_field = 'username'
     slug_url_kwarg = 'username'
 
     def test_func(self):
-        return self.request.user.username == self.kwargs['username']
+        return self.request.user.username.lower() == self.kwargs['username'].lower()
 
     def get_success_url(self):
         return reverse_lazy('user_profile', kwargs={'username': self.request.user.username})

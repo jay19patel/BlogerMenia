@@ -256,6 +256,7 @@ dependencies = [
     { name = "django-allauth", extra = ["socialaccount"] },
     { name = "langchain-chroma" },
     { name = "langchain-ollama" },
+    { name = "linkedin-api-client" },
     { name = "pillow" },
     { name = "redis" },
     { name = "requests" },
@@ -271,6 +272,7 @@ requires-dist = [
     { name = "django-allauth", extras = ["socialaccount"], specifier = ">=65.18.0" },
     { name = "langchain-chroma", specifier = ">=1.1.0" },
     { name = "langchain-ollama", specifier = ">=1.1.0" },
+    { name = "linkedin-api-client", git = "https://github.com/linkedin-developers/linkedin-api-python-client.git" },
     { name = "pillow", specifier = ">=11.0.0" },
     { name = "redis", specifier = ">=5.2.0" },
     { name = "requests", specifier = ">=2.34.2" },
@@ -1108,6 +1110,14 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/d4/8b/a56b97a3b8a94f850fe2ec42351d4c508cc6bd7ca96644906c311e32ec5b/langsmith-0.9.7.tar.gz", hash = "sha256:40f8a66a466a7abd991a9df1b50de0a9d30c48ee0d3da46ce00516b68e41c9d7", size = 4711142, upload-time = "2026-07-02T20:11:09.619Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/54/95/0abb8647123c9ebbb31162bcdba3183f5f3d3bb2f752ef3d777ab715e88c/langsmith-0.9.7-py3-none-any.whl", hash = "sha256:a5ff9179b77eb0c3a0129294d30924eab13e51e2720f374372dbbc014c892911", size = 671052, upload-time = "2026-07-02T20:11:07.702Z" },
+]
+
+[[package]]
+name = "linkedin-api-client"
+version = "0.3.0"
+source = { git = "https://github.com/linkedin-developers/linkedin-api-python-client.git#6331e52f5ea59b326447efa67a9bf925ed2d9ec7" }
+dependencies = [
+    { name = "requests" },
 ]
 
 [[package]]

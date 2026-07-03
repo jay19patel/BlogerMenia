@@ -8,6 +8,7 @@ class CustomUser(AbstractUser):
     profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
     linkedin_url = models.URLField(blank=True)
     linkedin_connected = models.BooleanField(default=False)
+    auto_post_to_linkedin = models.BooleanField(default=False)
     saved_blogs = models.ManyToManyField('blog.Blog', related_name='saved_by', blank=True)
 
     def __str__(self):

@@ -86,6 +86,8 @@ class Blog(models.Model):
     slug = models.SlugField(max_length=255, unique=True, blank=True)
     # Indexed: filtered on almost every query (only published content is shown).
     is_published = models.BooleanField(default=True, db_index=True)
+    posted_on_linkedin = models.BooleanField(default=False)
+    linkedin_post_url = models.URLField(max_length=500, blank=True, null=True)
     read_count = models.PositiveIntegerField(default=0)
 
     # --- Structured content (matches the Next.js BlogEditor / AI assistant schema) ---
@@ -116,6 +118,10 @@ class Blog(models.Model):
                 counter += 1
             self.slug = slug
         super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('blog_detail', kwargs={'slug': self.slug})
 
     def __str__(self):
         return self.title

@@ -2,7 +2,8 @@ from django.urls import path
 from .views.home_views import HomeView, ContactView
 from .views.blog_views import (
     BlogListView, BlogDetailView, BlogCreateView,
-    BlogUpdateView, BlogDeleteView, BlogLikeView, BlogSaveView
+    BlogUpdateView, BlogDeleteView, BlogLikeView, BlogSaveView,
+    BlogShareLinkedInView
 )
 from .views.playlist_views import (
     PlaylistListView, PlaylistDetailView, PlaylistCreateView,
@@ -23,6 +24,7 @@ urlpatterns = [
     path('blogs/<slug:slug>/delete/', BlogDeleteView.as_view(), name='blog_delete'),
     path('blogs/<slug:slug>/like/', BlogLikeView.as_view(), name='blog_like'),
     path('blogs/<slug:slug>/save/', BlogSaveView.as_view(), name='blog_save'),
+    path('blogs/<slug:slug>/share-linkedin/', BlogShareLinkedInView.as_view(), name='blog_share_linkedin'),
 
     # Playlist URLs
     path('playlists/', PlaylistListView.as_view(), name='playlist_list'),

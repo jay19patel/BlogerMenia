@@ -92,7 +92,7 @@
         </div>
         <div class="flex-1 min-w-0">
           {% if blog.category %}<span class="text-[11px] font-bold tracking-wide {{ blog.category.text_class }} {{ blog.category.bg_class }} rounded-full px-2 py-0.5 uppercase">{{ blog.category.name }}</span>{% endif %}
-          <h3 class="font-bold text-slate-900 text-base mt-1.5 truncate group-hover:text-brand-700 transition-colors">{{ blog.title }}</h3>
+          <h3 class="font-bold text-slate-900 text-base mt-1.5 truncate group-hover:text-brand-700 transition-colors">{{ blog.title }}{% if blog.posted_on_linkedin and blog.linkedin_post_url %} <span class="inline-flex text-[#0A66C2] align-middle ml-1" title="Posted on LinkedIn"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg></span>{% endif %}</h3>
           <p class="text-xs text-slate-400 mt-1">{{ blog.author.get_full_name|default:blog.author.username }} · {{ blog.read_count }} reads · {{ blog.like_count }} likes</p>
         </div>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-slate-300 group-hover:text-slate-500 transition-colors flex-shrink-0"><path d="M9 18l6-6-6-6"/></svg>
@@ -116,7 +116,8 @@
     </div>
     <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {% for member in featured_users %}
-      <a href="{% url 'user_profile' member.username %}" class="group flex items-center gap-4 bg-white border border-slate-100 hover:border-brand-200 hover:shadow-lg hover:shadow-brand-100/50 rounded-2xl p-5 transition-all">
+      <div class="group relative flex items-center gap-4 bg-white border border-slate-100 hover:border-brand-200 hover:shadow-lg hover:shadow-brand-100/50 rounded-2xl p-5 transition-all">
+        <a href="{% url 'user_profile' member.username %}" class="absolute inset-0 z-0 rounded-2xl"><span class="sr-only">View {{ member.username }}</span></a>
         <div class="w-14 h-14 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-slate-50 group-hover:ring-brand-100 transition-colors [&>svg]:w-full [&>svg]:h-full">
           {% if member.profile_picture %}
           <img src="{{ member.profile_picture.url }}" alt="{{ member.username }}" class="w-full h-full object-cover">
@@ -128,15 +129,19 @@
           <div class="flex items-center gap-1.5">
             <p class="font-semibold text-slate-900 truncate group-hover:text-brand-700 transition-colors">{{ member.get_full_name|default:member.username }}</p>
             {% if member.linkedin_url %}
-            <a href="{{ member.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="text-[#0A66C2] hover:text-[#004182] transition-colors flex-shrink-0" onclick="event.stopPropagation()" title="LinkedIn Profile">
+            <a href="{{ member.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="relative z-10 text-[#0A66C2] hover:text-[#004182] transition-colors flex-shrink-0" title="LinkedIn Profile">
               <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
             </a>
+            {% elif member.has_linkedin_oauth %}
+            <div class="text-[#0A66C2]/70 cursor-help flex-shrink-0" title="LinkedIn Connected">
+              <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+            </div>
             {% endif %}
           </div>
           <p class="text-xs text-slate-400 mt-0.5">@{{ member.username }}</p>
           {% if member.bio %}<p class="text-xs text-slate-500 mt-1 truncate">{{ member.bio }}</p>{% endif %}
         </div>
-      </a>
+      </div>
       {% empty %}
       <div class="col-span-3 text-center py-8 text-slate-400 text-sm">No members yet.</div>
       {% endfor %}

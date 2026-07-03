@@ -201,6 +201,8 @@ class SearchService:
             'url': reverse('blog_detail', kwargs={'slug': obj.slug}),
             'image_url': obj.image.url if obj.image else None,
             'icon_html': None if obj.image else obj.avatar_svg,
+            'posted_on_linkedin': obj.posted_on_linkedin,
+            'linkedin_post_url': obj.linkedin_post_url,
         }
 
     @staticmethod

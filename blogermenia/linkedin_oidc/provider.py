@@ -21,7 +21,7 @@ class LinkedInOIDCProvider(OAuth2Provider):
     oauth2_adapter_class = LinkedInOIDCAdapter
 
     def get_default_scope(self):
-        return ["openid", "profile", "email"]
+        return ["openid", "profile", "email", "w_member_social"]
 
     def extract_uid(self, data):
         # OIDC userinfo returns "sub" (not "id")

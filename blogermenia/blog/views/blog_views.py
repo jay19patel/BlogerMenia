@@ -4,9 +4,12 @@ from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, DeleteView, View
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404, redirect, render
+from django.contrib import messages
 from django.http import JsonResponse
 from django.db.models import Count
 from django.utils.text import slugify
+import requests
+from allauth.socialaccount.models import SocialToken
 from ..models import Blog, Like, Category, Playlist
 
 
@@ -132,6 +135,18 @@ class BlogCreateView(LoginRequiredMixin, View):
         blog.save()
         if request.POST.getlist('playlists'):
             blog.playlists.set(request.POST.getlist('playlists'))
+            
+        # LinkedIn auto-post via checkbox
+        post_to_linkedin = request.POST.get('post_to_linkedin') == 'on'
+        if blog.is_published and post_to_linkedin and not blog.posted_on_linkedin:
+            from accounts.tasks import post_to_linkedin_task
+            domain_url = request.build_absolute_uri('/')
+            linkedin_url = post_to_linkedin_task(request.user.id, blog.id, domain_url)
+            if linkedin_url:
+                blog.posted_on_linkedin = True
+                blog.linkedin_post_url = linkedin_url
+                blog.save()
+            
         return redirect('blog_detail', slug=blog.slug)
 
 
@@ -149,6 +164,7 @@ class BlogUpdateView(LoginRequiredMixin, UserPassesTestMixin, View):
 
     def post(self, request, slug):
         blog = self.get_object()
+        was_published = blog.is_published
         _parse_structured_post(request, blog)
         if not blog.title:
             ctx = _editor_context(request.user, blog)
@@ -156,6 +172,18 @@ class BlogUpdateView(LoginRequiredMixin, UserPassesTestMixin, View):
             return render(request, self.template_name, ctx)
         blog.save()
         blog.playlists.set(request.POST.getlist('playlists'))
+        
+        # LinkedIn auto-post via checkbox
+        post_to_linkedin = request.POST.get('post_to_linkedin') == 'on'
+        if blog.is_published and post_to_linkedin and not blog.posted_on_linkedin:
+            from accounts.tasks import post_to_linkedin_task
+            domain_url = request.build_absolute_uri('/')
+            linkedin_url = post_to_linkedin_task(request.user.id, blog.id, domain_url)
+            if linkedin_url:
+                blog.posted_on_linkedin = True
+                blog.linkedin_post_url = linkedin_url
+                blog.save()
+            
         return redirect('blog_detail', slug=blog.slug)
 
 
@@ -198,3 +226,29 @@ class BlogSaveView(LoginRequiredMixin, View):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'saved': saved})
         return redirect('blog_detail', slug=blog.slug)
+
+class BlogShareLinkedInView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        blog = get_object_or_404(Blog, slug=self.kwargs['slug'])
+        return self.request.user == blog.author
+
+    def post(self, request, slug):
+        blog = get_object_or_404(Blog, slug=slug)
+        if not request.user.has_linkedin_oauth():
+            messages.error(request, "Please connect your LinkedIn account first.")
+            return redirect('blog_detail', slug=blog.slug)
+            
+        from accounts.tasks import post_to_linkedin_task
+        domain_url = request.build_absolute_uri('/')
+        linkedin_url = post_to_linkedin_task(request.user.id, blog.id, domain_url)
+        
+        if linkedin_url:
+            blog.posted_on_linkedin = True
+            blog.linkedin_post_url = linkedin_url
+            blog.save()
+            messages.success(request, "Successfully shared to LinkedIn!")
+        else:
+            messages.error(request, "Failed to share on LinkedIn. Check logs.")
+            
+        return redirect('blog_detail', slug=blog.slug)
+

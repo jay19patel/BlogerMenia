@@ -88,6 +88,12 @@
           <label class="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
             <input type="checkbox" name="featured" id="f-featured" {% if object.featured %}checked{% endif %}> Feature this blog
           </label>
+          {% if user.has_linkedin_oauth %}
+          <label class="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+            <input type="checkbox" name="post_to_linkedin" id="f-linkedin" {% if object.posted_on_linkedin %}checked disabled title="Already posted"{% elif user.auto_post_to_linkedin %}checked{% endif %}> 
+            {% if object.posted_on_linkedin %}Posted on LinkedIn{% else %}Post to LinkedIn{% endif %}
+          </label>
+          {% endif %}
         </div>
 
         {% if user_playlists %}
