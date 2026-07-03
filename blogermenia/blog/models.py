@@ -75,7 +75,10 @@ class Playlist(models.Model):
 
 class Blog(models.Model):
     title = models.CharField(max_length=255)
-    content = models.TextField()
+    # Legacy single-body field. Kept for backward compatibility with older posts
+    # and the classic form; structured posts (built by the AI assistant / the
+    # Next.js editor) leave it blank and use the structured fields below instead.
+    content = models.TextField(blank=True)
     image = models.ImageField(upload_to='blog_images/', blank=True, null=True)
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='blogs')
     playlists = models.ManyToManyField(Playlist, related_name='blogs', blank=True)
@@ -84,6 +87,18 @@ class Blog(models.Model):
     # Indexed: filtered on almost every query (only published content is shown).
     is_published = models.BooleanField(default=True, db_index=True)
     read_count = models.PositiveIntegerField(default=0)
+
+    # --- Structured content (matches the Next.js BlogEditor / AI assistant schema) ---
+    subtitle = models.CharField(max_length=300, blank=True)
+    excerpt = models.TextField(blank=True)
+    introduction = models.TextField(blank=True)
+    conclusion = models.TextField(blank=True)
+    # Free-form string tags, e.g. ["Django", "AI"].
+    tags = models.JSONField(default=list, blank=True)
+    featured = models.BooleanField(default=False, db_index=True)
+    # Ordered list of typed section blocks (text/bullets/code/table/youtube/
+    # note/links/image/flowchart), as produced by the editor / uploaded JSON.
+    sections = models.JSONField(default=list, blank=True)
     # Indexed: the default ordering key for every listing.
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)

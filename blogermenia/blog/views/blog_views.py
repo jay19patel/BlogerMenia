@@ -1,10 +1,13 @@
+import json
+
 from django.urls import reverse_lazy
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View
+from django.views.generic import ListView, DetailView, DeleteView, View
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.http import JsonResponse
 from django.db.models import Count
-from ..models import Blog, Like, Category
+from django.utils.text import slugify
+from ..models import Blog, Like, Category, Playlist
 
 
 class BlogListView(ListView):
@@ -63,31 +66,97 @@ class BlogDetailView(DetailView):
         return context
 
 
-class BlogCreateView(LoginRequiredMixin, CreateView):
-    model = Blog
-    fields = ['title', 'content', 'image', 'category', 'playlists', 'is_published']
+def _parse_structured_post(request, blog):
+    """Apply the structured editor's POST payload onto a Blog instance (unsaved).
+
+    Shared by create and update so the two stay in lock-step. Reads the same
+    field names the ``blog_form.html`` editor submits, including the ``sections``
+    hidden field (a JSON array) and comma-separated ``tags``. Category is resolved
+    by name (created on demand) so the AI-populated free-text category works too.
+    """
+    post = request.POST
+    blog.title = post.get('title', '').strip()
+    blog.subtitle = post.get('subtitle', '').strip()
+    blog.excerpt = post.get('excerpt', '').strip()
+    blog.introduction = post.get('introduction', '').strip()
+    blog.conclusion = post.get('conclusion', '').strip()
+    blog.content = post.get('content', '').strip()
+    blog.is_published = post.get('is_published') in ('on', 'true', '1', 'True')
+    blog.featured = post.get('featured') in ('on', 'true', '1', 'True')
+
+    slug = post.get('slug', '').strip()
+    if slug:
+        blog.slug = slugify(slug)
+
+    blog.tags = [t.strip() for t in post.get('tags', '').split(',') if t.strip()]
+
+    try:
+        sections = json.loads(post.get('sections') or '[]')
+        blog.sections = sections if isinstance(sections, list) else []
+    except (ValueError, TypeError):
+        blog.sections = []
+
+    cat_name = post.get('category', '').strip()
+    if cat_name:
+        blog.category, _ = Category.objects.get_or_create(name=cat_name)
+    else:
+        blog.category = None
+
+    if request.FILES.get('image'):
+        blog.image = request.FILES['image']
+
+    return blog
+
+
+def _editor_context(user, blog=None):
+    return {
+        'object': blog,
+        'categories': Category.objects.all(),
+        'user_playlists': Playlist.objects.filter(author=user),
+    }
+
+
+class BlogCreateView(LoginRequiredMixin, View):
     template_name = 'blog/blog_form.html'
-    success_url = reverse_lazy('blog_list')
 
-    def form_valid(self, form):
-        form.instance.author = self.request.user
-        return super().form_valid(form)
+    def get(self, request):
+        return render(request, self.template_name, _editor_context(request.user))
+
+    def post(self, request):
+        blog = Blog(author=request.user)
+        _parse_structured_post(request, blog)
+        if not blog.title:
+            ctx = _editor_context(request.user)
+            ctx['error'] = 'Title is required.'
+            return render(request, self.template_name, ctx)
+        blog.save()
+        if request.POST.getlist('playlists'):
+            blog.playlists.set(request.POST.getlist('playlists'))
+        return redirect('blog_detail', slug=blog.slug)
 
 
-class BlogUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
-    model = Blog
-    fields = ['title', 'content', 'image', 'category', 'playlists', 'is_published']
+class BlogUpdateView(LoginRequiredMixin, UserPassesTestMixin, View):
     template_name = 'blog/blog_form.html'
 
-    def form_valid(self, form):
-        form.instance.author = self.request.user
-        return super().form_valid(form)
+    def get_object(self):
+        return get_object_or_404(Blog, slug=self.kwargs['slug'])
 
     def test_func(self):
         return self.request.user == self.get_object().author
 
-    def get_success_url(self):
-        return reverse_lazy('blog_detail', kwargs={'slug': self.object.slug})
+    def get(self, request, slug):
+        return render(request, self.template_name, _editor_context(request.user, self.get_object()))
+
+    def post(self, request, slug):
+        blog = self.get_object()
+        _parse_structured_post(request, blog)
+        if not blog.title:
+            ctx = _editor_context(request.user, blog)
+            ctx['error'] = 'Title is required.'
+            return render(request, self.template_name, ctx)
+        blog.save()
+        blog.playlists.set(request.POST.getlist('playlists'))
+        return redirect('blog_detail', slug=blog.slug)
 
 
 class BlogDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):

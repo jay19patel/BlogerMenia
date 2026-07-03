@@ -31,7 +31,7 @@
             <h1 class="text-2xl font-extrabold tracking-tight">
               {% if profile_user.first_name or profile_user.last_name %}{{ profile_user.first_name }} {{ profile_user.last_name }}{% else %}{{ profile_user.username }}{% endif %}
             </h1>
-            {% if profile_user.linkedin_connected %}
+            {% if profile_user.linkedin_url %}
             <a href="{{ profile_user.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="text-[#0A66C2] hover:text-[#004182] transition-colors" title="LinkedIn Profile">
               <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
             </a>
@@ -51,12 +51,7 @@
         {% provider_login_url "linkedin_oauth2" action="connect" as linkedin_connect_url %}
         <a href="{{ linkedin_connect_url }}" class="inline-flex items-center gap-2 border border-[#0A66C2]/30 hover:bg-blue-50 text-[#0A66C2] font-semibold text-sm px-4 py-2 rounded-xl transition-colors">
           <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
-          Connect LinkedIn
-        </a>
-        {% else %}
-        <a href="{% url 'socialaccount_connections' %}" class="inline-flex items-center gap-2 bg-white border border-green-200 text-green-700 font-semibold text-sm px-4 py-2 rounded-xl hover:bg-green-50 transition-colors">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-          LinkedIn Connected
+          Connect with LinkedIn
         </a>
         {% endif %}
         {% endif %}
@@ -102,9 +97,11 @@
       <button data-tab="playlists" class="tab-btn px-1 pb-3 mr-7 text-sm font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent transition-colors">
         Playlists
       </button>
+      {% if is_own_profile %}
       <button data-tab="saved" class="tab-btn px-1 pb-3 mr-7 text-sm font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent transition-colors">
         Saved Blogs
       </button>
+      {% endif %}
       {% if profile_user.about %}
       <button data-tab="about" class="tab-btn px-1 pb-3 text-sm font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent transition-colors">
         About
@@ -117,7 +114,8 @@
       {% if user_blogs %}
       <div class="grid sm:grid-cols-2 gap-5">
         {% for blog in user_blogs %}
-        <a href="{% url 'blog_detail' blog.slug %}" class="group flex flex-col rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-lg hover:shadow-slate-200/50 transition-all overflow-hidden">
+        <div class="group relative flex flex-col rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-lg hover:shadow-slate-200/50 transition-all overflow-hidden bg-white">
+          <a href="{% url 'blog_detail' blog.slug %}" class="absolute inset-0 z-10"><span class="sr-only">View {{ blog.title }}</span></a>
           <!-- Cover -->
           <div class="h-36 overflow-hidden bg-slate-100 flex items-center justify-center flex-shrink-0 [&>svg]:w-full [&>svg]:h-full [&>svg]:object-cover">
             {% if blog.image %}
@@ -138,11 +136,11 @@
               <span class="flex items-center gap-1"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>{{ blog.read_count }}</span>
               <span class="flex items-center gap-1"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>{{ blog.like_count }}</span>
               {% if is_own_profile %}
-              <a href="{% url 'blog_update' blog.slug %}" onclick="event.stopPropagation()" class="ml-auto text-slate-400 hover:text-brand-600 border border-slate-200 hover:border-brand-300 rounded-md px-2 py-0.5 transition-colors">Edit</a>
+              <a href="{% url 'blog_update' blog.slug %}" class="relative z-20 ml-auto text-slate-400 hover:text-brand-600 border border-slate-200 hover:border-brand-300 rounded-md px-2 py-0.5 transition-colors">Edit</a>
               {% endif %}
             </div>
           </div>
-        </a>
+        </div>
         {% endfor %}
       </div>
       {% else %}
@@ -163,8 +161,8 @@
       {% if user_playlists %}
       <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for playlist in user_playlists %}
-        <a href="{% url 'playlist_detail' playlist.slug %}" class="group block rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-xl hover:shadow-slate-200/60 transition-all overflow-hidden">
-
+        <div class="group relative block rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-xl hover:shadow-slate-200/60 transition-all overflow-hidden bg-white">
+          <a href="{% url 'playlist_detail' playlist.slug %}" class="absolute inset-0 z-10"><span class="sr-only">View {{ playlist.title }}</span></a>
           <!-- Stacked card cover -->
           <div class="relative h-40 p-4 flex items-end justify-center overflow-hidden bg-slate-100 [&>svg]:absolute [&>svg]:inset-0 [&>svg]:w-full [&>svg]:h-full [&>svg]:object-cover">
             {% if playlist.image %}
@@ -188,12 +186,12 @@
             <div class="flex items-center justify-between">
               <span class="text-xs text-slate-400">Updated {{ playlist.updated_at|date:"M d, Y" }}</span>
               {% if is_own_profile %}
-              <a href="{% url 'playlist_update' playlist.slug %}" onclick="event.stopPropagation()" class="text-xs text-slate-400 hover:text-brand-600 border border-slate-200 hover:border-brand-300 rounded-md px-2 py-0.5 transition-colors">Edit</a>
+              <a href="{% url 'playlist_update' playlist.slug %}" class="relative z-20 text-xs text-slate-400 hover:text-brand-600 border border-slate-200 hover:border-brand-300 rounded-md px-2 py-0.5 transition-colors">Edit</a>
               {% endif %}
             </div>
           </div>
 
-        </a>
+        </div>
         {% endfor %}
       </div>
       {% else %}
@@ -222,11 +220,13 @@
     {% endif %}
 
     <!-- SAVED BLOGS TAB -->
+    {% if is_own_profile %}
     <div id="tab-saved" class="hidden pb-12">
       {% if user_saved_blogs %}
       <div class="grid sm:grid-cols-2 gap-5">
         {% for blog in user_saved_blogs %}
-        <a href="{% url 'blog_detail' blog.slug %}" class="group flex flex-col rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-lg hover:shadow-slate-200/50 transition-all overflow-hidden bg-white">
+        <div class="group relative flex flex-col rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-lg hover:shadow-slate-200/50 transition-all overflow-hidden bg-white">
+          <a href="{% url 'blog_detail' blog.slug %}" class="absolute inset-0 z-10"><span class="sr-only">View {{ blog.title }}</span></a>
           <!-- Cover -->
           <div class="h-36 overflow-hidden bg-slate-100 flex items-center justify-center relative [&>svg]:absolute [&>svg]:inset-0 [&>svg]:w-full [&>svg]:h-full [&>svg]:object-cover">
             {% if blog.image %}
@@ -236,13 +236,13 @@
             {% endif %}
             
             {% if blog.category %}
-            <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide uppercase {{ blog.category.text_class }}">
+            <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide uppercase {{ blog.category.text_class }} z-20">
               {{ blog.category.name }}
             </div>
             {% endif %}
           </div>
           <!-- Content -->
-          <div class="p-5 flex flex-col flex-1">
+          <div class="p-5 flex flex-col flex-1 relative">
             <h3 class="font-bold text-slate-900 text-lg mb-2 group-hover:text-brand-700 transition-colors leading-snug line-clamp-2">{{ blog.title }}</h3>
             <p class="text-sm text-slate-500 line-clamp-2 mb-4">{{ blog.content|striptags|truncatewords:20 }}</p>
             <div class="mt-auto flex items-center justify-between text-xs text-slate-400">
@@ -250,7 +250,7 @@
               <span class="flex items-center gap-1"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>{{ blog.like_count }}</span>
             </div>
           </div>
-        </a>
+        </div>
         {% endfor %}
       </div>
       {% else %}
@@ -262,6 +262,7 @@
       </div>
       {% endif %}
     </div>
+    {% endif %}
 
   </div>
 </main>

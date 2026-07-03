@@ -14,7 +14,7 @@ class CustomUser(AbstractUser):
         return self.username
 
     def has_linkedin_oauth(self):
-        return self.socialaccount_set.filter(provider='linkedin_oauth2').exists()
+        return self.socialaccount_set.filter(provider__startswith='linkedin').exists()
 
     @property
     def avatar_svg(self):

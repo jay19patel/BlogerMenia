@@ -70,9 +70,14 @@
     {% endif %}
 
     <!-- Title -->
-    <h1 class="text-4xl sm:text-[42px] font-extrabold tracking-tight leading-[1.12] mb-6">
+    <h1 class="text-4xl sm:text-[42px] font-extrabold tracking-tight leading-[1.12] mb-4">
       {{ blog.title }}
     </h1>
+
+    <!-- Subtitle -->
+    {% if blog.subtitle %}
+    <p class="text-xl text-slate-500 leading-relaxed mb-6">{{ blog.subtitle }}</p>
+    {% endif %}
 
     <!-- Author bar + actions -->
     <div class="flex items-center gap-3 text-sm text-slate-500 mb-10">
@@ -147,24 +152,29 @@
     </div>
     {% endif %}
 
-    <!-- Article body — rendered as HTML for rich content support -->
+    <!-- Article body — structured sections, or legacy HTML content -->
     <article id="article-body" class="article-body text-slate-700 text-[17px] leading-[1.85]">
-      {{ blog.content|safe }}
+      {% include "blog/_blog_body.html" %}
     </article>
 
-    <!-- Tags / playlists -->
+    <!-- Tags -->
+    {% if blog.tags %}
     <div class="flex flex-wrap gap-2 mt-10 pt-8 border-t border-slate-100">
-      {% if blog.playlists.exists %}
+      {% for tag in blog.tags %}
+      <span class="text-xs font-medium text-slate-500 bg-slate-100 rounded-full px-3 py-1.5">#{{ tag }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Playlists -->
+    {% if blog.playlists.exists %}
+    <div class="flex flex-wrap gap-2 {% if not blog.tags %}mt-10 pt-8 border-t border-slate-100{% else %}mt-3{% endif %}">
       <span class="text-xs font-medium text-slate-400 mr-1 self-center">In playlists:</span>
       {% for playlist in blog.playlists.all %}
       <a href="{% url 'playlist_detail' playlist.slug %}" class="text-xs font-medium text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-full px-3 py-1.5 transition-colors">{{ playlist.title }}</a>
       {% endfor %}
-      {% else %}
-      {% if blog.category %}<span class="text-xs font-medium {{ blog.category.text_class }} {{ blog.category.bg_class }} rounded-full px-3 py-1.5">#{{ blog.category.slug }}</span>{% endif %}
-      <span class="text-xs font-medium text-slate-500 bg-slate-100 rounded-full px-3 py-1.5">#inkwell</span>
-      <span class="text-xs font-medium text-slate-500 bg-slate-100 rounded-full px-3 py-1.5">#writing</span>
-      {% endif %}
     </div>
+    {% endif %}
 
 
 
