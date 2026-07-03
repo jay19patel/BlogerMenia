@@ -1,7 +1,6 @@
 import logging
 import os
 import sys
-import threading
 
 from django.apps import AppConfig
 
@@ -17,7 +16,7 @@ class SearchConfig(AppConfig):
         from . import signals  # noqa: F401
 
         if self._should_index_on_startup():
-            self._start_background_index()
+            self._enqueue_startup_index()
 
     @staticmethod
     def _should_index_on_startup() -> bool:
@@ -29,13 +28,13 @@ class SearchConfig(AppConfig):
         return os.environ.get('RUN_MAIN') == 'true' or '--noreload' in sys.argv
 
     @staticmethod
-    def _start_background_index():
-        def _run():
-            try:
-                from .services import SearchService
-                SearchService.reindex_all(only_missing=True)
-            except Exception:
-                logger.exception("Startup search indexing failed")
-
-        threading.Thread(target=_run, daemon=True).start()
-        logger.info("Search: startup indexing scheduled (missing embeddings only)")
+    def _enqueue_startup_index():
+        """Hand a 'reindex missing' job to Celery. Best-effort: if the broker
+        isn't up yet, beat's periodic sweep will catch it — don't block boot."""
+        try:
+            from .tasks import reindex_all
+            reindex_all.delay(only_missing=True)
+            logger.info("Search: enqueued startup indexing (missing embeddings only)")
+        except Exception:
+            logger.warning("Search: could not enqueue startup indexing (broker down?)",
+                           exc_info=True)

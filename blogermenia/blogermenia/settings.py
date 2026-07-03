@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -48,8 +49,10 @@ INSTALLED_APPS = [
 ]
 
 # --- Semantic search (Ollama embeddings + ChromaDB vector store) ---
-OLLAMA_BASE_URL = "http://localhost:11434"
-OLLAMA_EMBEDDING_MODEL = "qwen3-embedding:0.6b"
+# OLLAMA_BASE_URL is read from the environment so the same code works locally
+# (localhost) and inside Docker (host.docker.internal), where Ollama runs on the host.
+OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+OLLAMA_EMBEDDING_MODEL = os.environ.get("OLLAMA_EMBEDDING_MODEL", "qwen3-embedding:0.6b")
 CHROMA_PERSIST_DIR = BASE_DIR / "search" / "chroma_db"
 
 MIDDLEWARE = [
@@ -174,4 +177,43 @@ SOCIALACCOUNT_LOGIN_ON_GET = True
 # Social account provider configuration
 SOCIALACCOUNT_PROVIDERS = {
     # linkedin_oauth2 scopes are set in linkedin_oidc/provider.py get_default_scope()
+}
+
+
+# --- Celery (async task queue, backed by Redis) ---
+# All CELERY_* settings are picked up by the Celery app in blogermenia/celery.py.
+# Broker/backend URLs come from the environment: localhost by default, or the
+# "redis" service hostname when running under docker-compose.
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://localhost:6379/1")
+
+# Send/accept only JSON — never pickle (safer, and portable across workers).
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_ENABLE_UTC = True
+
+# Production-grade reliability & throughput defaults:
+# - late ack + reject-on-lost: a task re-runs if a worker dies mid-flight.
+# - prefetch 1: fair dispatch for our slow, uneven embedding tasks.
+# - result expiry: don't let Redis fill up with old task results.
+CELERY_TASK_ACKS_LATE = True
+CELERY_TASK_REJECT_ON_WORKER_LOST = True
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_WORKER_MAX_TASKS_PER_CHILD = 200  # recycle workers to cap memory creep
+CELERY_RESULT_EXPIRES = 60 * 60  # seconds
+CELERY_TASK_TIME_LIMIT = 300  # hard kill after 5 min
+CELERY_TASK_SOFT_TIME_LIMIT = 240  # raise SoftTimeLimitExceeded first
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+
+# Periodic jobs (run by `celery beat`). Sweep for any content missing an
+# embedding every 6 hours as a safety net behind the real-time signal indexing.
+CELERY_BEAT_SCHEDULE = {
+    "reindex-missing-embeddings": {
+        "task": "search.tasks.reindex_all",
+        "schedule": 60 * 60 * 6,  # seconds
+        "kwargs": {"only_missing": True},
+    },
 }
