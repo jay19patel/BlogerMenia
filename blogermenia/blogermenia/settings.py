@@ -44,7 +44,13 @@ INSTALLED_APPS = [
     "allauth.socialaccount",
     "linkedin_oidc",
     "blog",
+    "search",
 ]
+
+# --- Semantic search (Ollama embeddings + ChromaDB vector store) ---
+OLLAMA_BASE_URL = "http://localhost:11434"
+OLLAMA_EMBEDDING_MODEL = "qwen3-embedding:0.6b"
+CHROMA_PERSIST_DIR = BASE_DIR / "search" / "chroma_db"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

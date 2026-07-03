@@ -1,5 +1,34 @@
 from django import forms
-from .models import ContactEntry
+from .models import ContactEntry, Playlist, Blog
+
+
+class PlaylistForm(forms.ModelForm):
+    blogs = forms.ModelMultipleChoiceField(
+        queryset=Blog.objects.none(),
+        required=False,
+    )
+
+    class Meta:
+        model = Playlist
+        fields = ['title', 'description', 'image']
+        widgets = {
+            'title': forms.TextInput(attrs={'placeholder': 'e.g., Essential Reading for Builders'}),
+            'description': forms.Textarea(attrs={'rows': 4, 'placeholder': 'What is this collection about?'}),
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if user is not None:
+            self.fields['blogs'].queryset = Blog.objects.filter(author=user)
+        if self.instance.pk:
+            self.fields['blogs'].initial = self.instance.blogs.all()
+
+    def save(self, commit=True):
+        instance = super().save(commit=commit)
+        if commit:
+            instance.blogs.set(self.cleaned_data['blogs'])
+        return instance
+
 
 class ContactForm(forms.ModelForm):
     class Meta:

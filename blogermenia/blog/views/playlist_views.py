@@ -2,6 +2,31 @@ from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from ..models import Playlist
+from ..forms import PlaylistForm
+
+
+class PlaylistFormMixin:
+    form_class = PlaylistForm
+    template_name = 'blog/playlist_form.html'
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        form = context['form']
+        value = form['blogs'].value() or []
+        context['selected_blog_ids'] = {
+            str(v.pk if hasattr(v, 'pk') else v) for v in value
+        }
+        context['user_blogs'] = form.fields['blogs'].queryset
+        return context
 
 
 class PlaylistListView(ListView):
@@ -17,25 +42,13 @@ class PlaylistDetailView(DetailView):
     context_object_name = 'playlist'
 
 
-class PlaylistCreateView(LoginRequiredMixin, CreateView):
+class PlaylistCreateView(LoginRequiredMixin, PlaylistFormMixin, CreateView):
     model = Playlist
-    fields = ['title', 'description', 'image']
-    template_name = 'blog/playlist_form.html'
     success_url = reverse_lazy('playlist_list')
 
-    def form_valid(self, form):
-        form.instance.author = self.request.user
-        return super().form_valid(form)
 
-
-class PlaylistUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class PlaylistUpdateView(LoginRequiredMixin, UserPassesTestMixin, PlaylistFormMixin, UpdateView):
     model = Playlist
-    fields = ['title', 'description', 'image']
-    template_name = 'blog/playlist_form.html'
-
-    def form_valid(self, form):
-        form.instance.author = self.request.user
-        return super().form_valid(form)
 
     def test_func(self):
         return self.request.user == self.get_object().author
