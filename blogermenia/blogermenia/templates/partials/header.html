@@ -45,10 +45,11 @@
   var list = document.getElementById('search-list');
   if (!input) return;
 
-  var LABEL_STYLE = {
-    blog: 'bg-blue-50 text-blue-600',
-    playlist: 'bg-emerald-50 text-emerald-600',
-    profile: 'bg-purple-50 text-purple-600'
+  var ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">';
+  var KIND_ICON = {
+    blog: ICON_SVG + '<path d="M4 4h11a2 2 0 0 1 2 2v14a1 1 0 0 1-1.4.9L12 19l-3.6 1.9A1 1 0 0 1 7 20V6a2 2 0 0 0-2-2z"/><path d="M8 7h6M8 11h6"/></svg>',
+    playlist: ICON_SVG + '<path d="M3 6h13M3 12h13M3 18h9"/><path d="M18 12l4 2.5-4 2.5z"/></svg>',
+    profile: ICON_SVG + '<circle cx="12" cy="8" r="4"/><path d="M4 20a8 8 0 0 1 16 0"/></svg>'
   };
 
   function focusSearch() { input.focus(); input.select(); }
@@ -85,14 +86,14 @@
     }
     status.classList.add('hidden');
     list.innerHTML = results.map(function(r) {
-      var badge = LABEL_STYLE[r.kind] || 'bg-slate-100 text-slate-500';
+      var icon = KIND_ICON[r.kind] || '';
       return '<a href="' + r.url + '" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0">' +
         thumb(r) +
         '<div class="min-w-0 flex-1">' +
           '<p class="text-sm font-semibold text-slate-800 truncate">' + escapeHtml(r.title) + '</p>' +
           '<p class="text-xs text-slate-400 truncate">' + escapeHtml(r.subtitle) + '</p>' +
         '</div>' +
-        '<span class="text-[10px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5 flex-shrink-0 ' + badge + '">' + escapeHtml(r.label) + '</span>' +
+        '<span class="text-slate-400 flex-shrink-0" title="' + escapeHtml(r.label) + '">' + icon + '</span>' +
       '</a>';
     }).join('');
   }

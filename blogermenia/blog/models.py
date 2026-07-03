@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import F
 from django.conf import settings
 from django.utils.text import slugify
 
@@ -68,6 +69,9 @@ class Playlist(models.Model):
     def __str__(self):
         return self.title
 
+    class Meta:
+        ordering = ['-created_at']
+
 
 class Blog(models.Model):
     title = models.CharField(max_length=255)
@@ -77,18 +81,22 @@ class Blog(models.Model):
     playlists = models.ManyToManyField(Playlist, related_name='blogs', blank=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='blogs')
     slug = models.SlugField(max_length=255, unique=True, blank=True)
-    is_published = models.BooleanField(default=True)
+    # Indexed: filtered on almost every query (only published content is shown).
+    is_published = models.BooleanField(default=True, db_index=True)
     read_count = models.PositiveIntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
+    # Indexed: the default ordering key for every listing.
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            import uuid
             base_slug = slugify(self.title)
             slug = base_slug
             counter = 1
-            while Blog.objects.filter(slug=slug).exists():
+            while Blog.objects.filter(slug=slug).exclude(pk=self.pk).exists():
                 slug = f"{base_slug}-{counter}"
                 counter += 1
             self.slug = slug
@@ -105,6 +113,17 @@ class Blog(models.Model):
             return self.likes.filter(user=user).exists()
         return False
 
+    def register_view(self, request):
+        """Count a read. Anonymous readers count; only the author's own views
+        are skipped (so authors don't inflate their own numbers).
+
+        Uses an F() update so concurrent reads don't clobber each other, and
+        .update() (not .save()) so it never re-fires save signals.
+        """
+        user = request.user
+        if not user.is_authenticated or user != self.author:
+            type(self).objects.filter(pk=self.pk).update(read_count=F('read_count') + 1)
+
     @property
     def avatar_svg(self):
         from .utils import generate_avatar
@@ -117,7 +136,9 @@ class Like(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('blog', 'user')
+        constraints = [
+            models.UniqueConstraint(fields=['blog', 'user'], name='unique_blog_user_like'),
+        ]
 
     def __str__(self):
         return f"{self.user.username} likes {self.blog.title}"

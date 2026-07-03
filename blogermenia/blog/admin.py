@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.models import Count
 from .models import Blog, Playlist, Like, Category, ContactEntry
 
 
@@ -22,10 +23,15 @@ class BlogAdmin(admin.ModelAdmin):
     search_fields = ('title', 'content', 'author__username')
     filter_horizontal = ('playlists',)
     readonly_fields = ('read_count',)
+    list_select_related = ('author', 'category')
 
+    def get_queryset(self, request):
+        # Annotate likes once for the whole changelist instead of a COUNT per row.
+        return super().get_queryset(request).annotate(_like_count=Count('likes'))
+
+    @admin.display(description='Likes', ordering='_like_count')
     def like_count(self, obj):
-        return obj.like_count()
-    like_count.short_description = 'Likes'
+        return obj._like_count
 
 
 @admin.register(Like)

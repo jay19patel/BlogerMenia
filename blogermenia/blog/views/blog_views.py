@@ -3,8 +3,8 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.http import JsonResponse
+from django.db.models import Count
 from ..models import Blog, Like, Category
-from ..signals import blog_viewed
 
 
 class BlogListView(ListView):
@@ -14,7 +14,13 @@ class BlogListView(ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        qs = Blog.objects.filter(is_published=True).order_by('-created_at').select_related('author', 'category')
+        # annotate(like_count=...) resolves {{ blog.like_count }} in the template
+        # from this single query instead of one COUNT per blog (N+1).
+        qs = (
+            Blog.objects.filter(is_published=True)
+            .select_related('author', 'category')
+            .annotate(like_count=Count('likes'))
+        )
         slug = self.request.GET.get('category')
         if slug:
             qs = qs.filter(category__slug=slug)
@@ -33,9 +39,13 @@ class BlogDetailView(DetailView):
     template_name = 'blog/blog_detail.html'
     context_object_name = 'blog'
 
+    def get_queryset(self):
+        # select_related avoids extra queries for author/category in the template.
+        return Blog.objects.select_related('author', 'category')
+
     def get_object(self, queryset=None):
         obj = super().get_object(queryset)
-        blog_viewed.send(sender=self.__class__, blog=obj, request=self.request)
+        obj.register_view(self.request)
         return obj
 
     def get_context_data(self, **kwargs):

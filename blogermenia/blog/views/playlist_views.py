@@ -33,7 +33,11 @@ class PlaylistListView(ListView):
     model = Playlist
     template_name = 'blog/playlist_list.html'
     context_object_name = 'playlists'
-    ordering = ['-created_at']
+    paginate_by = 12
+
+    def get_queryset(self):
+        # select_related/prefetch avoid per-card queries for author + blog counts.
+        return Playlist.objects.select_related('author').prefetch_related('blogs')
 
 
 class PlaylistDetailView(DetailView):
