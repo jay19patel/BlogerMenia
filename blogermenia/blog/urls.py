@@ -10,6 +10,7 @@ from .views.playlist_views import (
     PlaylistUpdateView, PlaylistDeleteView,
 )
 from .views.profile_views import UserProfileView, UserListView, ProfileUpdateView
+from .views.pdf_views import GeneratePDFView, CheckPDFStatusView, DownloadPDFView
 
 urlpatterns = [
     # Home
@@ -25,6 +26,11 @@ urlpatterns = [
     path('blogs/<slug:slug>/like/', BlogLikeView.as_view(), name='blog_like'),
     path('blogs/<slug:slug>/save/', BlogSaveView.as_view(), name='blog_save'),
     path('blogs/<slug:slug>/share-linkedin/', BlogShareLinkedInView.as_view(), name='blog_share_linkedin'),
+    
+    # PDF URLs
+    path('blogs/<slug:slug>/pdf-generate/', GeneratePDFView.as_view(), name='blog_pdf_generate'),
+    path('blogs/pdf-status/<str:task_id>/', CheckPDFStatusView.as_view(), name='blog_pdf_status'),
+    path('blogs/pdf-download/<str:task_id>/', DownloadPDFView.as_view(), name='blog_pdf_download'),
 
     # Playlist URLs
     path('playlists/', PlaylistListView.as_view(), name='playlist_list'),

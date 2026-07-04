@@ -18,6 +18,7 @@ dependencies = [
     "redis>=5.2.0",
     "flower>=2.0.0",
     "linkedin-api-client",
+    "weasyprint>=69.0",
 ]
 
 [tool.uv.sources]
