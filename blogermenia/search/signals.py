@@ -1,8 +1,8 @@
 """Keep the search index fresh as content changes.
 
-Embedding calls hit Ollama, so we hand the work to Celery. Indexing is scheduled
-on transaction commit — the user's save/delete request never waits on Ollama, and
-the worker only ever sees committed rows.
+Embedding calls hit the Gemini API, so we hand the work to Celery. Indexing is
+scheduled on transaction commit — the user's save/delete request never waits on
+Gemini, and the worker only ever sees committed rows.
 """
 import logging
 

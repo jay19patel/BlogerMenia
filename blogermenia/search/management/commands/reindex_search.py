@@ -15,6 +15,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         only_missing = options['missing_only']
-        self.stdout.write("Indexing search embeddings via Ollama...")
+        self.stdout.write("Indexing search embeddings via Gemini...")
         count = SearchService.reindex_all(only_missing=only_missing)
         self.stdout.write(self.style.SUCCESS(f"Done — {count} object(s) indexed."))

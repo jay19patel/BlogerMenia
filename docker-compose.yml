@@ -1,0 +1,75 @@
+# ============================================================================
+# DEVELOPMENT compose file.
+#
+#   docker compose up --build
+#
+# What you get: Django dev server (auto-reload), Redis, a Celery worker, a
+# Celery beat scheduler, and Flower (task monitoring UI). Database is SQLite
+# and the Chroma vector index is a plain folder — both are just files on your
+# host, bind-mounted in, so nothing is lost when containers are recreated.
+#
+# Every port is published to localhost so you can poke at any service
+# directly while developing.
+# ============================================================================
+
+# Shared config for the four Django-based services (they only differ in the
+# command they run). YAML anchors (&django / <<: *django) just copy-paste
+# this block into each service below — nothing magic.
+x-django: &django
+  build: .
+  image: blogermenia:dev
+  env_file: .env.dev
+  # Bind-mount the whole repo so code, db.sqlite3, chroma_db/ and media/ are
+  # shared live across web/worker/beat and survive container rebuilds.
+  volumes:
+    - .:/app
+  depends_on:
+    redis:
+      condition: service_healthy
+  restart: unless-stopped
+
+services:
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]  # persist the queue across restarts
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  web:
+    <<: *django
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+
+  worker:
+    <<: *django
+    # -Ofair + prefetch=1 (set in settings.py) give fair dispatch for our
+    # slow, uneven embedding tasks.
+    command: celery -A blogermenia worker --loglevel=info --concurrency=2 -Ofair
+
+  beat:
+    <<: *django
+    # Scheduler for periodic jobs (the 6-hourly "reindex missing embeddings" sweep).
+    command: celery -A blogermenia beat --loglevel=info
+
+  flower:
+    <<: *django
+    # Web UI to watch tasks live at http://localhost:5555
+    command: celery -A blogermenia flower --port=5555
+    ports:
+      - "5555:5555"
+    depends_on:
+      - worker
+
+volumes:
+  redis_data:

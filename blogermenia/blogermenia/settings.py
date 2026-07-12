@@ -13,20 +13,45 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load the repo-root .env.dev into os.environ (harmless no-op in production —
+# docker-compose.prod.yml injects .env.prod straight into the container's
+# environment, and load_dotenv() never overrides a variable that's already set).
+load_dotenv(BASE_DIR.parent / ".env.dev")
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-y-q^vt16l_smw)mq9s0=&@i51+&6$rnxqd4o^@gjv%&i1(*9me"
+SECRET_KEY = os.environ.get(
+    "DJANGO_SECRET_KEY",
+    "django-insecure-y-q^vt16l_smw)mq9s0=&@i51+&6$rnxqd4o^@gjv%&i1(*9me",
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [h for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h]
+
+CSRF_TRUSTED_ORIGINS = [o for o in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if o]
+
+# nginx sits in front in production and forwards this header, so Django knows
+# the original request was HTTPS even though gunicorn itself only speaks HTTP.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# Only enforced once you've actually put TLS in front of nginx — leave off
+# (default) while running plain HTTP, or every request loops redirecting.
+if not DEBUG and os.environ.get("DJANGO_SECURE_SSL_REDIRECT", "False") == "True":
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 60 * 60 * 24 * 7
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
 
 # Application definition
@@ -48,15 +73,19 @@ INSTALLED_APPS = [
     "search",
 ]
 
-# --- Semantic search (Ollama embeddings + ChromaDB vector store) ---
-# OLLAMA_BASE_URL is read from the environment so the same code works locally
-# (localhost) and inside Docker (host.docker.internal), where Ollama runs on the host.
-OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
-OLLAMA_EMBEDDING_MODEL = os.environ.get("OLLAMA_EMBEDDING_MODEL", "qwen3-embedding:0.6b")
+# --- Google Gemini (embeddings for semantic search + text generation) ---
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
+GEMINI_EMBEDDING_MODEL = os.environ.get("GEMINI_EMBEDDING_MODEL", "gemini-embedding-001")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
+
+# --- Semantic search (Gemini embeddings + ChromaDB vector store) ---
 CHROMA_PERSIST_DIR = BASE_DIR / "search" / "chroma_db"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # Serves collected static files directly from gunicorn (compressed +
+    # cache-busted) so nginx only has to proxy requests and serve /media/.
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -90,13 +119,27 @@ WSGI_APPLICATION = "blogermenia.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
+# SQLite by default (local dev). Set POSTGRES_DB (docker-compose.prod.yml does)
+# to switch to Postgres — no other code changes needed.
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+if os.environ.get("POSTGRES_DB"):
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.environ["POSTGRES_DB"],
+            "USER": os.environ.get("POSTGRES_USER", "postgres"),
+            "PASSWORD": os.environ.get("POSTGRES_PASSWORD", ""),
+            "HOST": os.environ.get("POSTGRES_HOST", "postgres"),
+            "PORT": os.environ.get("POSTGRES_PORT", "5432"),
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 
 # Password validation
@@ -134,6 +177,15 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = "static/"
+# `collectstatic` writes here; WhiteNoise serves it straight from gunicorn.
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    # Adds a content hash to each filename + far-future cache headers, and
+    # gzip/brotli-compresses everything at collectstatic time.
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+}
 
 # Media files (user uploads)
 MEDIA_URL = "/media/"

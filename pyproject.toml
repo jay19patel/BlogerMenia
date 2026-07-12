@@ -11,7 +11,8 @@ dependencies = [
     "pillow>=11.0.0",
     "dicebear-core>=10.3.0",
     "dicebear-styles>=10.2.0",
-    "langchain-ollama>=1.1.0",
+    "google-genai>=1.0.0",
+    "langchain-google-genai>=2.0.0",
     "langchain-chroma>=1.1.0",
     "chromadb>=1.5.9",
     "celery[redis]>=5.4.0",
@@ -19,6 +20,10 @@ dependencies = [
     "flower>=2.0.0",
     "linkedin-api-client",
     "weasyprint>=69.0",
+    "python-dotenv>=1.2.2",
+    "psycopg[binary]>=3.2",
+    "gunicorn>=23.0.0",
+    "whitenoise>=6.7.0",
 ]
 
 [tool.uv.sources]

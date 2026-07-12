@@ -1,7 +1,9 @@
 chroma_db/
-.env
+.env.dev
+.env.prod
 __pycache__/
 *.py[cod]
+staticfiles/
 
 # Celery beat runtime schedule DB
 celerybeat-schedule*

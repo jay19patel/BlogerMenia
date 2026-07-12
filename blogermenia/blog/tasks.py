@@ -5,6 +5,7 @@ from django.conf import settings
 from django.template.loader import render_to_string
 from weasyprint import HTML
 
+from . import ai_service
 from .models import Blog
 
 @shared_task
@@ -38,3 +39,30 @@ def generate_blog_pdf(blog_id, base_url="http://127.0.0.1:8000"):
         }
     except Exception as e:
         return {'status': 'error', 'message': str(e)}
+
+
+@shared_task(
+    autoretry_for=(Exception,),
+    retry_backoff=2,
+    retry_backoff_max=300,
+    retry_jitter=True,
+    max_retries=3,
+)
+def generate_blog_metadata(blog_id):
+    """Fill in a blog's excerpt/tags via Gemini if they're missing.
+
+    Uses .update() (not .save()) so this never re-triggers the post_save
+    signal that enqueued it.
+    """
+    blog = Blog.objects.filter(id=blog_id).first()
+    if blog is None or (blog.excerpt and blog.tags):
+        return
+
+    metadata = ai_service.generate_metadata(blog)
+    if metadata is None:
+        return
+
+    Blog.objects.filter(id=blog_id).update(
+        excerpt=blog.excerpt or metadata['excerpt'],
+        tags=blog.tags or metadata['tags'],
+    )

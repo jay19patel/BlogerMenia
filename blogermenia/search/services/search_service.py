@@ -1,6 +1,6 @@
 """Semantic search across blogs, playlists and profiles, backed by ChromaDB.
 
-Each object is embedded (via Ollama/LangChain) and stored in a persistent Chroma
+Each object is embedded (via Gemini/LangChain) and stored in a persistent Chroma
 collection keyed by a stable id like ``blog:12``. A search embeds the query, lets
 Chroma find the nearest documents, then loads the *real* Django model instances
 (Blog / Playlist / CustomUser) to render results.
@@ -94,7 +94,7 @@ class SearchService:
             logger.info(f"Indexed {doc_id}")
             return True
         except Exception as e:
-            logger.error(f"Failed to index {doc_id} (is Ollama running?): {e}")
+            logger.error(f"Failed to index {doc_id} (check GOOGLE_API_KEY): {e}")
             return False
 
     @classmethod

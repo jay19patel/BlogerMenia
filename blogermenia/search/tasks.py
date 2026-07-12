@@ -1,9 +1,9 @@
 """Celery tasks for keeping the semantic search index fresh.
 
 These replace the ad-hoc background threads that used to run embedding work.
-Embedding hits Ollama (slow, network-bound, occasionally down), so it belongs on
-a queue: the web request returns immediately and a worker does the real work,
-retrying automatically if Ollama is unavailable.
+Embedding hits the Gemini API (network-bound, occasionally rate-limited or
+down), so it belongs on a queue: the web request returns immediately and a
+worker does the real work, retrying automatically if Gemini is unavailable.
 """
 import logging
 
@@ -25,8 +25,8 @@ def _model_for(kind):
     }[kind]
 
 
-# autoretry_for + backoff: if Ollama is down the task retries with exponential
-# backoff (2s, 4s, 8s, ... capped) instead of silently losing the update.
+# autoretry_for + backoff: if Gemini is down/rate-limited the task retries with
+# exponential backoff (2s, 4s, 8s, ... capped) instead of silently losing the update.
 @shared_task(
     bind=True,
     autoretry_for=(Exception,),
@@ -42,7 +42,7 @@ def index_object(self, kind, pk):
         logger.info("index_object: %s:%s no longer exists, skipping", kind, pk)
         return
     if not SearchService.index_object(kind, obj):
-        # index_object swallows Ollama errors and returns False — turn that into a
+        # index_object swallows Gemini errors and returns False — turn that into a
         # real failure so the autoretry machinery kicks in.
         raise RuntimeError(f"Indexing failed for {kind}:{pk}")
 
