@@ -190,10 +190,11 @@ SOCIALACCOUNT_PROVIDERS = {
 
 # --- Celery (async task queue, backed by Redis) ---
 # All CELERY_* settings are picked up by the Celery app in blogermenia/celery.py.
-# Broker/backend URLs come from the environment: localhost by default, or the
-# "redis" service hostname when running under docker-compose.
-CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")
-CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://localhost:6379/1")
+# We use dedicated Redis DBs (2 = broker, 3 = results) so this project never
+# shares the default DB 0/1 with any other Celery project on the same machine —
+# otherwise workers steal and discard each other's tasks.
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/2")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://localhost:6379/3")
 
 # Send/accept only JSON — never pickle (safer, and portable across workers).
 CELERY_ACCEPT_CONTENT = ["json"]
