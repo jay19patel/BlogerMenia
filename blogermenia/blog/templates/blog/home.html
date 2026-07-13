@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+{% block title %}Inkwell — Ideas worth writing down{% endblock %}
+{% block content %}
+{% include "partials/header.html" %}
+{% include "partials/sidebar.html" with active="home" %}
+
+<main class="pt-16 lg:pl-64">
+
+  <!-- HERO -->
+  <section class="relative overflow-hidden px-8 sm:px-14 py-20 border-b border-slate-100">
+    <div class="absolute inset-0 bg-gradient-to-br from-brand-50 via-white to-slate-50 pointer-events-none"></div>
+    <div class="absolute top-0 right-0 w-96 h-96 bg-brand-500/5 rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+    <div class="relative max-w-2xl">
+      <span class="inline-flex items-center gap-2 bg-brand-50 text-brand-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-6 ring-1 ring-brand-500/20">
+        <span class="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse"></span>
+        New articles every week
+      </span>
+      <h1 class="text-5xl sm:text-6xl font-extrabold tracking-tight leading-[1.06] mb-6 text-slate-900">
+        Ideas worth<br><span class="text-brand-600">writing down.</span>
+      </h1>
+      <p class="text-lg text-slate-500 leading-relaxed mb-10 max-w-lg">
+        Inkwell is where curious minds share what they know. Discover thoughtful writing on technology, design, business, and beyond.
+      </p>
+      <div class="flex items-center gap-4 flex-wrap">
+        <a href="{% url 'blog_list' %}" class="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold px-6 py-3 rounded-xl transition-colors">
+          Start reading
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
+        {% if not user.is_authenticated %}
+        <a href="{% url 'account_signup' %}" class="inline-flex items-center gap-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 font-semibold px-6 py-3 rounded-xl transition-colors">
+          Start writing for free
+        </a>
+        {% else %}
+        <a href="{% url 'blog_create' %}" class="inline-flex items-center gap-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 font-semibold px-6 py-3 rounded-xl transition-colors">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          Write an article
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    <!-- Stats -->
+    <div class="relative mt-12 flex flex-wrap items-center gap-4">
+      <div class="flex items-center gap-3 bg-white border border-slate-200/80 rounded-full pl-2 pr-5 py-2 shadow-sm hover:shadow-md transition-shadow">
+        <div class="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center text-brand-600">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+        </div>
+        <div class="flex items-baseline gap-1.5">
+          <span class="text-lg font-extrabold text-slate-900 mono">{{ total_blogs }}</span>
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Articles</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 bg-white border border-slate-200/80 rounded-full pl-2 pr-5 py-2 shadow-sm hover:shadow-md transition-shadow">
+        <div class="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center text-brand-600">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="flex items-baseline gap-1.5">
+          <span class="text-lg font-extrabold text-slate-900 mono">{{ total_users }}</span>
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Writers</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 bg-white border border-slate-200/80 rounded-full pl-2 pr-5 py-2 shadow-sm hover:shadow-md transition-shadow">
+        <div class="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center text-brand-600">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="m16 6 4 14"/><path d="M12 6v14"/><path d="M8 8v12"/><path d="M4 4v16"/></svg>
+        </div>
+        <div class="flex items-baseline gap-1.5">
+          <span class="text-lg font-extrabold text-slate-900 mono">{{ total_playlists }}</span>
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Playlists</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOP BLOGS -->
+  {% if top_blogs %}
+  <section class="px-8 sm:px-14 py-16 border-b border-slate-100">
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <p class="text-[11px] font-semibold tracking-wider text-slate-400 mb-1.5">MOST READ</p>
+        <h2 class="text-2xl font-extrabold tracking-tight text-slate-900">Top Blogs</h2>
+      </div>
+    </div>
+    <div class="flex flex-col divide-y divide-slate-100">
+      {% for blog in top_blogs %}
+      <a href="{% url 'blog_detail' blog.slug %}" class="group flex items-center gap-5 py-5 hover:bg-slate-50/60 -mx-3 px-3 rounded-xl transition-colors">
+        <span class="text-3xl font-extrabold text-slate-200 mono w-10 flex-shrink-0 select-none">{{ forloop.counter }}</span>
+        <div class="w-20 h-14 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden bg-slate-100 [&>svg]:w-full [&>svg]:h-full [&>svg]:object-cover">
+          {% if blog.image %}
+          <img src="{{ blog.image.url }}" alt="{{ blog.title }}" class="w-full h-full object-cover rounded-xl">
+          {% else %}
+          {{ blog.avatar_svg|safe }}
+          {% endif %}
+        </div>
+        <div class="flex-1 min-w-0">
+          {% if blog.category %}<span class="text-[11px] font-bold tracking-wide {{ blog.category.text_class }} {{ blog.category.bg_class }} rounded-full px-2 py-0.5 uppercase">{{ blog.category.name }}</span>{% endif %}
+          <h3 class="font-bold text-slate-900 text-base mt-1.5 truncate group-hover:text-brand-700 transition-colors">{{ blog.title }}{% if blog.posted_on_linkedin and blog.linkedin_post_url %} <span class="inline-flex text-[#0A66C2] align-middle ml-1" title="Posted on LinkedIn"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg></span>{% endif %}</h3>
+          <p class="text-xs text-slate-400 mt-1">{{ blog.author.get_full_name|default:blog.author.username }} · {{ blog.read_count }} reads · {{ blog.like_count }} likes</p>
+        </div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-slate-300 group-hover:text-slate-500 transition-colors flex-shrink-0"><path d="M9 18l6-6-6-6"/></svg>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- COMMUNITY -->
+  <section class="px-8 sm:px-14 py-16 bg-slate-50/60 border-b border-slate-100">
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <p class="text-[11px] font-semibold tracking-wider text-slate-400 mb-1.5">MEET THE AUTHORS</p>
+        <h2 class="text-2xl font-extrabold tracking-tight text-slate-900">Community</h2>
+      </div>
+      <a href="{% url 'user_list' %}" class="text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors flex items-center gap-1.5">
+        All writers
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </a>
+    </div>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {% for member in featured_users %}
+      <div class="group relative flex items-center gap-4 bg-white border border-slate-100 hover:border-brand-200 hover:shadow-lg hover:shadow-brand-100/50 rounded-2xl p-5 transition-all">
+        <a href="{% url 'user_profile' member.username %}" class="absolute inset-0 z-0 rounded-2xl"><span class="sr-only">View {{ member.username }}</span></a>
+        <div class="w-14 h-14 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-slate-50 group-hover:ring-brand-100 transition-colors [&>svg]:w-full [&>svg]:h-full">
+          {% if member.profile_picture %}
+          <img src="{{ member.profile_picture.url }}" alt="{{ member.username }}" class="w-full h-full object-cover">
+          {% else %}
+          {{ member.avatar_svg|safe }}
+          {% endif %}
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-1.5">
+            <p class="font-semibold text-slate-900 truncate group-hover:text-brand-700 transition-colors">{{ member.get_full_name|default:member.username }}</p>
+            {% if member.linkedin_url %}
+            <a href="{{ member.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="relative z-10 text-[#0A66C2] hover:text-[#004182] transition-colors flex-shrink-0" title="LinkedIn Profile">
+              <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+            </a>
+            {% elif member.has_linkedin_oauth %}
+            <div class="text-[#0A66C2]/70 cursor-help flex-shrink-0" title="LinkedIn Connected">
+              <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+            </div>
+            {% endif %}
+          </div>
+          <p class="text-xs text-slate-400 mt-0.5">@{{ member.username }}</p>
+          {% if member.bio %}<p class="text-xs text-slate-500 mt-1 truncate">{{ member.bio }}</p>{% endif %}
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-span-3 text-center py-8 text-slate-400 text-sm">No members yet.</div>
+      {% endfor %}
+    </div>
+  </section>
+
+
+
+  <!-- TESTIMONIALS -->
+  <section class="px-8 sm:px-14 py-16 border-b border-slate-100">
+    <div class="text-center mb-12">
+      <p class="text-[11px] font-semibold tracking-wider text-slate-400 mb-2">FROM OUR WRITERS</p>
+      <h2 class="text-2xl font-extrabold tracking-tight text-slate-900">What people are saying</h2>
+    </div>
+    <div class="grid sm:grid-cols-3 gap-6">
+      <div class="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm">
+        <svg class="w-7 h-7 text-brand-500 mb-4" fill="currentColor" viewBox="0 0 32 32"><path d="M10 8C5.582 8 2 11.582 2 16c0 3.866 2.476 7.16 5.937 8.387A8.003 8.003 0 0 1 10 24c0 2.21-1.343 4-3 4H6v2h1c2.478 0 4.456-1.61 5.448-4.002C14.796 25.23 16 22.776 16 20v-4c0-4.418-2.686-8-6-8zm16 0c-3.314 0-6 3.582-6 8v4c0 2.776 1.204 5.23 3.552 5.998C20.544 28.39 22.522 30 25 30h1v-2h-1c-1.657 0-3-1.79-3-4a8.003 8.003 0 0 1 2.063.387C28.524 23.16 31 19.866 31 16c0-4.418-3.582-8-8-8z"/></svg>
+        <p class="text-sm text-slate-600 leading-relaxed mb-6">"Inkwell gave me a place to share my thoughts on design systems. The writing experience is clean and distraction-free — exactly what I needed."</p>
+        <div class="flex items-center gap-3">
+          <span class="w-9 h-9 rounded-full bg-brand-500 flex items-center justify-center font-bold text-white text-sm">S</span>
+          <div>
+            <p class="text-sm font-semibold text-slate-900">Sana Mehra</p>
+            <p class="text-xs text-slate-400">Product Designer</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm">
+        <svg class="w-7 h-7 text-brand-500 mb-4" fill="currentColor" viewBox="0 0 32 32"><path d="M10 8C5.582 8 2 11.582 2 16c0 3.866 2.476 7.16 5.937 8.387A8.003 8.003 0 0 1 10 24c0 2.21-1.343 4-3 4H6v2h1c2.478 0 4.456-1.61 5.448-4.002C14.796 25.23 16 22.776 16 20v-4c0-4.418-2.686-8-6-8zm16 0c-3.314 0-6 3.582-6 8v4c0 2.776 1.204 5.23 3.552 5.998C20.544 28.39 22.522 30 25 30h1v-2h-1c-1.657 0-3-1.79-3-4a8.003 8.003 0 0 1 2.063.387C28.524 23.16 31 19.866 31 16c0-4.418-3.582-8-8-8z"/></svg>
+        <p class="text-sm text-slate-600 leading-relaxed mb-6">"I've published 12 articles on Inkwell and the reader engagement has been incredible. The platform genuinely values thoughtful writing."</p>
+        <div class="flex items-center gap-3">
+          <span class="w-9 h-9 rounded-full bg-slate-700 flex items-center justify-center font-bold text-white text-sm">R</span>
+          <div>
+            <p class="text-sm font-semibold text-slate-900">Rohan Kapoor</p>
+            <p class="text-xs text-slate-400">Full Stack Developer</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm">
+        <svg class="w-7 h-7 text-brand-500 mb-4" fill="currentColor" viewBox="0 0 32 32"><path d="M10 8C5.582 8 2 11.582 2 16c0 3.866 2.476 7.16 5.937 8.387A8.003 8.003 0 0 1 10 24c0 2.21-1.343 4-3 4H6v2h1c2.478 0 4.456-1.61 5.448-4.002C14.796 25.23 16 22.776 16 20v-4c0-4.418-2.686-8-6-8zm16 0c-3.314 0-6 3.582-6 8v4c0 2.776 1.204 5.23 3.552 5.998C20.544 28.39 22.522 30 25 30h1v-2h-1c-1.657 0-3-1.79-3-4a8.003 8.003 0 0 1 2.063.387C28.524 23.16 31 19.866 31 16c0-4.418-3.582-8-8-8z"/></svg>
+        <p class="text-sm text-slate-600 leading-relaxed mb-6">"The playlist feature is brilliant. I curated a reading list for my team on system design, and they loved having it in one place."</p>
+        <div class="flex items-center gap-3">
+          <span class="w-9 h-9 rounded-full bg-purple-500 flex items-center justify-center font-bold text-white text-sm">P</span>
+          <div>
+            <p class="text-sm font-semibold text-slate-900">Priya Nair</p>
+            <p class="text-xs text-slate-400">Engineering Manager</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="px-8 sm:px-14 py-16 border-b border-slate-100">
+    <div class="max-w-2xl mx-auto">
+      <div class="text-center mb-10">
+        <p class="text-[11px] font-semibold tracking-wider text-slate-400 mb-2">GOT QUESTIONS?</p>
+        <h2 class="text-2xl font-extrabold tracking-tight text-slate-900">Frequently Asked Questions</h2>
+      </div>
+      <div class="space-y-3">
+
+        <div class="border border-slate-200 rounded-2xl overflow-hidden">
+          <button class="faq-btn w-full flex items-center justify-between px-6 py-4 text-left font-semibold text-slate-900 hover:bg-slate-50 transition-colors text-sm">
+            Is Inkwell free to use?
+            <svg class="faq-icon w-4 h-4 text-slate-400 flex-shrink-0 ml-4 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="faq-panel hidden px-6 pb-5 text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-4">
+            Yes, Inkwell is completely free for readers and writers. Create an account and start publishing in minutes. There are no hidden fees or paywalls.
+          </div>
+        </div>
+
+        <div class="border border-slate-200 rounded-2xl overflow-hidden">
+          <button class="faq-btn w-full flex items-center justify-between px-6 py-4 text-left font-semibold text-slate-900 hover:bg-slate-50 transition-colors text-sm">
+            What kind of content can I publish?
+            <svg class="faq-icon w-4 h-4 text-slate-400 flex-shrink-0 ml-4 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="faq-panel hidden px-6 pb-5 text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-4">
+            You can write about anything — technology, design, business, personal growth, science, or creative writing. We welcome all thoughtful, original content that adds value for readers.
+          </div>
+        </div>
+
+        <div class="border border-slate-200 rounded-2xl overflow-hidden">
+          <button class="faq-btn w-full flex items-center justify-between px-6 py-4 text-left font-semibold text-slate-900 hover:bg-slate-50 transition-colors text-sm">
+            What are playlists?
+            <svg class="faq-icon w-4 h-4 text-slate-400 flex-shrink-0 ml-4 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="faq-panel hidden px-6 pb-5 text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-4">
+            Playlists are curated collections of blogs. You can create playlists to group related articles together — great for series, reading lists, or topic-based collections. Share them with your audience or keep them for personal use.
+          </div>
+        </div>
+
+        <div class="border border-slate-200 rounded-2xl overflow-hidden">
+          <button class="faq-btn w-full flex items-center justify-between px-6 py-4 text-left font-semibold text-slate-900 hover:bg-slate-50 transition-colors text-sm">
+            Can I connect my LinkedIn account?
+            <svg class="faq-icon w-4 h-4 text-slate-400 flex-shrink-0 ml-4 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="faq-panel hidden px-6 pb-5 text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-4">
+            Yes! You can sign in with LinkedIn or connect your LinkedIn profile from your account settings. This adds credibility to your profile and makes it easier for readers to connect with you professionally.
+          </div>
+        </div>
+
+        <div class="border border-slate-200 rounded-2xl overflow-hidden">
+          <button class="faq-btn w-full flex items-center justify-between px-6 py-4 text-left font-semibold text-slate-900 hover:bg-slate-50 transition-colors text-sm">
+            How do I get more readers?
+            <svg class="faq-icon w-4 h-4 text-slate-400 flex-shrink-0 ml-4 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="faq-panel hidden px-6 pb-5 text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-4">
+            Focus on quality, publish consistently, and use categories so readers can discover your work. Sharing your articles on LinkedIn and other platforms also helps grow your audience on Inkwell.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  {% if not user.is_authenticated %}
+  <section class="px-8 sm:px-14 py-20 text-center">
+    <div class="max-w-lg mx-auto">
+      <span class="w-14 h-14 rounded-2xl bg-brand-500 flex items-center justify-center shadow-lg shadow-brand-500/30 mx-auto mb-6">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      </span>
+      <h2 class="text-3xl font-extrabold tracking-tight text-slate-900 mb-4">Ready to start writing?</h2>
+      <p class="text-slate-500 leading-relaxed mb-8">Join hundreds of writers sharing their knowledge on Inkwell. It's free, always.</p>
+      <div class="flex items-center justify-center gap-4 flex-wrap">
+        <a href="{% url 'account_signup' %}" class="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold px-7 py-3 rounded-xl transition-colors">
+          Create your account
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
+        <a href="{% url 'blog_list' %}" class="inline-flex items-center gap-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 font-semibold px-7 py-3 rounded-xl transition-colors">
+          Browse first
+        </a>
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.faq-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const panel = btn.nextElementSibling;
+    const icon = btn.querySelector('.faq-icon');
+    const isOpen = !panel.classList.contains('hidden');
+    document.querySelectorAll('.faq-panel').forEach(p => p.classList.add('hidden'));
+    document.querySelectorAll('.faq-icon').forEach(i => i.style.transform = '');
+    if (!isOpen) {
+      panel.classList.remove('hidden');
+      icon.style.transform = 'rotate(180deg)';
+    }
+  });
+});
+</script>
+{% endblock %}

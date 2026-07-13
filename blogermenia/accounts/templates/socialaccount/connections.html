@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load socialaccount %}
+{% block title %}Connected Accounts — Inkwell{% endblock %}
+{% block content %}
+{% include "partials/header.html" %}
+{% include "partials/sidebar.html" with active="profile" %}
+
+<main class="pt-16 lg:pl-64">
+  <div class="max-w-2xl px-8 sm:px-14 py-14">
+
+    <div class="flex items-center gap-2 text-sm text-slate-400 mb-6">
+      {% if user.is_authenticated %}<a href="{% url 'user_profile' user.username %}" class="hover:text-slate-600">Profile</a><span>/</span>{% endif %}
+      <span>Connected accounts</span>
+    </div>
+
+    <h1 class="text-2xl font-extrabold tracking-tight mb-8">Connected accounts</h1>
+
+    {% if form.accounts %}
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 mb-6">
+      <p class="text-sm text-slate-500 mb-4">You can sign in using these connected accounts:</p>
+      <form method="POST" action="{% url 'socialaccount_connections' %}">
+        {% csrf_token %}
+        <div class="space-y-3 mb-5">
+          {% for acc in form.fields.account.choices %}
+          {% with account=acc.0.instance.get_provider_account %}
+          <label class="flex items-center gap-4 p-4 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer transition-colors">
+            <input type="radio" name="account" value="{{ account.account.pk }}" class="flex-shrink-0" style="width:auto;display:inline">
+            <div class="flex-1">
+              <p class="text-sm font-semibold text-slate-900">{{ account }}</p>
+              <p class="text-xs text-slate-400 mt-0.5">{{ account.get_brand.name }}</p>
+            </div>
+          </label>
+          {% endwith %}
+          {% endfor %}
+        </div>
+        <button type="submit" class="px-4 py-2 border border-red-200 text-red-500 hover:bg-red-50 text-sm font-semibold rounded-lg transition-colors">
+          Disconnect selected
+        </button>
+      </form>
+    </div>
+    {% else %}
+    <div class="bg-white border border-slate-200 rounded-2xl p-8 mb-6 text-center">
+      <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      </div>
+      <p class="text-sm text-slate-500">No third-party accounts connected yet.</p>
+    </div>
+    {% endif %}
+
+    <div class="bg-white border border-slate-200 rounded-2xl p-6">
+      <h2 class="font-bold text-slate-900 mb-4">Add a connection</h2>
+      <div class="flex flex-wrap gap-3">
+        {% get_providers as socialaccount_providers %}
+        {% for provider in socialaccount_providers %}
+        <a href="{% provider_login_url provider.id process='connect' %}" class="inline-flex items-center gap-2 border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors">
+          {% if provider.id == 'linkedin_oauth2' %}
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="#0A66C2"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+          {% endif %}
+          {{ provider.name }}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+</main>
+{% endblock %}

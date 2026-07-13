@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+
+# Django / local data (kept on the host, mounted as volumes instead)
+**/db.sqlite3
+**/media/
+**/chroma_db/
+**/staticfiles/
+
+# VCS / editor / OS
+.git/
+.gitignore
+.DS_Store
+.idea/
+.vscode/
+.claude/
+
+# Docker / env
+.env.dev
+.env.prod
+.env.prod.example
+Dockerfile
+.dockerignore
+docker-compose*.yml

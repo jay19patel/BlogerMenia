@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Log out — Inkwell{% endblock %}
+{% block content %}
+
+<header class="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-6">
+  <a href="{% url 'home' %}" class="flex items-center gap-2.5">
+    <span class="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center shadow-sm shadow-brand-500/30">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+      </svg>
+    </span>
+    <span class="font-bold text-[17px] tracking-tight">Inkwell</span>
+  </a>
+  <a href="{% url 'home' %}" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-1.5">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+    Back to Blogs
+  </a>
+</header>
+
+<main class="min-h-[calc(100vh-64px)] flex items-center justify-center px-6 py-16 bg-slate-50/60">
+  <div class="w-full max-w-md">
+
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm shadow-slate-200/60 p-8 sm:p-10 text-center">
+
+      <h1 class="text-2xl font-extrabold tracking-tight mb-3">Log out?</h1>
+      <p class="text-sm text-slate-500 mb-8">Are you sure you want to log out of your Inkwell account?</p>
+
+      <div class="flex items-center justify-center gap-3">
+        <a href="{% url 'home' %}" class="flex-1 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 font-semibold text-sm py-3 rounded-xl transition-colors text-center">
+          Cancel
+        </a>
+        <form method="POST" action="{% url 'account_logout' %}" class="flex-1">
+          {% csrf_token %}
+          <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm py-3 rounded-xl transition-colors">
+            Log out
+          </button>
+        </form>
+      </div>
+
+    </div>
+
+  </div>
+</main>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Contact Us — Blogermenia{% endblock %}
+{% block content %}
+{% include "partials/header.html" %}
+{% include "partials/sidebar.html" with active="contact" %}
+
+<main class="pt-16 lg:pl-64 min-h-screen bg-slate-50">
+  <div class="max-w-2xl px-8 sm:px-14 py-14">
+    <div class="flex items-center gap-2 text-sm text-slate-400 mb-6">
+      <a href="{% url 'home' %}" class="hover:text-slate-600 transition-colors">Home</a>
+      <span>/</span>
+      <span>Contact</span>
+    </div>
+
+    <h1 class="text-4xl font-extrabold tracking-tight mb-4 text-slate-900">Get in touch</h1>
+    <p class="text-slate-500 mb-10 text-lg">Have a question or feedback? We'd love to hear from you.</p>
+
+    {% if request.GET.success %}
+    <div class="bg-brand-50 border border-brand-200 text-brand-700 px-6 py-4 rounded-xl mb-8 flex items-start gap-4">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-circle-2 text-brand-500 flex-shrink-0 mt-0.5"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
+      <div>
+        <h3 class="font-bold">Message sent successfully!</h3>
+        <p class="text-sm mt-1 opacity-90">Thank you for reaching out. We will get back to you as soon as possible.</p>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
+      <form method="post" class="space-y-6">
+        {% csrf_token %}
+        {% for field in form %}
+        <div>
+          <label for="{{ field.id_for_label }}" class="block text-sm font-semibold text-slate-700 mb-2">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}<p class="mt-2 text-sm text-red-500">{{ field.errors.0 }}</p>{% endif %}
+        </div>
+        {% endfor %}
+        <div class="pt-4 border-t border-slate-100">
+          <button type="submit" class="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm px-8 py-3 rounded-xl transition-colors shadow-sm shadow-brand-500/30">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-send"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Send Message
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+{% endblock %}

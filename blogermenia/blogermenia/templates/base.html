@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Inkwell{% endblock %}</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: { sans: ['Inter','sans-serif'], mono: ['JetBrains Mono','monospace'] },
+        colors: {
+          brand: { 50:'#EEF2FF', 100:'#E0E7FF', 500:'#6366F1', 600:'#4F46E5', 700:'#4338CA' }
+        }
+      }
+    }
+  }
+</script>
+<style>
+  body { font-family: 'Inter', sans-serif; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+</style>
+{% block head %}{% endblock %}
+</head>
+<body class="bg-white text-slate-900 antialiased">
+{% if messages %}
+<div id="toast-container" class="fixed top-5 right-5 z-[100] flex flex-col gap-3 max-w-md w-full sm:w-auto items-end pointer-events-none">
+  {% for message in messages %}
+  <div class="toast-message flex items-start p-4 rounded-xl shadow-xl border bg-white pointer-events-auto transform transition-all duration-300 translate-y-0 opacity-100 w-full sm:w-[350px]
+    {% if message.tags == 'error' %}border-rose-100 shadow-rose-100/50{% elif message.tags == 'success' %}border-emerald-100 shadow-emerald-100/50{% elif message.tags == 'warning' %}border-amber-100 shadow-amber-100/50{% else %}border-blue-100 shadow-blue-100/50{% endif %}"
+    role="alert">
+    
+    <div class="flex-shrink-0 mt-0.5">
+      {% if message.tags == 'error' %}
+      <svg class="w-5 h-5 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      {% elif message.tags == 'success' %}
+      <svg class="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      {% elif message.tags == 'warning' %}
+      <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+      {% else %}
+      <svg class="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      {% endif %}
+    </div>
+
+    <div class="ml-3 w-0 flex-1 pt-0.5">
+      <p class="text-sm font-semibold text-slate-800">{{ message }}</p>
+    </div>
+
+    <div class="ml-4 flex flex-shrink-0">
+      <button type="button" onclick="const t = this.closest('.toast-message'); t.style.opacity = '0'; t.style.transform = 'translateY(-10px)'; setTimeout(() => t.remove(), 300);" class="inline-flex rounded-md bg-white text-slate-400 hover:text-slate-500 focus:outline-none transition-colors">
+        <span class="sr-only">Close</span>
+        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+      </button>
+    </div>
+
+  </div>
+  {% endfor %}
+</div>
+
+<script>
+  setTimeout(() => {
+    const toasts = document.querySelectorAll('.toast-message');
+    toasts.forEach(t => {
+      t.style.opacity = '0';
+      t.style.transform = 'translateY(-10px)';
+      setTimeout(() => t.remove(), 300);
+    });
+  }, 5000);
+</script>
+{% endif %}
+{% block content %}{% endblock %}
+{% include "partials/footer.html" %}
+{% block scripts %}{% endblock %}
+</body>
+</html>
