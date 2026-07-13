@@ -29,6 +29,14 @@ def post_to_linkedin_task(self, user_id, blog_id, domain_url):
         logger.info(f"Blog '{blog.slug}' already on LinkedIn; skipping.")
         return blog.linkedin_post_url
 
+    # The post-save signal also queues excerpt/tag generation, but that's a
+    # separate task with no ordering guarantee against this one — without
+    # this, a LinkedIn share dispatched right after creation can beat it and
+    # go out with no summary. ensure_metadata is idempotent, so this is a
+    # no-op if that task already finished.
+    from blog import ai_service
+    ai_service.ensure_metadata(blog)
+
     service = LinkedInService(user)
     try:
         url = service.create_post(blog, domain_url)

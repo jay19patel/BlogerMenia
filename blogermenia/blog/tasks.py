@@ -51,18 +51,16 @@ def generate_blog_pdf(blog_id, base_url="http://127.0.0.1:8000"):
 def generate_blog_metadata(blog_id):
     """Fill in a blog's excerpt/tags via Gemini if they're missing.
 
-    Uses .update() (not .save()) so this never re-triggers the post_save
-    signal that enqueued it.
+    Delegates to `ai_service.ensure_metadata`, which updates via .update()
+    (not .save()) so this never re-triggers the post_save signal that
+    enqueued it. `ensure_metadata` swallows Gemini errors (so callers like the
+    LinkedIn task can fall back gracefully), so we re-check its result here
+    and raise if it's still empty — that's what turns a transient Gemini
+    outage into an autoretry instead of a silently-never-filled-in excerpt.
     """
     blog = Blog.objects.filter(id=blog_id).first()
-    if blog is None or (blog.excerpt and blog.tags):
+    if blog is None:
         return
-
-    metadata = ai_service.generate_metadata(blog)
-    if metadata is None:
-        return
-
-    Blog.objects.filter(id=blog_id).update(
-        excerpt=blog.excerpt or metadata['excerpt'],
-        tags=blog.tags or metadata['tags'],
-    )
+    ai_service.ensure_metadata(blog)
+    if not (blog.excerpt and blog.tags):
+        raise RuntimeError(f"Gemini metadata generation failed for blog {blog_id}")

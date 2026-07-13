@@ -106,3 +106,22 @@ def generate_metadata(blog) -> Optional[Dict[str, Any]]:
     except Exception as e:
         logger.error(f"Gemini metadata generation failed for blog {blog.pk}: {e}")
         return None
+
+
+def ensure_metadata(blog):
+    """Fill `blog.excerpt`/`blog.tags` in place via Gemini if either is missing.
+
+    Idempotent and safe to call from multiple places (the post-save signal AND
+    right before a LinkedIn share) — a blog that already has both is a no-op.
+    """
+    if blog.excerpt and blog.tags:
+        return blog
+
+    metadata = generate_metadata(blog)
+    if metadata is None:
+        return blog
+
+    blog.excerpt = blog.excerpt or metadata['excerpt']
+    blog.tags = blog.tags or metadata['tags']
+    type(blog).objects.filter(pk=blog.pk).update(excerpt=blog.excerpt, tags=blog.tags)
+    return blog
