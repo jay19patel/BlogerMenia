@@ -6,7 +6,13 @@
     border:1px solid #E2E8F0; border-radius:0.5rem; font-size:0.875rem; color:#1e293b; font-family:inherit; }
   .fld:focus { outline:none; border-color:#6366F1; box-shadow:0 0 0 2px rgba(99,102,241,0.2); background:#fff; }
   textarea.fld { min-height:90px; resize:vertical; }
+  .excalidraw-svg-wrapper svg { max-width: 100%; height: auto; max-height: 280px; }
 </style>
+<!-- Excalidraw Dependencies -->
+<script>window.EXCALIDRAW_ASSET_PATH = "https://unpkg.com/@excalidraw/excalidraw@0.17.6/dist/";</script>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@excalidraw/excalidraw@0.17.6/dist/excalidraw.production.min.js"></script>
 {% endblock %}
 {% block content %}
 {% include "partials/header.html" %}
@@ -143,6 +149,30 @@
   </div>
 </main>
 
+<!-- Excalidraw Modal -->
+<div id="excalidraw-modal" class="fixed inset-0 z-50 hidden bg-slate-900/80 backdrop-blur-sm flex flex-col p-2 sm:p-6">
+  <div class="bg-white w-full h-full rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-slate-200">
+    <div class="flex items-center justify-between px-6 py-3.5 border-b border-slate-200 bg-slate-50">
+      <div class="flex items-center gap-2.5">
+        <span class="text-xl">🎨</span>
+        <div>
+          <h3 class="text-base font-bold text-slate-900 leading-none">Excalidraw Studio</h3>
+          <p class="text-xs text-slate-500 mt-0.5">Draw architectural diagrams, flowcharts, or sketches</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button type="button" id="excalidraw-cancel-btn" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded-lg transition-colors">Cancel</button>
+        <button type="button" id="excalidraw-save-btn" class="px-5 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg shadow transition-colors flex items-center gap-1.5">
+          <span>Save & Insert Diagram</span>
+        </button>
+      </div>
+    </div>
+    <div class="flex-1 w-full relative bg-slate-100" id="excalidraw-container">
+      <!-- React Excalidraw mounts here -->
+    </div>
+  </div>
+</div>
+
 {{ object.sections|default:""|json_script:"initial-sections" }}
 {% endblock %}
 
@@ -154,6 +184,7 @@
     ['text','Text'], ['bullets','Bullet Points'], ['code','Code Block'],
     ['table','Table'], ['youtube','YouTube Video'], ['note','Note / Callout'],
     ['links','Links'], ['image','Image'], ['flowchart','Flowchart'],
+    ['excalidraw','Excalidraw Diagram'],
   ];
 
   // ---------------------------------------------------------------- state
@@ -173,7 +204,8 @@
     return {type: type, title: '', content: '', language: type === 'code' ? 'javascript' : '',
       items: [], headers: type === 'table' ? ['Column A','Column B'] : [],
       rows: type === 'table' ? [['','']] : [], videoId: '', videoTitle: '',
-      description: '', links: [], imageUrl: '', steps: []};
+      description: '', links: [], imageUrl: '', steps: [],
+      elements: [], appState: {}, svgData: '', caption: ''};
   }
 
   // ------------------------------------------------- per-type body markup
@@ -201,6 +233,20 @@
              field(i, 'description', 'input', 'Caption / description', s.description);
     if (t === 'flowchart')
       return field(i, 'steps', 'textarea', 'Steps as JSON', JSON.stringify(s.steps||[], null, 2));
+    if (t === 'excalidraw') {
+      var hasSvg = s.svgData && s.svgData.trim().length > 0;
+      var previewHtml = hasSvg
+        ? '<div class="my-3 p-3 bg-white border border-slate-200 rounded-xl max-h-[300px] overflow-hidden flex items-center justify-center excalidraw-svg-wrapper">' + s.svgData + '</div>'
+        : '<div class="my-3 p-6 bg-slate-100 border border-dashed border-slate-300 rounded-xl text-center text-slate-400 text-xs">No diagram created yet. Click button below to draw.</div>';
+
+      return previewHtml +
+        '<div class="flex items-center gap-3 mb-2">' +
+          '<button type="button" class="open-excalidraw-btn inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors" data-idx="' + i + '">' +
+            '✏️ ' + (hasSvg ? 'Edit Excalidraw Diagram' : 'Open Excalidraw Studio') +
+          '</button>' +
+        '</div>' +
+        field(i, 'caption', 'input', 'Diagram caption (optional)', s.caption || s.description || '');
+    }
     return '';
   }
 
@@ -241,11 +287,19 @@
     else if (f === 'rows') s.rows = v.split('\n').filter(function(l){return l.trim();}).map(function(l){return l.split('|').map(function(c){return c.trim();});});
     else if (f === 'links') s.links = v.split('\n').filter(function(l){return l.trim();}).map(function(l){var p=l.split('|');return {text:(p[0]||'').trim(),url:(p[1]||'').trim(),description:(p[2]||'').trim()};});
     else if (f === 'steps') { try { s.steps = JSON.parse(v || '[]'); } catch(_) {} }
+    else if (f === 'caption') { s.caption = v; s.description = v; }
     else s[f] = v;
   });
 
-  // ------------------------------------------------- structural ops
+  // ------------------------------------------------- structural ops & Excalidraw trigger
   listEl.addEventListener('click', function (e) {
+    var excalBtn = e.target.closest('.open-excalidraw-btn');
+    if (excalBtn) {
+      var idx = +excalBtn.getAttribute('data-idx');
+      openExcalidrawModal(idx);
+      return;
+    }
+
     var rm = e.target.getAttribute('data-remove');
     var mv = e.target.getAttribute('data-move');
     if (rm != null) { sections.splice(+rm, 1); render(); }
@@ -253,6 +307,87 @@
       var i = +e.target.getAttribute('data-idx'); var j = mv === 'up' ? i-1 : i+1;
       if (j < 0 || j >= sections.length) return;
       var tmp = sections[i]; sections[i] = sections[j]; sections[j] = tmp; render();
+    }
+  });
+
+  // ================================================= EXCALIDRAW MODAL LOGIC
+  var currentExcalidrawIdx = null;
+  var excalidrawReactRoot = null;
+  var excalidrawAPI = null;
+
+  function openExcalidrawModal(idx) {
+    currentExcalidrawIdx = idx;
+    var s = sections[idx] || {};
+    var modal = document.getElementById('excalidraw-modal');
+    modal.classList.remove('hidden');
+
+    var container = document.getElementById('excalidraw-container');
+
+    if (typeof React === 'undefined' || typeof ReactDOM === 'undefined' || typeof ExcalidrawLib === 'undefined') {
+      alert('Excalidraw library is loading. Please check your internet connection or wait a few seconds.');
+      return;
+    }
+
+    var ExcalidrawComp = ExcalidrawLib.Excalidraw;
+
+    var initialData = {
+      elements: s.elements || [],
+      appState: Object.assign({ viewBackgroundColor: '#ffffff' }, s.appState || {})
+    };
+
+    var App = function() {
+      return React.createElement(ExcalidrawComp, {
+        initialData: initialData,
+        excalidrawAPI: function(api) {
+          excalidrawAPI = api;
+        }
+      });
+    };
+
+    if (!excalidrawReactRoot) {
+      excalidrawReactRoot = ReactDOM.createRoot(container);
+    }
+    excalidrawReactRoot.render(React.createElement(App));
+  }
+
+  function closeExcalidrawModal() {
+    var modal = document.getElementById('excalidraw-modal');
+    modal.classList.add('hidden');
+    currentExcalidrawIdx = null;
+    excalidrawAPI = null;
+  }
+
+  document.getElementById('excalidraw-cancel-btn').addEventListener('click', closeExcalidrawModal);
+
+  document.getElementById('excalidraw-save-btn').addEventListener('click', async function() {
+    if (currentExcalidrawIdx === null || !excalidrawAPI) {
+      closeExcalidrawModal();
+      return;
+    }
+
+    try {
+      var elements = excalidrawAPI.getSceneElements();
+      var appState = excalidrawAPI.getAppState();
+      var files = excalidrawAPI.getFiles();
+
+      var svgElement = await ExcalidrawLib.exportToSvg({
+        elements: elements,
+        appState: appState,
+        files: files
+      });
+
+      var svgString = svgElement.outerHTML;
+
+      var s = sections[currentExcalidrawIdx];
+      s.elements = elements;
+      s.appState = { viewBackgroundColor: appState.viewBackgroundColor };
+      s.svgData = svgString;
+
+      render();
+      closeExcalidrawModal();
+    } catch (err) {
+      console.error('Failed to export Excalidraw SVG:', err);
+      alert('Error saving diagram. Please try again.');
     }
   });
 
@@ -325,6 +460,10 @@
         if (s.type === 'image') {   // some exports store the URL in `content`
           base.imageUrl = s.imageUrl || s.content || s.attachment || '';
           base.description = s.description || s.caption || '';
+        }
+        if (s.type === 'excalidraw') {
+          base.svgData = s.svgData || s.content || '';
+          base.caption = s.caption || s.description || '';
         }
         return base;
       });

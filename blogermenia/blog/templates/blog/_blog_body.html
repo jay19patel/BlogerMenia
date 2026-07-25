@@ -82,6 +82,20 @@
         </ol>
       </div>
 
+    {% elif section.type == "excalidraw" %}
+      <figure class="my-8 flex flex-col items-center text-center">
+        {% if section.svgData %}
+        <div class="w-full overflow-x-auto rounded-2xl border border-slate-200/80 shadow-sm bg-white p-4 sm:p-6 flex justify-center [&>svg]:max-w-full [&>svg]:h-auto">
+          {{ section.svgData|safe }}
+        </div>
+        {% elif section.imageUrl %}
+        <img class="max-h-[500px] w-auto object-contain rounded-2xl border border-slate-100 shadow-sm" src="{{ section.imageUrl }}" alt="{% if section.caption %}{{ section.caption }}{% elif section.title %}{{ section.title }}{% endif %}">
+        {% endif %}
+        {% if section.caption or section.description %}
+        <figcaption class="text-sm text-slate-500 mt-3 font-medium">{% firstof section.caption section.description %}</figcaption>
+        {% endif %}
+      </figure>
+
     {% else %}
       {{ section.content|linebreaks }}
     {% endif %}
