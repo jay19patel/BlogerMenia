@@ -1,6 +1,8 @@
-{# Renders a blog's body. Structured blogs (introduction + typed sections +
-   conclusion) render block-by-block; legacy blogs fall back to the single
-   `content` HTML field. Relies on the .article-body styles in blog_detail.html. #}
+{% comment %}
+Renders a blog's body. Structured blogs (introduction + typed sections +
+conclusion) render block-by-block; legacy blogs fall back to the single
+`content` HTML field. Relies on the .article-body styles in blog_detail.html.
+{% endcomment %}
 {% if blog.sections or blog.introduction or blog.conclusion %}
 
   {% if blog.introduction %}

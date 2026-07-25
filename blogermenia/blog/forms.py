@@ -12,8 +12,15 @@ class PlaylistForm(forms.ModelForm):
         model = Playlist
         fields = ['title', 'description', 'image']
         widgets = {
-            'title': forms.TextInput(attrs={'placeholder': 'e.g., Essential Reading for Builders'}),
-            'description': forms.Textarea(attrs={'rows': 4, 'placeholder': 'What is this collection about?'}),
+            'title': forms.TextInput(attrs={
+                'class': 'w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 focus:bg-white transition-all',
+                'placeholder': 'e.g., Essential Reading for Builders'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 focus:bg-white transition-all min-h-[120px]',
+                'rows': 4,
+                'placeholder': 'What is this collection about?'
+            }),
         }
 
     def __init__(self, *args, user=None, **kwargs):
