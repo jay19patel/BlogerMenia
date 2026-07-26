@@ -37,8 +37,15 @@ SECRET_KEY = os.environ.get(
 DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
 
 ALLOWED_HOSTS = [h for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h]
+render_hostname = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+if render_hostname and render_hostname not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(render_hostname)
 
 CSRF_TRUSTED_ORIGINS = [o for o in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if o]
+if render_hostname:
+    render_origin = f"https://{render_hostname}"
+    if render_origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(render_origin)
 
 # nginx sits in front in production and forwards this header, so Django knows
 # the original request was HTTPS even though gunicorn itself only speaks HTTP.
@@ -122,7 +129,20 @@ WSGI_APPLICATION = "blogermenia.wsgi.application"
 # SQLite by default (local dev). Set POSTGRES_DB (docker-compose.prod.yml does)
 # to switch to Postgres — no other code changes needed.
 
-if os.environ.get("POSTGRES_DB"):
+if os.environ.get("DATABASE_URL"):
+    import urllib.parse as urlparse
+    url = urlparse.urlparse(os.environ["DATABASE_URL"])
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": url.path[1:],
+            "USER": url.username,
+            "PASSWORD": url.password,
+            "HOST": url.hostname,
+            "PORT": str(url.port or 5432),
+        }
+    }
+elif os.environ.get("POSTGRES_DB"):
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
@@ -179,6 +199,8 @@ USE_TZ = True
 STATIC_URL = "static/"
 # `collectstatic` writes here; WhiteNoise serves it straight from gunicorn.
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+WHITENOISE_MANIFEST_STRICT = False
 
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
@@ -245,8 +267,9 @@ SOCIALACCOUNT_PROVIDERS = {
 # We use dedicated Redis DBs (2 = broker, 3 = results) so this project never
 # shares the default DB 0/1 with any other Celery project on the same machine —
 # otherwise workers steal and discard each other's tasks.
-CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/2")
-CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://localhost:6379/3")
+REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/2")
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", REDIS_URL)
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", os.environ.get("REDIS_URL", "redis://localhost:6379/3"))
 
 # Send/accept only JSON — never pickle (safer, and portable across workers).
 CELERY_ACCEPT_CONTENT = ["json"]

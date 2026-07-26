@@ -41,6 +41,13 @@ COPY --from=builder /opt/venv /opt/venv
 WORKDIR /app
 COPY . .
 
+# Copy entrypoint script and set executable permissions
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 WORKDIR /app/blogermenia
 
 EXPOSE 8000
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["gunicorn"]
