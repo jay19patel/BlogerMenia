@@ -16,6 +16,13 @@
 #     without depending on the host's folder layout
 # ============================================================================
 
+x-logging: &logging
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+
 x-django: &django
   build: .
   image: blogermenia:prod
@@ -29,6 +36,7 @@ x-django: &django
     redis:
       condition: service_healthy
   restart: unless-stopped
+  <<: *logging
 
 services:
   postgres:
@@ -43,6 +51,7 @@ services:
       timeout: 3s
       retries: 5
     restart: unless-stopped
+    <<: *logging
 
   redis:
     image: redis:7-alpine
@@ -55,6 +64,7 @@ services:
       timeout: 3s
       retries: 5
     restart: unless-stopped
+    <<: *logging
 
   web:
     <<: *django
@@ -81,6 +91,7 @@ services:
     depends_on:
       - web
     restart: unless-stopped
+    <<: *logging
 
 volumes:
   postgres_data:
