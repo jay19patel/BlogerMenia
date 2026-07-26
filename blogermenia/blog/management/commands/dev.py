@@ -1,10 +1,10 @@
 """
 One-command local dev launcher.
 
-    python manage.py dev
+    uv run python blogermenia/manage.py dev
 
 Ensures Redis is running (starts it if not), then boots the Celery worker,
-Flower (task monitoring UI) and the Django dev server together — and shuts
+Celery beat scheduler, Flower (task monitoring UI) and the Django dev server together — and shuts
 them all down cleanly on Ctrl+C.
 """
 import os
@@ -12,15 +12,19 @@ import sys
 import time
 import shutil
 import subprocess
+from typing import Any, List, Tuple
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
 
 class Command(BaseCommand):
-    help = "Run Redis + Celery worker + Flower + the Django dev server together."
+    """Management command to launch Redis, Celery Worker, Celery Beat, Flower, and Django dev server."""
 
-    def add_arguments(self, parser):
+    help = "Run Redis + Celery worker + Celery beat + Flower + the Django dev server together."
+
+    def add_arguments(self, parser: Any) -> None:
+        """Add command line arguments for address/port and options."""
         parser.add_argument(
             'addrport', nargs='?', default='127.0.0.1:8000',
             help="Django dev server address:port (default 127.0.0.1:8000).",
@@ -31,12 +35,13 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             '--no-flower', action='store_true',
-            help="Skip Flower (only Redis + worker + runserver).",
+            help="Skip Flower (only Redis + worker + beat + runserver).",
         )
 
     # --- Redis ---------------------------------------------------------------
 
-    def _redis_ok(self):
+    def _redis_ok(self) -> bool:
+        """Check if Redis connection ping succeeds."""
         try:
             import redis
             redis.from_url(settings.CELERY_BROKER_URL, socket_connect_timeout=2).ping()
@@ -44,7 +49,8 @@ class Command(BaseCommand):
         except Exception:
             return False
 
-    def _ensure_redis(self):
+    def _ensure_redis(self) -> None:
+        """Ensure Redis service is running locally."""
         if self._redis_ok():
             self.stdout.write(self.style.SUCCESS("✓ Redis is already running"))
             return
@@ -70,7 +76,8 @@ class Command(BaseCommand):
 
     # --- Run -----------------------------------------------------------------
 
-    def handle(self, *args, **opts):
+    def handle(self, *args: Any, **opts: Any) -> None:
+        """Orchestrate subprocesses for Django dev server, Celery worker, Celery beat, and Flower."""
         self._ensure_redis()
 
         env = os.environ.copy()
@@ -79,14 +86,15 @@ class Command(BaseCommand):
         manage_py = sys.argv[0]
         celery = [sys.executable, '-m', 'celery', '-A', 'blogermenia']
 
-        specs = [
+        specs: List[Tuple[str, List[str]]] = [
             ("worker", celery + ['worker', '-l', 'info', '--concurrency=2']),
+            ("beat", celery + ['beat', '-l', 'info']),
         ]
         if not opts['no_flower']:
             specs.append(("flower", celery + ['flower', f"--port={opts['flower_port']}"]))
         specs.append(("django", [sys.executable, manage_py, 'runserver', opts['addrport']]))
 
-        procs = []
+        procs: List[Tuple[str, subprocess.Popen[bytes]]] = []
         # start_new_session so Ctrl+C hits only THIS command; we forward the
         # shutdown to the children ourselves (no double-signalling).
         for name, cmd in specs:
@@ -95,9 +103,10 @@ class Command(BaseCommand):
         self.stdout.write("")
         self.stdout.write(self.style.MIGRATE_HEADING("Everything is up:"))
         self.stdout.write(f"  • Django    http://{opts['addrport']}")
+        self.stdout.write("  • Worker    processing the Celery queue")
+        self.stdout.write("  • Beat      scheduling periodic tasks")
         if not opts['no_flower']:
             self.stdout.write(f"  • Flower    http://localhost:{opts['flower_port']}")
-        self.stdout.write("  • Worker    processing the Celery queue")
         self.stdout.write(self.style.WARNING("\nPress Ctrl+C to stop everything.\n"))
 
         try:
@@ -114,7 +123,8 @@ class Command(BaseCommand):
         finally:
             self._shutdown(procs)
 
-    def _shutdown(self, procs):
+    def _shutdown(self, procs: List[Tuple[str, subprocess.Popen[bytes]]]) -> None:
+        """Cleanly terminate all spawned subprocesses."""
         for name, p in procs:
             if p.poll() is None:
                 p.terminate()

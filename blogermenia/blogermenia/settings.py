@@ -37,15 +37,7 @@ SECRET_KEY = os.environ.get(
 DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
 
 ALLOWED_HOSTS = [h for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h]
-render_hostname = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
-if render_hostname and render_hostname not in ALLOWED_HOSTS:
-    ALLOWED_HOSTS.append(render_hostname)
-
 CSRF_TRUSTED_ORIGINS = [o for o in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if o]
-if render_hostname:
-    render_origin = f"https://{render_hostname}"
-    if render_origin not in CSRF_TRUSTED_ORIGINS:
-        CSRF_TRUSTED_ORIGINS.append(render_origin)
 
 # nginx sits in front in production and forwards this header, so Django knows
 # the original request was HTTPS even though gunicorn itself only speaks HTTP.
@@ -135,7 +127,7 @@ if os.environ.get("DATABASE_URL"):
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": url.path[1:],
+            "NAME": url.path.split("?")[0].lstrip("/"),
             "USER": url.username,
             "PASSWORD": url.password,
             "HOST": url.hostname,
@@ -149,7 +141,7 @@ elif os.environ.get("POSTGRES_DB"):
             "NAME": os.environ["POSTGRES_DB"],
             "USER": os.environ.get("POSTGRES_USER", "postgres"),
             "PASSWORD": os.environ.get("POSTGRES_PASSWORD", ""),
-            "HOST": os.environ.get("POSTGRES_HOST", "postgres"),
+            "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
             "PORT": os.environ.get("POSTGRES_PORT", "5432"),
         }
     }
@@ -267,9 +259,8 @@ SOCIALACCOUNT_PROVIDERS = {
 # We use dedicated Redis DBs (2 = broker, 3 = results) so this project never
 # shares the default DB 0/1 with any other Celery project on the same machine —
 # otherwise workers steal and discard each other's tasks.
-REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/2")
-CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", REDIS_URL)
-CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", os.environ.get("REDIS_URL", "redis://localhost:6379/3"))
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://127.0.0.1:6379/2")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://127.0.0.1:6379/3")
 
 # Send/accept only JSON — never pickle (safer, and portable across workers).
 CELERY_ACCEPT_CONTENT = ["json"]
