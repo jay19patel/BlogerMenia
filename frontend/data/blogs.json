@@ -1,0 +1,847 @@
+[
+  {
+    "content": "",
+    "image": null,
+    "category_slug": "engineering",
+    "is_published": false,
+    "posted_on_linkedin": false,
+    "linkedin_post_url": null,
+    "subtitle": "A work-in-progress teardown of our job runner.",
+    "excerpt": "Notes from an in-flight rewrite: what the old scheduler promised, what it actually delivered, and which guarantee we are keeping.",
+    "introduction": "This one is still a draft. I am publishing my notes as I go so the decisions are legible later, including the ones that turn out to be wrong.",
+    "conclusion": "",
+    "tags": [
+      "Celery",
+      "Scheduling",
+      "Draft"
+    ],
+    "featured": false,
+    "sections": [
+      {
+        "type": "text",
+        "title": "The guarantee we actually had",
+        "content": "For three years we told people the scheduler was at-least-once. It was, in the sense that a job never silently vanished. It was not, in the sense that a worker killed between the fetch and the ack would replay work that had already had visible side effects."
+      },
+      {
+        "type": "bullets",
+        "title": "What the rewrite must keep",
+        "items": [
+          "Jobs are never lost, even across an ungraceful shutdown",
+          "Duplicate delivery stays possible but becomes observable",
+          "Schedule drift stays under one second at p99"
+        ]
+      }
+    ],
+    "id": 12,
+    "title": "Rewriting the Scheduler, One Guarantee at a Time",
+    "slug": "rewriting-the-scheduler-one-guarantee-at-a-time",
+    "author_id": 1,
+    "read_count": 3,
+    "like_count": 0,
+    "created_at": "2026-08-28T10:12:00.000Z",
+    "updated_at": "2026-08-29T08:40:00.000Z"
+  },
+  {
+    "content": "",
+    "image": null,
+    "category_slug": "technology",
+    "is_published": true,
+    "posted_on_linkedin": true,
+    "linkedin_post_url": "https://www.linkedin.com/posts/jay-patel-dev_real-time-dashboards-activity-7000000000000000000",
+    "subtitle": "From websockets to charts, a practical end-to-end guide.",
+    "excerpt": "Build a live cryptocurrency dashboard with Django, websockets and Chart.js, including data flow, code and the deployment details that usually bite.",
+    "introduction": "Real-time dashboards feel like magic, but the building blocks are simple once you see them laid out. In this walkthrough we will wire up a live crypto price dashboard step by step, then spend the second half on everything that breaks once real traffic arrives.",
+    "conclusion": "A real-time dashboard is three ordinary problems stacked on top of each other: getting the data, fanning it out, and drawing it without melting the browser. Solve them one at a time and the magic goes away, which is exactly what you want in something you have to operate.",
+    "tags": [
+      "Django",
+      "WebSockets",
+      "Crypto",
+      "Chart.js",
+      "Tutorial"
+    ],
+    "featured": true,
+    "sections": [
+      {
+        "type": "text",
+        "title": "What we are building",
+        "content": "A single-page dashboard that streams live prices for a handful of coins, updates charts in real time, and degrades gracefully when the connection drops.\n\nThe important word there is gracefully. Every demo works on a stable connection; the interesting engineering starts at the first reconnect."
+      },
+      {
+        "type": "bullets",
+        "title": "Tech stack",
+        "items": [
+          "Django for the backend and templating",
+          "A websocket feed for live prices",
+          "Chart.js for the live charts",
+          "Redis to fan out updates to connected clients"
+        ]
+      },
+      {
+        "type": "code",
+        "title": "Connecting to the price feed",
+        "language": "python",
+        "content": "import json\nimport websocket\n\n\ndef on_message(ws, message):\n    data = json.loads(message)\n    print(data['symbol'], data['price'])\n\n\nws = websocket.WebSocketApp(\n    'wss://stream.example.com/prices',\n    on_message=on_message,\n)\nws.run_forever()"
+      },
+      {
+        "type": "table",
+        "title": "Coins we will track",
+        "headers": [
+          "Symbol",
+          "Name",
+          "Update interval"
+        ],
+        "rows": [
+          [
+            "BTC",
+            "Bitcoin",
+            "1s"
+          ],
+          [
+            "ETH",
+            "Ethereum",
+            "1s"
+          ],
+          [
+            "SOL",
+            "Solana",
+            "2s"
+          ]
+        ]
+      },
+      {
+        "type": "note",
+        "title": "Heads up",
+        "content": "Always throttle chart re-renders. Updating on every single tick will pin the CPU on busy markets. Batch updates every 500ms instead and the difference is invisible to a human eye."
+      },
+      {
+        "type": "code",
+        "title": "Batching updates on the client",
+        "language": "javascript",
+        "content": "const pending = new Map();\n\nsocket.addEventListener('message', (event) => {\n  const tick = JSON.parse(event.data);\n  pending.set(tick.symbol, tick.price);\n});\n\nsetInterval(() => {\n  if (pending.size === 0) return;\n  for (const [symbol, price] of pending) {\n    chart.data.datasets[index[symbol]].data.push(price);\n  }\n  pending.clear();\n  chart.update('none');\n}, 500);"
+      },
+      {
+        "type": "links",
+        "title": "Useful references",
+        "links": [
+          {
+            "text": "Chart.js docs",
+            "url": "https://www.chartjs.org/docs/latest/",
+            "description": "Official charting library docs"
+          },
+          {
+            "text": "Django Channels",
+            "url": "https://channels.readthedocs.io/",
+            "description": "Websockets for Django"
+          },
+          {
+            "text": "MDN: WebSocket",
+            "url": "https://developer.mozilla.org/docs/Web/API/WebSocket",
+            "description": "The browser API, including close codes"
+          }
+        ]
+      },
+      {
+        "type": "youtube",
+        "title": "Video walkthrough",
+        "videoId": "dQw4w9WgXcQ",
+        "videoTitle": "Real-time dashboards explained",
+        "description": "A short primer on streaming architectures."
+      },
+      {
+        "type": "flowchart",
+        "title": "Reconnect strategy",
+        "steps": [
+          {
+            "title": "Socket closes",
+            "description": "Record the close code and the last sequence number seen."
+          },
+          {
+            "title": "Back off",
+            "description": "Exponential, jittered, capped at 30 seconds.",
+            "branches": [
+              {
+                "title": "Code 1000",
+                "description": "clean close, do not reconnect"
+              },
+              {
+                "title": "Code 1006",
+                "description": "abnormal, reconnect immediately once"
+              }
+            ]
+          },
+          {
+            "title": "Resume",
+            "description": "Re-subscribe and request a snapshot to fill the gap."
+          }
+        ]
+      }
+    ],
+    "id": 1,
+    "title": "Building a Real-Time Crypto Dashboard: A Complete Walkthrough",
+    "slug": "building-a-real-time-crypto-dashboard-a-complete-walkthrough",
+    "author_id": 1,
+    "read_count": 4821,
+    "like_count": 214,
+    "created_at": "2026-08-24T07:30:00.000Z",
+    "updated_at": "2026-08-24T07:30:00.000Z"
+  },
+  {
+    "content": "",
+    "image": "/media/blog_images/observability-cover.png",
+    "category_slug": "engineering",
+    "is_published": true,
+    "posted_on_linkedin": false,
+    "linkedin_post_url": null,
+    "subtitle": "Three layers, one invalidation path, and no guessing.",
+    "excerpt": "Caching is easy until someone asks how stale the answer is. Here is the layered design we settled on, and the one rule that keeps it honest.",
+    "introduction": "Every read-heavy service ends up with a cache. The question is never whether to add one, it is whether anybody can still say how old a given response is. This is the design we landed on after two rewrites.",
+    "conclusion": "The cache is not the interesting part. The invalidation path is. If you can draw it on one page and every engineer draws the same picture, you are probably fine.",
+    "tags": [
+      "Caching",
+      "Redis",
+      "Postgres",
+      "Architecture"
+    ],
+    "featured": false,
+    "sections": [
+      {
+        "type": "text",
+        "title": "The rule",
+        "content": "Every cached value carries the timestamp of the write it was derived from. Not the time it was cached, the time the underlying row last changed. That single change turned a class of unreproducible bugs into a comparison you can put in an assertion."
+      },
+      {
+        "type": "image",
+        "title": "Where the layers sit",
+        "imageUrl": "/media/blog_images/cache-layers.svg",
+        "description": "Requests fall through three layers; invalidation travels back up the same path."
+      },
+      {
+        "type": "table",
+        "title": "What each layer is for",
+        "headers": [
+          "Layer",
+          "TTL",
+          "Serves",
+          "Invalidated by"
+        ],
+        "rows": [
+          [
+            "Edge",
+            "30s",
+            "71%",
+            "purge on write"
+          ],
+          [
+            "Redis",
+            "5m",
+            "22%",
+            "explicit delete"
+          ],
+          [
+            "Postgres",
+            "n/a",
+            "7%",
+            "n/a"
+          ]
+        ]
+      },
+      {
+        "type": "code",
+        "title": "Stamping the version",
+        "language": "python",
+        "content": "def cached_article(slug):\n    key = f'article:{slug}'\n    hit = redis.get(key)\n    if hit:\n        payload = json.loads(hit)\n        if payload['version'] >= current_version(slug):\n            return payload['data']\n\n    row = Article.objects.get(slug=slug)\n    payload = {'version': row.updated_at.timestamp(), 'data': serialize(row)}\n    redis.setex(key, 300, json.dumps(payload))\n    return payload['data']"
+      },
+      {
+        "type": "bullets",
+        "title": "What we stopped doing",
+        "items": [
+          "Caching querysets instead of serialized payloads",
+          "Using the request path as a cache key",
+          "Treating a cache miss as an error worth paging on"
+        ]
+      },
+      {
+        "type": "note",
+        "title": "One caveat",
+        "content": "This design assumes writes are rare relative to reads. At roughly a 1:3 ratio the purge traffic starts to dominate and you are better off with a shorter TTL and no invalidation at all."
+      }
+    ],
+    "id": 2,
+    "title": "Designing a Read-Heavy Cache That Does Not Lie to You",
+    "slug": "designing-a-read-heavy-cache-that-does-not-lie-to-you",
+    "author_id": 1,
+    "read_count": 3102,
+    "like_count": 176,
+    "created_at": "2026-08-12T06:05:00.000Z",
+    "updated_at": "2026-08-13T09:15:00.000Z"
+  },
+  {
+    "content": "",
+    "image": null,
+    "category_slug": "design",
+    "is_published": true,
+    "posted_on_linkedin": true,
+    "linkedin_post_url": "https://www.linkedin.com/posts/sana-mehra-design_design-systems-activity-7000000000000000001",
+    "subtitle": "A design system is a promise, and promises need terms.",
+    "excerpt": "The hardest part of a design system is not the components. It is agreeing, in writing, on what a team gives up in exchange for using them.",
+    "introduction": "Every design system I have worked on died the same way: not from bad components, but from an unwritten agreement that nobody could point to when it was broken.",
+    "conclusion": "Write the contract down. Put it next to the components. When someone forks a button, the conversation stops being about taste and starts being about terms.",
+    "tags": [
+      "Design Systems",
+      "Tokens",
+      "Documentation"
+    ],
+    "featured": false,
+    "sections": [
+      {
+        "type": "text",
+        "title": "What the system owes you",
+        "content": "Accessibility, visual consistency, and a migration path when something changes. Those three, in writing, with owners attached."
+      },
+      {
+        "type": "bullets",
+        "title": "What you owe the system",
+        "items": [
+          "You do not fork a component to change one padding value",
+          "You file the gap instead of styling around it",
+          "You upgrade within one minor version of a breaking change"
+        ]
+      },
+      {
+        "type": "note",
+        "title": "The test",
+        "content": "If a designer cannot explain, in one sentence, why a component looks the way it does, the component is decoration rather than a decision."
+      },
+      {
+        "type": "links",
+        "title": "Worth reading",
+        "links": [
+          {
+            "text": "Design Tokens Format Module",
+            "url": "https://tr.designtokens.org/format/",
+            "description": "The interchange format, once it settles"
+          },
+          {
+            "url": "https://www.w3.org/WAI/ARIA/apg/"
+          }
+        ]
+      }
+    ],
+    "id": 3,
+    "title": "The Design System Contract",
+    "slug": "the-design-system-contract",
+    "author_id": 2,
+    "read_count": 2417,
+    "like_count": 198,
+    "created_at": "2026-07-30T12:40:00.000Z",
+    "updated_at": "2026-07-30T12:40:00.000Z"
+  },
+  {
+    "content": "",
+    "image": null,
+    "category_slug": "ai-ml",
+    "is_published": true,
+    "posted_on_linkedin": false,
+    "linkedin_post_url": null,
+    "subtitle": "Your recall@10 went up. Did anything get better?",
+    "excerpt": "A short field guide to evaluating retrieval systems, including the three ways a benchmark quietly becomes meaningless.",
+    "introduction": "Retrieval metrics are easy to move and hard to trust. Most of the improvements I have shipped looked smaller on the dashboard than they felt in use, and a few of the big dashboard wins did nothing at all.",
+    "conclusion": "Pick a metric you can defend to a sceptical colleague, freeze the evaluation set before you tune, and re-read a sample of the failures by hand every month. There is no substitute for the last part.",
+    "tags": [
+      "Retrieval",
+      "Evaluation",
+      "RAG"
+    ],
+    "featured": false,
+    "sections": [
+      {
+        "type": "text",
+        "title": "Three ways a benchmark rots",
+        "content": "Leakage from the tuning set, annotator drift as the guidelines get reinterpreted, and a query distribution that no longer matches production. All three are invisible from the number alone."
+      },
+      {
+        "type": "table",
+        "title": "Metrics and what they hide",
+        "headers": [
+          "Metric",
+          "Good for",
+          "Blind to"
+        ],
+        "rows": [
+          [
+            "Recall@k",
+            "coverage",
+            "ordering within k"
+          ],
+          [
+            "MRR",
+            "first useful hit",
+            "everything after it"
+          ],
+          [
+            "nDCG",
+            "graded relevance",
+            "annotator disagreement"
+          ]
+        ]
+      },
+      {
+        "type": "code",
+        "title": "A judgement set you can actually diff",
+        "language": "python",
+        "content": "from dataclasses import dataclass\n\n\n@dataclass(frozen=True)\nclass Judgement:\n    query_id: str\n    doc_id: str\n    grade: int          # 0 irrelevant, 1 partial, 2 relevant\n    annotator: str\n    guideline_version: str\n\n\ndef ndcg_at_k(ranked, judgements, k):\n    gains = [judgements.get(doc, 0) for doc in ranked[:k]]\n    dcg = sum(g / math.log2(i + 2) for i, g in enumerate(gains))\n    ideal = sorted(judgements.values(), reverse=True)[:k]\n    idcg = sum(g / math.log2(i + 2) for i, g in enumerate(ideal))\n    return dcg / idcg if idcg else 0.0"
+      },
+      {
+        "type": "flowchart",
+        "title": "The loop we run monthly",
+        "steps": [
+          {
+            "title": "Sample",
+            "description": "200 production queries, stratified by intent."
+          },
+          {
+            "title": "Judge",
+            "description": "Two annotators, adjudicate disagreements.",
+            "branches": [
+              {
+                "title": "Agreement above 0.8",
+                "description": "accept the batch"
+              },
+              {
+                "title": "Below 0.8",
+                "description": "rewrite the guideline, re-judge"
+              }
+            ]
+          },
+          {
+            "title": "Compare",
+            "description": "Score the frozen set, then the fresh one, and look at the gap."
+          }
+        ]
+      }
+    ],
+    "id": 4,
+    "title": "Retrieval Evaluation Without Fooling Yourself",
+    "slug": "retrieval-evaluation-without-fooling-yourself",
+    "author_id": 5,
+    "read_count": 1980,
+    "like_count": 143,
+    "created_at": "2026-07-15T15:20:00.000Z",
+    "updated_at": "2026-07-16T11:00:00.000Z"
+  },
+  {
+    "content": "",
+    "image": null,
+    "category_slug": "opinion",
+    "is_published": true,
+    "posted_on_linkedin": false,
+    "linkedin_post_url": null,
+    "subtitle": "The rota is the cheap part.",
+    "excerpt": "An honest accounting of what a 24/7 rotation takes out of a team, and the four changes that bought back the most.",
+    "introduction": "We ran a six-person rotation for two years. The pager fired 41 times. Only nine of those were incidents. Here is what the other 32 cost us.",
+    "conclusion": "You cannot make on-call free. You can make it small, predictable, and visibly owned by the people who chose the architecture. That is most of the way there.",
+    "tags": [
+      "On-call",
+      "Reliability",
+      "Management"
+    ],
+    "featured": false,
+    "sections": [
+      {
+        "type": "text",
+        "title": "The invisible line item",
+        "content": "The cost is not the night you get paged. It is the four nights you sleep badly because you might be. Nobody logs that, and it does not show up in any incident review."
+      },
+      {
+        "type": "bullets",
+        "title": "What we changed",
+        "items": [
+          "Every alert needs a linked runbook or it gets deleted after 30 days",
+          "The team that ships the service carries the pager for it",
+          "A week on call means a week off feature work, not a week of both",
+          "Anything that fires more than twice a quarter becomes a sprint item"
+        ]
+      },
+      {
+        "type": "note",
+        "title": "The one that mattered",
+        "content": "Deleting alerts. We removed 60% of them in a single afternoon and the number of real incidents we caught did not change."
+      }
+    ],
+    "id": 5,
+    "title": "What On-Call Actually Costs",
+    "slug": "what-on-call-actually-costs",
+    "author_id": 4,
+    "read_count": 3644,
+    "like_count": 287,
+    "created_at": "2026-06-28T08:00:00.000Z",
+    "updated_at": "2026-06-28T08:00:00.000Z"
+  },
+  {
+    "content": "",
+    "image": null,
+    "category_slug": "engineering",
+    "is_published": true,
+    "posted_on_linkedin": true,
+    "linkedin_post_url": "https://www.linkedin.com/posts/rohan-kapoor-dev_postgres-activity-7000000000000000002",
+    "subtitle": "When B-tree is not the answer, and how to tell.",
+    "excerpt": "A practical tour of Postgres index types with the query shapes that justify each one, plus how to read what the planner is actually doing.",
+    "introduction": "Most index advice stops at create index on the column you filter by. That covers maybe seventy percent of cases. This is about the rest.",
+    "conclusion": "Read the plan before you add the index and read it again after. An index that the planner refuses to use is pure write amplification with extra steps.",
+    "tags": [
+      "Postgres",
+      "Performance",
+      "SQL"
+    ],
+    "featured": false,
+    "sections": [
+      {
+        "type": "text",
+        "title": "Start with the plan",
+        "content": "EXPLAIN (ANALYZE, BUFFERS) is the only opinion that counts. Everything below is a hypothesis you are going to test with it."
+      },
+      {
+        "type": "code",
+        "title": "The command you should reach for first",
+        "language": "sql",
+        "content": "EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)\nSELECT id, title, created_at\nFROM blog_blog\nWHERE is_published = true\n  AND category_id = 4\nORDER BY created_at DESC\nLIMIT 10;"
+      },
+      {
+        "type": "table",
+        "title": "Index types by query shape",
+        "headers": [
+          "Type",
+          "Use when",
+          "Avoid when"
+        ],
+        "rows": [
+          [
+            "B-tree",
+            "equality and range on scalars",
+            "array containment"
+          ],
+          [
+            "GIN",
+            "jsonb keys, full-text, arrays",
+            "high write volume"
+          ],
+          [
+            "BRIN",
+            "huge append-only tables",
+            "randomly ordered data"
+          ],
+          [
+            "Partial",
+            "a hot subset of rows",
+            "the predicate changes often"
+          ]
+        ]
+      },
+      {
+        "type": "bullets",
+        "title": "Cheap wins",
+        "items": [
+          "A partial index on is_published = true, since nothing queries the drafts",
+          "Matching the index column order to the ORDER BY, not just the WHERE",
+          "Dropping the redundant single-column index a composite already covers"
+        ]
+      },
+      {
+        "type": "note",
+        "title": "Before you add one",
+        "content": "Every index is paid for on every write. Three unused indexes on a hot table is a measurable throughput tax, and pg_stat_user_indexes will tell you which ones they are."
+      }
+    ],
+    "id": 6,
+    "title": "Postgres Indexes: A Field Guide",
+    "slug": "postgres-indexes-a-field-guide",
+    "author_id": 3,
+    "read_count": 5210,
+    "like_count": 331,
+    "created_at": "2026-06-10T09:45:00.000Z",
+    "updated_at": "2026-06-11T07:20:00.000Z"
+  },
+  {
+    "content": "",
+    "image": null,
+    "category_slug": "career",
+    "is_published": true,
+    "posted_on_linkedin": false,
+    "linkedin_post_url": null,
+    "subtitle": "Structure beats prose, every time.",
+    "excerpt": "Four structural changes that took our docs from ignored to load-bearing, with no increase in word count.",
+    "introduction": "Nobody reads documentation. People search documentation, land in the middle of a page, and decide within four seconds whether to stay. Write for that.",
+    "conclusion": "Good docs are not well-written docs. They are docs where the answer is where the reader expected it to be.",
+    "tags": [
+      "Documentation",
+      "DX",
+      "Writing"
+    ],
+    "featured": false,
+    "sections": [
+      {
+        "type": "text",
+        "title": "Write the failure first",
+        "content": "The single highest-traffic paragraph in our docs is a list of error messages with one sentence each. It took an afternoon to write and it outperforms the tutorial we spent a month on."
+      },
+      {
+        "type": "bullets",
+        "title": "The four changes",
+        "items": [
+          "One page per task, never per feature",
+          "Runnable code above the explanation, not below it",
+          "Every error string in the product appears verbatim somewhere in the docs",
+          "A last-reviewed date on every page, and a bot that files an issue at 180 days"
+        ]
+      },
+      {
+        "type": "links",
+        "title": "References",
+        "links": [
+          {
+            "text": "Diataxis",
+            "url": "https://diataxis.fr/",
+            "description": "The four-mode framework this is loosely based on"
+          },
+          {
+            "text": "Google developer documentation style guide",
+            "url": "https://developers.google.com/style",
+            "description": "Useful even if you disagree with half of it"
+          }
+        ]
+      }
+    ],
+    "id": 7,
+    "title": "Writing Docs Developers Actually Read",
+    "slug": "writing-docs-developers-actually-read",
+    "author_id": 6,
+    "read_count": 1466,
+    "like_count": 97,
+    "created_at": "2026-05-22T13:10:00.000Z",
+    "updated_at": "2026-05-22T13:10:00.000Z"
+  },
+  {
+    "content": "",
+    "image": null,
+    "category_slug": "engineering",
+    "is_published": true,
+    "posted_on_linkedin": false,
+    "linkedin_post_url": null,
+    "subtitle": "A codemod, a visual diff gate, and eleven weeks.",
+    "excerpt": "How we moved four hundred server-rendered templates onto a shared component library without a freeze, a rewrite, or a single big-bang release.",
+    "introduction": "The plan everyone proposes is a rewrite. The plan that works is a codemod plus a gate that makes regressions impossible to merge.",
+    "conclusion": "Eleven weeks, no freeze, and 383 of 400 templates converted automatically. The other seventeen were genuinely special, which is a much better conversation to have than four hundred maybes.",
+    "tags": [
+      "Migration",
+      "Codemods",
+      "Frontend"
+    ],
+    "featured": false,
+    "sections": [
+      {
+        "type": "text",
+        "title": "Why a codemod and not a rewrite",
+        "content": "A rewrite asks every team to stop. A codemod asks them to review a diff. Only one of those fits into a normal sprint."
+      },
+      {
+        "type": "excalidraw",
+        "title": "The pipeline",
+        "svgData": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 600 260\" width=\"600\" height=\"260\"><rect width=\"600\" height=\"260\" fill=\"#ffffff\"/><g font-family=\"Virgil, Segoe UI, sans-serif\" font-size=\"14\" fill=\"#1e1e1e\"><rect x=\"30\" y=\"40\" width=\"150\" height=\"60\" rx=\"8\" fill=\"none\" stroke=\"#1971c2\" stroke-width=\"2\"/><text x=\"105\" y=\"76\" text-anchor=\"middle\" fill=\"#1971c2\">Legacy templates</text><rect x=\"225\" y=\"40\" width=\"150\" height=\"60\" rx=\"8\" fill=\"none\" stroke=\"#2f9e44\" stroke-width=\"2\"/><text x=\"300\" y=\"68\" text-anchor=\"middle\" fill=\"#2f9e44\">Codemod</text><text x=\"300\" y=\"86\" text-anchor=\"middle\" fill=\"#2f9e44\">(AST rewrite)</text><rect x=\"420\" y=\"40\" width=\"150\" height=\"60\" rx=\"8\" fill=\"none\" stroke=\"#e8590c\" stroke-width=\"2\"/><text x=\"495\" y=\"76\" text-anchor=\"middle\" fill=\"#e8590c\">Component library</text><path d=\"M180 70 L220 70\" stroke=\"#1e1e1e\" stroke-width=\"2\" fill=\"none\"/><path d=\"M212 64 L222 70 L212 76\" stroke=\"#1e1e1e\" stroke-width=\"2\" fill=\"none\"/><path d=\"M375 70 L415 70\" stroke=\"#1e1e1e\" stroke-width=\"2\" fill=\"none\"/><path d=\"M407 64 L417 70 L407 76\" stroke=\"#1e1e1e\" stroke-width=\"2\" fill=\"none\"/><rect x=\"225\" y=\"160\" width=\"150\" height=\"55\" rx=\"8\" fill=\"none\" stroke=\"#862e9c\" stroke-width=\"2\"/><text x=\"300\" y=\"193\" text-anchor=\"middle\" fill=\"#862e9c\">Visual diff gate</text><path d=\"M300 100 L300 155\" stroke=\"#1e1e1e\" stroke-width=\"2\" fill=\"none\"/><path d=\"M294 147 L300 157 L306 147\" stroke=\"#1e1e1e\" stroke-width=\"2\" fill=\"none\"/></g></svg>",
+        "caption": "Templates pass through the codemod, then through a visual diff gate before merge."
+      },
+      {
+        "type": "flowchart",
+        "title": "Per-template flow",
+        "steps": [
+          {
+            "title": "Parse",
+            "description": "Build an AST for the template, bail out on anything unparseable."
+          },
+          {
+            "title": "Rewrite",
+            "description": "Map known markup patterns onto components.",
+            "branches": [
+              {
+                "title": "Confident match",
+                "description": "rewrite and open a PR"
+              },
+              {
+                "title": "Ambiguous",
+                "description": "leave it, add to the manual list"
+              }
+            ]
+          },
+          {
+            "title": "Gate",
+            "description": "Screenshot before and after; any pixel delta blocks the merge."
+          }
+        ]
+      },
+      {
+        "type": "table",
+        "title": "Where the time went",
+        "headers": [
+          "Phase",
+          "Weeks",
+          "Templates converted"
+        ],
+        "rows": [
+          [
+            "Codemod v1",
+            "3",
+            "212"
+          ],
+          [
+            "Codemod v2 (edge cases)",
+            "4",
+            "171"
+          ],
+          [
+            "Manual",
+            "4",
+            "17"
+          ]
+        ]
+      }
+    ],
+    "id": 8,
+    "title": "Migrating 400 Templates to a Component Library",
+    "slug": "migrating-400-templates-to-a-component-library",
+    "author_id": 2,
+    "read_count": 2231,
+    "like_count": 154,
+    "created_at": "2026-05-05T10:30:00.000Z",
+    "updated_at": "2026-05-07T16:45:00.000Z"
+  },
+  {
+    "content": "",
+    "image": null,
+    "category_slug": "career",
+    "is_published": true,
+    "posted_on_linkedin": false,
+    "linkedin_post_url": null,
+    "subtitle": "Five rounds, one signal.",
+    "excerpt": "We tracked two years of hiring decisions against on-the-job performance. Four of our five interview rounds predicted nothing.",
+    "introduction": "This is an uncomfortable post to write, because I designed three of the rounds we deleted.",
+    "conclusion": "Fewer rounds, better calibrated, with a written rubric the candidate could have read in advance. Our offer acceptance went up nine points and our first-year regret rate went down.",
+    "tags": [
+      "Hiring",
+      "Management",
+      "Interviews"
+    ],
+    "featured": false,
+    "sections": [
+      {
+        "type": "text",
+        "title": "What we measured",
+        "content": "For every hire over two years, we compared each interviewer's numeric score against the manager's twelve-month rating. Then we did the same for the candidates we rejected but who were hired by teams we could follow up with."
+      },
+      {
+        "type": "bullets",
+        "title": "What survived",
+        "items": [
+          "A paid, scoped work sample reviewed by two people independently",
+          "A structured conversation about a real system the candidate has operated"
+        ]
+      },
+      {
+        "type": "note",
+        "title": "The uncomfortable part",
+        "content": "The whiteboard algorithms round had a correlation with on-the-job rating of roughly zero. It did, however, correlate strongly with how recently the candidate had been interviewing."
+      }
+    ],
+    "id": 9,
+    "title": "The Interview Loop We Stopped Running",
+    "slug": "the-interview-loop-we-stopped-running",
+    "author_id": 4,
+    "read_count": 2890,
+    "like_count": 241,
+    "created_at": "2026-04-18T07:55:00.000Z",
+    "updated_at": "2026-04-18T07:55:00.000Z"
+  },
+  {
+    "content": "",
+    "image": null,
+    "category_slug": "technology",
+    "is_published": true,
+    "posted_on_linkedin": false,
+    "linkedin_post_url": null,
+    "subtitle": "Server-sent events, chunked responses, and when each one is right.",
+    "excerpt": "Streaming is not one technique. Here are the three that matter, with the failure mode each one hides.",
+    "introduction": "Every streaming bug I have debugged came from a buffer somewhere in the chain that nobody knew about. Start by finding the buffers.",
+    "conclusion": "Pick the simplest transport that survives your proxy layer. That is almost always server-sent events, and almost never a websocket.",
+    "tags": [
+      "Streaming",
+      "SSE",
+      "HTTP"
+    ],
+    "featured": false,
+    "sections": [
+      {
+        "type": "text",
+        "title": "Find the buffers first",
+        "content": "Your reverse proxy buffers. Your CDN buffers. The browser buffers until it has enough bytes to guess a MIME type. Any one of them will turn a stream into a single delayed response."
+      },
+      {
+        "type": "code",
+        "title": "The minimum viable SSE endpoint",
+        "language": "javascript",
+        "content": "export async function GET() {\n  const encoder = new TextEncoder();\n  const stream = new ReadableStream({\n    async start(controller) {\n      for await (const chunk of generate()) {\n        controller.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\\n\\n`));\n      }\n      controller.close();\n    },\n  });\n\n  return new Response(stream, {\n    headers: {\n      'Content-Type': 'text/event-stream',\n      'Cache-Control': 'no-cache, no-transform',\n      'X-Accel-Buffering': 'no',\n    },\n  });\n}"
+      },
+      {
+        "type": "youtube",
+        "title": "Background",
+        "videoId": "aQ9BlxCVOcM",
+        "videoTitle": "HTTP streaming, end to end",
+        "description": "Worth watching before you pick a transport."
+      },
+      {
+        "type": "links",
+        "title": "Specs and gotchas",
+        "links": [
+          {
+            "text": "WHATWG: Server-sent events",
+            "url": "https://html.spec.whatwg.org/multipage/server-sent-events.html",
+            "description": "Including the reconnect and last-event-id semantics"
+          },
+          {
+            "text": "nginx proxy_buffering",
+            "url": "https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffering",
+            "description": "The setting that breaks most first attempts"
+          }
+        ]
+      }
+    ],
+    "id": 10,
+    "title": "A Practical Guide to Streaming Responses",
+    "slug": "a-practical-guide-to-streaming-responses",
+    "author_id": 3,
+    "read_count": 1755,
+    "like_count": 112,
+    "created_at": "2026-03-29T18:25:00.000Z",
+    "updated_at": "2026-03-29T18:25:00.000Z"
+  },
+  {
+    "content": "<p>There are only two hard problems in computer science, and I have been losing to one of them all week.</p><h2>Names are compression</h2><p>A good name is a lossy compression of an idea that happens to decompress correctly in another person's head. That is a much harder thing to do than picking an accurate word.</p><h2>Three rules that survived</h2><ul><li>Name it after what it guarantees, not what it does.</li><li>If you need a comment to explain the name, the comment is the name.</li><li>Plural names on things that can be empty. It saves an argument later.</li></ul><p>None of this is original. All of it is repeatedly forgotten, including by me, roughly every six months.</p>",
+    "image": null,
+    "category_slug": null,
+    "is_published": true,
+    "posted_on_linkedin": false,
+    "linkedin_post_url": null,
+    "subtitle": "",
+    "excerpt": "",
+    "introduction": "",
+    "conclusion": "",
+    "tags": [],
+    "featured": false,
+    "sections": [],
+    "id": 11,
+    "title": "Notes on Naming Things",
+    "slug": "notes-on-naming-things",
+    "author_id": 7,
+    "read_count": 612,
+    "like_count": 38,
+    "created_at": "2026-02-14T20:15:00.000Z",
+    "updated_at": "2026-02-14T20:15:00.000Z"
+  }
+]

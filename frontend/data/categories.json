@@ -1,0 +1,8 @@
+[
+  { "id": 1, "name": "AI & ML", "slug": "ai-ml", "color": "indigo" },
+  { "id": 2, "name": "Career", "slug": "career", "color": "amber" },
+  { "id": 3, "name": "Design", "slug": "design", "color": "purple" },
+  { "id": 4, "name": "Engineering", "slug": "engineering", "color": "teal" },
+  { "id": 5, "name": "Opinion", "slug": "opinion", "color": "rose" },
+  { "id": 6, "name": "Technology", "slug": "technology", "color": "blue" }
+]

@@ -1,0 +1,227 @@
+@import 'tailwindcss';
+@import './untitled-ui-tokens.css';
+
+@plugin 'tailwindcss-react-aria-components';
+@plugin 'tailwindcss-animate';
+
+@theme {
+  /*
+   * next/font exposes each family under its own variable; these theme keys are
+   * what `font-sans` / `font-serif` / `font-mono` compile to. The names must
+   * differ or the theme key would reference itself.
+   */
+  --font-sans: var(--font-jakarta), 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-serif: var(--font-newsreader), Newsreader, Georgia, serif;
+  --font-mono: var(--font-jetbrains), 'JetBrains Mono', monospace;
+
+  /*
+   * The Django config declared only 50/100/500/600/700, yet the templates also
+   * reference brand-200/300/400 (the profile cover gradient, card hover borders,
+   * avatar rings) — so those silently rendered as nothing upstream. The five
+   * declared values are Tailwind's Indigo ramp, so the gaps are filled from the
+   * same ramp and the markup now renders as it was written to.
+   */
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-200: #c7d2fe;
+  --color-brand-300: #a5b4fc;
+  --color-brand-400: #818cf8;
+  --color-brand-500: #6366f1;
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca;
+  --color-brand-800: #3730a3;
+  --color-brand-900: #312e81;
+
+  /*
+   * Tailwind v4 expresses font-size line-heights as unitless ratios, which
+   * children with a different font-size then inherit and rescale — a
+   * `text-[11px]` count inside a `text-sm` nav item came out 4.3px shorter.
+   * Pinning the v3 scale's absolute line-heights keeps the vertical rhythm
+   * identical to the Django app's Tailwind CDN build.
+   */
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 2rem;
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: 2.25rem;
+  --text-4xl: 2.25rem;
+  --text-4xl--line-height: 2.5rem;
+  --text-5xl: 3rem;
+  --text-5xl--line-height: 1;
+  --text-6xl: 3.75rem;
+  --text-6xl--line-height: 1;
+  --text-7xl: 4.5rem;
+  --text-7xl--line-height: 1;
+  --text-8xl: 6rem;
+  --text-8xl--line-height: 1;
+  --text-9xl: 8rem;
+  --text-9xl--line-height: 1;
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+/* --- from `base.html` \3c style> ------------------------------------------- */
+body {
+  font-family: var(--font-sans);
+}
+.font-serif {
+  font-family: var(--font-serif);
+}
+.mono {
+  font-family: var(--font-mono);
+}
+
+/* --- from `blog_detail.html` \3c style>, scoped to the article body --------- */
+.article-body pre code.hljs {
+  padding: 0 !important;
+  background: transparent !important;
+}
+.article-body pre {
+  background: #282c34;
+  border: 1px solid #1a1d23;
+  border-radius: 0.75rem;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+.article-body code:not(pre code) {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  background: #f1f5f9;
+  color: #e11d48;
+  border-radius: 0.25rem;
+  padding: 0.15rem 0.45rem;
+}
+.article-body h2 {
+  font-family: var(--font-serif);
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin-top: 2.75rem;
+  margin-bottom: 1rem;
+  scroll-margin-top: 6rem;
+  line-height: 1.25;
+}
+.article-body h3 {
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-top: 2.25rem;
+  margin-bottom: 0.75rem;
+  scroll-margin-top: 6rem;
+}
+.article-body p {
+  margin-bottom: 1.35rem;
+  line-height: 1.8;
+}
+.article-body blockquote {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  border-left: 3px solid #6366f1;
+  background: #faf9f6;
+  border-radius: 0 0.75rem 0.75rem 0;
+  padding: 1.25rem 1.5rem;
+  margin: 2rem 0;
+  font-style: italic;
+  color: #334155;
+}
+.article-body ul {
+  list-style: disc;
+  padding-left: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+.article-body ol {
+  list-style: decimal;
+  padding-left: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+/*
+ * Lists that manage their own rhythm with `space-y-*` are excluded: this rule
+ * is unlayered and would otherwise out-rank the layered utility in v4, which
+ * it did not do under v3's flat output order.
+ */
+.article-body :is(ul, ol):not([class*="space-y-"]) li {
+  margin-bottom: 0.4rem;
+}
+.article-body ul li::marker {
+  color: #6366f1;
+}
+.article-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+.article-body th {
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.75rem 1rem;
+  text-align: left;
+}
+.article-body td {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #f1f5f9;
+  color: #475569;
+  font-size: 0.875rem;
+}
+.article-body tr:hover td {
+  background: #f8fafc;
+}
+.article-body img {
+  border-radius: 1rem;
+  max-width: 100%;
+  margin: 1.5rem 0;
+}
+.article-body figure {
+  margin: 1.5rem 0;
+}
+.article-body figure svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+.article-body figcaption {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 0.625rem;
+  text-align: center;
+}
+.toc-link.active {
+  color: #4338ca;
+  font-weight: 600;
+}
+.toc-link.active .toc-dot {
+  background: #4f46e5;
+}

@@ -1,0 +1,126 @@
+[
+  {
+    "id": 1,
+    "username": "jaypatel",
+    "first_name": "Jay",
+    "last_name": "Patel",
+    "email": "jay@blogermenia.dev",
+    "bio": "Backend engineer. I write about Django, distributed systems, and the boring parts that keep products alive.",
+    "about": "I've spent the last seven years building backends for fintech and developer tools — mostly Python, mostly Django, occasionally Go when latency matters.\n\nMy writing here is a running notebook: things I had to learn the hard way, benchmarks I wish someone had published, and the architectural trade-offs nobody puts in the README.\n\nOutside work I maintain a couple of small open-source libraries and answer far too many questions about database indexes.",
+    "profile_picture": "/media/profile_pics/jay_linkedin.jpg",
+    "linkedin_url": "https://www.linkedin.com/in/jay-patel-dev",
+    "linkedin_connected": true,
+    "auto_post_to_linkedin": true,
+    "has_linkedin_oauth": true,
+    "date_joined": "2024-02-11T09:24:00.000Z",
+    "saved_blog_ids": [
+      4,
+      7,
+      9
+    ]
+  },
+  {
+    "id": 2,
+    "username": "sanamehra",
+    "first_name": "Sana",
+    "last_name": "Mehra",
+    "email": "sana@blogermenia.dev",
+    "bio": "Product designer working on design systems and the unglamorous craft of consistency.",
+    "about": "I design systems, not screens. Most of my day is spent negotiating between what a component should do and what six different teams have already made it do.\n\nI write about tokens, documentation, and why the hardest part of a design system is the social contract around it.",
+    "profile_picture": "/media/profile_pics/screenshot-2026-06-28.png",
+    "linkedin_url": "https://www.linkedin.com/in/sana-mehra-design",
+    "linkedin_connected": true,
+    "auto_post_to_linkedin": false,
+    "has_linkedin_oauth": true,
+    "date_joined": "2024-04-03T14:10:00.000Z",
+    "saved_blog_ids": [
+      1,
+      6
+    ]
+  },
+  {
+    "id": 3,
+    "username": "rohankapoor",
+    "first_name": "Rohan",
+    "last_name": "Kapoor",
+    "email": "rohan@blogermenia.dev",
+    "bio": "Full stack developer. TypeScript, Postgres, and an unreasonable number of side projects.",
+    "about": "Full stack by necessity rather than ideology. I like the part of the job where you can see the whole path from a click to a row in a table.\n\nHere I mostly publish walkthroughs — the kind I'd want to find at 1am when something is on fire.",
+    "profile_picture": null,
+    "linkedin_url": "",
+    "linkedin_connected": false,
+    "auto_post_to_linkedin": false,
+    "has_linkedin_oauth": true,
+    "date_joined": "2024-06-19T11:02:00.000Z",
+    "saved_blog_ids": []
+  },
+  {
+    "id": 4,
+    "username": "priyanair",
+    "first_name": "Priya",
+    "last_name": "Nair",
+    "email": "priya@blogermenia.dev",
+    "bio": "Engineering manager. Thinking out loud about teams, systems, and the space between them.",
+    "about": "I manage two platform teams and spend most of my time on the interfaces between people rather than services.\n\nI write about hiring, on-call culture, and how technical decisions quietly become organisational ones.",
+    "profile_picture": null,
+    "linkedin_url": "https://www.linkedin.com/in/priya-nair-eng",
+    "linkedin_connected": true,
+    "auto_post_to_linkedin": false,
+    "has_linkedin_oauth": true,
+    "date_joined": "2024-08-27T08:45:00.000Z",
+    "saved_blog_ids": [
+      2
+    ]
+  },
+  {
+    "id": 5,
+    "username": "arjunsingh",
+    "first_name": "Arjun",
+    "last_name": "Singh",
+    "email": "arjun@blogermenia.dev",
+    "bio": "ML engineer. Retrieval, evaluation, and being suspicious of benchmarks.",
+    "about": "",
+    "profile_picture": null,
+    "linkedin_url": "",
+    "linkedin_connected": false,
+    "auto_post_to_linkedin": false,
+    "has_linkedin_oauth": false,
+    "date_joined": "2025-01-14T16:30:00.000Z",
+    "saved_blog_ids": [
+      3,
+      10
+    ]
+  },
+  {
+    "id": 6,
+    "username": "meeraiyer",
+    "first_name": "Meera",
+    "last_name": "Iyer",
+    "email": "meera@blogermenia.dev",
+    "bio": "Writing about developer experience, docs, and the tools that get out of your way.",
+    "about": "Technical writer turned DX engineer. I believe most onboarding problems are really documentation problems wearing a costume.",
+    "profile_picture": null,
+    "linkedin_url": "https://www.linkedin.com/in/meera-iyer-dx",
+    "linkedin_connected": false,
+    "auto_post_to_linkedin": false,
+    "has_linkedin_oauth": false,
+    "date_joined": "2025-03-22T10:15:00.000Z",
+    "saved_blog_ids": []
+  },
+  {
+    "id": 7,
+    "username": "devkumar",
+    "first_name": "",
+    "last_name": "",
+    "email": "dev@blogermenia.dev",
+    "bio": "",
+    "about": "",
+    "profile_picture": null,
+    "linkedin_url": "",
+    "linkedin_connected": false,
+    "auto_post_to_linkedin": false,
+    "has_linkedin_oauth": false,
+    "date_joined": "2025-07-08T19:05:00.000Z",
+    "saved_blog_ids": []
+  }
+]

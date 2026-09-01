@@ -1,0 +1,111 @@
+/*
+ * From `blog/pdf_template.html`. The Django version is rendered head-less by
+ * wkhtmltopdf; here the same rules drive the browser's own print dialog.
+ */
+@page {
+  size: A4;
+  margin: 2cm;
+}
+
+.pdf-document {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #1e293b;
+  line-height: 1.6;
+  font-size: 14pt;
+  max-width: 21cm;
+  margin: 0 auto;
+  padding: 2cm 1.5rem;
+}
+.pdf-document h1 {
+  font-size: 28pt;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  color: #0f172a;
+}
+.pdf-document .meta {
+  font-size: 11pt;
+  color: #64748b;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+.pdf-document .cover-image {
+  width: 100%;
+  max-height: 400px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+.pdf-document h2 {
+  font-size: 20pt;
+  margin-top: 2rem;
+  color: #0f172a;
+}
+.pdf-document p {
+  margin-bottom: 1.5rem;
+}
+.pdf-document ul {
+  list-style: disc;
+  padding-left: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.pdf-document ol {
+  list-style: decimal;
+  padding-left: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.pdf-document table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+}
+.pdf-document th,
+.pdf-document td {
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  font-size: 11pt;
+}
+.pdf-document pre {
+  background-color: #f8fafc;
+  padding: 1rem;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 10pt;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  border: 1px solid #e2e8f0;
+}
+.pdf-document blockquote {
+  border-left: 4px solid #6366f1;
+  padding-left: 1rem;
+  color: #475569;
+  font-style: italic;
+  margin-left: 0;
+}
+.pdf-document img {
+  max-width: 100%;
+  height: auto;
+}
+.pdf-document figure {
+  margin: 1.5rem 0;
+}
+.pdf-document figcaption {
+  font-size: 10pt;
+  color: #64748b;
+  text-align: center;
+}
+
+/* The print view is standalone in Django; hide the shared footer here. */
+.pdf-mode footer {
+  display: none;
+}
+
+@media print {
+  .pdf-print-hint {
+    display: none;
+  }
+  .pdf-document {
+    padding: 0;
+  }
+}

@@ -8,3 +8,5 @@ staticfiles/
 # Celery beat runtime schedule DB
 celerybeat-schedule*
 celerybeat.pid
+
+node_modules/

@@ -1,0 +1,79 @@
+[
+  {
+    "id": 1,
+    "title": "Backend Foundations",
+    "description": "The stack of posts I hand to every engineer joining a backend team: caching, indexes, and the scheduling guarantees nobody writes down.",
+    "image": "/media/playlist_images/screenshot-2026-06-28.png",
+    "author_id": 1,
+    "slug": "backend-foundations",
+    "blog_ids": [2, 6, 10, 12],
+    "created_at": "2026-06-15T09:00:00.000Z",
+    "updated_at": "2026-08-26T14:30:00.000Z"
+  },
+  {
+    "id": 2,
+    "title": "Systems That Outlive You",
+    "description": "Long-horizon thinking about the parts of a system that are still there after the team has turned over twice.",
+    "image": null,
+    "author_id": 4,
+    "slug": "systems-that-outlive-you",
+    "blog_ids": [5, 9, 2],
+    "created_at": "2026-05-02T11:20:00.000Z",
+    "updated_at": "2026-07-04T08:10:00.000Z"
+  },
+  {
+    "id": 3,
+    "title": "Design Systems, End to End",
+    "description": "From the contract to the codemod: what it actually takes to make a component library stick.",
+    "image": null,
+    "author_id": 2,
+    "slug": "design-systems-end-to-end",
+    "blog_ids": [3, 8, 7],
+    "created_at": "2026-05-10T15:45:00.000Z",
+    "updated_at": "2026-08-01T12:00:00.000Z"
+  },
+  {
+    "id": 4,
+    "title": "Evaluating ML in Production",
+    "description": "Retrieval, judgement sets, and the slow discipline of not fooling yourself.",
+    "image": null,
+    "author_id": 5,
+    "slug": "evaluating-ml-in-production",
+    "blog_ids": [4],
+    "created_at": "2026-07-18T17:05:00.000Z",
+    "updated_at": "2026-07-18T17:05:00.000Z"
+  },
+  {
+    "id": 5,
+    "title": "Writing for Engineers",
+    "description": "Docs, naming, and the argument that clear writing is a technical skill rather than a soft one.",
+    "image": null,
+    "author_id": 6,
+    "slug": "writing-for-engineers",
+    "blog_ids": [7, 11],
+    "created_at": "2026-05-25T09:30:00.000Z",
+    "updated_at": "2026-06-30T10:45:00.000Z"
+  },
+  {
+    "id": 6,
+    "title": "Real-Time, Properly",
+    "description": "Streaming transports, reconnect strategies, and dashboards that survive contact with a flaky network.",
+    "image": null,
+    "author_id": 3,
+    "slug": "real-time-properly",
+    "blog_ids": [1, 10],
+    "created_at": "2026-08-02T13:15:00.000Z",
+    "updated_at": "2026-08-25T07:50:00.000Z"
+  },
+  {
+    "id": 7,
+    "title": "Empty by Design",
+    "description": "A brand new collection, still waiting for its first article.",
+    "image": null,
+    "author_id": 7,
+    "slug": "empty-by-design",
+    "blog_ids": [],
+    "created_at": "2026-08-30T18:00:00.000Z",
+    "updated_at": "2026-08-30T18:00:00.000Z"
+  }
+]

@@ -1,0 +1,85 @@
+/*
+ * Untitled UI token bridge.
+ * ---------------------------------------------------------------------------
+ * Untitled UI's React components are copy-in source that reference its own
+ * semantic tokens (`bg-brand-solid`, `text-secondary`, `ring-primary`, …). Its
+ * full theme is ~830 lines and ships a purple brand ramp plus its own type
+ * scale, which would replace BlogerMenia's look wholesale.
+ *
+ * Instead only the tokens its components actually use are declared here, mapped
+ * onto BlogerMenia's palette: `brand` is the indigo ramp from `globals.css`,
+ * and the neutral roles resolve to the Slate scale the Django templates use. An
+ * Untitled UI component dropped into this project therefore renders in this
+ * site's colours with no edits to the component itself.
+ *
+ * Adding another Untitled UI component may need a token that is not yet here —
+ * the build will simply render it unstyled, so grep the new file for
+ * `bg-|text-|ring-|border-` names and add the missing ones below.
+ */
+@theme {
+  /* Surfaces */
+  --color-bg-primary: var(--color-white);
+  --color-bg-primary_hover: var(--color-slate-50);
+  --color-bg-secondary: var(--color-slate-50);
+  --color-bg-secondary_hover: var(--color-slate-100);
+  --color-bg-tertiary: var(--color-slate-100);
+  --color-bg-quaternary: var(--color-slate-200);
+  --color-bg-overlay: --alpha(var(--color-slate-900) / 80%);
+
+  /* Brand surfaces — BlogerMenia indigo, matching the Django buttons. */
+  --color-bg-brand-primary: var(--color-brand-50);
+  --color-bg-brand-secondary: var(--color-brand-100);
+  --color-bg-brand-solid: var(--color-slate-900);
+  --color-bg-brand-solid_hover: var(--color-slate-800);
+
+  /* Destructive */
+  --color-bg-error-primary: var(--color-red-50);
+  --color-bg-error-secondary: var(--color-red-100);
+  --color-bg-error-solid: var(--color-red-600);
+  --color-bg-error-solid_hover: var(--color-red-700);
+
+  /* Text roles */
+  --color-text-primary: var(--color-slate-900);
+  --color-text-secondary: var(--color-slate-700);
+  --color-text-secondary_hover: var(--color-slate-900);
+  --color-text-tertiary: var(--color-slate-500);
+  --color-text-tertiary_hover: var(--color-slate-700);
+  --color-text-quaternary: var(--color-slate-400);
+  --color-text-brand-secondary: var(--color-brand-600);
+  --color-text-brand-secondary_hover: var(--color-brand-700);
+  --color-text-error-primary: var(--color-red-600);
+  --color-text-error-primary_hover: var(--color-red-700);
+  --color-text-white: var(--color-white);
+
+  /* Foreground (icon) roles */
+  --color-fg-quaternary: var(--color-slate-400);
+  --color-fg-quaternary_hover: var(--color-slate-500);
+  --color-fg-brand-secondary_alt: var(--color-brand-600);
+  --color-fg-brand-secondary_hover: var(--color-brand-700);
+  --color-fg-error-primary: var(--color-red-600);
+  --color-fg-error-secondary: var(--color-red-500);
+
+  /* Borders and rings */
+  --color-border-primary: var(--color-slate-200);
+  --color-border-secondary: var(--color-slate-100);
+  --color-border-brand: var(--color-brand-500);
+  --color-border-error: var(--color-red-300);
+  --color-ring-primary: var(--color-slate-200);
+  --color-ring-error_subtle: var(--color-red-200);
+  --color-ring-brand: var(--color-brand-500);
+
+  /* Focus outline colour used by `outline-brand` / `outline-error`. */
+  --color-outline-brand: var(--color-brand-500);
+  --color-outline-error: var(--color-red-500);
+
+  /* Untitled UI's `text-md` step, which Tailwind has no default for. */
+  --text-md: 1rem;
+  --text-md--line-height: 1.5rem;
+}
+
+@utility shadow-xs-skeuomorphic {
+  /* Untitled UI's subtle raised button shadow, matched to this site's weight. */
+  box-shadow:
+    0 1px 2px 0 --alpha(var(--color-slate-900) / 5%),
+    inset 0 -2px 0 0 --alpha(var(--color-slate-900) / 5%);
+}
