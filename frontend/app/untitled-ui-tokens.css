@@ -15,6 +15,15 @@
  * Adding another Untitled UI component may need a token that is not yet here —
  * the build will simply render it unstyled, so grep the new file for
  * `bg-|text-|ring-|border-` names and add the missing ones below.
+ *
+ * That is exactly what had happened: the bridge was written when the only
+ * Untitled UI component in the project was the Excalidraw modal, and the
+ * buttons, inputs, checkbox and toggle added since reference twelve tokens it
+ * did not declare. Because an undeclared token renders as *no rule at all*,
+ * the result was not an obvious break but a set of quiet ones — a toggle with
+ * an invisible knob, a checkbox with an invisible tick, placeholder text the
+ * same colour as typed text, and no focus or error ring anywhere. Each token
+ * below names the component that needs it, so the next audit is a grep.
  */
 @theme {
   /* Surfaces */
@@ -75,6 +84,56 @@
   --color-outline-brand: var(--color-brand-500);
   --color-outline-error: var(--color-red-500);
 
+  /*
+   * `outline-focus-ring` / `ring-focus-ring` — the keyboard focus indicator on
+   * button-utility, close-button, checkbox, toggle, the dropdown items and the
+   * tag input. Without it those controls had no visible focus state at all.
+   */
+  --color-focus-ring: var(--color-brand-500);
+
+  /* `text-placeholder` — every input and textarea. Undeclared, a placeholder
+   * inherited `text-primary` and read as already-entered text. */
+  --color-text-placeholder: var(--color-slate-400);
+
+  /* `ring-secondary` — the resting ring on inputs, the dropdown popover and the
+   * toggle track. */
+  --color-ring-secondary: var(--color-slate-200);
+
+  /* `ring-error` — the 2px ring an invalid, focused input shows. Only the
+   * lighter `ring-error_subtle` was declared, so the focused state of a field
+   * with a validation error looked identical to a valid one. */
+  --color-ring-error: var(--color-red-500);
+
+  /* `ring-brand-solid` — the ring around a checked checkbox / radio. */
+  --color-ring-brand-solid: var(--color-brand-600);
+
+  /* `text-fg-white` — the tick inside a checked checkbox, and the glyph in
+   * close-button. It was invisible against the brand fill. */
+  --color-fg-white: #ffffff;
+
+  /* `bg-fg-white` — the toggle's knob. An unstyled knob made the control read
+   * as an empty pill, which is why the "Auto post to LinkedIn" switch on the
+   * profile editor looked like it was missing. */
+  --color-bg-fg-white: #ffffff;
+
+  /* The toggle's track borders, resting and pressed. */
+  --color-border-toggle-border: var(--color-slate-300);
+  --color-border-toggle-slim-border_pressed: var(--color-brand-600);
+  --color-border-toggle-slim-border_pressed-hover: var(--color-brand-700);
+
+  /* `text-brand-tertiary` — the required-field asterisk in `label`. */
+  --color-text-brand-tertiary: var(--color-brand-600);
+
+  /* `text-fg-brand-primary` — the check beside a selected dropdown item. */
+  --color-fg-brand-primary: var(--color-brand-600);
+
+  /* `text-fg-success-secondary` — the success variant of `tags`. */
+  --color-fg-success-secondary: var(--color-emerald-500);
+
+  /* `caret-alpha-black` — the text caret in the tag inputs used by the blog
+   * editor. */
+  --color-alpha-black: var(--color-slate-900);
+
   /* Untitled UI's `text-md` step, which Tailwind has no default for. */
   --text-md: 1rem;
   --text-md--line-height: 1.5rem;
@@ -85,4 +144,150 @@
   box-shadow:
     0 1px 2px 0 --alpha(var(--color-slate-900) / 5%),
     inset 0 -2px 0 0 --alpha(var(--color-slate-900) / 5%);
+}
+
+/* ===========================================================================
+ *  THE UTILITY LAYER
+ * ===========================================================================
+ *
+ *  Declaring `--color-bg-primary` is not enough to make `bg-primary` work.
+ *  Tailwind v4 resolves a colour utility from `--color-<value>`, so `bg-primary`
+ *  looks for `--color-primary` — while `--color-bg-primary` instead feeds
+ *  `bg-bg-primary`, a class nothing uses. The two conventions look alike and
+ *  neither errors, which is why this went unnoticed: an unresolved utility emits
+ *  no rule at all, so the components rendered without background, ring or text
+ *  colour rather than visibly failing.
+ *
+ *  Untitled UI's own theme solves this by pairing every namespaced variable with
+ *  an `@utility` rule, and that pairing is what was missing here. `bg-primary`
+ *  and `text-primary` are different colours in this system (white vs Slate 900),
+ *  so they cannot share a single `--color-primary` — the namespacing is load
+ *  bearing, and these rules are what connect it to the class names.
+ *
+ *  Roles whose class name already contains its own namespace — `text-fg-white`,
+ *  `bg-fg-white`, `outline-focus-ring`, `caret-alpha-black` — resolve natively
+ *  from `--color-fg-white` and friends above, and so are absent here.
+ * ======================================================================== */
+
+/* Surfaces */
+@utility bg-primary {
+  background-color: var(--color-bg-primary);
+}
+@utility bg-primary_hover {
+  background-color: var(--color-bg-primary_hover);
+}
+@utility bg-tertiary {
+  background-color: var(--color-bg-tertiary);
+}
+@utility bg-overlay {
+  background-color: var(--color-bg-overlay);
+}
+@utility bg-primary-solid {
+  background-color: var(--color-bg-primary-solid);
+}
+
+/* Brand surfaces */
+@utility bg-brand-solid {
+  background-color: var(--color-bg-brand-solid);
+}
+@utility bg-brand-solid_hover {
+  background-color: var(--color-bg-brand-solid_hover);
+}
+
+/* Destructive surfaces */
+@utility bg-error-primary {
+  background-color: var(--color-bg-error-primary);
+}
+@utility bg-error-solid {
+  background-color: var(--color-bg-error-solid);
+}
+@utility bg-error-solid_hover {
+  background-color: var(--color-bg-error-solid_hover);
+}
+
+/* Text roles */
+@utility text-primary {
+  color: var(--color-text-primary);
+}
+@utility text-secondary {
+  color: var(--color-text-secondary);
+}
+@utility text-secondary_hover {
+  color: var(--color-text-secondary_hover);
+}
+@utility text-tertiary {
+  color: var(--color-text-tertiary);
+}
+@utility text-tertiary_hover {
+  color: var(--color-text-tertiary_hover);
+}
+@utility text-quaternary {
+  color: var(--color-text-quaternary);
+}
+@utility text-placeholder {
+  color: var(--color-text-placeholder);
+}
+@utility text-tooltip-supporting-text {
+  color: var(--color-text-tooltip-supporting-text);
+}
+
+/* Brand text */
+@utility text-brand-secondary {
+  color: var(--color-text-brand-secondary);
+}
+@utility text-brand-secondary_hover {
+  color: var(--color-text-brand-secondary_hover);
+}
+@utility text-brand-tertiary {
+  color: var(--color-text-brand-tertiary);
+}
+
+/* Destructive text */
+@utility text-error-primary {
+  color: var(--color-text-error-primary);
+}
+@utility text-error-primary_hover {
+  color: var(--color-text-error-primary_hover);
+}
+
+/* Rings */
+@utility ring-primary {
+  --tw-ring-color: var(--color-ring-primary);
+}
+@utility ring-secondary {
+  --tw-ring-color: var(--color-ring-secondary);
+}
+@utility ring-secondary_alt {
+  --tw-ring-color: var(--color-ring-secondary_alt);
+}
+@utility ring-brand {
+  --tw-ring-color: var(--color-ring-brand);
+}
+@utility ring-brand-solid {
+  --tw-ring-color: var(--color-ring-brand-solid);
+}
+@utility ring-error {
+  --tw-ring-color: var(--color-ring-error);
+}
+@utility ring-error_subtle {
+  --tw-ring-color: var(--color-ring-error_subtle);
+}
+
+/* Borders */
+@utility border-toggle-border {
+  border-color: var(--color-border-toggle-border);
+}
+@utility border-toggle-slim-border_pressed {
+  border-color: var(--color-border-toggle-slim-border_pressed);
+}
+@utility border-toggle-slim-border_pressed-hover {
+  border-color: var(--color-border-toggle-slim-border_pressed-hover);
+}
+
+/* Focus outlines */
+@utility outline-brand {
+  outline-color: var(--color-outline-brand);
+}
+@utility outline-error {
+  outline-color: var(--color-outline-error);
 }

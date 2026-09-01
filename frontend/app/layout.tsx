@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono, Newsreader, Plus_Jakarta_Sans } from "next/font/google";
 
 import { Providers } from "@/components/providers";
+import { SiteFooter } from "@/components/site-footer";
 import { WebSiteJsonLd } from "@/components/json-ld";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
 
@@ -9,10 +10,8 @@ import "./globals.css";
 
 /**
  * `blogermenia/templates/base.html` — the document shell every page extends:
- * the three Google fonts, the messages/toast region and the page content.
- *
- * The footer is not here: it lives at the bottom of the sidebar rail
- * (`components/site-footer.tsx`), where it costs no vertical space in `<main>`.
+ * the three Google fonts, the messages/toast region, the page content and the
+ * shared footer.
  */
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -73,7 +72,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="bg-white text-slate-900 antialiased">
         <WebSiteJsonLd />
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <SiteFooter />
+        </Providers>
       </body>
     </html>
   );

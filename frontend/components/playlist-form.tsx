@@ -153,22 +153,29 @@ export function PlaylistForm({
             <label className="block text-xs font-semibold text-slate-600 mb-1.5">Cover image</label>
             <label
               htmlFor="id_image"
-              className="block cursor-pointer rounded-xl border-2 border-dashed border-slate-200 hover:border-emerald-400 transition-colors bg-slate-50 overflow-hidden"
+              className="block cursor-pointer overflow-hidden rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 transition-colors hover:border-brand-400"
             >
-              <div className={`${coverPreview ? "block" : "hidden"} aspect-video`}>
-                {/* eslint-disable-next-line @next/next/no-img-element -- object URLs cannot go through next/image. */}
-                <img src={coverPreview ?? ""} className="w-full h-full object-cover" alt="" />
-              </div>
-              <div
-                className={`${coverPreview ? "hidden" : "flex"} flex-col items-center justify-center gap-2 py-10 text-slate-400`}
-              >
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="17 8 12 3 7 8" />
-                  <line x1="12" y1="3" x2="12" y2="15" />
-                </svg>
-                <span className="text-xs font-medium">Click to upload</span>
-              </div>
+              {/*
+                Both branches used to render, toggled with `hidden`, which left an
+                `<img src="">` in the tree whenever there was no preview — and an
+                empty `src` makes the browser re-request the current page. Only
+                the branch in use is rendered now.
+              */}
+              {coverPreview ? (
+                <div className="aspect-video">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- object URLs cannot go through next/image. */}
+                  <img src={coverPreview} className="h-full w-full object-cover" alt="" />
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-2 py-10 text-slate-400">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                  <span className="text-xs font-medium">Click to upload</span>
+                </div>
+              )}
             </label>
             <div className="hidden">
               <input

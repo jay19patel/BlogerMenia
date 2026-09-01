@@ -11,7 +11,6 @@ import {
 } from "@/components/nav-icons";
 import { NavHeading, NavLink, navRowClass } from "@/components/nav-link";
 import { SidebarAccount } from "@/components/sidebar-account";
-import { SidebarFooter } from "@/components/site-footer";
 import { Toc } from "@/components/toc";
 import type { TocEntry } from "@/lib/blog";
 import { CATEGORY_DOT_CLASSES, type Category } from "@/lib/types";
@@ -107,14 +106,10 @@ export function SiteNav({
         </IfAuthenticated>
       </nav>
 
-      <div className="mt-auto">
-        <nav aria-label="Account" className="flex flex-col gap-0.5 border-t border-slate-100 pt-4">
-          <NavHeading>ACCOUNT</NavHeading>
-          <SidebarAccount active={active} />
-        </nav>
-
-        <SidebarFooter />
-      </div>
+      <nav aria-label="Account" className="mt-auto flex flex-col gap-0.5 border-t border-slate-100 pt-4">
+        <NavHeading>ACCOUNT</NavHeading>
+        <SidebarAccount active={active} />
+      </nav>
     </div>
   );
 }
