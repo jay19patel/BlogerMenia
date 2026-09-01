@@ -7,8 +7,8 @@ import { useState } from "react";
 import { useMessages } from "@/components/messages-provider";
 import { useSession } from "@/components/session-provider";
 import { urls } from "@/lib/urls";
-
-import "../../auth-form.css";
+import { Input } from "@/components/base/input/input";
+import { Button } from "@/components/base/buttons/button";
 
 /** allauth's `ChangePasswordForm` as rendered by `account/password_change.html`. */
 
@@ -27,7 +27,7 @@ export function ChangePasswordForm() {
 
   return (
     <form
-      className="legacy-fields space-y-5"
+      className="space-y-5"
       method="POST"
       noValidate
       onSubmit={(event) => {
@@ -43,34 +43,32 @@ export function ChangePasswordForm() {
     >
       {FIELDS.map((field) => (
         <div key={field.name}>
-          <label className="block text-xs font-medium text-ink/70 mb-1.5" htmlFor={field.id}>
-            {field.label}
-          </label>
-          <input
+          <Input
             id={field.id}
             name={field.name}
             type="password"
+            label={field.label}
             autoComplete={field.name === "oldpassword" ? "current-password" : "new-password"}
             value={values[field.name]}
-            onChange={(event) =>
-              setValues((current) => ({ ...current, [field.name]: event.target.value }))
-            }
+            onChange={(value) => setValues((current) => ({ ...current, [field.name]: value }))}
+            isInvalid={field.name === "password2" && Boolean(error)}
+            hint={field.name === "password2" ? error : undefined}
           />
-          {field.name === "password2" && error && <p className="mt-1 text-xs text-red-500">{error}</p>}
         </div>
       ))}
 
-      <div className="flex items-center gap-3 pt-2 border-t border-line">
-        <button
+      <div className="flex items-center gap-3 pt-2 border-t border-slate-200">
+        <Button
           type="submit"
-          className="bg-ink hover:bg-black text-white text-sm font-medium px-5 py-2.5 rounded-md transition-colors"
+          color="primary"
+          size="md"
         >
           Update password
-        </button>
+        </Button>
         {user && (
           <Link
             href={urls.userProfile(user.username)}
-            className="text-sm text-muted hover:text-ink transition-colors"
+            className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
           >
             Cancel
           </Link>

@@ -17,7 +17,7 @@ import { EmailConfirmForm } from "./confirm-form";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
-  title: "Confirm Email — Inkwell",
+  title: "Confirm Email — BlogerMenia",
 };
 
 export default async function EmailConfirmPage({

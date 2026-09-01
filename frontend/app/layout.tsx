@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono, Newsreader, Plus_Jakarta_Sans } from "next/font/google";
 
 import { Providers } from "@/components/providers";
-import { SiteFooter } from "@/components/site-footer";
 import { WebSiteJsonLd } from "@/components/json-ld";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
 
@@ -10,8 +9,10 @@ import "./globals.css";
 
 /**
  * `blogermenia/templates/base.html` — the document shell every page extends:
- * the three Google fonts, the messages/toast region, the page content and the
- * shared footer.
+ * the three Google fonts, the messages/toast region and the page content.
+ *
+ * The footer is not here: it lives at the bottom of the sidebar rail
+ * (`components/site-footer.tsx`), where it costs no vertical space in `<main>`.
  */
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -41,7 +42,6 @@ export const metadata: Metadata = {
   title: { default: SITE_NAME, template: "%s" },
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
-  alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     siteName: SITE_NAME,
@@ -56,6 +56,7 @@ export const metadata: Metadata = {
     googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
   },
   formatDetection: { telephone: false, address: false },
+  alternates: { canonical: "/", types: { "application/rss+xml": "/feed.xml" } },
 };
 
 export const viewport: Viewport = {
@@ -72,10 +73,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="bg-white text-slate-900 antialiased">
         <WebSiteJsonLd />
-        <Providers>
-          {children}
-          <SiteFooter />
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

@@ -1,7 +1,10 @@
 "use client";
 
+import { Button } from "@/components/base/buttons/button";
+import { EmptyState } from "@/components/empty-state";
 import { useMessages } from "@/components/messages-provider";
 import { useSession } from "@/components/session-provider";
+import { SettingsCard } from "@/components/settings-card";
 
 /**
  * The connected-accounts list of `socialaccount/connections.html`. A fixture
@@ -18,21 +21,23 @@ export function ConnectionsList() {
 
   if (accounts.length === 0) {
     return (
-      <div className="bg-white border border-slate-200 rounded-2xl p-8 mb-6 text-center">
-        <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-          </svg>
-        </div>
-        <p className="text-sm text-slate-500">No third-party accounts connected yet.</p>
-      </div>
+      <SettingsCard className="p-0 sm:p-0">
+        <EmptyState
+          variant="plain"
+          icon={
+            <svg className="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+            </svg>
+          }
+          message="No third-party accounts connected yet."
+        />
+      </SettingsCard>
     );
   }
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-6 mb-6">
-      <p className="text-sm text-slate-500 mb-4">You can sign in using these connected accounts:</p>
+    <SettingsCard title="Connected" description="You can sign in using these accounts.">
       <form
         method="POST"
         onSubmit={(event) => {
@@ -40,7 +45,7 @@ export function ConnectionsList() {
           addMessage("Static demo — connections cannot be changed here.", "warning");
         }}
       >
-        <div className="space-y-3 mb-5">
+        <div className="mb-5 flex flex-col gap-3">
           {accounts.map((account) => (
             <label
               key={account.id}
@@ -51,8 +56,7 @@ export function ConnectionsList() {
                 name="account"
                 value={account.id}
                 defaultChecked
-                className="shrink-0"
-                style={{ width: "auto", display: "inline" }}
+                className="size-4 shrink-0 accent-brand-600"
               />
               <div className="flex-1">
                 <p className="text-sm font-semibold text-slate-900">{account.label}</p>
@@ -61,13 +65,10 @@ export function ConnectionsList() {
             </label>
           ))}
         </div>
-        <button
-          type="submit"
-          className="px-4 py-2 border border-red-200 text-red-500 hover:bg-red-50 text-sm font-semibold rounded-lg transition-colors"
-        >
+        <Button type="submit" size="md" color="secondary-destructive">
           Disconnect selected
-        </button>
+        </Button>
       </form>
-    </div>
+    </SettingsCard>
   );
 }

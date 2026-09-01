@@ -10,6 +10,7 @@ export const urls = {
 
   blogList: () => "/blogs/",
   blogListByCategory: (slug: string) => `/blogs/?category=${encodeURIComponent(slug)}`,
+  blogListByTag: (tag: string) => `/blogs/?tag=${encodeURIComponent(tag)}`,
   blogCreate: () => "/blogs/create/",
   blogDetail: (slug: string) => `/blogs/${slug}/`,
   blogUpdate: (slug: string) => `/blogs/${slug}/update/`,
@@ -21,6 +22,8 @@ export const urls = {
   playlistDetail: (slug: string) => `/playlists/${slug}/`,
   playlistUpdate: (slug: string) => `/playlists/${slug}/update/`,
   playlistDelete: (slug: string) => `/playlists/${slug}/delete/`,
+
+  search: (query?: string) => (query ? `/search/?q=${encodeURIComponent(query)}` : "/search/"),
 
   userList: () => "/accounts-list/",
   userProfile: (username: string) => `/profile/${username}/`,

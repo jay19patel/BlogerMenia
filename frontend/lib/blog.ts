@@ -1,7 +1,7 @@
 import DOMPurify from "isomorphic-dompurify";
 
 import { firstOf, stripTags, truncateWords } from "@/lib/format";
-import type { Blog } from "@/lib/types";
+import type { Blog, BlogSection } from "@/lib/types";
 
 /**
  * `{% firstof blog.excerpt blog.subtitle blog.content|striptags|truncatewords:N %}`
@@ -11,6 +11,44 @@ import type { Blog } from "@/lib/types";
  */
 export function blogSummary(blog: Blog, words: number): string {
   return firstOf(blog.excerpt, blog.subtitle, truncateWords(stripTags(blog.content), words));
+}
+
+/**
+ * Average adult reading speed for prose, in words per minute. 200–250 is the
+ * range most publishers use; the middle of it avoids over-promising on long
+ * technical posts.
+ */
+const WORDS_PER_MINUTE = 225;
+
+/** The prose a section contributes to the reading-time estimate. */
+function sectionText(section: BlogSection): string {
+  return [
+    section.title,
+    // Code is skimmed, not read at prose speed, so it is left out.
+    section.type === "code" ? "" : section.content,
+    section.description,
+    section.caption,
+    section.items?.join(" "),
+    section.rows?.flat().join(" "),
+    section.steps?.map((step) => `${step.title} ${step.description ?? ""}`).join(" "),
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+/**
+ * "N min read" — the estimate every blog listing is expected to carry.
+ *
+ * Derived from the post's own fields rather than the rendered DOM, so it is
+ * available on the server, in metadata and in the card listings alike.
+ */
+export function readingMinutes(blog: Blog): number {
+  const prose = isStructured(blog)
+    ? [blog.introduction, blog.conclusion, ...blog.sections.map(sectionText)].join(" ")
+    : stripTags(blog.content);
+
+  const words = prose.trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.round(words / WORDS_PER_MINUTE));
 }
 
 /** True when the post uses the structured editor rather than the legacy body. */

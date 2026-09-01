@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { AuthBadge, AuthShell } from "@/components/auth-shell";
-import { LinkedInIcon } from "@/components/linkedin-icon";
+import { LinkedInIcon } from "@/components/icons";
+import { Button } from "@/components/base/buttons/button";
 import { urls } from "@/lib/urls";
 
 import { LoginForm } from "./login-form";
@@ -11,7 +12,7 @@ import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
-  title: "Log in — Inkwell",
+  title: "Log in — BlogerMenia",
 };
 
 export default function LoginPage() {
@@ -42,15 +43,15 @@ export default function LoginPage() {
         <span className="h-px flex-1 bg-slate-100" />
       </div>
 
-      <a
+      <Button
+        color="secondary"
+        size="lg"
         href={urls.linkedinLogin()}
-        className="w-full flex items-center justify-center gap-2 border border-slate-200 hover:border-slate-300 hover:bg-slate-50 rounded-lg py-2.5 text-sm font-medium text-slate-700 transition-colors"
+        iconLeading={LinkedInIcon}
+        className="w-full justify-center text-[#0A66C2]"
       >
-        <span className="text-[#0A66C2]">
-          <LinkedInIcon className="w-4 h-4" />
-        </span>
         Continue with LinkedIn
-      </a>
+      </Button>
     </AuthShell>
   );
 }

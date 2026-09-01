@@ -17,7 +17,7 @@ export default function GlobalError() {
   return (
     <html lang="en" className={inter.className}>
       <head>
-        <title>Something went wrong — Inkwell</title>
+        <title>Something went wrong — BlogerMenia</title>
       </head>
       <body className="bg-white text-slate-900 antialiased">
         <main className="min-h-screen flex items-center justify-center px-6">

@@ -11,7 +11,11 @@ import { useSession } from "@/components/session-provider";
 import { urls } from "@/lib/urls";
 import type { BlogSection, SectionType } from "@/lib/types";
 
-import "../app/blogs/blog-form.css";
+import { Input } from "@/components/base/input/input";
+import { TextArea } from "@/components/base/textarea/textarea";
+import { Toggle } from "@/components/base/toggle/toggle";
+import { InputTags } from "@/components/base/input/input-tags";
+
 
 /**
  * `blog/blog_form.html` — the structured post editor used by both
@@ -121,6 +125,7 @@ function readImportedSections(raw: Record<string, unknown>): BlogSection[] | nul
 }
 
 interface FieldProps {
+  /** The section key this input edits; becomes the field's `name`. */
   field: string;
   placeholder: string;
   value: string;
@@ -128,16 +133,15 @@ interface FieldProps {
   multiline?: boolean;
 }
 
+/**
+ * One section-editor input.
+ *
+ * React Aria passes the new value to `onChange` directly, so the handler is
+ * forwarded as-is rather than unwrapped from a DOM event.
+ */
 function Field({ field, placeholder, value, onChange, multiline }: FieldProps) {
-  const shared = {
-    className: "fld mt-2",
-    "data-field": field,
-    placeholder,
-    "aria-label": placeholder,
-    value,
-    onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => onChange(event.target.value),
-  };
-  return multiline ? <textarea {...shared} /> : <input type="text" {...shared} />;
+  const shared = { name: field, placeholder, "aria-label": placeholder, value, onChange };
+  return multiline ? <TextArea {...shared} /> : <Input {...shared} />;
 }
 
 export function BlogEditor({
@@ -161,7 +165,7 @@ export function BlogEditor({
   const [category, setCategory] = useState(initial?.category_name ?? "");
   const [subtitle, setSubtitle] = useState(initial?.subtitle ?? "");
   const [excerpt, setExcerpt] = useState(initial?.excerpt ?? "");
-  const [tags, setTags] = useState((initial?.tags ?? []).join(", "));
+  const [tags, setTags] = useState<string[]>(initial?.tags ?? []);
   const [introduction, setIntroduction] = useState(initial?.introduction ?? "");
   const [conclusion, setConclusion] = useState(initial?.conclusion ?? "");
   const [isPublished, setIsPublished] = useState(initial ? initial.is_published : true);
@@ -241,8 +245,8 @@ export function BlogEditor({
 
     if (data.featured !== undefined) setFeatured(Boolean(data.featured));
     if (data.is_published !== undefined) setIsPublished(Boolean(data.is_published));
-    if (Array.isArray(data.tags)) setTags((data.tags as string[]).join(", "));
-    else if (typeof data.tags === "string") setTags(data.tags);
+    if (Array.isArray(data.tags)) setTags(data.tags as string[]);
+    else if (typeof data.tags === "string") setTags(data.tags.split(",").map(s => s.trim()));
 
     const content = (data.content && typeof data.content === "object" ? data.content : data) as Record<string, unknown>;
     if (typeof content.introduction === "string") setIntroduction(content.introduction);
@@ -335,52 +339,42 @@ export function BlogEditor({
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-5">
           <h2 className="text-lg font-bold text-slate-900">Basic information</h2>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5" htmlFor="f-title">
-              Title <span className="text-red-400">*</span>
-            </label>
-            <input
+            <Input
               id="f-title"
               name="title"
               type="text"
-              className="fld"
+              label="Title"
+              isRequired
               placeholder="Enter blog title"
               value={title}
-              onChange={(event) => onTitleChange(event.target.value)}
+              onChange={onTitleChange}
             />
-          </div>
 
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1.5" htmlFor="f-slug">
-                Slug <span className="text-slate-400 font-normal">(auto)</span>
-              </label>
-              <input
+              <Input
                 id="f-slug"
                 name="slug"
                 type="text"
-                className="fld"
+                label="Slug"
+                hint="(auto)"
                 placeholder="blog-slug-url"
                 value={slug}
-                onChange={(event) => {
+                onChange={(value) => {
                   setSlugTouched(true);
-                  setSlug(event.target.value);
+                  setSlug(value);
                 }}
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1.5" htmlFor="f-category">
-                Category
-              </label>
-              <input
+              <Input
                 id="f-category"
                 name="category"
                 type="text"
-                className="fld"
-                list="cat-list"
+                label="Category"
                 placeholder="e.g. Technology"
                 value={category}
-                onChange={(event) => setCategory(event.target.value)}
+                onChange={setCategory}
               />
               <datalist id="cat-list">
                 {categories.map((name) => (
@@ -391,31 +385,25 @@ export function BlogEditor({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5" htmlFor="f-subtitle">
-              Subtitle
-            </label>
-            <input
+            <Input
               id="f-subtitle"
               name="subtitle"
               type="text"
-              className="fld"
+              label="Subtitle"
               placeholder="A short subtitle"
               value={subtitle}
-              onChange={(event) => setSubtitle(event.target.value)}
+              onChange={setSubtitle}
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5" htmlFor="f-excerpt">
-              Excerpt
-            </label>
-            <textarea
+            <TextArea
               id="f-excerpt"
               name="excerpt"
-              className="fld"
+              label="Excerpt"
               placeholder="Short description shown in listings"
               value={excerpt}
-              onChange={(event) => setExcerpt(event.target.value)}
+              onChange={setExcerpt}
             />
           </div>
 
@@ -430,52 +418,37 @@ export function BlogEditor({
               )}
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1.5" htmlFor="f-tags">
-                Tags <span className="text-slate-400 font-normal">(comma separated)</span>
-              </label>
-              <input
-                id="f-tags"
-                name="tags"
-                type="text"
-                className="fld"
+              <InputTags
+                label="Tags"
                 placeholder="Django, AI, Tutorial"
                 value={tags}
-                onChange={(event) => setTags(event.target.value)}
+                onChange={setTags}
               />
+              <input type="hidden" name="tags" value={tags.join(",")} />
             </div>
           </div>
 
           <div className="flex items-center gap-6 pt-1">
-            <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
-              <input
-                type="checkbox"
-                name="is_published"
-                checked={isPublished}
-                onChange={(event) => setIsPublished(event.target.checked)}
-              />{" "}
-              Published
-            </label>
-            <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
-              <input
-                type="checkbox"
-                name="featured"
-                checked={featured}
-                onChange={(event) => setFeatured(event.target.checked)}
-              />{" "}
-              Feature this blog
-            </label>
+            <Toggle
+              name="is_published"
+              isSelected={isPublished}
+              onChange={(checked) => setIsPublished(checked)}
+              label="Published"
+            />
+            <Toggle
+              name="featured"
+              isSelected={featured}
+              onChange={(checked) => setFeatured(checked)}
+              label="Feature this blog"
+            />
             {user?.has_linkedin_oauth && (
-              <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="post_to_linkedin"
-                  checked={postToLinkedIn}
-                  disabled={alreadyPosted}
-                  title={alreadyPosted ? "Already posted" : undefined}
-                  onChange={(event) => setPostToLinkedIn(event.target.checked)}
-                />{" "}
-                {alreadyPosted ? "Posted on LinkedIn" : "Post to LinkedIn"}
-              </label>
+              <Toggle
+                name="post_to_linkedin"
+                isSelected={postToLinkedIn}
+                isDisabled={alreadyPosted}
+                onChange={(checked) => setPostToLinkedIn(checked)}
+                label={alreadyPosted ? "Posted on LinkedIn" : "Post to LinkedIn"}
+              />
             )}
           </div>
 
@@ -508,16 +481,13 @@ export function BlogEditor({
         </div>
 
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
-          <label className="block text-xs font-semibold text-slate-600 mb-1.5" htmlFor="f-introduction">
-            Introduction
-          </label>
-          <textarea
+          <TextArea
             id="f-introduction"
             name="introduction"
-            className="fld"
+            label="Introduction"
             placeholder="Write the opening for your blog..."
             value={introduction}
-            onChange={(event) => setIntroduction(event.target.value)}
+            onChange={setIntroduction}
           />
         </div>
 
@@ -619,16 +589,13 @@ export function BlogEditor({
         </div>
 
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
-          <label className="block text-xs font-semibold text-slate-600 mb-1.5" htmlFor="f-conclusion">
-            Conclusion
-          </label>
-          <textarea
+          <TextArea
             id="f-conclusion"
             name="conclusion"
-            className="fld"
+            label="Conclusion"
             placeholder="Wrap up your blog..."
             value={conclusion}
-            onChange={(event) => setConclusion(event.target.value)}
+            onChange={setConclusion}
           />
         </div>
 

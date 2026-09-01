@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { Breadcrumbs } from "@/components/breadcrumbs";
+import { BooksIcon } from "@/components/nav-icons";
 import { IfAuthenticated } from "@/components/auth-gate";
 import { BlogCard, FeaturedBlogCard } from "@/components/blog-card";
-import { PageHeader } from "@/components/page-header";
-import { SiteSidebar } from "@/components/site-sidebar";
+import { EmptyState } from "@/components/empty-state";
+import { Pagination } from "@/components/pagination";
 import { blogs as blogsApi, misc } from "@/lib/api";
 import { ItemListJsonLd } from "@/components/json-ld";
+import { PageContainer, PageShell } from "@/components/page-shell";
 import { buildMetadata } from "@/lib/seo";
 import { urls } from "@/lib/urls";
 
@@ -22,9 +25,20 @@ async function findCategory(slug: string | undefined) {
 }
 
 export async function generateMetadata({ searchParams }: PageProps<"/blogs">): Promise<Metadata> {
-  const category = await findCategory(firstParam((await searchParams).category));
+  const params = await searchParams;
+  const category = await findCategory(firstParam(params.category));
+  const tag = firstParam(params.tag);
+
+  if (tag) {
+    return buildMetadata({
+      title: `#${tag} — BlogerMenia`,
+      description: `Every article tagged #${tag} on BlogerMenia.`,
+      path: urls.blogListByTag(tag),
+    });
+  }
+
   return buildMetadata({
-    title: `${category ? `${category.name} — ` : ""}All Articles — Inkwell`,
+    title: `${category ? `${category.name} — ` : ""}All Articles — BlogerMenia`,
     description: category
       ? `Every article filed under ${category.name} on BlogerMenia.`
       : "Every article published on BlogerMenia, newest first.",
@@ -36,6 +50,8 @@ export default async function BlogListPage({ searchParams }: PageProps<"/blogs">
   const params = await searchParams;
   const requestedPage = Number.parseInt(firstParam(params.page) ?? "1", 10);
 
+  const currentTag = firstParam(params.tag);
+
   const [allCategories, currentCategory] = await Promise.all([
     misc.listCategories(),
     findCategory(firstParam(params.category)),
@@ -44,10 +60,15 @@ export default async function BlogListPage({ searchParams }: PageProps<"/blogs">
   const { blogs, page: pageNumber, totalPages } = await blogsApi.listBlogs({
     page: Number.isNaN(requestedPage) ? 1 : requestedPage,
     category: currentCategory?.slug,
+    tag: currentTag,
   });
 
-  const isPaginated = totalPages > 1;
-  const categoryQuery = currentCategory ? `category=${currentCategory.slug}&` : "";
+  // Whatever filter is active has to survive a page change.
+  const filterQuery = currentTag
+    ? `tag=${encodeURIComponent(currentTag)}&`
+    : currentCategory
+      ? `category=${currentCategory.slug}&`
+      : "";
 
   return (
     <>
@@ -55,19 +76,27 @@ export default async function BlogListPage({ searchParams }: PageProps<"/blogs">
         name={currentCategory ? `${currentCategory.name} articles` : "Latest articles"}
         items={blogs.map((blog) => ({ title: blog.title, path: urls.blogDetail(blog.slug) }))}
       />
-      <PageHeader />
-      <SiteSidebar active="blog_list" activeCategory={currentCategory?.slug} />
+      <PageShell active="blog_list" activeCategory={currentCategory?.slug}>
+        <PageContainer className="max-w-5xl">
+          <Breadcrumbs
+            items={[
+              { name: "Home", href: urls.home() },
+              { name: "Blogs", href: urls.blogList() },
+              ...(currentTag ? [{ name: `#${currentTag}`, href: urls.blogListByTag(currentTag) }] : []),
+              ...(currentCategory
+                ? [{ name: currentCategory.name, href: urls.blogListByCategory(currentCategory.slug) }]
+                : []),
+            ]}
+          />
 
-      <main className="pt-16 lg:pl-64">
-        <div className="max-w-5xl px-8 sm:px-14 py-14">
           {/* Page header */}
           <div className="flex items-center justify-between mb-8">
             <div>
-              <p className="text-[11px] font-semibold tracking-wider text-slate-400 mb-1.5">
-                {currentCategory ? currentCategory.name.toUpperCase() : "ALL WRITING"}
+              <p className="mb-1.5 text-[11px] font-semibold tracking-wider text-slate-400">
+                {currentTag ? "TAGGED" : currentCategory ? currentCategory.name.toUpperCase() : "ALL WRITING"}
               </p>
-              <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
-                {currentCategory ? currentCategory.name : "Latest Articles"}
+              <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
+                {currentTag ? `#${currentTag}` : currentCategory ? currentCategory.name : "Latest Articles"}
               </h1>
             </div>
             <IfAuthenticated>
@@ -83,6 +112,21 @@ export default async function BlogListPage({ searchParams }: PageProps<"/blogs">
               </Link>
             </IfAuthenticated>
           </div>
+
+          {/* An active tag is not one of the category pills, so it gets its own
+              removable chip — otherwise the filter is invisible and unclearable. */}
+          {currentTag && (
+            <div className="mb-6 flex items-center gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full bg-brand-50 px-3 py-1.5 text-sm font-semibold text-brand-700">
+                #{currentTag}
+                <Link href={urls.blogList()} aria-label={`Clear the ${currentTag} tag filter`} className="text-brand-500 transition-colors hover:text-brand-800">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+                    <path d="M18 6 6 18M6 6l12 12" />
+                  </svg>
+                </Link>
+              </span>
+            </div>
+          )}
 
           {/* Category filter pills */}
           {allCategories.length > 0 && (
@@ -126,62 +170,29 @@ export default async function BlogListPage({ searchParams }: PageProps<"/blogs">
               )}
             </>
           ) : (
-            /* Empty state */
-            <div className="text-center py-24 border border-dashed border-slate-200 rounded-2xl">
-              <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                <svg className="w-7 h-7 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-                </svg>
-              </div>
-              <h3 className="font-bold text-slate-900 mb-1">No articles yet</h3>
-              <p className="text-slate-500 text-sm mb-6">
-                {currentCategory
-                  ? `No articles in ${currentCategory.name} yet.`
-                  : "Be the first to write something."}
-              </p>
-              <IfAuthenticated>
-                <Link href={urls.blogCreate()} className="inline-flex items-center gap-2 bg-slate-900 text-white text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-slate-800 transition-colors">
-                  Write the first article
-                </Link>
-              </IfAuthenticated>
-            </div>
+            <EmptyState
+              icon={<BooksIcon className="size-7" strokeWidth={1.5} />}
+              title="No articles yet"
+              message={
+                currentTag
+                  ? `Nothing tagged #${currentTag} yet.`
+                  : currentCategory
+                    ? `No articles in ${currentCategory.name} yet.`
+                    : "Be the first to write something."
+              }
+              action={
+                <IfAuthenticated>
+                  <Link href={urls.blogCreate()} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800">
+                    Write the first article
+                  </Link>
+                </IfAuthenticated>
+              }
+            />
           )}
 
-          {/* Pagination */}
-          {isPaginated && (
-            <div className="mt-12 flex items-center justify-center gap-3">
-              {pageNumber > 1 && (
-                <Link
-                  href={`?${categoryQuery}page=${pageNumber - 1}`}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition-colors"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M19 12H5" />
-                    <path d="m12 5-7 7 7 7" />
-                  </svg>
-                  Previous
-                </Link>
-              )}
-              <span className="text-sm text-slate-400 px-2 mono">
-                {pageNumber} / {totalPages}
-              </span>
-              {pageNumber < totalPages && (
-                <Link
-                  href={`?${categoryQuery}page=${pageNumber + 1}`}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition-colors"
-                >
-                  Next
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M5 12h14" />
-                    <path d="m12 5 7 7-7 7" />
-                  </svg>
-                </Link>
-              )}
-            </div>
-          )}
-        </div>
-      </main>
+          <Pagination page={pageNumber} totalPages={totalPages} baseQuery={filterQuery} />
+        </PageContainer>
+      </PageShell>
     </>
   );
 }

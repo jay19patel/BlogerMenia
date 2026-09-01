@@ -1,36 +1,25 @@
 "use client";
 
-import Link from "next/link";
-
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { useSession } from "@/components/session-provider";
 import { urls } from "@/lib/urls";
 
 /**
- * The `Profile / <page>` breadcrumb the account settings templates render, which
+ * The `Profile / <page>` trail the account settings templates render, which
  * only shows the Profile link when someone is signed in.
+ *
+ * A thin wrapper over `Breadcrumbs`: the crumbs depend on the session, which is
+ * client-side, but the markup and structured data stay shared.
  */
-export function ProfileBreadcrumb({
-  current,
-  wrapperClassName = "text-slate-400",
-  linkClassName = "hover:text-slate-600",
-}: {
-  current: string;
-  wrapperClassName?: string;
-  linkClassName?: string;
-}) {
+export function ProfileBreadcrumb({ current }: { current: string }) {
   const { user } = useSession();
 
   return (
-    <div className={`flex items-center gap-2 text-sm mb-6 ${wrapperClassName}`}>
-      {user && (
-        <>
-          <Link href={urls.userProfile(user.username)} className={linkClassName}>
-            Profile
-          </Link>
-          <span>/</span>
-        </>
-      )}
-      <span>{current}</span>
-    </div>
+    <Breadcrumbs
+      items={[
+        ...(user ? [{ name: "Profile", href: urls.userProfile(user.username) }] : []),
+        { name: current },
+      ]}
+    />
   );
 }

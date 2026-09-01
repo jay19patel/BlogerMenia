@@ -2,10 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { DeleteConfirmForm } from "@/components/delete-confirm-form";
-import { PageHeader } from "@/components/page-header";
-import { SiteSidebar } from "@/components/site-sidebar";
 import { TrashBadge } from "@/components/trash-icon";
 import { blogs as blogsApi } from "@/lib/api";
+import { PageContainer, PageShell } from "@/components/page-shell";
 import { urls } from "@/lib/urls";
 
 /** Django: `/blogs/<slug>/delete/` → `BlogDeleteView` → `blog/blog_confirm_delete.html` */
@@ -17,7 +16,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps<"/blogs/[slug]/delete">): Promise<Metadata> {
   const blog = await blogsApi.getBlog((await params).slug);
   return {
-    title: blog ? `Delete "${blog.title}" — Inkwell` : "Page not found — Inkwell",
+    title: blog ? `Delete "${blog.title}" — BlogerMenia` : "Page not found — BlogerMenia",
     robots: { index: false, follow: false },
   };
 }
@@ -28,11 +27,8 @@ export default async function BlogDeletePage({ params }: PageProps<"/blogs/[slug
 
   return (
     <>
-      <PageHeader />
-      <SiteSidebar />
-
-      <main className="pt-16 lg:pl-64">
-        <div className="max-w-md px-8 sm:px-14 py-24 mx-auto text-center">
+      <PageShell active="blog_list">
+        <PageContainer className="mx-auto max-w-md text-center sm:py-24">
           <TrashBadge />
 
           <h1 className="text-2xl font-extrabold tracking-tight mb-3">Delete this post?</h1>
@@ -42,8 +38,8 @@ export default async function BlogDeletePage({ params }: PageProps<"/blogs/[slug
           </p>
 
           <DeleteConfirmForm cancelHref={urls.blogDetail(blog.slug)} successHref={urls.blogList()} />
-        </div>
-      </main>
+        </PageContainer>
+      </PageShell>
     </>
   );
 }

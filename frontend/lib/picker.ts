@@ -1,6 +1,5 @@
 import { formatDate } from "@/lib/format";
-import type { Blog } from "@/lib/types";
-import type { PlaylistPickerBlog } from "@/components/playlist-form";
+import type { Blog, PlaylistPickerBlog } from "@/lib/types";
 
 /** Trims a `Blog` down to the fields the playlist picker sends to the browser. */
 export function toPickerBlog(blog: Blog): PlaylistPickerBlog {

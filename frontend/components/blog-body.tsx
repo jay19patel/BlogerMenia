@@ -59,6 +59,9 @@ function SectionBody({ section, variant }: { section: BlogSection; variant: Blog
 
     case "table":
       return (
+        /* A wide table must scroll in its own box rather than making the whole
+           page scroll sideways on a phone. */
+        <div className="my-6 -mx-5 overflow-x-auto px-5 sm:mx-0 sm:px-0">
         <table>
           {section.headers && section.headers.length > 0 && (
             <thead>
@@ -79,6 +82,7 @@ function SectionBody({ section, variant }: { section: BlogSection; variant: Blog
             ))}
           </tbody>
         </table>
+        </div>
       );
 
     case "youtube":

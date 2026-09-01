@@ -18,13 +18,14 @@
  */
 @theme {
   /* Surfaces */
-  --color-bg-primary: var(--color-white);
+  --color-bg-primary: #ffffff;
   --color-bg-primary_hover: var(--color-slate-50);
   --color-bg-secondary: var(--color-slate-50);
   --color-bg-secondary_hover: var(--color-slate-100);
   --color-bg-tertiary: var(--color-slate-100);
   --color-bg-quaternary: var(--color-slate-200);
   --color-bg-overlay: --alpha(var(--color-slate-900) / 80%);
+  --color-bg-primary-solid: var(--color-slate-900);
 
   /* Brand surfaces — BlogerMenia indigo, matching the Django buttons. */
   --color-bg-brand-primary: var(--color-brand-50);
@@ -49,7 +50,8 @@
   --color-text-brand-secondary_hover: var(--color-brand-700);
   --color-text-error-primary: var(--color-red-600);
   --color-text-error-primary_hover: var(--color-red-700);
-  --color-text-white: var(--color-white);
+  --color-text-white: #ffffff;
+  --color-text-tooltip-supporting-text: var(--color-slate-300);
 
   /* Foreground (icon) roles */
   --color-fg-quaternary: var(--color-slate-400);
@@ -65,6 +67,7 @@
   --color-border-brand: var(--color-brand-500);
   --color-border-error: var(--color-red-300);
   --color-ring-primary: var(--color-slate-200);
+  --color-ring-secondary_alt: var(--color-slate-200);
   --color-ring-error_subtle: var(--color-red-200);
   --color-ring-brand: var(--color-brand-500);
 

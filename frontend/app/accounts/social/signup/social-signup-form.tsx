@@ -8,8 +8,8 @@ import { z } from "zod";
 import { useSession } from "@/components/session-provider";
 import { applyServerErrors } from "@/lib/forms";
 import { urls } from "@/lib/urls";
-
-import "../../auth-form.css";
+import { FormInput } from "@/components/form-fields";
+import { Button } from "@/components/base/buttons/button";
 
 /** The single-field form of `socialaccount/signup.html`. */
 
@@ -21,10 +21,10 @@ export function SocialSignupForm() {
   const { login } = useSession();
 
   const {
-    register,
+    control,
     handleSubmit,
     setError,
-    formState: { errors, isSubmitting },
+    formState: { isSubmitting },
   } = useForm<SocialSignupValues>({
     resolver: zodResolver(socialSignupSchema),
     defaultValues: { email: "" },
@@ -43,22 +43,25 @@ export function SocialSignupForm() {
   });
 
   return (
-    <form className="legacy-fields space-y-4" onSubmit={onSubmit} noValidate>
-      <div>
-        <label className="block text-xs font-medium text-ink/70 mb-1.5" htmlFor="id_email">
-          Email
-        </label>
-        <input id="id_email" type="email" autoComplete="email" aria-invalid={Boolean(errors.email)} {...register("email")} />
-        {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}
-      </div>
+    <form className="space-y-4" onSubmit={onSubmit} noValidate>
+      <FormInput
+        control={control}
+        name="email"
+        id="id_email"
+        type="email"
+        label="Email"
+        autoComplete="email"
+      />
 
-      <button
+      <Button
         type="submit"
-        disabled={isSubmitting}
-        className="w-full bg-ink hover:bg-black text-white text-sm font-medium py-2.5 rounded-md transition-colors disabled:opacity-70"
+        color="primary"
+        size="lg"
+        isDisabled={isSubmitting}
+        className="w-full justify-center mt-2"
       >
         {isSubmitting ? "Creating account…" : "Create account"}
-      </button>
+      </Button>
     </form>
   );
 }

@@ -2,10 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { DeleteConfirmForm } from "@/components/delete-confirm-form";
-import { PageHeader } from "@/components/page-header";
-import { SiteSidebar } from "@/components/site-sidebar";
 import { TrashBadge } from "@/components/trash-icon";
 import { playlists as playlistsApi } from "@/lib/api";
+import { PageContainer, PageShell } from "@/components/page-shell";
 import { urls } from "@/lib/urls";
 
 /** Django: `/playlists/<slug>/delete/` → `PlaylistDeleteView` → `blog/playlist_confirm_delete.html` */
@@ -17,7 +16,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps<"/playlists/[slug]/delete">): Promise<Metadata> {
   const playlist = await playlistsApi.getPlaylist((await params).slug);
   return {
-    title: playlist ? `Delete "${playlist.title}" — Inkwell` : "Page not found — Inkwell",
+    title: playlist ? `Delete "${playlist.title}" — BlogerMenia` : "Page not found — BlogerMenia",
     robots: { index: false, follow: false },
   };
 }
@@ -28,11 +27,8 @@ export default async function PlaylistDeletePage({ params }: PageProps<"/playlis
 
   return (
     <>
-      <PageHeader />
-      <SiteSidebar active="playlists" />
-
-      <main className="pt-16 lg:pl-64">
-        <div className="max-w-md px-8 sm:px-14 py-24 mx-auto text-center">
+      <PageShell active="playlists">
+        <PageContainer className="mx-auto max-w-md text-center sm:py-24">
           <TrashBadge />
 
           <h1 className="text-2xl font-extrabold tracking-tight mb-3">Delete this playlist?</h1>
@@ -46,8 +42,8 @@ export default async function PlaylistDeletePage({ params }: PageProps<"/playlis
             cancelHref={urls.playlistDetail(playlist.slug)}
             successHref={urls.playlistList()}
           />
-        </div>
-      </main>
+        </PageContainer>
+      </PageShell>
     </>
   );
 }

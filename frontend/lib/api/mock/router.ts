@@ -155,6 +155,10 @@ export async function mockRequest(options: RequestOptions): Promise<unknown> {
     let items: ApiBlog[] = publishedBlogs;
     if (query.category) items = items.filter((blog) => blog.category?.slug === query.category);
     if (query.author) items = items.filter((blog) => blog.author.username === query.author);
+    if (query.tag) {
+      const tag = String(query.tag).toLowerCase();
+      items = items.filter((blog) => blog.tags.some((entry) => entry.toLowerCase() === tag));
+    }
     if (query.featured === true || query.featured === "true") items = items.filter((blog) => blog.featured);
     if (query.ordering === "-read_count") {
       items = [...items].sort(

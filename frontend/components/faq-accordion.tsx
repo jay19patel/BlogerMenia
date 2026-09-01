@@ -7,9 +7,9 @@ import { cn } from "@/lib/cn";
 
 const FAQ_ITEMS = [
   {
-    question: "Is Inkwell free to use?",
+    question: "Is BlogerMenia free to use?",
     answer:
-      "Yes, Inkwell is completely free for readers and writers. Create an account and start publishing in minutes. There are no hidden fees or paywalls.",
+      "Yes, BlogerMenia is completely free for readers and writers. Create an account and start publishing in minutes. There are no hidden fees or paywalls.",
   },
   {
     question: "What kind of content can I publish?",
@@ -29,7 +29,7 @@ const FAQ_ITEMS = [
   {
     question: "How do I get more readers?",
     answer:
-      "Focus on quality, publish consistently, and use categories so readers can discover your work. Sharing your articles on LinkedIn and other platforms also helps grow your audience on Inkwell.",
+      "Focus on quality, publish consistently, and use categories so readers can discover your work. Sharing your articles on LinkedIn and other platforms also helps grow your audience on BlogerMenia.",
   },
 ];
 

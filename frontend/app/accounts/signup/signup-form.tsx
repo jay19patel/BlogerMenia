@@ -9,8 +9,7 @@ import { useSession } from "@/components/session-provider";
 import { signupPayloadSchema, type SignupPayload } from "@/lib/api/schemas";
 import { applyServerErrors } from "@/lib/forms";
 import { urls } from "@/lib/urls";
-
-import "../auth-form.css";
+import { FormInput } from "@/components/form-fields";
 
 /**
  * `account/signup.html` — allauth's `ACCOUNT_SIGNUP_FIELDS` of
@@ -33,10 +32,10 @@ export function SignupForm() {
   const { signup } = useSession();
 
   const {
-    register,
+    control,
     handleSubmit,
     setError,
-    formState: { errors, isSubmitting },
+    formState: { isSubmitting },
   } = useForm<SignupPayload>({
     resolver: zodResolver(signupPayloadSchema),
     defaultValues: { email: "", password1: "", password2: "" },
@@ -53,49 +52,40 @@ export function SignupForm() {
   });
 
   return (
-    <form className="auth-fields space-y-4" onSubmit={onSubmit} noValidate>
-      <div>
-        <label className="block text-xs font-semibold text-slate-600 mb-1.5" htmlFor="id_email">
-          Email
-        </label>
-        <input id="id_email" type="email" autoComplete="email" aria-invalid={Boolean(errors.email)} {...register("email")} />
-        {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}
-      </div>
+    <form className="space-y-4" onSubmit={onSubmit} noValidate>
+      <FormInput
+        control={control}
+        name="email"
+        id="id_email"
+        type="email"
+        label="Email"
+        autoComplete="email"
+      />
 
-      <div>
-        <label className="block text-xs font-semibold text-slate-600 mb-1.5" htmlFor="id_password1">
-          Password
-        </label>
-        <input
-          id="id_password1"
-          type="password"
-          autoComplete="new-password"
-          aria-invalid={Boolean(errors.password1)}
-          {...register("password1")}
-        />
-        {errors.password1 && <p className="mt-1 text-xs text-red-500">{errors.password1.message}</p>}
-        <div className="mt-1 text-xs text-slate-400">
-          <ul>
+      <FormInput
+        control={control}
+        name="password1"
+        id="id_password1"
+        type="password"
+        label="Password"
+        autoComplete="new-password"
+        hint={
+          <ul className="list-disc space-y-1 pl-4 text-xs">
             {PASSWORD_HELP.map((rule) => (
               <li key={rule}>{rule}</li>
             ))}
           </ul>
-        </div>
-      </div>
+        }
+      />
 
-      <div>
-        <label className="block text-xs font-semibold text-slate-600 mb-1.5" htmlFor="id_password2">
-          Password (again)
-        </label>
-        <input
-          id="id_password2"
-          type="password"
-          autoComplete="new-password"
-          aria-invalid={Boolean(errors.password2)}
-          {...register("password2")}
-        />
-        {errors.password2 && <p className="mt-1 text-xs text-red-500">{errors.password2.message}</p>}
-      </div>
+      <FormInput
+        control={control}
+        name="password2"
+        id="id_password2"
+        type="password"
+        label="Password (again)"
+        autoComplete="new-password"
+      />
 
       <button
         type="submit"

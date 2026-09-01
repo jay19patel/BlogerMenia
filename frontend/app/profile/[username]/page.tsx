@@ -3,17 +3,21 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Linebreaks } from "@/components/linebreaks";
-import { LinkedInIcon, LinkedInPostedBadge } from "@/components/linkedin-icon";
-import { Media } from "@/components/media";
+import { Edit01, LinkedInIcon, LinkedInPostedBadge } from "@/components/icons";
+import { MediaFrame } from "@/components/media";
+import { CategoryBadge } from "@/components/category-badge";
+import { EmptyState as SharedEmptyState } from "@/components/empty-state";
+import { BooksIcon, PlaylistIcon } from "@/components/nav-icons";
 import { OwnerOnly } from "@/components/owner-only";
-import { PageHeader } from "@/components/page-header";
 import { ProfileTabs } from "@/components/profile-tabs";
-import { SiteSidebar } from "@/components/site-sidebar";
 import { SavedBlogsPanel } from "@/components/saved-blogs-panel";
 import { blogs as blogsApi, users as usersApi } from "@/lib/api";
 import { blogSummary } from "@/lib/blog";
+import { Button } from "@/components/base/buttons/button";
+import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { formatDate, pluralize } from "@/lib/format";
-import { ProfileJsonLd } from "@/components/json-ld";
+import { BreadcrumbJsonLd, ProfileJsonLd } from "@/components/json-ld";
+import { PageContainer, PageShell } from "@/components/page-shell";
 import { buildMetadata } from "@/lib/seo";
 import { urls } from "@/lib/urls";
 import type { Blog, Playlist, User } from "@/lib/types";
@@ -26,10 +30,10 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps<"/profile/[username]">): Promise<Metadata> {
   const user = await usersApi.getUser((await params).username);
-  if (!user) return { title: "Page not found — Inkwell" };
+  if (!user) return { title: "Page not found — BlogerMenia" };
 
   return buildMetadata({
-    title: `${user.display_name} — Inkwell`,
+    title: `${user.display_name} — BlogerMenia`,
     description: user.bio || `Articles and playlists by ${user.display_name} on BlogerMenia.`,
     path: urls.userProfile(user.username),
     image: user.profile_picture,
@@ -54,42 +58,18 @@ function HeartIcon() {
   );
 }
 
-function EmptyState({
-  icon,
-  message,
-  action,
-}: {
-  icon: React.ReactNode;
-  message: string;
-  action: React.ReactNode;
-}) {
-  return (
-    <div className="text-center py-16">
-      <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
-        {icon}
-      </div>
-      <p className="text-slate-500 text-sm mb-5">{message}</p>
-      {action}
-    </div>
-  );
-}
-
 function BlogsPanel({ blogs, profileUser }: { blogs: Blog[]; profileUser: User }) {
   if (blogs.length === 0) {
     return (
-      <EmptyState
-        icon={
-          <svg className="w-7 h-7 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-          </svg>
-        }
+      <SharedEmptyState
+        variant="plain"
+        icon={<BooksIcon className="size-7" strokeWidth={1.5} />}
         message="No articles published yet."
         action={
           <OwnerOnly username={profileUser.username}>
-            <Link href={urls.blogCreate()} className="inline-flex items-center gap-2 bg-slate-900 text-white text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-slate-800 transition-colors">
+            <Button color="primary" size="md" href={urls.blogCreate()}>
               Write your first article
-            </Link>
+            </Button>
           </OwnerOnly>
         }
       />
@@ -106,15 +86,9 @@ function BlogsPanel({ blogs, profileUser }: { blogs: Blog[]; profileUser: User }
           <Link href={urls.blogDetail(blog.slug)} className="absolute inset-0 z-10">
             <span className="sr-only">View {blog.title}</span>
           </Link>
-          <div className="h-36 overflow-hidden bg-slate-100 flex items-center justify-center shrink-0 [&>svg]:w-full [&>svg]:h-full [&>svg]:object-cover">
-            <Media src={blog.image} alt={blog.title} avatarSvg={blog.avatar_svg} />
-          </div>
+          <MediaFrame src={blog.image} alt={blog.title} avatarSvg={blog.avatar_svg} className="h-36 shrink-0" />
           <div className="flex flex-col flex-1 p-5">
-            {blog.category && (
-              <span className={`text-[11px] font-bold tracking-wide ${blog.category.text_class} ${blog.category.bg_class} rounded-full px-2 py-0.5 uppercase w-fit mb-2`}>
-                {blog.category.name}
-              </span>
-            )}
+            <CategoryBadge category={blog.category} fallback={null} className="mb-2 w-fit" />
             <h3 className="font-bold text-slate-900 text-[15px] leading-snug mb-1.5 group-hover:text-brand-700 transition-colors">
               {blog.title}
               <LinkedInPostedBadge postedOnLinkedin={blog.posted_on_linkedin} linkedinPostUrl={blog.linkedin_post_url} />
@@ -131,12 +105,9 @@ function BlogsPanel({ blogs, profileUser }: { blogs: Blog[]; profileUser: User }
                 {blog.like_count}
               </span>
               <OwnerOnly username={profileUser.username}>
-                <Link
-                  href={urls.blogUpdate(blog.slug)}
-                  className="relative z-20 ml-auto text-slate-400 hover:text-brand-600 border border-slate-200 hover:border-brand-300 rounded-md px-2 py-0.5 transition-colors"
-                >
-                  Edit
-                </Link>
+                <div className="ml-auto relative z-20">
+                  <ButtonUtility size="xs" color="secondary" tooltip="Edit" icon={Edit01} href={urls.blogUpdate(blog.slug)} />
+                </div>
               </OwnerOnly>
             </div>
           </div>
@@ -149,22 +120,15 @@ function BlogsPanel({ blogs, profileUser }: { blogs: Blog[]; profileUser: User }
 function PlaylistsPanel({ playlists, profileUser }: { playlists: Playlist[]; profileUser: User }) {
   if (playlists.length === 0) {
     return (
-      <EmptyState
-        icon={
-          <svg className="w-7 h-7 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M21 15V6" />
-            <path d="M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
-            <path d="M12 12H3" />
-            <path d="M16 6H3" />
-            <path d="M12 18H3" />
-          </svg>
-        }
+      <SharedEmptyState
+        variant="plain"
+        icon={<PlaylistIcon className="size-7" strokeWidth={1.5} />}
         message="No playlists created yet."
         action={
           <OwnerOnly username={profileUser.username}>
-            <Link href={urls.playlistCreate()} className="inline-flex items-center gap-2 bg-slate-900 text-white text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-slate-800 transition-colors">
+            <Button color="primary" size="md" href={urls.playlistCreate()}>
               Create a playlist
-            </Link>
+            </Button>
           </OwnerOnly>
         }
       />
@@ -181,17 +145,17 @@ function PlaylistsPanel({ playlists, profileUser }: { playlists: Playlist[]; pro
           <Link href={urls.playlistDetail(playlist.slug)} className="absolute inset-0 z-10">
             <span className="sr-only">View {playlist.title}</span>
           </Link>
-          <div className="relative h-40 p-4 flex items-end justify-center overflow-hidden bg-slate-100 [&>svg]:absolute [&>svg]:inset-0 [&>svg]:w-full [&>svg]:h-full [&>svg]:object-cover">
-            <Media
-              src={playlist.image}
-              alt={playlist.title}
-              avatarSvg={playlist.avatar_svg}
-              imgClassName="absolute inset-0 w-full h-full object-cover"
-            />
-            <span className="relative z-10 bg-black/40 text-white text-[10px] font-bold px-2.5 py-1 rounded-full backdrop-blur-xs">
+          <MediaFrame
+            src={playlist.image}
+            alt={playlist.title}
+            avatarSvg={playlist.avatar_svg}
+            imgClassName="absolute inset-0 w-full h-full object-cover"
+            className="relative h-40 items-end p-4 [&>svg]:absolute [&>svg]:inset-0"
+          >
+            <span className="relative z-10 rounded-full bg-black/40 px-2.5 py-1 text-[10px] font-bold text-white backdrop-blur-xs">
               {playlist.blogs.length} blog{pluralize(playlist.blogs.length)}
             </span>
-          </div>
+          </MediaFrame>
 
           <div className="p-5 bg-white">
             <h3 className="font-bold text-slate-900 group-hover:text-brand-700 transition-colors leading-snug mb-1.5">
@@ -205,12 +169,9 @@ function PlaylistsPanel({ playlists, profileUser }: { playlists: Playlist[]; pro
                 Updated {formatDate(playlist.updated_at, "M d, Y")}
               </span>
               <OwnerOnly username={profileUser.username}>
-                <Link
-                  href={urls.playlistUpdate(playlist.slug)}
-                  className="relative z-20 text-xs text-slate-400 hover:text-brand-600 border border-slate-200 hover:border-brand-300 rounded-md px-2 py-0.5 transition-colors"
-                >
-                  Edit
-                </Link>
+                <div className="relative z-20">
+                  <ButtonUtility size="xs" color="secondary" tooltip="Edit" icon={Edit01} href={urls.playlistUpdate(playlist.slug)} />
+                </div>
               </OwnerOnly>
             </div>
           </div>
@@ -226,14 +187,18 @@ function SavedBlogCard({ blog }: { blog: Blog }) {
       <Link href={urls.blogDetail(blog.slug)} className="absolute inset-0 z-10">
         <span className="sr-only">View {blog.title}</span>
       </Link>
-      <div className="h-36 overflow-hidden bg-slate-100 flex items-center justify-center relative [&>svg]:absolute [&>svg]:inset-0 [&>svg]:w-full [&>svg]:h-full [&>svg]:object-cover">
-        <Media src={blog.image} alt={blog.title} avatarSvg={blog.avatar_svg} />
+      <MediaFrame
+        src={blog.image}
+        alt={blog.title}
+        avatarSvg={blog.avatar_svg}
+        className="relative h-36 [&>svg]:absolute [&>svg]:inset-0"
+      >
         {blog.category && (
           <div className={`absolute top-3 left-3 bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide uppercase ${blog.category.text_class} z-20`}>
             {blog.category.name}
           </div>
         )}
-      </div>
+      </MediaFrame>
       <div className="p-5 flex flex-col flex-1 relative">
         <h3 className="font-bold text-slate-900 text-lg mb-2 group-hover:text-brand-700 transition-colors leading-snug line-clamp-2">
           {blog.title}
@@ -267,10 +232,19 @@ export default async function ProfilePage({ params }: PageProps<"/profile/[usern
   return (
     <>
       <ProfileJsonLd user={profileUser} blogCount={user_blogs.length} />
-      <PageHeader />
-      <SiteSidebar active="profile" />
-
-      <main className="pt-16 lg:pl-64">
+      {/*
+        Structured data only: the page deliberately leads with a full-bleed
+        cover banner, so there is nowhere to put a visible trail without
+        fighting the design. Crawlers still get the hierarchy.
+      */}
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", path: urls.home() },
+          { name: "Community", path: urls.userList() },
+          { name: profileUser.display_name, path: urls.userProfile(profileUser.username) },
+        ]}
+      />
+      <PageShell active="profile">
         {/* Cover banner */}
         <div className="h-44 sm:h-52 bg-linear-to-br from-brand-400 via-indigo-500 to-purple-600 relative overflow-hidden">
           <div
@@ -285,23 +259,18 @@ export default async function ProfilePage({ params }: PageProps<"/profile/[usern
           <div className="absolute top-6 right-16 w-20 h-20 rounded-full bg-white/5" />
         </div>
 
-        <div className="max-w-5xl px-8 sm:px-14">
+        <PageContainer className="max-w-5xl py-0 sm:py-0">
           {/* Profile header */}
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-12 sm:-mt-14 pb-8 border-b border-slate-100">
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-12 sm:-mt-14 pb-8 border-b border-slate-100">
             <div className="flex items-end gap-5">
-              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-white p-1.5 shadow-xl shadow-slate-300/40 shrink-0 overflow-hidden">
-                {profileUser.profile_picture ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- matches the original profile markup.
-                  <img
-                    src={profileUser.profile_picture}
-                    alt={profileUser.username}
-                    className="w-full h-full rounded-xl object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full rounded-xl overflow-hidden [&>svg]:w-full [&>svg]:h-full">
-                    <Media src={null} alt={profileUser.username} avatarSvg={profileUser.avatar_svg} />
-                  </div>
-                )}
+              <div className="size-24 shrink-0 overflow-hidden rounded-2xl bg-white p-1.5 shadow-xl shadow-slate-300/40 sm:size-28">
+                <MediaFrame
+                  src={profileUser.profile_picture}
+                  alt={profileUser.username}
+                  avatarSvg={profileUser.avatar_svg}
+                  imgClassName="w-full h-full rounded-xl object-cover"
+                  className="h-full w-full rounded-xl bg-transparent"
+                />
               </div>
               <div className="pb-1">
                 <div className="flex items-center gap-3">
@@ -330,24 +299,13 @@ export default async function ProfilePage({ params }: PageProps<"/profile/[usern
 
             <div className="flex items-center gap-3 pb-1 flex-wrap">
               <OwnerOnly username={profileUser.username}>
-                <Link
-                  href={urls.profileEdit(profileUser.username)}
-                  className="inline-flex items-center gap-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 font-semibold text-sm px-4 py-2 rounded-xl transition-colors"
-                >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                  </svg>
+                <Button color="secondary" size="md" href={urls.profileEdit(profileUser.username)} iconLeading={Edit01}>
                   Edit Profile
-                </Link>
+                </Button>
                 {!has_linkedin_oauth && (
-                  <a
-                    href={urls.linkedinLogin()}
-                    className="inline-flex items-center gap-2 border border-[#0A66C2]/30 hover:bg-blue-50 text-[#0A66C2] font-semibold text-sm px-4 py-2 rounded-xl transition-colors"
-                  >
-                    <LinkedInIcon />
+                  <Button color="secondary" size="md" href={urls.linkedinLogin()} iconLeading={LinkedInIcon} className="text-[#0A66C2]">
                     Connect with LinkedIn
-                  </a>
+                  </Button>
                 )}
               </OwnerOnly>
             </div>
@@ -399,8 +357,8 @@ export default async function ProfilePage({ params }: PageProps<"/profile/[usern
               ) : null
             }
           />
-        </div>
-      </main>
+        </PageContainer>
+      </PageShell>
     </>
   );
 }

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { AuthBadge, AuthShell } from "@/components/auth-shell";
-import { LinkedInIcon } from "@/components/linkedin-icon";
+import { LinkedInIcon } from "@/components/icons";
 import { urls } from "@/lib/urls";
 
 import { SignupForm } from "./signup-form";
@@ -11,7 +11,7 @@ import { SignupForm } from "./signup-form";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
-  title: "Sign up — Inkwell",
+  title: "Sign up — BlogerMenia",
 };
 
 export default function SignupPage() {
@@ -29,7 +29,7 @@ export default function SignupPage() {
       <div className="flex flex-col items-center text-center mb-8">
         <AuthBadge />
         <h1 className="text-2xl font-extrabold tracking-tight mb-1.5">Create an account</h1>
-        <p className="text-sm text-slate-500">Start writing and reading on Inkwell today.</p>
+        <p className="text-sm text-slate-500">Start writing and reading on BlogerMenia today.</p>
       </div>
 
       <SignupForm />

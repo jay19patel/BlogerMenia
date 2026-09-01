@@ -8,7 +8,7 @@ import { urls } from "@/lib/urls";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
-  title: "Verify Your Email — Inkwell",
+  title: "Verify Your Email — BlogerMenia",
 };
 
 export default function VerificationSentPage() {

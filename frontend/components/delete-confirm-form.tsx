@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { useMessages } from "@/components/messages-provider";
+import { Button } from "@/components/base/buttons/button";
 
 /**
  * The confirm form shared by `blog/blog_confirm_delete.html` and
@@ -31,18 +31,20 @@ export function DeleteConfirmForm({
         router.push(successHref);
       }}
     >
-      <Link
+      <Button
+        size="md"
+        color="secondary"
         href={cancelHref}
-        className="inline-flex items-center gap-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 font-semibold text-sm px-6 py-2.5 rounded-xl transition-colors"
       >
         Keep it
-      </Link>
-      <button
+      </Button>
+      <Button
         type="submit"
-        className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold text-sm px-6 py-2.5 rounded-xl transition-colors"
+        size="md"
+        color="primary-destructive"
       >
         Yes, delete
-      </button>
+      </Button>
     </form>
   );
 }

@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { PageHeader } from "@/components/page-header";
-import { SiteSidebar } from "@/components/site-sidebar";
+import { Breadcrumbs } from "@/components/breadcrumbs";
+import { PageContainer, PageShell } from "@/components/page-shell";
 import { users as usersApi } from "@/lib/api";
 import { urls } from "@/lib/urls";
 
@@ -26,26 +25,26 @@ export default async function ProfileEditPage({ params }: PageProps<"/profile/[u
 
   return (
     <>
-      <PageHeader />
-      <SiteSidebar active="profile" />
+      <PageShell active="profile">
+        <PageContainer className="max-w-2xl">
+          <Breadcrumbs
+            items={[
+              { name: profileUser.display_name, href: urls.userProfile(profileUser.username) },
+              { name: "Edit profile" },
+            ]}
+          />
 
-      <main className="pt-16 lg:pl-64">
-        <div className="max-w-2xl px-8 sm:px-14 py-14">
-          <div className="flex items-center gap-2 text-sm text-slate-400 mb-6">
-            <Link href={urls.userProfile(profileUser.username)} className="hover:text-slate-600 transition-colors">
-              Profile
-            </Link>
-            <span>/</span>
-            <span>Edit</span>
-          </div>
+          <p className="mb-1.5 text-[11px] font-semibold tracking-wider text-slate-400">ACCOUNT SETTINGS</p>
+          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">Edit profile</h1>
+          <p className="mt-2 leading-relaxed text-slate-500">
+            Your name, bio and links as readers see them on your profile.
+          </p>
 
-          <h1 className="text-3xl font-extrabold tracking-tight mb-8">Edit profile</h1>
-
-          <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-xs">
+          <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs sm:p-8">
             <ProfileEditForm profileUser={profileUser} />
           </div>
-        </div>
-      </main>
+        </PageContainer>
+      </PageShell>
     </>
   );
 }

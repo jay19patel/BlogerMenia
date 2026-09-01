@@ -3,25 +3,25 @@ import Link from "next/link";
 
 import { AuthSwitch, IfAnonymous } from "@/components/auth-gate";
 import { FaqAccordion } from "@/components/faq-accordion";
-import { LinkedInIcon, LinkedInPostedBadge } from "@/components/linkedin-icon";
-import { Media } from "@/components/media";
-import { PageHeader } from "@/components/page-header";
-import { SiteSidebar } from "@/components/site-sidebar";
+import { LinkedInIcon, LinkedInPostedBadge } from "@/components/icons";
+import { AuthorAvatar, MediaFrame } from "@/components/media";
+import { CategoryBadge } from "@/components/category-badge";
 import { blogs as blogsApi, playlists as playlistsApi, users as usersApi } from "@/lib/api";
+import { PageShell } from "@/components/page-shell";
 import { buildMetadata } from "@/lib/seo";
 import { urls } from "@/lib/urls";
 
 /** Django: `/` → `blog.views.home_views.HomeView` → `blog/home.html` */
 
 export const metadata: Metadata = buildMetadata({
-  title: "Inkwell — Ideas worth writing down",
+  title: "BlogerMenia — Ideas worth writing down",
   path: urls.home(),
 });
 
 const TESTIMONIALS = [
   {
     quote:
-      "\"Inkwell gave me a place to share my thoughts on design systems. The writing experience is clean and distraction-free — exactly what I needed.\"",
+      "\"BlogerMenia gave me a place to share my thoughts on design systems. The writing experience is clean and distraction-free — exactly what I needed.\"",
     initial: "S",
     initialClass: "bg-brand-500",
     name: "Sana Mehra",
@@ -29,7 +29,7 @@ const TESTIMONIALS = [
   },
   {
     quote:
-      "\"I've published 12 articles on Inkwell and the reader engagement has been incredible. The platform genuinely values thoughtful writing.\"",
+      "\"I've published 12 articles on BlogerMenia and the reader engagement has been incredible. The platform genuinely values thoughtful writing.\"",
     initial: "R",
     initialClass: "bg-slate-700",
     name: "Rohan Kapoor",
@@ -113,12 +113,9 @@ export default async function HomePage() {
 
   return (
     <>
-      <PageHeader />
-      <SiteSidebar active="home" />
-
-      <main className="pt-16 lg:pl-64">
+      <PageShell active="home">
         {/* HERO */}
-        <section className="relative overflow-hidden px-8 sm:px-14 py-20 border-b border-slate-100/80 bg-linear-to-b from-slate-50/50 via-white to-white">
+        <section className="relative overflow-hidden px-5 sm:px-14 py-20 border-b border-slate-100/80 bg-linear-to-b from-slate-50/50 via-white to-white">
           <div className="max-w-4xl">
             <div className="inline-flex items-center gap-2 bg-indigo-50/80 text-brand-700 text-xs font-semibold px-3 py-1 rounded-full mb-6 border border-brand-100/60">
               <span className="w-1.5 h-1.5 rounded-full bg-brand-600 animate-pulse" />
@@ -194,7 +191,7 @@ export default async function HomePage() {
 
         {/* TOP BLOGS */}
         {top_blogs.length > 0 && (
-          <section className="px-8 sm:px-14 py-16 border-b border-slate-100">
+          <section className="px-5 sm:px-14 py-16 border-b border-slate-100">
             <div className="flex items-center justify-between mb-8">
               <div>
                 <p className="text-[11px] font-semibold tracking-wider text-slate-400 mb-1.5">MOST READ</p>
@@ -211,20 +208,15 @@ export default async function HomePage() {
                   <span className="text-3xl font-extrabold text-slate-200 mono w-10 shrink-0 select-none">
                     {index + 1}
                   </span>
-                  <div className="w-20 h-14 rounded-xl shrink-0 flex items-center justify-center overflow-hidden bg-slate-100 [&>svg]:w-full [&>svg]:h-full [&>svg]:object-cover">
-                    <Media
-                      src={blog.image}
-                      alt={blog.title}
-                      avatarSvg={blog.avatar_svg}
-                      imgClassName="w-full h-full object-cover rounded-xl"
-                    />
-                  </div>
+                  <MediaFrame
+                    src={blog.image}
+                    alt={blog.title}
+                    avatarSvg={blog.avatar_svg}
+                    imgClassName="w-full h-full object-cover rounded-xl"
+                    className="h-14 w-20 shrink-0 rounded-xl"
+                  />
                   <div className="flex-1 min-w-0">
-                    {blog.category && (
-                      <span className={`text-[11px] font-bold tracking-wide ${blog.category.text_class} ${blog.category.bg_class} rounded-full px-2 py-0.5 uppercase`}>
-                        {blog.category.name}
-                      </span>
-                    )}
+                    <CategoryBadge category={blog.category} fallback={null} />
                     <h3 className="font-bold text-slate-900 text-base mt-1.5 truncate group-hover:text-brand-700 transition-colors">
                       {blog.title}
                       <LinkedInPostedBadge
@@ -246,7 +238,7 @@ export default async function HomePage() {
         )}
 
         {/* COMMUNITY */}
-        <section className="px-8 sm:px-14 py-16 bg-slate-50/60 border-b border-slate-100">
+        <section className="px-5 sm:px-14 py-16 bg-slate-50/60 border-b border-slate-100">
           <div className="flex items-center justify-between mb-8">
             <div>
               <p className="text-[11px] font-semibold tracking-wider text-slate-400 mb-1.5">MEET THE AUTHORS</p>
@@ -269,9 +261,10 @@ export default async function HomePage() {
                   <Link href={urls.userProfile(member.username)} className="absolute inset-0 z-0 rounded-2xl">
                     <span className="sr-only">View {member.username}</span>
                   </Link>
-                  <div className="w-14 h-14 rounded-full overflow-hidden shrink-0 ring-2 ring-slate-50 group-hover:ring-brand-100 transition-colors [&>svg]:w-full [&>svg]:h-full">
-                    <Media src={member.profile_picture} alt={member.username} avatarSvg={member.avatar_svg} />
-                  </div>
+                  <AuthorAvatar
+                    user={member}
+                    className="size-14 shrink-0 ring-2 ring-slate-50 transition-colors group-hover:ring-brand-100"
+                  />
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
                       <p className="font-semibold text-slate-900 truncate group-hover:text-brand-700 transition-colors">
@@ -303,7 +296,7 @@ export default async function HomePage() {
         </section>
 
         {/* TESTIMONIALS */}
-        <section className="px-8 sm:px-14 py-16 border-b border-slate-100">
+        <section className="px-5 sm:px-14 py-16 border-b border-slate-100">
           <div className="text-center mb-12">
             <p className="text-[11px] font-semibold tracking-wider text-slate-400 mb-2">FROM OUR WRITERS</p>
             <h2 className="text-2xl font-extrabold tracking-tight text-slate-900">What people are saying</h2>
@@ -328,7 +321,7 @@ export default async function HomePage() {
         </section>
 
         {/* FAQ */}
-        <section className="px-8 sm:px-14 py-16 border-b border-slate-100">
+        <section className="px-5 sm:px-14 py-16 border-b border-slate-100">
           <div className="max-w-2xl mx-auto">
             <div className="text-center mb-10">
               <p className="text-[11px] font-semibold tracking-wider text-slate-400 mb-2">GOT QUESTIONS?</p>
@@ -342,7 +335,7 @@ export default async function HomePage() {
 
         {/* CTA */}
         <IfAnonymous>
-          <section className="px-8 sm:px-14 py-20 text-center">
+          <section className="px-5 sm:px-14 py-20 text-center">
             <div className="max-w-lg mx-auto">
               <span className="w-14 h-14 rounded-2xl bg-brand-500 flex items-center justify-center shadow-lg shadow-brand-500/30 mx-auto mb-6">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -354,7 +347,7 @@ export default async function HomePage() {
                 Ready to start writing?
               </h2>
               <p className="text-slate-500 leading-relaxed mb-8">
-                Join hundreds of writers sharing their knowledge on Inkwell. It&apos;s free, always.
+                Join hundreds of writers sharing their knowledge on BlogerMenia. It&apos;s free, always.
               </p>
               <div className="flex items-center justify-center gap-4 flex-wrap">
                 <Link href={urls.accountSignup()} className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold px-7 py-3 rounded-xl transition-colors">
@@ -368,7 +361,7 @@ export default async function HomePage() {
             </div>
           </section>
         </IfAnonymous>
-      </main>
+      </PageShell>
     </>
   );
 }

@@ -22,7 +22,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps<"/blogs/[slug]/pdf">): Promise<Metadata> {
   const blog = await blogsApi.getBlog((await params).slug);
   return {
-    title: blog ? blog.title : "Page not found — Inkwell",
+    title: blog ? blog.title : "Page not found — BlogerMenia",
     robots: { index: false, follow: false },
   };
 }

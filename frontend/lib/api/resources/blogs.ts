@@ -19,6 +19,8 @@ export interface BlogListParams {
   pageSize?: number;
   category?: string;
   author?: string;
+  /** Filter to posts carrying this tag — `Blog.tags__contains` in Django. */
+  tag?: string;
   ordering?: "-created_at" | "-read_count";
   featured?: boolean;
   /** Omit one post — used for "More like this". */
@@ -44,6 +46,7 @@ export async function listBlogs(params: BlogListParams = {}): Promise<BlogList> 
       page_size: pageSize,
       category: params.category,
       author: params.author,
+      tag: params.tag,
       ordering: params.ordering,
       featured: params.featured,
       exclude: params.exclude,
@@ -70,7 +73,7 @@ export async function getBlog(slug: string): Promise<Blog | null> {
   }
 }
 
-/** Every slug, drafts included — for `generateStaticParams`. */
+/** Every published slug — for `generateStaticParams`. */
 export async function listAllBlogSlugs(): Promise<string[]> {
   const data = await request(blogPage, { path: endpoints.blogs(), query: { page_size: 1000 } });
   return data.results.map((blog) => blog.slug);

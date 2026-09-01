@@ -8,7 +8,7 @@ import { urls } from "@/lib/urls";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
-  title: "Password Updated — Inkwell",
+  title: "Password Updated — BlogerMenia",
 };
 
 export default function PasswordResetFromKeyDonePage() {

@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { LinkedInPostedBadge } from "@/components/linkedin-icon";
-import { Media } from "@/components/media";
+import { Breadcrumbs } from "@/components/breadcrumbs";
+import { LinkedInPostedBadge } from "@/components/icons";
+import { AuthorAvatar, MediaFrame } from "@/components/media";
 import { OwnerOnly, VisibleToOwnerOrPublic } from "@/components/owner-only";
-import { PageHeader } from "@/components/page-header";
-import { SiteSidebar } from "@/components/site-sidebar";
 import { playlists as playlistsApi } from "@/lib/api";
 import { formatDate, pluralize } from "@/lib/format";
 import { CollectionJsonLd } from "@/components/json-ld";
+import { PageContainer, PageShell } from "@/components/page-shell";
 import { buildMetadata } from "@/lib/seo";
 import { urls } from "@/lib/urls";
 
@@ -21,10 +21,10 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps<"/playlists/[slug]">): Promise<Metadata> {
   const playlist = await playlistsApi.getPlaylist((await params).slug);
-  if (!playlist) return { title: "Page not found — Inkwell" };
+  if (!playlist) return { title: "Page not found — BlogerMenia" };
 
   return buildMetadata({
-    title: `${playlist.title} — Playlist — Inkwell`,
+    title: `${playlist.title} — Playlist — BlogerMenia`,
     description: playlist.description || undefined,
     path: urls.playlistDetail(playlist.slug),
     image: playlist.image,
@@ -40,31 +40,25 @@ export default async function PlaylistDetailPage({ params }: PageProps<"/playlis
   return (
     <>
       <CollectionJsonLd playlist={playlist} />
-      <PageHeader />
-      <SiteSidebar active="playlists" />
-
-      <main className="pt-16 lg:pl-64">
-        <div className="max-w-4xl px-8 sm:px-14 py-14">
-          <div className="flex items-center gap-2 text-sm text-slate-400 mb-6">
-            <Link href={urls.home()} className="hover:text-slate-600 transition-colors">
-              Blogs
-            </Link>
-            <span>/</span>
-            <Link href={urls.playlistList()} className="hover:text-slate-600 transition-colors">
-              Playlists
-            </Link>
-          </div>
+      <PageShell active="playlists">
+        <PageContainer className="max-w-4xl">
+          <Breadcrumbs
+            items={[
+              { name: "Home", href: urls.home() },
+              { name: "Playlists", href: urls.playlistList() },
+              { name: playlist.title, href: urls.playlistDetail(playlist.slug) },
+            ]}
+          />
 
           {/* Playlist header */}
           <div className="flex flex-col sm:flex-row gap-6 sm:items-end pb-8 border-b border-slate-100 mb-8">
-            <div className="w-full sm:w-44 h-44 rounded-2xl shrink-0 flex items-center justify-center shadow-lg overflow-hidden bg-slate-100 [&>svg]:w-full [&>svg]:h-full [&>svg]:object-cover">
-              <Media
-                src={playlist.image}
-                alt={playlist.title}
-                avatarSvg={playlist.avatar_svg}
-                imgClassName="w-full h-full object-cover rounded-2xl"
-              />
-            </div>
+            <MediaFrame
+              src={playlist.image}
+              alt={playlist.title}
+              avatarSvg={playlist.avatar_svg}
+              imgClassName="w-full h-full object-cover rounded-2xl"
+              className="h-44 w-full shrink-0 rounded-2xl shadow-lg sm:w-44"
+            />
 
             <div className="flex-1">
               <p className="text-xs font-bold tracking-wide text-brand-600 mb-2">
@@ -73,13 +67,7 @@ export default async function PlaylistDetailPage({ params }: PageProps<"/playlis
               <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3">{playlist.title}</h1>
               <p className="text-slate-500 leading-relaxed max-w-lg mb-4">{playlist.description}</p>
               <div className="flex items-center gap-3 text-sm text-slate-500">
-                <div className="w-6 h-6 rounded-full overflow-hidden [&>svg]:w-full [&>svg]:h-full">
-                  <Media
-                    src={playlist.author.profile_picture}
-                    alt={playlist.author.username}
-                    avatarSvg={playlist.author.avatar_svg}
-                  />
-                </div>
+                <AuthorAvatar user={playlist.author} className="size-6 shrink-0" />
                 <Link
                   href={urls.userProfile(playlist.author.username)}
                   className="font-medium text-slate-700 hover:text-brand-600 transition-colors"
@@ -91,7 +79,7 @@ export default async function PlaylistDetailPage({ params }: PageProps<"/playlis
               </div>
             </div>
 
-            <div className="flex sm:flex-col gap-3 sm:items-end">
+            <div className="flex flex-wrap gap-3 sm:flex-col sm:items-end">
               {firstBlog && (
                 <Link
                   href={urls.blogDetail(firstBlog.slug)}
@@ -143,14 +131,13 @@ export default async function PlaylistDetailPage({ params }: PageProps<"/playlis
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-brand-600 hidden group-hover:block w-6 shrink-0">
                       <path d="M8 5v14l11-7z" />
                     </svg>
-                    <div className="w-16 h-16 rounded-lg shrink-0 flex items-center justify-center overflow-hidden bg-slate-100 [&>svg]:w-full [&>svg]:h-full [&>svg]:object-cover">
-                      <Media
-                        src={blog.image}
-                        alt={blog.title}
-                        avatarSvg={blog.avatar_svg}
-                        imgClassName="w-full h-full object-cover rounded-lg"
-                      />
-                    </div>
+                    <MediaFrame
+                      src={blog.image}
+                      alt={blog.title}
+                      avatarSvg={blog.avatar_svg}
+                      imgClassName="w-full h-full object-cover rounded-lg"
+                      className="size-16 shrink-0 rounded-lg"
+                    />
                     <div className="flex-1 min-w-0">
                       <h3 className="font-bold text-slate-900 truncate group-hover:text-brand-700 transition-colors">
                         {blog.title}
@@ -177,8 +164,8 @@ export default async function PlaylistDetailPage({ params }: PageProps<"/playlis
               ))
             )}
           </div>
-        </div>
-      </main>
+        </PageContainer>
+      </PageShell>
     </>
   );
 }

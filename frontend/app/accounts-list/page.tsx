@@ -1,19 +1,20 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { LinkedInIcon } from "@/components/linkedin-icon";
-import { Media } from "@/components/media";
-import { PageHeader } from "@/components/page-header";
-import { SiteSidebar } from "@/components/site-sidebar";
+import { Breadcrumbs } from "@/components/breadcrumbs";
+import { LinkedInIcon } from "@/components/icons";
+import { AuthorAvatar } from "@/components/media";
+import { EmptyState } from "@/components/empty-state";
 import { users as usersApi } from "@/lib/api";
 import { formatDate } from "@/lib/format";
+import { PageContainer, PageShell } from "@/components/page-shell";
 import { buildMetadata } from "@/lib/seo";
 import { urls } from "@/lib/urls";
 
 /** Django: `/accounts-list/` → `UserListView` → `blog/user_list.html` */
 
 export const metadata: Metadata = buildMetadata({
-  title: "Community — Inkwell",
+  title: "Community — BlogerMenia",
   description: "Discover the writers publishing on BlogerMenia, their blogs and their playlists.",
   path: urls.userList(),
 });
@@ -23,11 +24,12 @@ export default async function UserListPage() {
 
   return (
     <>
-      <PageHeader />
-      <SiteSidebar />
+      <PageShell active="community">
+        <PageContainer className="max-w-5xl sm:py-16">
+          <Breadcrumbs
+            items={[{ name: "Home", href: urls.home() }, { name: "Community", href: urls.userList() }]}
+          />
 
-      <main className="pt-16 lg:pl-64">
-        <div className="max-w-5xl px-8 sm:px-14 py-16">
           <span className="inline-flex items-center gap-2 bg-brand-50 text-brand-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-8">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -45,9 +47,7 @@ export default async function UserListPage() {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {users.length === 0 ? (
-              <div className="col-span-full text-center py-20 border border-dashed border-slate-200 rounded-2xl">
-                <p className="text-slate-500">No accounts found.</p>
-              </div>
+              <EmptyState className="col-span-full" message="No accounts found." />
             ) : (
               users.map((author) => (
                 <div
@@ -57,9 +57,7 @@ export default async function UserListPage() {
                   <Link href={urls.userProfile(author.username)} className="absolute inset-0 z-0 rounded-2xl">
                     <span className="sr-only">View {author.username}</span>
                   </Link>
-                  <div className="w-16 h-16 rounded-full mb-4 overflow-hidden shrink-0 [&>svg]:w-full [&>svg]:h-full">
-                    <Media src={author.profile_picture} alt={author.username} avatarSvg={author.avatar_svg} />
-                  </div>
+                  <AuthorAvatar user={author} className="mb-4 size-16 shrink-0" />
                   <div className="flex items-center justify-center gap-1.5 mb-0.5">
                     <h2 className="font-bold text-slate-900 group-hover:text-brand-700 transition-colors">
                       {author.full_name || author.username}
@@ -97,8 +95,8 @@ export default async function UserListPage() {
               ))
             )}
           </div>
-        </div>
-      </main>
+        </PageContainer>
+      </PageShell>
     </>
   );
 }

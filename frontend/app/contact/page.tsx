@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { ContactForm } from "@/components/contact-form";
-import { PageHeader } from "@/components/page-header";
-import { SiteSidebar } from "@/components/site-sidebar";
+import { PageContainer, PageShell } from "@/components/page-shell";
+import { Mail01, MarkerPin01, MessageChatCircle } from "@untitledui/icons";
 import { buildMetadata } from "@/lib/seo";
 import { urls } from "@/lib/urls";
 
@@ -20,44 +20,99 @@ export default async function ContactPage({ searchParams }: PageProps<"/contact"
 
   return (
     <>
-      <PageHeader />
-      <SiteSidebar active="contact" />
+      <PageShell active="contact" className="min-h-screen relative overflow-hidden bg-slate-50">
+        {/* Premium Background Elements (Light Mode) */}
+        <div className="absolute inset-0 z-0">
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-brand-200/40 rounded-full blur-3xl" />
+          <div className="absolute top-1/3 -left-20 w-80 h-80 bg-purple-200/30 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-indigo-200/30 rounded-full blur-3xl" />
+        </div>
 
-      <main className="pt-16 lg:pl-64 min-h-screen bg-slate-50">
-        <div className="max-w-2xl px-8 sm:px-14 py-14">
-          <div className="flex items-center gap-2 text-sm text-slate-400 mb-6">
-            <Link href={urls.home()} className="hover:text-slate-600 transition-colors">
-              Home
-            </Link>
-            <span>/</span>
-            <span>Contact</span>
-          </div>
+        <PageContainer className="relative z-10 max-w-6xl py-12 lg:py-20">
+          <Breadcrumbs 
+            items={[{ name: "Home", href: urls.home() }, { name: "Contact" }]} 
+            className="mb-8"
+          />
 
-          <h1 className="text-4xl font-extrabold tracking-tight mb-4 text-slate-900">Get in touch</h1>
-          <p className="text-slate-500 mb-10 text-lg">
-            Have a question or feedback? We&apos;d love to hear from you.
-          </p>
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20">
+            {/* Left Column: Text & Info */}
+            <div className="flex flex-col justify-center">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-50 border border-brand-200 text-brand-600 w-fit mb-6">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-500"></span>
+                </span>
+                <span className="text-xs font-semibold uppercase tracking-wider">We&apos;re online</span>
+              </div>
+              
+              <h1 className="text-4xl lg:text-6xl font-extrabold tracking-tight mb-6 text-slate-900 leading-tight">
+                Let&apos;s start a <br/>
+                <span className="text-transparent bg-clip-text bg-linear-to-r from-brand-600 to-purple-600">conversation</span>
+              </h1>
+              <p className="text-slate-500 mb-12 text-lg leading-relaxed max-w-lg">
+                Have a question, feedback, or a brilliant idea? We&apos;d love to hear from you. Drop us a message and our team will get back to you shortly.
+              </p>
 
-          {success && (
-            <div className="bg-brand-50 border border-brand-200 text-brand-700 px-6 py-4 rounded-xl mb-8 flex items-start gap-4">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-check-circle-2 text-brand-500 shrink-0 mt-0.5">
-                <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
-                <path d="m9 12 2 2 4-4" />
-              </svg>
-              <div>
-                <h3 className="font-bold">Message sent successfully!</h3>
-                <p className="text-sm mt-1 opacity-90">
-                  Thank you for reaching out. We will get back to you as soon as possible.
-                </p>
+              <div className="space-y-8">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 rounded-xl bg-white border border-slate-200 text-brand-600 shadow-xs">
+                    <Mail01 className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-slate-900 font-semibold mb-1">Email us</h3>
+                    <p className="text-slate-500 text-sm">Our friendly team is here to help.</p>
+                    <a href="mailto:hello@blogermenia.com" className="text-brand-600 font-medium text-sm mt-1 block hover:text-brand-700 transition-colors">hello@blogermenia.com</a>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="p-3 rounded-xl bg-white border border-slate-200 text-brand-600 shadow-xs">
+                    <MessageChatCircle className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-slate-900 font-semibold mb-1">Live chat</h3>
+                    <p className="text-slate-500 text-sm">Available Mon-Fri, 9am to 5pm EST.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="p-3 rounded-xl bg-white border border-slate-200 text-brand-600 shadow-xs">
+                    <MarkerPin01 className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-slate-900 font-semibold mb-1">Office</h3>
+                    <p className="text-slate-500 text-sm">Come say hello at our HQ.</p>
+                    <p className="text-slate-600 text-sm mt-1">100 Smith Street<br/>Collingwood VIC 3066 AU</p>
+                  </div>
+                </div>
               </div>
             </div>
-          )}
 
-          <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-xs">
-            <ContactForm />
+            {/* Right Column: Form */}
+            <div className="relative">
+              <div className="absolute inset-0 bg-linear-to-b from-brand-100 to-purple-100 rounded-3xl blur-xl opacity-60 transform -rotate-1" />
+              <div className="relative bg-white border border-slate-200 rounded-3xl p-8 sm:p-10 shadow-xl shadow-slate-200/50">
+                {success && (
+                  <div className="bg-brand-50 border border-brand-200 text-brand-700 px-6 py-4 rounded-2xl mb-8 flex items-start gap-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-check-circle-2 text-brand-500 shrink-0 mt-0.5">
+                      <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+                      <path d="m9 12 2 2 4-4" />
+                    </svg>
+                    <div>
+                      <h3 className="font-bold">Message sent successfully!</h3>
+                      <p className="text-sm mt-1 opacity-90">
+                        Thank you for reaching out. We will get back to you as soon as possible.
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
+                <ContactForm />
+              </div>
+            </div>
           </div>
-        </div>
-      </main>
+        </PageContainer>
+      </PageShell>
     </>
   );
 }

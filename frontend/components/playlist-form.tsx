@@ -7,9 +7,12 @@ import { useMemo, useState } from "react";
 import { useMessages } from "@/components/messages-provider";
 import { RawSvg } from "@/components/raw-svg";
 import { useSession } from "@/components/session-provider";
+import type { PlaylistPickerBlog } from "@/lib/types";
 import { urls } from "@/lib/urls";
+import { Input } from "@/components/base/input/input";
+import { TextArea } from "@/components/base/textarea/textarea";
+import { SearchSm } from "@untitledui/icons";
 
-import "../app/playlists/playlist-form.css";
 
 /**
  * `blog/playlist_form.html` — the three-column playlist editor.
@@ -18,17 +21,6 @@ import "../app/playlists/playlist-form.css";
  * between the "In this playlist" and "Your library" columns; here the same
  * layout is driven by React state, with identical markup for each row.
  */
-
-/** One row of the blog picker — the subset of `Blog` the editor needs. */
-export interface PlaylistPickerBlog {
-  id: number;
-  title: string;
-  image: string | null;
-  avatar_svg: string;
-  category_name: string | null;
-  created_at_label: string;
-  author_username: string;
-}
 
 interface PlaylistFormProps {
   blogs: PlaylistPickerBlog[];
@@ -138,7 +130,6 @@ export function PlaylistForm({
 
   return (
     <form
-      className="playlist-form"
       method="post"
       encType="multipart/form-data"
       noValidate
@@ -180,37 +171,42 @@ export function PlaylistForm({
               </div>
             </label>
             <div className="hidden">
-              <input id="id_image" name="image" type="file" accept="image/*" onChange={onCoverChange} />
+              <input
+                id="id_image"
+                name="image"
+                type="file"
+                accept="image/*"
+                onChange={onCoverChange}
+                className="fld"
+              />
             </div>
           </div>
 
           <div>
-            <label htmlFor="id_title" className="block text-xs font-semibold text-slate-600 mb-1.5">
-              Title <span className="text-red-400">*</span>
-            </label>
-            <input
+            <Input
               id="id_title"
               name="title"
               type="text"
+              label="Title"
+              isRequired
               maxLength={200}
               placeholder="e.g., Essential Reading for Builders"
               value={title}
-              onChange={(event) => setTitle(event.target.value)}
+              onChange={setTitle}
+              isInvalid={!!titleError}
+              hint={titleError}
             />
-            {titleError && <p className="mt-1 text-xs text-red-500">{titleError}</p>}
           </div>
 
           <div>
-            <label htmlFor="id_description" className="block text-xs font-semibold text-slate-600 mb-1.5">
-              Description
-            </label>
-            <textarea
+            <TextArea
               id="id_description"
               name="description"
+              label="Description"
               rows={4}
               placeholder="What is this collection about?"
               value={description}
-              onChange={(event) => setDescription(event.target.value)}
+              onChange={setDescription}
             />
           </div>
         </div>
@@ -250,18 +246,14 @@ export function PlaylistForm({
             </span>
           </div>
           <div className="relative mb-3">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.3-4.3" />
-            </svg>
-            <input
+            <Input
               type="text"
               aria-label="Search your library"
               placeholder="Search your library..."
-              className="pl-9!"
               autoComplete="off"
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={setSearch}
+              icon={SearchSm}
             />
           </div>
           <div className="space-y-2 flex-1 overflow-y-auto max-h-[520px] pr-1">

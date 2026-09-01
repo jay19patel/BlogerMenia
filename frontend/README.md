@@ -86,7 +86,7 @@ required settings, and a checklist.
 - `app/sitemap.ts` and `app/robots.ts`, generated from the same data layer.
 - Editors, delete confirmations, PDF views and the account flows are
   `noindex` and disallowed in robots.txt.
-- 109 routes prerendered at build; article pages are static HTML with the full
+- 111 routes prerendered at build; article pages are static HTML with the full
   body in the initial response.
 
 ---
@@ -106,10 +106,19 @@ tokens its components use and maps them onto this site's palette — `brand` is
 the indigo ramp, the neutral roles resolve to Slate. An Untitled UI component
 therefore drops in already wearing this site's colours.
 
-Currently used for the Excalidraw Studio overlay, which gains a focus trap,
-Escape handling and scroll locking that the original hand-rolled `div` never
-had. Adding another component may need a token that is not in the bridge yet —
-the file says how to spot and add it.
+Used for the Excalidraw Studio overlay — which gains a focus trap, Escape
+handling and scroll locking that the original hand-rolled `div` never had — and
+for the buttons and form fields across the editors, the account flows and the
+contact form. Adding another component may need a token that is not in the
+bridge yet; the file says how to spot and add it.
+
+**Its fields are React Aria**, which matters: their `onChange` receives the new
+*value*, not a DOM event, and their `ref` lands on the wrapper rather than the
+`<input>`. Driving one with `{...register(name)}` therefore hands react-hook-form
+a string where it expects an event and throws on the first keystroke.
+[`components/form-fields.tsx`](components/form-fields.tsx) is the `Controller`
+bridge every validated form goes through; uncontrolled fields take the value
+directly (`onChange={setEmail}`).
 
 ---
 
@@ -154,7 +163,11 @@ frontend/
 │   ├── untitled-ui-tokens.css              Untitled UI tokens → this site's palette
 │   └── globals.css                         base.html <style> + .article-body rules
 ├── components/
-│   ├── base/  application/                 Untitled UI React source
+│   ├── base/  application/                 Untitled UI React source (vendored)
+│   ├── page-shell.tsx                      header + sidebar + <main>, on every content page
+│   ├── site-nav.tsx  mobile-nav.tsx        one navigation, desktop rail and mobile drawer
+│   ├── form-fields.tsx                     react-hook-form ⇄ React Aria bridge
+│   ├── breadcrumbs.tsx                     the trail *and* its BreadcrumbList JSON-LD
 │   └── …                                   partials/ + reusable card & form pieces
 ├── lib/
 │   ├── api/
@@ -206,9 +219,18 @@ frontend/
 
 | Django URL | Template | Next.js equivalent |
 | --- | --- | --- |
-| `/search/api/` | *(JSON endpoint)* | client-side filter in `components/site-header.tsx` |
+| `/search/api/` | *(JSON endpoint)* | `app/api/search/route.ts`, called by the header dropdown |
+| — | *(no equivalent upstream)* | `app/search/page.tsx` — the full results page |
 | 404 handler | `404.html` | `app/not-found.tsx` |
 | 500 handler | `500.html` | `app/global-error.tsx` |
+
+### Added beyond the Django app
+
+| Route | What it is |
+| --- | --- |
+| `/search/?q=` | Linkable search results; also what the `SearchAction` in the site JSON-LD now points at |
+| `/blogs/?tag=` | Tag listing, so the tags on an article are navigable |
+| `/feed.xml` | RSS 2.0 feed of the published posts, advertised from `<head>` |
 
 ### `accounts/` (django-allauth template overrides)
 
@@ -233,9 +255,9 @@ frontend/
 
 | Django partial | Component |
 | --- | --- |
-| `partials/header.html` | `components/site-header.tsx` (+ `page-header.tsx` wrapper) |
-| `partials/sidebar.html` | `components/site-sidebar.tsx`, `components/sidebar-account.tsx` |
-| `partials/sidebar_detail.html` | `components/detail-sidebar.tsx` |
+| `partials/header.html` | `components/site-header.tsx` (composed by `page-shell.tsx`) |
+| `partials/sidebar.html` | `components/site-nav.tsx`, `components/sidebar-account.tsx`, `components/mobile-nav.tsx` |
+| `partials/sidebar_detail.html` | folded into `components/site-nav.tsx` (the `toc` prop) |
 | `partials/footer.html` | `components/site-footer.tsx` |
 | `blog/_blog_body.html` | `components/blog-body.tsx`, `components/code-block.tsx` |
 | `base.html` messages block | `components/messages-provider.tsx` |
@@ -246,8 +268,10 @@ frontend/
 ## Dummy data
 
 `data/` mirrors the Django models field-for-field, so the fixtures read like a
-`dumpdata` export. `lib/data.ts` joins them at module load — the static
-equivalent of the `select_related` / `annotate` calls in `blog/views/`.
+`dumpdata` export. [`lib/api/mock/db.ts`](lib/api/mock/db.ts) joins them at
+module load — the static equivalent of the `select_related` / `annotate` calls
+in `blog/views/` — and `lib/api/mock/router.ts` serves them with DRF's
+semantics.
 
 | File | Model | Records |
 | --- | --- | --- |
@@ -262,8 +286,10 @@ cover image, with and without a category, all ten structured section types, one
 legacy `content`-only post, an empty playlist, a draft, a user with no name and
 no bio, and the "no results" state of every list.
 
-Everything is a plain `import` — there is no `fetch`, no `axios`, and no data
-loader anywhere in the project.
+The fixtures are plain `import`s, but nothing above `lib/api/client.ts` knows
+that: the resource modules, the pages and the route handlers all call what looks
+like an HTTP API, which is what makes `API_MODE=live` a configuration change
+rather than a rewrite.
 
 ---
 

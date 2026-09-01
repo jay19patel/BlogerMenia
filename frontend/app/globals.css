@@ -96,6 +96,68 @@ body {
   font-family: var(--font-mono);
 }
 
+/* --- bare form controls ---------------------------------------------------
+ *
+ * Untitled UI covers every text field, but three native controls have no
+ * component equivalent: the cover-image pickers on the blog, playlist and
+ * profile forms, and the editor's multi-select. `.fld` draws them the same box
+ * the Untitled UI fields draw, so a form never mixes two field shapes.
+ *
+ * This replaces four page-scoped stylesheets (`auth-form.css`,
+ * `playlist-form.css`, `profile-form.css` and the input half of
+ * `blog-form.css`). Those targeted bare `input[type="…"]` selectors, which had
+ * become actively harmful: Untitled UI renders the border, background and
+ * padding on a *wrapper* and leaves the inner `<input>` transparent, so an
+ * unlayered element rule — and in Tailwind v4 unlayered CSS outranks every
+ * utility — painted a second border and a second background inside the first,
+ * then turned the focus ring emerald green. A class selector is safe to keep
+ * global; a bare element selector was the reason those files had to be scoped.
+ */
+.fld {
+  display: block;
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: #1e293b;
+  font-family: inherit;
+}
+.fld:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+  background: #fff;
+}
+textarea.fld {
+  min-height: 90px;
+  resize: vertical;
+}
+/* The native "Choose file" button, restyled to match a secondary button. */
+.fld::file-selector-button {
+  margin-right: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  background: #fff;
+  color: #334155;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.fld::file-selector-button:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.excalidraw-svg-wrapper svg {
+  max-width: 100%;
+  height: auto;
+  max-height: 280px;
+}
+
 /* --- from `blog_detail.html` \3c style>, scoped to the article body --------- */
 .article-body pre code.hljs {
   padding: 0 !important;

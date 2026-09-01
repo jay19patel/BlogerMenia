@@ -191,9 +191,6 @@ export function findBlog(slug: string) {
   return blogs.find((blog) => blog.slug === slug) ?? null;
 }
 
-export function findBlogById(id: number) {
-  return blogById.get(id) ?? null;
-}
 
 export function findPlaylist(slug: string) {
   return playlists.find((playlist) => playlist.slug === slug) ?? null;

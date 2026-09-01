@@ -66,6 +66,21 @@ export interface Playlist extends Omit<ApiPlaylist, "author" | "blogs"> {
   blogs: Blog[];
 }
 
+/**
+ * One row of the playlist editor's blog picker — the subset of `Blog` that is
+ * actually sent to the browser, so a playlist page does not ship every post's
+ * full body. `lib/picker.ts` does the narrowing.
+ */
+export interface PlaylistPickerBlog {
+  id: number;
+  title: string;
+  image: string | null;
+  avatar_svg: string;
+  category_name: string | null;
+  created_at_label: string;
+  author_username: string;
+}
+
 /** The signed-in viewer, including their own like and bookmark sets. */
 export interface Viewer extends User {
   saved_blog_ids: number[];

@@ -7,8 +7,9 @@ import { useState } from "react";
 import { useMessages } from "@/components/messages-provider";
 import { urls } from "@/lib/urls";
 import type { User } from "@/lib/types";
-
-import "./profile-form.css";
+import { Input } from "@/components/base/input/input";
+import { TextArea } from "@/components/base/textarea/textarea";
+import { Toggle } from "@/components/base/toggle/toggle";
 
 /**
  * `ProfileUpdateView`'s model form as rendered by `blog/profile_edit.html`.
@@ -32,7 +33,7 @@ export function ProfileEditForm({ profileUser }: { profileUser: User }) {
 
   return (
     <form
-      className="profile-edit-form space-y-6"
+      className="space-y-6"
       encType="multipart/form-data"
       onSubmit={(event) => {
         event.preventDefault();
@@ -41,55 +42,47 @@ export function ProfileEditForm({ profileUser }: { profileUser: User }) {
       }}
     >
       <div>
-        <label htmlFor="id_first_name" className="block text-xs font-semibold text-slate-600 mb-1.5">
-          First name
-        </label>
-        <input
+        <Input
           id="id_first_name"
           name="first_name"
           type="text"
+          label="First name"
           maxLength={150}
           value={values.first_name}
-          onChange={(event) => setValue("first_name", event.target.value)}
+          onChange={(value) => setValue("first_name", value)}
         />
       </div>
 
       <div>
-        <label htmlFor="id_last_name" className="block text-xs font-semibold text-slate-600 mb-1.5">
-          Last name
-        </label>
-        <input
+        <Input
           id="id_last_name"
           name="last_name"
           type="text"
+          label="Last name"
           maxLength={150}
           value={values.last_name}
-          onChange={(event) => setValue("last_name", event.target.value)}
+          onChange={(value) => setValue("last_name", value)}
         />
       </div>
 
       <div>
-        <label htmlFor="id_bio" className="block text-xs font-semibold text-slate-600 mb-1.5">
-          Bio
-        </label>
-        <textarea
+        <TextArea
           id="id_bio"
           name="bio"
+          label="Bio"
           maxLength={500}
           value={values.bio}
-          onChange={(event) => setValue("bio", event.target.value)}
+          onChange={(value) => setValue("bio", value)}
         />
       </div>
 
       <div>
-        <label htmlFor="id_about" className="block text-xs font-semibold text-slate-600 mb-1.5">
-          About
-        </label>
-        <textarea
+        <TextArea
           id="id_about"
           name="about"
+          label="About"
           value={values.about}
-          onChange={(event) => setValue("about", event.target.value)}
+          onChange={(value) => setValue("about", value)}
         />
       </div>
 
@@ -97,39 +90,33 @@ export function ProfileEditForm({ profileUser }: { profileUser: User }) {
         <label htmlFor="id_profile_picture" className="block text-xs font-semibold text-slate-600 mb-1.5">
           Profile picture
         </label>
-        <input id="id_profile_picture" name="profile_picture" type="file" accept="image/*" />
+        <input id="id_profile_picture" name="profile_picture" type="file" accept="image/*" className="fld" />
       </div>
 
       <div>
-        <label htmlFor="id_linkedin_url" className="block text-xs font-semibold text-slate-600 mb-1.5">
-          Linkedin url
-        </label>
-        <input
+        <Input
           id="id_linkedin_url"
           name="linkedin_url"
           type="url"
+          label="Linkedin url"
           value={values.linkedin_url}
-          onChange={(event) => setValue("linkedin_url", event.target.value)}
+          onChange={(value) => setValue("linkedin_url", value)}
         />
       </div>
 
       <div>
-        <label htmlFor="id_auto_post_to_linkedin" className="block text-xs font-semibold text-slate-600 mb-1.5">
-          Auto post to linkedin
-        </label>
-        <input
-          id="id_auto_post_to_linkedin"
+        <Toggle
           name="auto_post_to_linkedin"
-          type="checkbox"
-          checked={values.auto_post_to_linkedin}
-          onChange={(event) => setValue("auto_post_to_linkedin", event.target.checked)}
+          isSelected={values.auto_post_to_linkedin}
+          onChange={(checked) => setValue("auto_post_to_linkedin", checked)}
+          label="Auto post to linkedin"
         />
       </div>
 
       <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
         <button
           type="submit"
-          className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm px-6 py-2.5 rounded-lg transition-colors"
+          className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
         >
           Save changes
         </button>

@@ -137,7 +137,9 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
   return (
     <MessagesContext.Provider value={value}>
       {messages.length > 0 && (
-        <div className="fixed top-5 right-5 z-100 flex flex-col gap-3 max-w-md w-full sm:w-auto items-end pointer-events-none">
+        // `right-5` with `w-full` put the box's left edge off-screen on a
+        // phone; pinning both insets keeps it inside the viewport instead.
+        <div className="pointer-events-none fixed top-5 right-4 left-4 z-100 flex flex-col items-end gap-3 sm:left-auto sm:right-5 sm:max-w-md">
           {messages.map((message) => (
             <Toast key={message.id} message={message} onDismiss={dismiss} />
           ))}

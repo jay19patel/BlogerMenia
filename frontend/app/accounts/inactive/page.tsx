@@ -8,7 +8,7 @@ import { urls } from "@/lib/urls";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
-  title: "Account Disabled — Inkwell",
+  title: "Account Disabled — BlogerMenia",
 };
 
 export default function AccountInactivePage() {

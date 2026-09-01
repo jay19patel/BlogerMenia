@@ -6,7 +6,7 @@ import { cn } from "@/lib/cn";
 
 /**
  * The standalone chrome every django-allauth template in
- * `accounts/templates/account/` shares: a slim header with the Inkwell mark and
+ * `accounts/templates/account/` shares: a slim header with the BlogerMenia mark and
  * a "Back to Blogs" link, over a centred card.
  */
 export function AuthShell({
@@ -28,7 +28,7 @@ export function AuthShell({
               <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
             </svg>
           </span>
-          <span className="font-bold text-[17px] tracking-tight">Inkwell</span>
+          <span className="font-bold text-[17px] tracking-tight">BlogerMenia</span>
         </Link>
         <Link href={urls.home()} className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-1.5">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

@@ -5,8 +5,8 @@ import { useState } from "react";
 
 import { SubmitArrow } from "@/components/auth-shell";
 import { urls } from "@/lib/urls";
-
-import "../../auth-form.css";
+import { Input } from "@/components/base/input/input";
+import { Button } from "@/components/base/buttons/button";
 
 /** `account/password_reset.html`'s form. */
 export function PasswordResetForm() {
@@ -16,7 +16,7 @@ export function PasswordResetForm() {
 
   return (
     <form
-      className="auth-fields space-y-4"
+      className="space-y-4"
       method="POST"
       noValidate
       onSubmit={(event) => {
@@ -29,28 +29,29 @@ export function PasswordResetForm() {
       }}
     >
       <div>
-        <label className="block text-xs font-semibold text-slate-600 mb-1.5" htmlFor="id_email">
-          Email address
-        </label>
-        <input
+        <Input
           id="id_email"
           name="email"
           type="email"
+          label="Email address"
           autoComplete="email"
           placeholder="you@example.com"
           value={email}
-          onChange={(event) => setEmail(event.target.value)}
+          onChange={setEmail}
+          isInvalid={Boolean(error)}
+          hint={error}
         />
-        {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
       </div>
 
-      <button
+      <Button
         type="submit"
-        className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm py-3 rounded-lg transition-colors flex items-center justify-center gap-2 mt-2"
+        color="primary"
+        size="lg"
+        className="w-full justify-center mt-2"
       >
         Send reset link
         <SubmitArrow />
-      </button>
+      </Button>
     </form>
   );
 }

@@ -10,7 +10,7 @@ import { PasswordResetForm } from "./reset-form";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
-  title: "Forgot Password — Inkwell",
+  title: "Forgot Password — BlogerMenia",
 };
 
 export default function PasswordResetPage() {

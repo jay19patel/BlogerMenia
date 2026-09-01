@@ -1,18 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { PageHeader } from "@/components/page-header";
 import { PlaylistForm } from "@/components/playlist-form";
-import { SiteSidebar } from "@/components/site-sidebar";
 import { blogs as blogsApi } from "@/lib/api";
 import { toPickerBlog } from "@/lib/picker";
+import { PageShell } from "@/components/page-shell";
 import { urls } from "@/lib/urls";
 
 /** Django: `/playlists/create/` → `PlaylistCreateView` → `blog/playlist_form.html` */
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
-  title: "New Playlist — Inkwell",
+  title: "New Playlist — BlogerMenia",
 };
 
 export default async function PlaylistCreatePage() {
@@ -21,10 +20,7 @@ export default async function PlaylistCreatePage() {
 
   return (
     <>
-      <PageHeader />
-      <SiteSidebar active="playlists" />
-
-      <main className="pt-16 lg:pl-64">
+      <PageShell active="playlists">
         <div className="max-w-6xl px-6 sm:px-10 py-10">
           <div className="flex items-center gap-2 text-sm text-slate-400 mb-4">
             <Link href={urls.playlistList()} className="hover:text-slate-600 transition-colors">
@@ -42,7 +38,7 @@ export default async function PlaylistCreatePage() {
             successHref={urls.playlistList()}
           />
         </div>
-      </main>
+      </PageShell>
     </>
   );
 }

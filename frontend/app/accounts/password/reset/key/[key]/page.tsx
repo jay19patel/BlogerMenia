@@ -17,7 +17,7 @@ import { SetPasswordForm } from "./set-password-form";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
-  title: "Set New Password — Inkwell",
+  title: "Set New Password — BlogerMenia",
 };
 
 export default async function PasswordResetFromKeyPage({

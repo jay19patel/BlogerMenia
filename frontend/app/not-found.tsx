@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { PageHeader } from "@/components/page-header";
+import { SiteHeader } from "@/components/site-header";
 import { urls } from "@/lib/urls";
 
 /** Django: `blogermenia/templates/404.html` */
 
 export const metadata: Metadata = {
-  title: "Page not found — Inkwell",
+  title: "Page not found — BlogerMenia",
 };
 
 export default function NotFound() {
   return (
     <>
-      <PageHeader />
+      <SiteHeader />
 
       <main className="pt-16 min-h-screen flex items-center justify-center px-6">
         <div className="text-center max-w-md py-20">

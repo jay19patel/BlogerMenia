@@ -8,7 +8,7 @@ import { urls } from "@/lib/urls";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
-  title: "Check Your Email — Inkwell",
+  title: "Check Your Email — BlogerMenia",
 };
 
 export default function PasswordResetDonePage() {

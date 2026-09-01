@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 
+import { Button } from "@/components/base/buttons/button";
+import { Input } from "@/components/base/input/input";
 import { useMessages } from "@/components/messages-provider";
 import { useSession } from "@/components/session-provider";
-
-import "../auth-form.css";
+import { SettingsCard } from "@/components/settings-card";
+import { cn } from "@/lib/cn";
 
 /**
  * `account/email.html` — the address list plus the "add address" form.
@@ -22,27 +24,36 @@ export function EmailAddresses() {
   const addresses = user ? [{ email: user.email, verified: true, primary: true }] : [];
   const activeEmail = selected ?? addresses[0]?.email ?? null;
 
+  const readOnly = () => addMessage("Static demo — email addresses are read-only here.", "warning");
+
+  const tag = "rounded px-1.5 py-0.5 text-[10px] font-semibold";
+
   return (
     <>
       {addresses.length > 0 && (
-        <div className="bg-white border border-line rounded-lg p-6 mb-6">
-          <p className="text-sm text-muted mb-4">Email addresses associated with your account:</p>
+        <SettingsCard
+          title="Your addresses"
+          description="Select an address to manage it."
+        >
           <form
             method="POST"
             onSubmit={(event) => {
               event.preventDefault();
-              addMessage("Static demo — email addresses are read-only here.", "warning");
+              readOnly();
             }}
           >
-            <div className="space-y-3 mb-5">
+            <div className="mb-5 flex flex-col gap-3">
               {addresses.map((address) => {
                 const checked = activeEmail === address.email;
                 return (
                   <label
                     key={address.email}
-                    className={`flex items-center gap-3 p-3 rounded-md border cursor-pointer ${
-                      checked ? "border-accent bg-accent-soft" : "border-line hover:border-ink/20"
-                    }`}
+                    className={cn(
+                      "flex cursor-pointer items-center gap-3 rounded-xl border p-3.5 transition-colors",
+                      checked
+                        ? "border-brand-500 bg-brand-50"
+                        : "border-slate-200 hover:border-slate-300 hover:bg-slate-50",
+                    )}
                   >
                     <input
                       type="radio"
@@ -50,25 +61,18 @@ export function EmailAddresses() {
                       value={address.email}
                       checked={checked}
                       onChange={() => setSelected(address.email)}
-                      className="accent-accent"
-                      style={{ width: "auto", display: "inline" }}
+                      className="size-4 shrink-0 accent-brand-600"
                     />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-ink">{address.email}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-slate-900">{address.email}</p>
+                      <div className="mt-1 flex items-center gap-2">
                         {address.verified ? (
-                          <span className="text-[10px] font-semibold text-accent bg-accent-soft px-1.5 py-0.5 rounded-sm">
-                            Verified
-                          </span>
+                          <span className={cn(tag, "bg-emerald-50 text-emerald-700")}>Verified</span>
                         ) : (
-                          <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-sm">
-                            Unverified
-                          </span>
+                          <span className={cn(tag, "bg-amber-50 text-amber-700")}>Unverified</span>
                         )}
                         {address.primary && (
-                          <span className="text-[10px] font-semibold text-muted bg-stone-100 px-1.5 py-0.5 rounded-sm">
-                            Primary
-                          </span>
+                          <span className={cn(tag, "bg-slate-100 text-slate-500")}>Primary</span>
                         )}
                       </div>
                     </div>
@@ -76,49 +80,46 @@ export function EmailAddresses() {
                 );
               })}
             </div>
+
             <div className="flex flex-wrap gap-2">
-              <button type="submit" name="action_primary" className="px-4 py-2 bg-ink hover:bg-black text-white text-sm font-medium rounded-md transition-colors">
-                Make Primary
-              </button>
-              <button type="submit" name="action_send" className="px-4 py-2 border border-line hover:border-ink/30 text-ink text-sm font-medium rounded-md transition-colors">
-                Re-send Verification
-              </button>
-              <button type="submit" name="action_remove" className="px-4 py-2 border border-red-200 text-red-500 hover:bg-red-50 text-sm font-medium rounded-md transition-colors">
+              <Button type="submit" name="action_primary" size="md" color="primary">
+                Make primary
+              </Button>
+              <Button type="submit" name="action_send" size="md" color="secondary">
+                Re-send verification
+              </Button>
+              <Button type="submit" name="action_remove" size="md" color="secondary-destructive">
                 Remove
-              </button>
+              </Button>
             </div>
           </form>
-        </div>
+        </SettingsCard>
       )}
 
-      <div className="bg-white border border-line rounded-lg p-6">
-        <h2 className="serif text-lg font-semibold tracking-tight mb-4">Add email address</h2>
+      <SettingsCard title="Add an email address">
         <form
-          className="legacy-fields space-y-4"
+          className="flex flex-col gap-4"
           method="POST"
           onSubmit={(event) => {
             event.preventDefault();
-            addMessage("Static demo — email addresses are read-only here.", "warning");
+            readOnly();
             setNewEmail("");
           }}
         >
-          <div>
-            <label className="block text-xs font-medium text-ink/70 mb-1.5" htmlFor="id_email">
-              New email address
-            </label>
-            <input
-              id="id_email"
-              name="email"
-              type="email"
-              value={newEmail}
-              onChange={(event) => setNewEmail(event.target.value)}
-            />
-          </div>
-          <button type="submit" name="action_add" className="px-4 py-2 bg-ink hover:bg-black text-white text-sm font-medium rounded-md transition-colors">
-            Add Email
-          </button>
+          <Input
+            id="id_email"
+            name="email"
+            type="email"
+            label="New email address"
+            placeholder="you@example.com"
+            value={newEmail}
+            onChange={setNewEmail}
+          />
+          <Button type="submit" name="action_add" size="md" color="primary" className="w-fit">
+            Add email
+          </Button>
         </form>
-      </div>
+      </SettingsCard>
     </>
   );
 }
