@@ -120,7 +120,7 @@ export function SiteHeader({ mobileNav }: { mobileNav?: ReactNode }) {
         </span>
       </Link>
 
-      <div className="flex min-w-0 flex-1 items-center sm:mx-4 lg:mx-8 lg:max-w-md">
+      <div className="flex min-w-0 flex-1 items-center mx-1.5 sm:mx-4 lg:mx-8 lg:max-w-md">
         <form
           role="search"
           action={urls.search()}
@@ -144,7 +144,7 @@ export function SiteHeader({ mobileNav }: { mobileNav?: ReactNode }) {
             type="search"
             autoComplete="off"
             aria-label="Search blogs, playlists, people"
-            placeholder="Search blogs, playlists, people..."
+            placeholder="Search..."
             value={query}
             onChange={(event) => {
               setQuery(event.target.value);
@@ -218,18 +218,18 @@ export function SiteHeader({ mobileNav }: { mobileNav?: ReactNode }) {
         {user && (
           <Dropdown.Root>
             <Dropdown.DotsButton aria-label="Profile menu">
-            {user.profile_picture ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={user.profile_picture}
-                alt={user.username}
-                className="w-8 h-8 rounded-full object-cover ring-2 ring-transparent hover:ring-brand-500 transition-all"
-              />
-            ) : (
-              <div className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-transparent hover:ring-brand-500 transition-all [&>svg]:w-full [&>svg]:h-full">
-                <RawSvg html={user.avatar_svg} />
-              </div>
-            )}
+              {user.profile_picture ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={user.profile_picture}
+                  alt={user.username}
+                  className="w-8 h-8 rounded-full object-cover ring-2 ring-transparent hover:ring-brand-500 transition-all"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-transparent hover:ring-brand-500 transition-all [&>svg]:w-full [&>svg]:h-full">
+                  <RawSvg html={user.avatar_svg} />
+                </div>
+              )}
             </Dropdown.DotsButton>
             <Dropdown.Popover>
               <Dropdown.Menu aria-label="User Profile">

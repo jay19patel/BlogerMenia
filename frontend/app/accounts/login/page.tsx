@@ -43,15 +43,15 @@ export default function LoginPage() {
         <span className="h-px flex-1 bg-slate-100" />
       </div>
 
-      <Button
-        color="secondary"
-        size="lg"
+      <a
         href={urls.linkedinLogin()}
-        iconLeading={LinkedInIcon}
-        className="w-full justify-center text-[#0A66C2]"
+        className="w-full flex items-center justify-center gap-2 border border-slate-200 hover:border-slate-300 hover:bg-slate-50 rounded-lg py-2.5 text-sm font-medium text-slate-700 transition-colors"
       >
+        <span className="text-[#0A66C2]">
+          <LinkedInIcon className="w-5 h-5" />
+        </span>
         Continue with LinkedIn
-      </Button>
+      </a>
     </AuthShell>
   );
 }

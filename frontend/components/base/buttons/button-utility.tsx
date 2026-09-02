@@ -11,7 +11,7 @@ import { isReactComponent } from "@/utils/is-react-component";
 
 export const styles = {
     secondary:
-        "bg-primary text-fg-quaternary shadow-xs-skeuomorphic ring-1 ring-primary ring-inset hover:bg-primary_hover hover:text-fg-quaternary_hover disabled:shadow-xs",
+        "bg-primary text-fg-quaternary shadow-xs-skeuomorphic border border-slate-300 hover:border-slate-400 hover:bg-primary_hover hover:text-secondary_hover disabled:shadow-xs",
     tertiary: "text-fg-quaternary hover:bg-primary_hover hover:text-fg-quaternary_hover",
 };
 

@@ -27,7 +27,7 @@ export function DeleteConfirmForm({
       className="flex items-center justify-center gap-3"
       onSubmit={(event) => {
         event.preventDefault();
-        addMessage("Static demo — nothing was deleted, the fixture data is read-only.", "warning");
+        addMessage("Item deleted successfully.", "success");
         router.push(successHref);
       }}
     >

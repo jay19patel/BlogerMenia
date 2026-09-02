@@ -256,7 +256,7 @@ export default async function HomePage() {
               featured_users.map((member) => (
                 <div
                   key={member.username}
-                  className="group relative flex items-center gap-4 bg-white border border-slate-100 hover:border-brand-200 hover:shadow-lg hover:shadow-brand-100/50 rounded-2xl p-5 transition-all"
+                  className="group relative flex min-w-0 items-center gap-4 bg-white border border-slate-100 hover:border-brand-200 hover:shadow-lg hover:shadow-brand-100/50 rounded-2xl p-5 transition-all"
                 >
                   <Link href={urls.userProfile(member.username)} className="absolute inset-0 z-0 rounded-2xl">
                     <span className="sr-only">View {member.username}</span>

@@ -2,20 +2,20 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 import { cn } from "@/lib/cn";
+import { useIsHydrated } from "@/lib/use-is-hydrated";
 
 /**
  * The sidebar as a mobile drawer.
  *
- * The rail is `hidden lg:block`, so below 1024px the site previously had no
- * navigation at all beyond the logo and search. This renders the same `SiteNav`
- * behind a hamburger: a labelled dialog that closes on Escape, on backdrop
- * click, on activating any link or button inside it, and on any route change,
- * and that locks body scroll while open.
+ * Rendered with `createPortal` to `document.body` so parent `backdrop-blur-md`
+ * and fixed height constraints on `<header>` do not clip or trap the drawer dialog.
  */
 export function MobileNav({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const isHydrated = useIsHydrated();
   const [state, setState] = useState({ isOpen: false, pathname });
   const isOpen = state.isOpen && state.pathname === pathname;
 
@@ -43,20 +43,8 @@ export function MobileNav({ children }: { children: ReactNode }) {
     };
   }, [isOpen, pathname]);
 
-  return (
+  const drawerContent = (
     <>
-      <button
-        type="button"
-        onClick={() => setIsOpen(true)}
-        aria-label="Open navigation"
-        aria-expanded={isOpen}
-        className="-ml-1 flex size-9 shrink-0 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 lg:hidden"
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-          <path d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
-
       {/* Backdrop */}
       <div
         onClick={() => setIsOpen(false)}
@@ -75,8 +63,8 @@ export function MobileNav({ children }: { children: ReactNode }) {
         // accessibility tree while still allowing it to animate.
         inert={!isOpen}
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col overflow-y-auto border-r border-slate-200 bg-white transition-transform duration-200 ease-out lg:hidden",
-          isOpen ? "translate-x-0" : "-translate-x-full",
+          "fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col border-r border-slate-200 bg-white transition-transform duration-200 ease-out lg:hidden",
+          isOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full",
         )}
       >
         <div className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 px-5">
@@ -87,7 +75,7 @@ export function MobileNav({ children }: { children: ReactNode }) {
             type="button"
             onClick={() => setIsOpen(false)}
             aria-label="Close navigation"
-            className="flex size-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900"
+            className="flex size-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900 cursor-pointer"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
               <path d="M18 6 6 18M6 6l12 12" />
@@ -102,7 +90,7 @@ export function MobileNav({ children }: { children: ReactNode }) {
           change the path, so those are caught here.
         */}
         <div
-          className="flex-1"
+          className="flex-1 overflow-y-auto"
           onClick={(event) => {
             if ((event.target as HTMLElement).closest("a, button")) setIsOpen(false);
           }}
@@ -110,6 +98,24 @@ export function MobileNav({ children }: { children: ReactNode }) {
           {children}
         </div>
       </div>
+    </>
+  );
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setIsOpen(true)}
+        aria-label="Open navigation"
+        aria-expanded={isOpen}
+        className="-ml-1 flex size-9 shrink-0 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 lg:hidden cursor-pointer"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+          <path d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
+      {isHydrated ? createPortal(drawerContent, document.body) : null}
     </>
   );
 }

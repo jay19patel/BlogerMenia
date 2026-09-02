@@ -15,6 +15,7 @@ import { Input } from "@/components/base/input/input";
 import { TextArea } from "@/components/base/textarea/textarea";
 import { Toggle } from "@/components/base/toggle/toggle";
 import { InputTags } from "@/components/base/input/input-tags";
+import { cx } from "@/utils/cx";
 
 
 /**
@@ -43,6 +44,7 @@ const SECTION_TYPES: [SectionType, string][] = [
 interface EditorSection extends BlogSection {
   elements?: readonly unknown[];
   appState?: Record<string, unknown>;
+  isCollapsed?: boolean;
 }
 
 export interface BlogEditorPlaylist {
@@ -87,6 +89,7 @@ function blankSection(type: SectionType): EditorSection {
     appState: {},
     svgData: "",
     caption: "",
+    isCollapsed: false,
   };
 }
 
@@ -131,6 +134,7 @@ interface FieldProps {
   value: string;
   onChange: (value: string) => void;
   multiline?: boolean;
+  isCode?: boolean;
 }
 
 /**
@@ -139,9 +143,16 @@ interface FieldProps {
  * React Aria passes the new value to `onChange` directly, so the handler is
  * forwarded as-is rather than unwrapped from a DOM event.
  */
-function Field({ field, placeholder, value, onChange, multiline }: FieldProps) {
+function Field({ field, placeholder, value, onChange, multiline, isCode }: FieldProps) {
   const shared = { name: field, placeholder, "aria-label": placeholder, value, onChange };
-  return multiline ? <TextArea {...shared} /> : <Input {...shared} />;
+  return multiline ? (
+    <TextArea
+      {...shared}
+      textAreaClassName={isCode ? "font-mono text-sm leading-relaxed" : undefined}
+    />
+  ) : (
+    <Input {...shared} />
+  );
 }
 
 export function BlogEditor({
@@ -191,6 +202,20 @@ export function BlogEditor({
     document.addEventListener("click", close);
     return () => document.removeEventListener("click", close);
   }, [menuOpen]);
+
+  const [canDragIndex, setCanDragIndex] = useState<number | null>(null);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  const reorderSections = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
+    setSections((current) => {
+      const next = [...current];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      return next;
+    });
+  };
 
   const patchSection = (index: number, patch: Partial<EditorSection>) =>
     setSections((current) =>
@@ -281,8 +306,36 @@ export function BlogEditor({
       return;
     }
     setError(null);
-    addMessage("Static demo — the post was not saved.", "warning");
-    router.push(isEdit && initial ? urls.blogDetail(initial.slug) : urls.blogList());
+    const postSlug = slug.trim() || slugify(title);
+
+    try {
+      const existingRaw = localStorage.getItem("blogermenia_custom_blogs");
+      const existing = existingRaw ? JSON.parse(existingRaw) : [];
+      const blogData = {
+        slug: postSlug,
+        title,
+        subtitle,
+        excerpt,
+        introduction,
+        conclusion,
+        category_name: category || "General",
+        tags,
+        is_published: isPublished,
+        featured,
+        sections: sections.map(({ isCollapsed, ...s }) => s),
+        updated_at: new Date().toISOString(),
+      };
+      const updatedList = isEdit && initial
+        ? existing.map((item: { slug: string }) => (item.slug === initial.slug ? blogData : item))
+        : [blogData, ...existing.filter((item: { slug: string }) => item.slug !== postSlug)];
+      localStorage.setItem("blogermenia_custom_blogs", JSON.stringify(updatedList));
+    } catch {
+      // Ignore quota or storage errors
+    }
+
+    addMessage(isEdit ? "Blog post updated successfully!" : "Blog post published successfully!", "success");
+    router.push(isEdit && initial ? urls.blogDetail(postSlug) : urls.blogDetail(postSlug));
+    router.refresh();
   };
 
   const onExcalidrawSave = (scene: ExcalidrawSceneData) => {
@@ -320,11 +373,10 @@ export function BlogEditor({
 
       {jsonStatus && (
         <p
-          className={`mb-4 text-sm rounded-lg px-4 py-2.5 ${
-            jsonStatus.isError
+          className={`mb-4 text-sm rounded-lg px-4 py-2.5 ${jsonStatus.isError
               ? "text-red-600 bg-red-50 border border-red-100"
               : "text-emerald-700 bg-emerald-50 border border-emerald-100"
-          }`}
+            }`}
         >
           {jsonStatus.text}
         </p>
@@ -339,16 +391,16 @@ export function BlogEditor({
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-5">
           <h2 className="text-lg font-bold text-slate-900">Basic information</h2>
 
-            <Input
-              id="f-title"
-              name="title"
-              type="text"
-              label="Title"
-              isRequired
-              placeholder="Enter blog title"
-              value={title}
-              onChange={onTitleChange}
-            />
+          <Input
+            id="f-title"
+            name="title"
+            type="text"
+            label="Title"
+            isRequired
+            placeholder="Enter blog title"
+            value={title}
+            onChange={onTitleChange}
+          />
 
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
@@ -493,92 +545,215 @@ export function BlogEditor({
 
         {/* Sections builder */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
             <h2 className="text-lg font-bold text-slate-900">Content sections</h2>
-            <div className="relative">
-              <button
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  setMenuOpen((current) => !current);
-                }}
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:text-brand-700 border border-brand-200 bg-brand-50 rounded-lg px-3 py-1.5"
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                  <path d="M5 12h14M12 5v14" />
-                </svg>{" "}
-                Add section
-              </button>
-              {menuOpen && (
-                <div className="absolute right-0 mt-1 w-44 bg-white border border-slate-200 rounded-lg shadow-lg z-20 py-1">
-                  {SECTION_TYPES.map(([type, label]) => (
-                    <button
-                      key={type}
-                      type="button"
-                      onClick={() => {
-                        setSections((current) => [...current, blankSection(type)]);
-                        setMenuOpen(false);
-                      }}
-                      className="block w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                    >
-                      {label}
-                    </button>
-                  ))}
+            <div className="flex items-center gap-2.5">
+              {sections.length > 0 && (
+                <div className="inline-flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSections((current) => current.map((s) => ({ ...s, isCollapsed: true })))
+                    }
+                    className="px-2.5 py-1 font-medium text-slate-600 hover:text-slate-900 rounded-md hover:bg-white transition-colors"
+                  >
+                    Collapse all
+                  </button>
+                  <span className="text-slate-300">|</span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSections((current) => current.map((s) => ({ ...s, isCollapsed: false })))
+                    }
+                    className="px-2.5 py-1 font-medium text-slate-600 hover:text-slate-900 rounded-md hover:bg-white transition-colors"
+                  >
+                    Expand all
+                  </button>
                 </div>
               )}
+
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setMenuOpen((current) => !current);
+                  }}
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:text-brand-700 border border-brand-200 bg-brand-50 rounded-lg px-3 py-1.5"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <path d="M5 12h14M12 5v14" />
+                  </svg>{" "}
+                  Add section
+                </button>
+                {menuOpen && (
+                  <div className="absolute right-0 mt-1 w-44 bg-white border border-slate-200 rounded-lg shadow-lg z-20 py-1">
+                    {SECTION_TYPES.map(([type, label]) => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => {
+                          setSections((current) => [...current, blankSection(type)]);
+                          setMenuOpen(false);
+                        }}
+                        className="block w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
           <div className="space-y-4">
-            {sections.map((section, index) => (
-              <div key={index} className="border border-slate-200 rounded-xl p-4 bg-slate-50/50">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      aria-label="Move section up"
-                      disabled={index === 0}
-                      onClick={() => moveSection(index, -1)}
-                      className="px-1.5 rounded-sm hover:bg-slate-200 disabled:opacity-30"
-                    >
-                      ▲
-                    </button>
-                    <button
-                      type="button"
-                      aria-label="Move section down"
-                      disabled={index === sections.length - 1}
-                      onClick={() => moveSection(index, 1)}
-                      className="px-1.5 rounded-sm hover:bg-slate-200 disabled:opacity-30"
-                    >
-                      ▼
-                    </button>
-                    <span className="text-xs font-bold uppercase tracking-wide text-brand-600 ml-1">
-                      {typeLabel(section.type)}
-                    </span>
+            {sections.map((section, index) => {
+              const isDragging = draggedIndex === index;
+              const isDragOver = dragOverIndex === index && draggedIndex !== index;
+
+              return (
+                <div
+                  key={index}
+                  draggable={canDragIndex === index}
+                  onDragStart={(e) => {
+                    setDraggedIndex(index);
+                    e.dataTransfer.effectAllowed = "move";
+                    e.dataTransfer.setData("text/plain", String(index));
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = "move";
+                    if (dragOverIndex !== index) {
+                      setDragOverIndex(index);
+                    }
+                  }}
+                  onDragLeave={(e) => {
+                    if (e.currentTarget === e.target) {
+                      setDragOverIndex(null);
+                    }
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (draggedIndex !== null && draggedIndex !== index) {
+                      reorderSections(draggedIndex, index);
+                    }
+                    setDraggedIndex(null);
+                    setDragOverIndex(null);
+                    setCanDragIndex(null);
+                  }}
+                  onDragEnd={() => {
+                    setDraggedIndex(null);
+                    setDragOverIndex(null);
+                    setCanDragIndex(null);
+                  }}
+                  className={cx(
+                    "flex flex-col border rounded-xl transition-all duration-150",
+                    section.isCollapsed ? "p-3.5 gap-0 bg-white" : "p-5 gap-4 bg-slate-50/50",
+                    isDragging
+                      ? "opacity-40 border-dashed border-brand-400 bg-brand-50/20 scale-[0.99]"
+                      : isDragOver
+                      ? "border-brand-500 ring-2 ring-brand-400 bg-brand-50/40 shadow-md"
+                      : "border-slate-200 hover:border-slate-300"
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <button
+                        type="button"
+                        onClick={() => patchSection(index, { isCollapsed: !section.isCollapsed })}
+                        className="p-1 rounded-md hover:bg-slate-200/80 text-slate-500 hover:text-slate-800 transition-colors shrink-0"
+                        title={section.isCollapsed ? "Expand section" : "Collapse section"}
+                        aria-label={section.isCollapsed ? "Expand section" : "Collapse section"}
+                      >
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className={cx("transition-transform duration-200", !section.isCollapsed && "rotate-90")}
+                        >
+                          <polyline points="9 18 15 12 9 6" />
+                        </svg>
+                      </button>
+
+                      <div
+                        onMouseDown={() => setCanDragIndex(index)}
+                        onMouseUp={() => setCanDragIndex(null)}
+                        onTouchStart={() => setCanDragIndex(index)}
+                        onTouchEnd={() => setCanDragIndex(null)}
+                        className="flex items-center gap-2 cursor-grab active:cursor-grabbing select-none px-2 py-1 rounded-lg hover:bg-slate-200/80 text-slate-400 hover:text-slate-700 transition-colors group shrink-0"
+                        title="Drag to reorder section"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" className="text-slate-400 group-hover:text-slate-700">
+                          <circle cx="5" cy="3" r="1.5" />
+                          <circle cx="11" cy="3" r="1.5" />
+                          <circle cx="5" cy="8" r="1.5" />
+                          <circle cx="11" cy="8" r="1.5" />
+                          <circle cx="5" cy="13" r="1.5" />
+                          <circle cx="11" cy="13" r="1.5" />
+                        </svg>
+                        <span className="text-xs font-bold uppercase tracking-wide text-brand-600">
+                          {typeLabel(section.type)}
+                        </span>
+                      </div>
+
+                      {section.isCollapsed ? (
+                        <span
+                          onClick={() => patchSection(index, { isCollapsed: false })}
+                          className="text-sm font-semibold text-slate-700 truncate cursor-pointer hover:text-brand-600 transition-colors ml-1"
+                          title="Click to expand"
+                        >
+                          {section.title || (section.content ? section.content.slice(0, 60) + "..." : "(Untitled section)")}
+                        </span>
+                      ) : (
+                        <span className="text-[11px] text-slate-400 font-normal hidden sm:inline">
+                          (Drag to reorder)
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => patchSection(index, { isCollapsed: !section.isCollapsed })}
+                        className="text-xs text-slate-500 hover:text-slate-800 font-medium px-2 py-1 rounded hover:bg-slate-200/60 transition-colors"
+                      >
+                        {section.isCollapsed ? "Expand" : "Collapse"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSections((current) => current.filter((_, position) => position !== index))}
+                        className="text-xs text-red-500 hover:text-red-700 font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors"
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setSections((current) => current.filter((_, position) => position !== index))}
-                    className="text-xs text-red-500 hover:text-red-700 font-medium"
-                  >
-                    Remove
-                  </button>
+
+                  {!section.isCollapsed && (
+                    <>
+                      <Field
+                        field="title"
+                        placeholder="Section title"
+                        value={section.title ?? ""}
+                        onChange={(value) => patchSection(index, { title: value })}
+                      />
+
+                      <SectionFields
+                        section={section}
+                        onPatch={(patch) => patchSection(index, patch)}
+                        onOpenExcalidraw={() => setExcalidrawIndex(index)}
+                      />
+                    </>
+                  )}
                 </div>
-
-                <Field
-                  field="title"
-                  placeholder="Section title"
-                  value={section.title ?? ""}
-                  onChange={(value) => patchSection(index, { title: value })}
-                />
-
-                <SectionFields
-                  section={section}
-                  onPatch={(patch) => patchSection(index, patch)}
-                  onOpenExcalidraw={() => setExcalidrawIndex(index)}
-                />
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {sections.length === 0 && (
@@ -660,6 +835,7 @@ function SectionFields({
             field="content"
             placeholder="Paste code..."
             multiline
+            isCode
             value={section.content ?? ""}
             onChange={(value) => onPatch({ content: value })}
           />
@@ -780,6 +956,7 @@ function SectionFields({
           field="steps"
           placeholder="Steps as JSON"
           multiline
+          isCode
           value={JSON.stringify(section.steps ?? [], null, 2)}
           onChange={(value) => {
             try {

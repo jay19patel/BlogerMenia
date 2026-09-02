@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 
-import { SettingsCard } from "@/components/settings-card";
-import { SettingsPage } from "@/components/settings-page";
-
+import { AuthShell } from "@/components/auth-shell";
 import { ChangePasswordForm } from "./change-password-form";
 
 /** Django: `/accounts/password/change/` → django-allauth → `account/password_change.html` */
@@ -14,14 +12,15 @@ export const metadata: Metadata = {
 
 export default function PasswordChangePage() {
   return (
-    <SettingsPage
-      current="Change password"
-      title="Change password"
-      description="Pick something you don't use anywhere else. You'll stay signed in on this device."
-    >
-      <SettingsCard>
-        <ChangePasswordForm />
-      </SettingsCard>
-    </SettingsPage>
+    <AuthShell>
+      <div className="flex flex-col mb-8">
+        <h1 className="text-2xl font-extrabold tracking-tight mb-1.5">Change password</h1>
+        <p className="text-sm text-slate-500">
+          Pick something you don't use anywhere else. You'll stay signed in on this device.
+        </p>
+      </div>
+
+      <ChangePasswordForm />
+    </AuthShell>
   );
 }

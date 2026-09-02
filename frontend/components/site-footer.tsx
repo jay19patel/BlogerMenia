@@ -6,8 +6,8 @@ import { urls } from "@/lib/urls";
 /** `partials/footer.html` — included by `base.html` on every page. */
 export function SiteFooter() {
   return (
-    <footer className="bg-white border-t border-slate-100 py-12 mt-auto">
-      <div className="max-w-7xl mx-auto px-8 sm:px-14 lg:pl-64">
+    <footer className="bg-white border-t border-slate-100 py-12 mt-auto lg:pl-64">
+      <div className="max-w-7xl mx-auto px-8 sm:px-14">
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
           <Link href={urls.home()} className="flex items-center gap-2.5 group">
             <span className="w-9 h-9 rounded-xl bg-linear-to-tr from-brand-600 via-indigo-600 to-purple-600 flex items-center justify-center shadow-md shadow-brand-500/20 font-bold text-white text-lg mono group-hover:scale-105 transition-transform">

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode, Ref } from "react";
+import { type ReactNode, type Ref, useCallback, useEffect, useRef } from "react";
 import React from "react";
 import type { TextAreaProps as AriaTextAreaProps, TextFieldProps as AriaTextFieldProps } from "react-aria-components";
 import { TextArea as AriaTextArea, TextField as AriaTextField } from "react-aria-components";
@@ -18,22 +18,50 @@ interface TextAreaBaseProps extends AriaTextAreaProps {
     size?: "sm" | "md";
 }
 
-export const TextAreaBase = ({ className, size = "md", ...props }: TextAreaBaseProps) => {
+export const TextAreaBase = ({ className, size = "md", ref, style, ...props }: TextAreaBaseProps) => {
+    const localRef = useRef<HTMLTextAreaElement | null>(null);
+
+    const adjustHeight = useCallback(() => {
+        const el = localRef.current;
+        if (!el) return;
+        el.style.height = "auto";
+        const newHeight = Math.max(96, el.scrollHeight);
+        el.style.height = `${newHeight}px`;
+    }, []);
+
+    useEffect(() => {
+        adjustHeight();
+    });
+
     return (
         <AriaTextArea
             {...props}
+            ref={(node) => {
+                localRef.current = node;
+                if (typeof ref === "function") {
+                    ref(node);
+                } else if (ref && "current" in ref) {
+                    (ref as React.MutableRefObject<HTMLTextAreaElement | null>).current = node;
+                }
+            }}
+            onInput={(e) => {
+                adjustHeight();
+                props.onInput?.(e);
+            }}
             style={
                 {
                     "--resize-handle-bg": getResizeHandleBg("#D5D7DA"),
                     "--resize-handle-bg-dark": getResizeHandleBg("#373A41"),
-                } as React.CSSProperties
+                    fieldSizing: "content",
+                    ...style,
+                } as unknown as React.CSSProperties
             }
             className={(state) =>
                 cx(
-                    "w-full scroll-py-3 rounded-lg bg-primary text-primary shadow-xs ring-1 ring-primary transition duration-100 ease-linear ring-inset placeholder:text-placeholder autofill:rounded-lg autofill:text-primary focus:outline-hidden",
+                    "w-full min-h-[96px] scroll-py-3 rounded-lg bg-primary text-primary shadow-xs ring-1 ring-primary transition-colors duration-100 ease-linear ring-inset placeholder:text-placeholder autofill:rounded-lg autofill:text-primary focus:outline-hidden",
 
-                    size === "sm" && "p-3 text-sm",
-                    size === "md" && "px-3.5 py-3 text-md",
+                    size === "sm" && "p-3 text-sm leading-relaxed",
+                    size === "md" && "px-3.5 py-3 text-md leading-relaxed",
 
                     // Resize handle
                     "[&::-webkit-resizer]:bg-(image:--resize-handle-bg) [&::-webkit-resizer]:bg-contain dark:[&::-webkit-resizer]:bg-(image:--resize-handle-bg-dark)",
@@ -91,6 +119,8 @@ export const TextArea = ({
     size = "md",
     ...props
 }: TextFieldProps) => {
+    const computedRows = rows || (typeof props.value === "string" ? Math.max(3, props.value.split("\n").length) : undefined);
+
     return (
         <AriaTextField
             {...props}
@@ -106,7 +136,15 @@ export const TextArea = ({
                         </Label>
                     )}
 
-                    <TextAreaBase placeholder={placeholder} className={textAreaClassName} ref={textAreaRef} rows={rows} cols={cols} size={size} />
+                    <TextAreaBase
+                        placeholder={placeholder}
+                        className={textAreaClassName}
+                        ref={textAreaRef}
+                        rows={computedRows}
+                        cols={cols}
+                        size={size}
+                        value={props.value}
+                    />
 
                     {hint && (
                         <HintText isInvalid={isInvalid} size={size}>

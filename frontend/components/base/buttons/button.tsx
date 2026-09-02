@@ -65,7 +65,7 @@ export const styles = sortCx({
         },
         secondary: {
             root: [
-                "bg-primary text-secondary shadow-xs-skeuomorphic ring-1 ring-primary ring-inset hover:bg-primary_hover hover:text-secondary_hover data-loading:bg-primary_hover",
+                "bg-primary text-secondary shadow-xs-skeuomorphic border border-slate-300 hover:border-slate-400 hover:bg-primary_hover hover:text-secondary_hover data-loading:bg-primary_hover",
                 // Icon styles
                 "*:data-icon:text-fg-quaternary hover:*:data-icon:text-fg-quaternary_hover",
             ].join(" "),

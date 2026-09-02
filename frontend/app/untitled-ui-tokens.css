@@ -71,12 +71,12 @@
   --color-fg-error-secondary: var(--color-red-500);
 
   /* Borders and rings */
-  --color-border-primary: var(--color-slate-200);
-  --color-border-secondary: var(--color-slate-100);
+  --color-border-primary: var(--color-slate-300);
+  --color-border-secondary: var(--color-slate-200);
   --color-border-brand: var(--color-brand-500);
   --color-border-error: var(--color-red-300);
-  --color-ring-primary: var(--color-slate-200);
-  --color-ring-secondary_alt: var(--color-slate-200);
+  --color-ring-primary: var(--color-slate-300);
+  --color-ring-secondary_alt: var(--color-slate-300);
   --color-ring-error_subtle: var(--color-red-200);
   --color-ring-brand: var(--color-brand-500);
 
@@ -97,7 +97,7 @@
 
   /* `ring-secondary` — the resting ring on inputs, the dropdown popover and the
    * toggle track. */
-  --color-ring-secondary: var(--color-slate-200);
+  --color-ring-secondary: var(--color-slate-300);
 
   /* `ring-error` — the 2px ring an invalid, focused input shows. Only the
    * lighter `ring-error_subtle` was declared, so the focused state of a field

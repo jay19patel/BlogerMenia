@@ -9,6 +9,7 @@ import { useSession } from "@/components/session-provider";
 import { urls } from "@/lib/urls";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { Button } from "@/components/base/buttons/button";
+import { Tooltip } from "@/components/base/tooltip/tooltip";
 
 /** Shown in place of the download icon while the print view is being opened. */
 function PdfSpinner() {
@@ -79,14 +80,18 @@ export function BlogActions({
               }}
               className="inline"
             >
-              <Button type="submit" size="sm" color="tertiary" iconLeading={LinkedInIcon}>
-                Share
-              </Button>
+              <Tooltip title="Share to LinkedIn">
+                <Button type="submit" size="sm" color="tertiary" iconLeading={LinkedInIcon}>
+                  Share
+                </Button>
+              </Tooltip>
             </form>
           ) : (
-            <Button size="sm" color="tertiary" iconLeading={LinkedInIcon} href={linkedinPostUrl ?? "#"} target={linkedinPostUrl ? "_blank" : undefined}>
-              Shared
-            </Button>
+            <Tooltip title="View on LinkedIn">
+              <Button size="sm" color="tertiary" iconLeading={LinkedInIcon} href={linkedinPostUrl ?? "#"} target={linkedinPostUrl ? "_blank" : undefined}>
+                Shared
+              </Button>
+            </Tooltip>
           ))}
 
         {pdfButton}
@@ -97,9 +102,11 @@ export function BlogActions({
   return (
     <div className="flex items-center gap-2 sm:ml-auto">
       {postedOnLinkedin && linkedinPostUrl && (
-        <Button size="sm" color="tertiary" iconLeading={LinkedInIcon} href={linkedinPostUrl} target="_blank" className="mr-1">
-          Shared
-        </Button>
+        <Tooltip title="View on LinkedIn">
+          <Button size="sm" color="tertiary" iconLeading={LinkedInIcon} href={linkedinPostUrl} target="_blank" className="mr-1">
+            Shared
+          </Button>
+        </Tooltip>
       )}
 
       {user ? (

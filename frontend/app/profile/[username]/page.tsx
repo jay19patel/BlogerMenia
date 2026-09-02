@@ -81,7 +81,7 @@ function BlogsPanel({ blogs, profileUser }: { blogs: Blog[]; profileUser: User }
       {blogs.map((blog) => (
         <div
           key={blog.slug}
-          className="group relative flex flex-col rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-lg hover:shadow-slate-200/50 transition-all overflow-hidden bg-white"
+          className="group relative flex flex-col rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-lg hover:shadow-slate-200/50 transition-all overflow-hidden bg-white"
         >
           <Link href={urls.blogDetail(blog.slug)} className="absolute inset-0 z-10">
             <span className="sr-only">View {blog.title}</span>
@@ -140,7 +140,7 @@ function PlaylistsPanel({ playlists, profileUser }: { playlists: Playlist[]; pro
       {playlists.map((playlist) => (
         <div
           key={playlist.slug}
-          className="group relative block rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-xl hover:shadow-slate-200/60 transition-all overflow-hidden bg-white"
+          className="group relative block rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-200/60 transition-all overflow-hidden bg-white"
         >
           <Link href={urls.playlistDetail(playlist.slug)} className="absolute inset-0 z-10">
             <span className="sr-only">View {playlist.title}</span>
@@ -183,7 +183,7 @@ function PlaylistsPanel({ playlists, profileUser }: { playlists: Playlist[]; pro
 
 function SavedBlogCard({ blog }: { blog: Blog }) {
   return (
-    <div className="group relative flex flex-col rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-lg hover:shadow-slate-200/50 transition-all overflow-hidden bg-white">
+    <div className="group relative flex flex-col rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-lg hover:shadow-slate-200/50 transition-all overflow-hidden bg-white">
       <Link href={urls.blogDetail(blog.slug)} className="absolute inset-0 z-10">
         <span className="sr-only">View {blog.title}</span>
       </Link>

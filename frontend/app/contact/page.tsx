@@ -20,21 +20,21 @@ export default async function ContactPage({ searchParams }: PageProps<"/contact"
 
   return (
     <>
-      <PageShell active="contact" className="min-h-screen relative overflow-hidden bg-slate-50">
+      <PageShell active="contact" className="min-h-screen relative bg-slate-50">
         {/* Premium Background Elements (Light Mode) */}
-        <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-40 -right-40 w-96 h-96 bg-brand-200/40 rounded-full blur-3xl" />
           <div className="absolute top-1/3 -left-20 w-80 h-80 bg-purple-200/30 rounded-full blur-3xl" />
           <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-indigo-200/30 rounded-full blur-3xl" />
         </div>
 
-        <PageContainer className="relative z-10 max-w-6xl py-12 lg:py-20">
-          <Breadcrumbs 
-            items={[{ name: "Home", href: urls.home() }, { name: "Contact" }]} 
+        <PageContainer className="relative z-10 max-w-6xl py-8 sm:py-12 lg:py-16">
+          <Breadcrumbs
+            items={[{ name: "Home", href: urls.home() }, { name: "Contact" }]}
             className="mb-8"
           />
 
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
             {/* Left Column: Text & Info */}
             <div className="flex flex-col justify-center">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-50 border border-brand-200 text-brand-600 w-fit mb-6">
@@ -44,9 +44,9 @@ export default async function ContactPage({ searchParams }: PageProps<"/contact"
                 </span>
                 <span className="text-xs font-semibold uppercase tracking-wider">We&apos;re online</span>
               </div>
-              
+
               <h1 className="text-4xl lg:text-6xl font-extrabold tracking-tight mb-6 text-slate-900 leading-tight">
-                Let&apos;s start a <br/>
+                Let&apos;s start a <br />
                 <span className="text-transparent bg-clip-text bg-linear-to-r from-brand-600 to-purple-600">conversation</span>
               </h1>
               <p className="text-slate-500 mb-12 text-lg leading-relaxed max-w-lg">
@@ -82,7 +82,7 @@ export default async function ContactPage({ searchParams }: PageProps<"/contact"
                   <div>
                     <h3 className="text-slate-900 font-semibold mb-1">Office</h3>
                     <p className="text-slate-500 text-sm">Come say hello at our HQ.</p>
-                    <p className="text-slate-600 text-sm mt-1">100 Smith Street<br/>Collingwood VIC 3066 AU</p>
+                    <p className="text-slate-600 text-sm mt-1">100 Smith Street<br />Collingwood VIC 3066 AU</p>
                   </div>
                 </div>
               </div>
@@ -106,7 +106,7 @@ export default async function ContactPage({ searchParams }: PageProps<"/contact"
                     </div>
                   </div>
                 )}
-                
+
                 <ContactForm />
               </div>
             </div>

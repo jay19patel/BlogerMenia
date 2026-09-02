@@ -21,7 +21,7 @@ export function FeaturedBlogCard({ blog }: { blog: Blog }) {
   return (
     <Link
       href={urls.blogDetail(blog.slug)}
-      className="group block rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-xl hover:shadow-slate-200/60 transition-all overflow-hidden mb-8"
+      className="group block rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-200/60 transition-all overflow-hidden mb-8"
     >
       <div className="sm:flex">
         <MediaFrame
@@ -67,7 +67,7 @@ export function BlogCard({ blog }: { blog: Blog }) {
   return (
     <Link
       href={urls.blogDetail(blog.slug)}
-      className="group flex flex-col rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-lg hover:shadow-slate-200/50 transition-all overflow-hidden"
+      className="group flex flex-col rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-lg hover:shadow-slate-200/50 transition-all overflow-hidden"
     >
       <MediaFrame
         src={blog.image}
