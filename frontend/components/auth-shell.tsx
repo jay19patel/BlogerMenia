@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import { urls } from "@/lib/urls";
 import { cn } from "@/lib/cn";
+import { BrandLogo } from "@/components/brand-logo";
 
 /**
  * The standalone chrome every django-allauth template in
@@ -21,15 +22,7 @@ export function AuthShell({
   return (
     <>
       <header className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-6">
-        <Link href={urls.home()} className="flex items-center gap-2.5">
-          <span className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center shadow-xs shadow-brand-500/30">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 20h9" />
-              <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-            </svg>
-          </span>
-          <span className="font-bold text-[17px] tracking-tight">BlogerMenia</span>
-        </Link>
+        <BrandLogo />
         <Link href={urls.home()} className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-1.5">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 12H5" />
@@ -56,13 +49,14 @@ export function AuthShell({
   );
 }
 
-/** The pencil badge shown above the heading on the login and sign-up cards. */
+/** The brand mark shown above the heading on the login and sign-up cards. */
 export function AuthBadge() {
   return (
-    <span className="w-11 h-11 rounded-xl bg-brand-500 flex items-center justify-center shadow-xs shadow-brand-500/30 mb-4">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 20h9" />
-        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    <span className="w-12 h-12 rounded-2xl bg-linear-to-tr from-brand-600 via-indigo-600 to-purple-600 flex items-center justify-center shadow-md shadow-brand-500/25 mb-4">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+        <path d="M9 8h6" />
+        <path d="M9 12h4" />
       </svg>
     </span>
   );

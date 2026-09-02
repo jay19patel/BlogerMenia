@@ -36,15 +36,15 @@ export async function PageShell({
   const nav = <SiteNav categories={categories} active={active} activeCategory={activeCategory} toc={toc} />;
 
   return (
-    <>
+    <div className="flex-1 flex flex-col min-h-0">
       <SiteHeader mobileNav={<MobileNav>{nav}</MobileNav>} />
 
-      <aside className="fixed top-16 bottom-0 left-0 hidden w-64 overflow-y-auto border-r border-slate-200 bg-white lg:block">
+      <aside className="fixed top-16 bottom-0 left-0 hidden w-64 overflow-y-auto border-r border-slate-200 bg-white lg:block z-30">
         {nav}
       </aside>
 
-      <main className={cn("pt-16 lg:pl-64", className)}>{children}</main>
-    </>
+      <main className={cn("pt-16 lg:pl-64 flex-1 flex flex-col", className)}>{children}</main>
+    </div>
   );
 }
 
@@ -57,5 +57,5 @@ export async function PageShell({
  * changes — from 640px up the padding is what it always was.
  */
 export function PageContainer({ className, children }: { className?: string; children: ReactNode }) {
-  return <div className={cn("px-5 py-10 sm:px-14 sm:py-14", className)}>{children}</div>;
+  return <div className={cn("px-5 py-10 sm:px-14 sm:py-14 flex-1 flex flex-col", className)}>{children}</div>;
 }

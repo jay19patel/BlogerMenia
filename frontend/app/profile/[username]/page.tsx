@@ -348,7 +348,7 @@ export default async function ProfilePage({ params }: PageProps<"/profile/[usern
             savedPanel={<SavedBlogsPanel cards={savableBlogs.map((blog) => ({ id: blog.id, node: <SavedBlogCard blog={blog} /> }))} />}
             aboutPanel={
               profileUser.about ? (
-                <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-xs">
+                <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-xs">
                   <h3 className="font-bold text-slate-900 text-lg mb-4">About</h3>
                   <div className="prose prose-slate prose-sm max-w-none prose-p:leading-relaxed prose-a:text-brand-600 hover:prose-a:text-brand-700">
                     <Linebreaks text={profileUser.about} />

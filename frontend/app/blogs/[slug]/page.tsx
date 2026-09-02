@@ -177,7 +177,7 @@ export default async function BlogDetailPage({ params }: PageProps<"/blogs/[slug
                   <Link
                     key={related.slug}
                     href={urls.blogDetail(related.slug)}
-                    className="group block rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-lg hover:shadow-slate-200/50 transition-all overflow-hidden"
+                    className="group block rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-lg hover:shadow-slate-200/50 transition-all overflow-hidden"
                   >
                     <MediaFrame src={related.image} alt={related.title} avatarSvg={related.avatar_svg} className="h-32" />
                     <div className="p-5">

@@ -18,7 +18,7 @@ export function SavedBlogsPanel({ cards }: { cards: { id: number; node: ReactNod
 
   if (saved.length === 0) {
     return (
-      <div className="text-center py-20 bg-white border border-slate-100 rounded-2xl shadow-xs">
+      <div className="text-center py-20 bg-white border border-slate-200 rounded-2xl shadow-xs">
         <span className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-4 text-slate-300">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />

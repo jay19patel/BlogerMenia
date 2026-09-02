@@ -55,7 +55,7 @@ function BlogRow({
   onToggle: () => void;
 }) {
   return (
-    <div className="blog-item group flex items-center gap-3 rounded-xl border border-slate-100 hover:border-slate-200 p-2.5 transition-colors">
+    <div className="blog-item group flex items-center gap-3 rounded-xl border border-slate-200 hover:border-slate-300 p-2.5 transition-colors">
       <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-100 shrink-0 [&>svg]:w-full [&>svg]:h-full">
         {blog.image ? (
           // eslint-disable-next-line @next/next/no-img-element -- matches the original picker markup.
@@ -146,7 +146,7 @@ export function PlaylistForm({
     >
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Left: playlist details */}
-        <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs space-y-5 self-start">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-5 self-start">
           <h2 className="text-sm font-bold uppercase tracking-wide text-slate-400">Playlist details</h2>
 
           <div>
@@ -219,7 +219,7 @@ export function PlaylistForm({
         </div>
 
         {/* Middle: included blogs */}
-        <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs flex flex-col self-start min-h-[420px]">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs flex flex-col self-start min-h-[420px]">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-bold uppercase tracking-wide text-slate-400">In this playlist</h2>
             <span className="text-xs font-bold bg-emerald-100 text-emerald-700 rounded-full px-2 py-0.5">
@@ -245,7 +245,7 @@ export function PlaylistForm({
         </div>
 
         {/* Right: library */}
-        <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs flex flex-col self-start min-h-[420px]">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs flex flex-col self-start min-h-[420px]">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-bold uppercase tracking-wide text-slate-400">Your library</h2>
             <span className="text-xs font-bold bg-slate-100 text-slate-500 rounded-full px-2 py-0.5">

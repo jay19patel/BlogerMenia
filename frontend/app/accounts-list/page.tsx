@@ -52,7 +52,7 @@ export default async function UserListPage() {
               users.map((author) => (
                 <div
                   key={author.username}
-                  className="group relative flex flex-col items-center text-center p-6 rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-lg hover:shadow-slate-200/50 transition-all bg-white"
+                  className="group relative flex flex-col items-center text-center p-6 rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-lg hover:shadow-slate-200/50 transition-all bg-white"
                 >
                   <Link href={urls.userProfile(author.username)} className="absolute inset-0 z-0 rounded-2xl">
                     <span className="sr-only">View {author.username}</span>

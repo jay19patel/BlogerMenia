@@ -256,7 +256,7 @@ export default async function HomePage() {
               featured_users.map((member) => (
                 <div
                   key={member.username}
-                  className="group relative flex min-w-0 items-center gap-4 bg-white border border-slate-100 hover:border-brand-200 hover:shadow-lg hover:shadow-brand-100/50 rounded-2xl p-5 transition-all"
+                  className="group relative flex min-w-0 items-center gap-4 bg-white border border-slate-200 hover:border-brand-300 hover:shadow-lg hover:shadow-brand-100/50 rounded-2xl p-5 transition-all"
                 >
                   <Link href={urls.userProfile(member.username)} className="absolute inset-0 z-0 rounded-2xl">
                     <span className="sr-only">View {member.username}</span>
@@ -303,7 +303,7 @@ export default async function HomePage() {
           </div>
           <div className="grid sm:grid-cols-3 gap-6">
             {TESTIMONIALS.map((testimonial) => (
-              <div key={testimonial.name} className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs">
+              <div key={testimonial.name} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
                 <QuoteIcon />
                 <p className="text-sm text-slate-600 leading-relaxed mb-6">{testimonial.quote}</p>
                 <div className="flex items-center gap-3">

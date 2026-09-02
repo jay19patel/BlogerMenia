@@ -89,7 +89,7 @@ function SectionBody({ section, variant }: { section: BlogSection; variant: Blog
       return (
         <figure>
           <div
-            className="relative w-full max-w-3xl mx-auto rounded-2xl overflow-hidden shadow-xs border border-slate-100"
+            className="relative w-full max-w-3xl mx-auto rounded-2xl overflow-hidden shadow-xs border border-slate-200"
             style={{ paddingTop: "56.25%" }}
           >
             <iframe
@@ -132,7 +132,7 @@ function SectionBody({ section, variant }: { section: BlogSection; variant: Blog
           {src && (
             // eslint-disable-next-line @next/next/no-img-element -- matches the original figure markup.
             <img
-              className="max-h-[500px] w-auto object-contain rounded-2xl border border-slate-100 shadow-xs"
+              className="max-h-[500px] w-auto object-contain rounded-2xl border border-slate-200 shadow-xs"
               src={src}
               alt={alt}
             />
@@ -179,7 +179,7 @@ function SectionBody({ section, variant }: { section: BlogSection; variant: Blog
           ) : section.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- matches the original figure markup.
             <img
-              className="max-h-[500px] w-auto object-contain rounded-2xl border border-slate-100 shadow-xs"
+              className="max-h-[500px] w-auto object-contain rounded-2xl border border-slate-200 shadow-xs"
               src={section.imageUrl}
               alt={firstOf(section.caption, section.title)}
             />

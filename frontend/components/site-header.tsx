@@ -14,6 +14,7 @@ import { urls } from "@/lib/urls";
 import type { SearchResult } from "@/lib/types";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { User01, Edit05, Lock01, LogOut01, Plus } from "@untitledui/icons";
+import { BrandLogo } from "@/components/brand-logo";
 
 /** `partials/header.html` — the fixed top bar and its search dropdown. */
 
@@ -107,18 +108,7 @@ export function SiteHeader({ mobileNav }: { mobileNav?: ReactNode }) {
     <header className="fixed top-0 left-0 right-0 h-16 border-b border-slate-200/80 bg-white/95 backdrop-blur-md z-40 flex items-center justify-between gap-2 px-4 sm:px-6 shadow-xs shadow-slate-100">
       {mobileNav}
 
-      <Link href={urls.home()} className="flex items-center gap-2.5 group shrink-0">
-        <span className="w-9 h-9 rounded-xl bg-linear-to-tr from-brand-600 via-indigo-600 to-purple-600 flex items-center justify-center shadow-md shadow-brand-500/25 group-hover:scale-105 transition-transform duration-200">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
-            <path d="M9 8h6" />
-            <path d="M9 12h4" />
-          </svg>
-        </span>
-        <span className="hidden text-[19px] font-extrabold tracking-tight text-slate-900 transition-colors group-hover:text-brand-600 sm:inline">
-          Bloger<span className="text-brand-600">Menia</span>
-        </span>
-      </Link>
+      <BrandLogo textClassName="hidden sm:inline" />
 
       <div className="flex min-w-0 flex-1 items-center mx-1.5 sm:mx-4 lg:mx-8 lg:max-w-md">
         <form

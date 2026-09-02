@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 
 import { cn } from "@/lib/cn";
 import { useIsHydrated } from "@/lib/use-is-hydrated";
+import { BrandLogo } from "@/components/brand-logo";
 
 /**
  * The sidebar as a mobile drawer.
@@ -68,9 +69,7 @@ export function MobileNav({ children }: { children: ReactNode }) {
         )}
       >
         <div className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 px-5">
-          <span className="font-extrabold tracking-tight text-slate-900">
-            Bloger<span className="text-brand-600">Menia</span>
-          </span>
+          <BrandLogo />
           <button
             type="button"
             onClick={() => setIsOpen(false)}

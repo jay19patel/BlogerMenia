@@ -44,7 +44,7 @@ export function SiteNav({
   const tocEntries = toc && toc.length >= 2 ? toc : [];
 
   return (
-    <div className="flex h-full flex-col gap-5 p-4">
+    <div className="flex h-full flex-col gap-5 p-4 pb-8">
       <nav aria-label="Browse" className="flex flex-col gap-5">
         <div>
           <NavHeading>BROWSE</NavHeading>
@@ -106,7 +106,7 @@ export function SiteNav({
         </IfAuthenticated>
       </nav>
 
-      <nav aria-label="Account" className="mt-auto flex flex-col gap-0.5 border-t border-slate-100 pt-4">
+      <nav aria-label="Account" className="mt-auto flex flex-col gap-0.5 border-t border-slate-200 pt-4 pb-2">
         <NavHeading>ACCOUNT</NavHeading>
         <SidebarAccount active={active} />
       </nav>

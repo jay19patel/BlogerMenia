@@ -68,12 +68,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${plusJakartaSans.variable} ${newsreader.variable} ${jetBrainsMono.variable}`}
+      className={`${plusJakartaSans.variable} ${newsreader.variable} ${jetBrainsMono.variable} h-full`}
     >
-      <body className="bg-white text-slate-900 antialiased">
+      <body className="min-h-screen flex flex-col bg-white text-slate-900 antialiased">
         <WebSiteJsonLd />
         <Providers>
-          {children}
+          <div className="flex-1 flex flex-col min-h-0">
+            {children}
+          </div>
           <SiteFooter />
         </Providers>
       </body>

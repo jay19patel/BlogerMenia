@@ -15,7 +15,7 @@ import { urls } from "@/lib/urls";
  */
 export function AuthorBio({ author }: { author: User }) {
   return (
-    <aside className="mt-14 rounded-2xl border border-slate-100 bg-slate-50/60 p-6 sm:p-8">
+    <aside className="mt-14 rounded-2xl border border-slate-200 bg-slate-50/60 p-6 sm:p-8">
       <p className="mb-4 text-[11px] font-semibold tracking-wider text-slate-400">WRITTEN BY</p>
 
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start">

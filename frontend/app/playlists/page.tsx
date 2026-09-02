@@ -104,7 +104,7 @@ export default async function PlaylistListPage({ searchParams }: PageProps<"/pla
                 <Link
                   key={playlist.slug}
                   href={urls.playlistDetail(playlist.slug)}
-                  className="group block rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-lg hover:shadow-slate-200/50 transition-all overflow-hidden"
+                  className="group block rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-lg hover:shadow-slate-200/50 transition-all overflow-hidden"
                 >
                   <MediaFrame
                     src={playlist.image}
