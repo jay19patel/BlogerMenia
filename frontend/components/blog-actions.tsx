@@ -112,14 +112,16 @@ export function BlogActions({
       {user ? (
         <>
           <form onSubmit={(event) => { event.preventDefault(); toggleLike(blogId, slug); }}>
-            <Button
-              type="submit"
-              size="sm"
-              color={liked ? "tertiary-destructive" : "tertiary"}
-              iconLeading={HeartRounded}
-            >
-              {likeCountFor(blogId, baseLikeCount).toString()}
-            </Button>
+            <Tooltip title={liked ? "Unlike" : "Like"}>
+              <Button
+                type="submit"
+                size="sm"
+                color={liked ? "tertiary-destructive" : "tertiary"}
+                iconLeading={HeartRounded}
+              >
+                {likeCountFor(blogId, baseLikeCount).toString()}
+              </Button>
+            </Tooltip>
           </form>
           <form onSubmit={(event) => { event.preventDefault(); toggleSave(blogId, slug); }}>
             <ButtonUtility
@@ -134,8 +136,20 @@ export function BlogActions({
         </>
       ) : (
         <>
-          <Button size="sm" color="tertiary" iconLeading={HeartRounded} href={urls.accountLogin()} />
-          <ButtonUtility size="sm" color="tertiary" icon={Bookmark} href={urls.accountLogin()} tooltip="Save" />
+          <ButtonUtility
+            size="sm"
+            color="tertiary"
+            icon={HeartRounded}
+            href={urls.accountLogin()}
+            tooltip="Like"
+          />
+          <ButtonUtility
+            size="sm"
+            color="tertiary"
+            icon={Bookmark}
+            href={urls.accountLogin()}
+            tooltip="Save"
+          />
         </>
       )}
 

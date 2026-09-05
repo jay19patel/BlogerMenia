@@ -112,8 +112,13 @@ export default async function PlaylistListPage({ searchParams }: PageProps<"/pla
                     avatarSvg={playlist.avatar_svg}
                     className="relative h-36"
                   >
-                    <span className="absolute right-3 bottom-3 z-10 rounded-full bg-black/25 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-xs">
-                      {playlist.blog_count} blog{pluralize(playlist.blog_count)}
+                    <span className="absolute bottom-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-slate-950/75 px-3 py-1 text-xs font-semibold text-white shadow-sm backdrop-blur-md border border-white/20 whitespace-nowrap">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-white/80 shrink-0">
+                        <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
+                        <path d="M6 6h10" />
+                        <path d="M6 10h10" />
+                      </svg>
+                      <span>{playlist.blog_count} {playlist.blog_count === 1 ? "blog" : "blogs"}</span>
                     </span>
                   </MediaFrame>
                   <div className="p-5">

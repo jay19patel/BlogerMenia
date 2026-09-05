@@ -68,7 +68,7 @@ export default async function BlogDetailPage({ params }: PageProps<"/blogs/[slug
             ]}
           />
 
-          <CategoryBadge category={blog.category} className="mb-5 inline-block" />
+          <CategoryBadge category={blog.category} className="mb-5" />
 
           {/* Title */}
           <h1 className="text-4xl sm:text-[46px] font-serif font-semibold tracking-tight leading-[1.15] text-slate-900 mb-5">

@@ -39,8 +39,8 @@
   /* Brand surfaces — BlogerMenia indigo, matching the Django buttons. */
   --color-bg-brand-primary: var(--color-brand-50);
   --color-bg-brand-secondary: var(--color-brand-100);
-  --color-bg-brand-solid: var(--color-slate-900);
-  --color-bg-brand-solid_hover: var(--color-slate-800);
+  --color-bg-brand-solid: var(--color-brand-600);
+  --color-bg-brand-solid_hover: var(--color-brand-700);
 
   /* Destructive */
   --color-bg-error-primary: var(--color-red-50);

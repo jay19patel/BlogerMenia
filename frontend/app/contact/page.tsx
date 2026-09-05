@@ -92,22 +92,7 @@ export default async function ContactPage({ searchParams }: PageProps<"/contact"
             <div className="relative">
               <div className="absolute inset-0 bg-linear-to-b from-brand-100 to-purple-100 rounded-3xl blur-xl opacity-60 transform -rotate-1" />
               <div className="relative bg-white border border-slate-200 rounded-3xl p-8 sm:p-10 shadow-xl shadow-slate-200/50">
-                {success && (
-                  <div className="bg-brand-50 border border-brand-200 text-brand-700 px-6 py-4 rounded-2xl mb-8 flex items-start gap-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-check-circle-2 text-brand-500 shrink-0 mt-0.5">
-                      <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
-                      <path d="m9 12 2 2 4-4" />
-                    </svg>
-                    <div>
-                      <h3 className="font-bold">Message sent successfully!</h3>
-                      <p className="text-sm mt-1 opacity-90">
-                        Thank you for reaching out. We will get back to you as soon as possible.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                <ContactForm />
+                <ContactForm initialSuccess={success} />
               </div>
             </div>
           </div>
