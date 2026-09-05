@@ -6,10 +6,10 @@
  */
 export const endpoints = {
   // --- auth (rest_framework_simplejwt) ---
-  token: () => "/token/",
-  tokenRefresh: () => "/token/refresh/",
+  token: () => "/auth/login/",
+  tokenRefresh: () => "/auth/login/refresh/",
   register: () => "/auth/register/",
-  currentUser: () => "/users/me/",
+  currentUser: () => "/auth/me/",
 
   // --- content ---
   categories: () => "/categories/",

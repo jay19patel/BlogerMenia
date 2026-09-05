@@ -40,7 +40,7 @@ const KIND_ICON: Record<SearchResult["kind"], React.ReactElement> = {
 };
 
 const MIN_QUERY_LENGTH = 2;
-const DEBOUNCE_MS = 250;
+const DEBOUNCE_MS = 500;
 
 interface SearchResponse {
   query: string;

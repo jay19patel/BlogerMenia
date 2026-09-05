@@ -299,43 +299,54 @@ export function BlogEditor({
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const onSubmit = (event: React.FormEvent) => {
+  const [isPending, setIsPending] = useState(false);
+
+  const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!title.trim()) {
       setError("Title is required.");
       return;
     }
     setError(null);
-    const postSlug = slug.trim() || slugify(title);
+    setIsPending(true);
 
     try {
-      const existingRaw = localStorage.getItem("blogermenia_custom_blogs");
-      const existing = existingRaw ? JSON.parse(existingRaw) : [];
-      const blogData = {
-        slug: postSlug,
-        title,
-        subtitle,
-        excerpt,
-        introduction,
-        conclusion,
-        category_name: category || "General",
-        tags,
-        is_published: isPublished,
-        featured,
-        sections: sections.map(({ isCollapsed, ...s }) => s),
-        updated_at: new Date().toISOString(),
-      };
-      const updatedList = isEdit && initial
-        ? existing.map((item: { slug: string }) => (item.slug === initial.slug ? blogData : item))
-        : [blogData, ...existing.filter((item: { slug: string }) => item.slug !== postSlug)];
-      localStorage.setItem("blogermenia_custom_blogs", JSON.stringify(updatedList));
-    } catch {
-      // Ignore quota or storage errors
-    }
+      const formData = new FormData(event.currentTarget);
+      
+      const postSlug = slug.trim() || slugify(title);
+      formData.set("slug", postSlug);
+      
+      // We must serialize tags and sections as JSON strings since they are JSON fields.
+      // DRF will parse them if they are sent as JSON strings in FormData.
+      formData.set("tags", JSON.stringify(tags));
+      formData.set("sections", JSON.stringify(sections.map(({ isCollapsed, ...s }) => s)));
+      
+      // Override the category to ensure it's sent properly if it's customized
+      if (category) {
+        formData.set("category_name", category);
+      }
 
-    addMessage(isEdit ? "Blog post updated successfully!" : "Blog post published successfully!", "success");
-    router.push(isEdit && initial ? urls.blogDetail(postSlug) : urls.blogDetail(postSlug));
-    router.refresh();
+      // Checkboxes handling
+      formData.set("is_published", isPublished ? "true" : "false");
+      formData.set("featured", featured ? "true" : "false");
+      formData.set("posted_on_linkedin", postToLinkedIn ? "true" : "false");
+
+      // Handle multiple playlists
+      formData.delete("playlist_ids"); // Clear native select if any
+      selectedPlaylists.forEach(id => formData.append("playlist_ids", String(id)));
+
+      const { saveBlogAction } = await import("@/app/blogs/actions");
+      const result = await saveBlogAction(isEdit, initial?.slug, formData);
+
+      addMessage(isEdit ? "Blog post updated successfully!" : "Blog post published successfully!", "success");
+      router.push(urls.blogDetail(result.slug));
+      router.refresh();
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Failed to save blog post. Please check your inputs.");
+    } finally {
+      setIsPending(false);
+    }
   };
 
   const onExcalidrawSave = (scene: ExcalidrawSceneData) => {
@@ -777,9 +788,10 @@ export function BlogEditor({
         <div className="flex items-center gap-3 pt-1">
           <button
             type="submit"
-            className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm px-6 py-2.5 rounded-lg transition-colors"
+            disabled={isPending}
+            className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm px-6 py-2.5 rounded-lg transition-colors disabled:opacity-50"
           >
-            {isEdit ? "Save changes" : "Publish post"}
+            {isPending ? "Saving..." : (isEdit ? "Save changes" : "Publish post")}
           </button>
           <Link href={urls.blogList()} className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
             Cancel

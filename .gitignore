@@ -1,12 +1,83 @@
-chroma_db/
-.env.dev
-.env.prod
+# ==============================
+# GENERAL / OS / IDE
+# ==============================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
+
+# ==============================
+# BACKEND (Django, Python, uv)
+# ==============================
 __pycache__/
 *.py[cod]
-staticfiles/
+*$py.class
+*.so
+.Python
+env/
+venv/
+.env_venv/
+.venv/
+env.bak/
+venv.bak/
 
-# Celery beat runtime schedule DB
+# Environment Variables
+.env
+.env.*
+!.env.example
+backend/.env
+frontend/.env
+
+# Local Databases
+*.sqlite3
+*.sqlite3-journal
+backend/search/milvus.db
+backend/search/milvus.db-wal
+backend/search/milvus.db.lock
+chroma_db/
+
+# Django Media and Static files
+backend/media/
+backend/staticfiles/
+backend/static_root/
+
+# Celery
 celerybeat-schedule*
 celerybeat.pid
 
+# Testing / Logs
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# ==============================
+# FRONTEND (Next.js, Node)
+# ==============================
 node_modules/
+frontend/node_modules/
+
+# Next.js build output
+.next/
+frontend/.next/
+out/
+frontend/out/
+build/
+frontend/build/
+
+# Next.js cache
+.turbo/
+frontend/.turbo/
+
+# Node logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*

@@ -68,6 +68,6 @@ export async function getCurrentUser(token: string | null): Promise<Viewer | nul
   }
 }
 
-export async function updateProfile(username: string, payload: ProfilePayload, token: string | null) {
+export async function updateProfile(username: string, payload: ProfilePayload | FormData, token: string | null) {
   return request(userSchema, { path: endpoints.user(username), method: "PATCH", body: payload, token });
 }

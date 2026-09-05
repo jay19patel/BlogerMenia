@@ -99,11 +99,11 @@ export async function shareBlogToLinkedIn(slug: string, token: string | null) {
   return requestVoid({ path: endpoints.blogShareLinkedIn(slug), method: "POST", token });
 }
 
-export async function createBlog(payload: BlogPayload, token: string | null) {
+export async function createBlog(payload: BlogPayload | FormData, token: string | null) {
   return request(blogSchema, { path: endpoints.blogs(), method: "POST", body: payload, token });
 }
 
-export async function updateBlog(slug: string, payload: BlogPayload, token: string | null) {
+export async function updateBlog(slug: string, payload: BlogPayload | FormData, token: string | null) {
   return request(blogSchema, { path: endpoints.blog(slug), method: "PATCH", body: payload, token });
 }
 

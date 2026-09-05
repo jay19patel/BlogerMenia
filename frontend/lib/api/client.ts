@@ -84,15 +84,16 @@ async function liveRequest(options: RequestOptions): Promise<unknown> {
 
   let response: Response;
   try {
+    const isFormData = body instanceof FormData;
     response = await fetch(url, {
       method,
       signal: combined,
       headers: {
         Accept: "application/json",
-        ...(body === undefined ? {} : { "Content-Type": "application/json" }),
+        ...(isFormData ? {} : body === undefined ? {} : { "Content-Type": "application/json" }),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: isFormData ? body : (body === undefined ? undefined : JSON.stringify(body)),
       ...(next ? { next } : {}),
     });
   } catch (cause) {

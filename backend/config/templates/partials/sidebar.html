@@ -1,0 +1,108 @@
+<aside class="fixed top-16 left-0 bottom-0 w-64 border-r border-slate-200 bg-white overflow-y-auto hidden lg:block">
+  <nav class="p-5 flex flex-col gap-6 h-full">
+
+    <!-- BROWSE -->
+    <div>
+      <p class="text-[11px] font-semibold tracking-wider text-slate-400 mb-2 px-2">BROWSE</p>
+      <ul class="flex flex-col gap-0.5">
+        <li>
+          <a href="{% url 'home' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium text-sm transition-colors {% if active == 'home' %}bg-brand-50 text-brand-700{% else %}text-slate-600 hover:bg-slate-50 hover:text-slate-900{% endif %}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Home
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'blog_list' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium text-sm transition-colors {% if active == 'blog_list' %}bg-brand-50 text-brand-700{% else %}text-slate-600 hover:bg-slate-50 hover:text-slate-900{% endif %}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            All Blogs
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'playlist_list' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium text-sm transition-colors {% if active == 'playlists' %}bg-brand-50 text-brand-700{% else %}text-slate-600 hover:bg-slate-50 hover:text-slate-900{% endif %}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15V6"/><path d="M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/><path d="M12 12H3"/><path d="M16 6H3"/><path d="M12 18H3"/></svg>
+            Playlists
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'user_list' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium text-sm transition-colors {% if active == 'community' %}bg-brand-50 text-brand-700{% else %}text-slate-600 hover:bg-slate-50 hover:text-slate-900{% endif %}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Community
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- CATEGORIES -->
+    {% if all_categories %}
+    <div>
+      <p class="text-[11px] font-semibold tracking-wider text-slate-400 mb-2 px-2">CATEGORIES</p>
+      <ul class="flex flex-col gap-0.5">
+        {% for cat in all_categories %}
+        <li>
+          <a href="{% url 'blog_list' %}?category={{ cat.slug }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium text-sm transition-colors {% if active_category == cat.slug %}bg-brand-50 text-brand-700{% else %}text-slate-600 hover:bg-slate-50 hover:text-slate-900{% endif %}">
+            <span class="w-2 h-2 rounded-full
+              {% if cat.color == 'blue' %}bg-blue-500
+              {% elif cat.color == 'rose' %}bg-rose-500
+              {% elif cat.color == 'amber' %}bg-amber-500
+              {% elif cat.color == 'purple' %}bg-purple-500
+              {% elif cat.color == 'teal' %}bg-teal-500
+              {% else %}bg-indigo-500{% endif %}"></span>
+            {{ cat.name }}
+            <span class="ml-auto text-[11px] text-slate-400">{{ cat.blogs.count }}</span>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    {% if user.is_authenticated %}
+    <!-- WRITE -->
+    <div>
+      <p class="text-[11px] font-semibold tracking-wider text-slate-400 mb-2 px-2">WRITE</p>
+      <ul class="flex flex-col gap-0.5">
+        <li>
+          <a href="{% url 'blog_create' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium text-sm transition-colors {% if active == 'write' %}bg-brand-50 text-brand-700{% else %}text-slate-600 hover:bg-slate-50 hover:text-slate-900{% endif %}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pen-line"><path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/></svg>
+            New Blog
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'playlist_create' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-sm transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-list-video"><path d="M12 12H3"/><path d="M16 6H3"/><path d="M12 18H3"/><path d="m16 12 5 3-5 3v-6Z"/></svg>
+            New Playlist
+          </a>
+        </li>
+      </ul>
+    </div>
+    {% endif %}
+
+    <!-- ACCOUNT -->
+    <div class="mt-auto pt-6 border-t border-slate-100 flex flex-col gap-0.5">
+      <p class="text-[11px] font-semibold tracking-wider text-slate-400 mb-2 px-2">ACCOUNT</p>
+      {% if user.is_authenticated %}
+      <a href="{% url 'user_profile' user.username %}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium text-sm transition-colors {% if active == 'profile' %}bg-brand-50 text-brand-700{% else %}text-slate-600 hover:bg-slate-50 hover:text-slate-900{% endif %}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        My Profile
+      </a>
+      <form method="post" action="{% url 'account_logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 font-medium text-sm transition-colors">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Log out
+        </button>
+      </form>
+      {% else %}
+      <a href="{% url 'account_login' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 font-medium text-sm transition-colors">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        Login
+      </a>
+      <a href="{% url 'account_signup' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 font-medium text-sm transition-colors">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        Sign up
+      </a>
+      {% endif %}
+    </div>
+
+  </nav>
+</aside>

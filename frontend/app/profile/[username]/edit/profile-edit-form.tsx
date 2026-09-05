@@ -11,6 +11,8 @@ import { Input } from "@/components/base/input/input";
 import { TextArea } from "@/components/base/textarea/textarea";
 import { Toggle } from "@/components/base/toggle/toggle";
 
+import { updateProfileAction } from "./actions";
+
 /**
  * `ProfileUpdateView`'s model form as rendered by `blog/profile_edit.html`.
  * Field order and labels follow the view's `fields` list.
@@ -18,6 +20,7 @@ import { Toggle } from "@/components/base/toggle/toggle";
 export function ProfileEditForm({ profileUser }: { profileUser: User }) {
   const router = useRouter();
   const { addMessage } = useMessages();
+  const [isPending, setIsPending] = useState(false);
 
   const [values, setValues] = useState({
     first_name: profileUser.first_name,
@@ -35,10 +38,17 @@ export function ProfileEditForm({ profileUser }: { profileUser: User }) {
     <form
       className="space-y-6"
       encType="multipart/form-data"
-      onSubmit={(event) => {
+      onSubmit={async (event) => {
         event.preventDefault();
-        addMessage("Static demo — profile changes are not saved.", "warning");
-        router.push(urls.userProfile(profileUser.username));
+        setIsPending(true);
+        try {
+          const formData = new FormData(event.currentTarget);
+          await updateProfileAction(profileUser.username, formData);
+          addMessage("Profile updated successfully.", "success");
+        } catch (error) {
+          addMessage("Failed to update profile.", "error");
+          setIsPending(false);
+        }
       }}
     >
       <div>
@@ -116,9 +126,10 @@ export function ProfileEditForm({ profileUser }: { profileUser: User }) {
       <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
         <button
           type="submit"
-          className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+          disabled={isPending}
+          className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:opacity-50"
         >
-          Save changes
+          {isPending ? "Saving..." : "Save changes"}
         </button>
         <Link
           href={urls.userProfile(profileUser.username)}
