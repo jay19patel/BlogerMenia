@@ -17,12 +17,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 load_dotenv(BASE_DIR / ".env")
 
 
+def env(name: str, default: str = "") -> str:
+    """A variable present but blank in `.env` means "unset", not "empty string".
+
+    Without this, `SQLITE_PATH=` in .env silently leaves DATABASES["NAME"] empty
+    and every request fails with ImproperlyConfigured.
+    """
+    return os.environ.get(name, "").strip() or default
+
+
 def env_bool(name: str, default: bool = False) -> bool:
-    return os.environ.get(name, str(default)).strip().lower() in {"1", "true", "yes", "on"}
+    return env(name, str(default)).lower() in {"1", "true", "yes", "on"}
 
 
 def env_list(name: str, default: str = "") -> list[str]:
-    return [item.strip() for item in os.environ.get(name, default).split(",") if item.strip()]
+    return [item.strip() for item in env(name, default).split(",") if item.strip()]
 
 
 # --- Applications ---------------------------------------------------------
@@ -91,7 +100,7 @@ TEMPLATES = [
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.environ.get("SQLITE_PATH", str(BASE_DIR / "db.sqlite3")),
+        "NAME": env("SQLITE_PATH", str(BASE_DIR / "db.sqlite3")),
         "OPTIONS": {
             "timeout": 20,
             "init_command": "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;",
@@ -135,7 +144,7 @@ DEFAULT_FROM_EMAIL = "Inkwell <noreply@inkwell.dev>"
 
 # Where the Next.js app is served. Used to build the public URL of a post for
 # LinkedIn shares and canonical links — Django itself renders no blog pages.
-FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000").rstrip("/")
+FRONTEND_URL = env("FRONTEND_URL", "http://localhost:3000").rstrip("/")
 
 
 # --- i18n / files ---------------------------------------------------------
@@ -162,7 +171,7 @@ MEDIA_ROOT = BASE_DIR / "media"
 # Upload limits. Anything larger than this is rejected before it reaches a view;
 # `core.validators.validate_image` enforces the same ceiling per file so the
 # error is a field error rather than a 400 from the request parser.
-MAX_UPLOAD_SIZE_MB = int(os.environ.get("MAX_UPLOAD_SIZE_MB", "5"))
+MAX_UPLOAD_SIZE_MB = int(env("MAX_UPLOAD_SIZE_MB", "5"))
 DATA_UPLOAD_MAX_MEMORY_SIZE = (MAX_UPLOAD_SIZE_MB + 1) * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = 2 * 1024 * 1024
 
@@ -181,12 +190,12 @@ CORS_ALLOW_CREDENTIALS = False  # the frontend authenticates with a bearer token
 
 # --- Google Gemini --------------------------------------------------------
 
-GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
-GEMINI_EMBEDDING_MODEL = os.environ.get("GEMINI_EMBEDDING_MODEL", "gemini-embedding-001")
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+GOOGLE_API_KEY = env("GOOGLE_API_KEY")
+GEMINI_EMBEDDING_MODEL = env("GEMINI_EMBEDDING_MODEL", "gemini-embedding-001")
+GEMINI_MODEL = env("GEMINI_MODEL", "gemini-2.5-flash")
 
 # Semantic search index (Milvus Lite — a file, not a server).
-MILVUS_URI = os.environ.get("MILVUS_URI", str(BASE_DIR / "search" / "milvus.db"))
+MILVUS_URI = env("MILVUS_URI", str(BASE_DIR / "search" / "milvus.db"))
 
 
 # --- Celery ---------------------------------------------------------------
@@ -194,8 +203,8 @@ MILVUS_URI = os.environ.get("MILVUS_URI", str(BASE_DIR / "search" / "milvus.db")
 # DB 0/1 with another Celery project on the same machine — otherwise workers
 # steal and discard each other's tasks.
 
-CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://127.0.0.1:6379/2")
-CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://127.0.0.1:6379/3")
+CELERY_BROKER_URL = env("CELERY_BROKER_URL", "redis://127.0.0.1:6379/2")
+CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", "redis://127.0.0.1:6379/3")
 
 # JSON only — never pickle.
 CELERY_ACCEPT_CONTENT = ["json"]
@@ -261,12 +270,12 @@ REST_FRAMEWORK = {
     # Scopes are attached per-view via `throttle_scope`. `login`, `register` and
     # `search` are the ones that cost real money or enable credential stuffing.
     "DEFAULT_THROTTLE_RATES": {
-        "login": os.environ.get("THROTTLE_LOGIN", "10/min"),
-        "register": os.environ.get("THROTTLE_REGISTER", "5/hour"),
-        "contact": os.environ.get("THROTTLE_CONTACT", "5/hour"),
-        "search": os.environ.get("THROTTLE_SEARCH", "30/min"),
-        "write": os.environ.get("THROTTLE_WRITE", "60/hour"),
-        "read": os.environ.get("THROTTLE_READ", "300/min"),
+        "login": env("THROTTLE_LOGIN", "10/min"),
+        "register": env("THROTTLE_REGISTER", "5/hour"),
+        "contact": env("THROTTLE_CONTACT", "5/hour"),
+        "search": env("THROTTLE_SEARCH", "30/min"),
+        "write": env("THROTTLE_WRITE", "60/hour"),
+        "read": env("THROTTLE_READ", "300/min"),
     },
 }
 
