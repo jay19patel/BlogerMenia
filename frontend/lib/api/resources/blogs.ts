@@ -2,7 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 
-import { request, requestVoid } from "@/lib/api/client";
+import { request, requestBinary, requestVoid } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import { ApiError } from "@/lib/api/errors";
 import { blogSchema, detailSchema, paginated, type BlogPayload } from "@/lib/api/schemas";
@@ -156,4 +156,15 @@ export async function updateBlog(slug: string, payload: BlogPayload | FormData, 
 
 export async function deleteBlog(slug: string, token: string | null) {
   return requestVoid({ path: endpoints.blog(slug), method: "DELETE", token });
+}
+
+/**
+ * The post rendered as a PDF, by Django.
+ *
+ * The token is passed so an author can pull the PDF of their own unpublished
+ * draft — the endpoint filters on the same `visible_blogs` queryset the detail
+ * view uses, so without it a draft reads as a 404.
+ */
+export async function getBlogPdf(slug: string, token: string | null) {
+  return requestBinary({ path: endpoints.blogPdf(slug), token });
 }

@@ -1,6 +1,7 @@
 import DOMPurify from "isomorphic-dompurify";
 
 import { firstOf, stripTags, truncateWords } from "@/lib/format";
+import { stripInlineMarkdown } from "@/lib/markdown";
 import type { Blog, BlogSection } from "@/lib/types";
 
 /**
@@ -10,7 +11,8 @@ import type { Blog, BlogSection } from "@/lib/types";
  * legacy-content fallback.
  */
 export function blogSummary(blog: Blog, words: number): string {
-  return firstOf(blog.excerpt, blog.subtitle, truncateWords(stripTags(blog.content), words));
+  // Cards and `<meta>` tags are plain text: markdown markers are dropped, not rendered.
+  return stripInlineMarkdown(firstOf(blog.excerpt, blog.subtitle, truncateWords(stripTags(blog.content), words)));
 }
 
 /**
@@ -97,7 +99,9 @@ export function buildToc(blog: Blog): TocEntry[] {
   if (!isStructured(blog)) return renderLegacyContent(blog.content).headings;
 
   const entries: TocEntry[] = blog.sections
-    .map((section, index) => ({ id: `section-${index}`, text: section.title ?? "" }))
+    // The rail is plain text, so a heading's inline markdown is flattened
+    // rather than shown as raw `**markers**` beside the formatted heading.
+    .map((section, index) => ({ id: `section-${index}`, text: stripInlineMarkdown(section.title ?? "") }))
     .filter((entry) => entry.text !== "");
 
   if (blog.conclusion) entries.push({ id: "section-conclusion", text: "Conclusion" });

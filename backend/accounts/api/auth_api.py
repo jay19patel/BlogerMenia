@@ -3,6 +3,7 @@ from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
@@ -11,6 +12,7 @@ from accounts.serializers import (
     EmailTokenObtainPairSerializer,
     UserRegistrationSerializer,
 )
+from accounts.services.social_handoff import redeem_code
 from blog.selectors import user_queryset
 
 User = get_user_model()
@@ -46,6 +48,30 @@ class RegisterView(generics.CreateAPIView):
             {'refresh': str(refresh), 'access': str(refresh.access_token)},
             status=status.HTTP_201_CREATED,
         )
+
+
+@extend_schema_view(post=extend_schema(summary="Redeem a social-login handoff code"))
+class SocialHandoffExchangeView(APIView):
+    """Turn the single-use code from the LinkedIn callback into a token pair.
+
+    Called by the frontend's handoff route, never by a browser: the code arrives
+    in the redirect URL, and only the Next.js server ever POSTs it here.
+    Throttled as a login because a valid code is a credential.
+    """
+
+    permission_classes = (AllowAny,)
+    throttle_scope = 'login'
+
+    def post(self, request):
+        user = redeem_code(str(request.data.get('code', '')))
+        if user is None:
+            return Response(
+                {'detail': 'This login link has expired. Please try again.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        refresh = RefreshToken.for_user(user)
+        return Response({'refresh': str(refresh), 'access': str(refresh.access_token)})
 
 
 @extend_schema_view(

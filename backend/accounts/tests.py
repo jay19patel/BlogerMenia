@@ -1,8 +1,15 @@
 """Account API tests: registration validation, and who may see what."""
+from types import SimpleNamespace
+from urllib.parse import parse_qs, urlparse
+
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
+
+from accounts.adapters import handoff_url
+from accounts.services.social_handoff import issue_code, redeem_code
 
 User = get_user_model()
 
@@ -46,6 +53,57 @@ class RegistrationTests(APITestCase):
         response = self._post()
         self.assertNotIn("password1", response.data)
         self.assertNotIn("password2", response.data)
+
+
+class SocialHandoffTests(APITestCase):
+    """The bridge between allauth's session and the frontend's JWTs."""
+
+    url_name = "v1:social-handoff-exchange"
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="linkedinner", email="li@example.com", password="a-perfectly-fine-password"
+        )
+
+    def _exchange(self, code):
+        return self.client.post(reverse(self.url_name), {"code": code}, format="json")
+
+    def test_code_is_exchanged_for_a_token_pair(self):
+        response = self._exchange(issue_code(self.user))
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertIn("access", response.data)
+        self.assertIn("refresh", response.data)
+
+    def test_code_cannot_be_replayed(self):
+        code = issue_code(self.user)
+        self.assertEqual(self._exchange(code).status_code, status.HTTP_200_OK)
+        self.assertEqual(self._exchange(code).status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_unknown_code_is_rejected(self):
+        self.assertEqual(self._exchange("not-a-real-code").status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_missing_code_is_rejected(self):
+        response = self.client.post(reverse(self.url_name), {}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_deactivated_user_cannot_be_redeemed(self):
+        """A code outlives the account being disabled, so redeeming has to
+        re-check rather than trust the pk it stored."""
+        code = issue_code(self.user)
+        self.user.is_active = False
+        self.user.save(update_fields=["is_active"])
+        self.assertEqual(self._exchange(code).status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_handoff_url_points_at_the_frontend(self):
+        request = SimpleNamespace(user=self.user)
+        url = handoff_url(request, "/accounts/social/connections/")
+        self.assertTrue(url.startswith(settings.FRONTEND_URL + "/api/auth/social/handoff/"))
+        query = parse_qs(urlparse(url).query)
+        self.assertEqual(query["next"], ["/accounts/social/connections/"])
+        # The tokens themselves must never travel in a redirect URL.
+        self.assertNotIn("access", query)
+        self.assertNotIn("refresh", query)
+        self.assertIsNotNone(redeem_code(query["code"][0]))
 
 
 class LoginTests(APITestCase):

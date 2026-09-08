@@ -15,7 +15,9 @@ export const urls = {
   blogDetail: (slug: string) => `/blogs/${slug}/`,
   blogUpdate: (slug: string) => `/blogs/${slug}/update/`,
   blogDelete: (slug: string) => `/blogs/${slug}/delete/`,
-  blogPdf: (slug: string) => `/blogs/${slug}/pdf/`,
+  /** The server-rendered PDF, streamed through the BFF — the same file the
+   *  LinkedIn share attaches. */
+  blogPdf: (slug: string) => `/api/blogs/${slug}/pdf/`,
 
   playlistList: () => "/playlists/",
   playlistCreate: () => "/playlists/create/",

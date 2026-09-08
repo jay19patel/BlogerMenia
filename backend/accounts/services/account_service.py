@@ -1,7 +1,10 @@
 import logging
+
 import requests
-from django.core.files.base import ContentFile
 from allauth.socialaccount.models import SocialToken
+from django.core.files.base import ContentFile
+
+from . import linkedin_share
 
 logger = logging.getLogger(__name__)
 
@@ -74,29 +77,40 @@ class LinkedInService:
             logger.error(f"Error syncing LinkedIn profile for {self.user.username}: {e}")
             return False
 
-    def _build_post_text(self, blog, blog_url):
-        """Compose the LinkedIn share text from the blog's own fields."""
-        parts = [blog.title.strip()]
+    def _attach_pdf(self, blog, author_urn):
+        """Upload the post's PDF and return its document URN, or None.
 
-        summary = (blog.excerpt or blog.subtitle or '').strip()
-        if summary:
-            parts.append(summary)
+        Deliberately swallowing every failure: a share with no attachment still
+        reaches the author's network, and losing the whole post because a
+        document upload timed out is the worse trade. The caller logs what the
+        reader ends up seeing either way.
+        """
+        from blog.services.pdf_service import blog_pdf, pdf_filename
 
-        parts.append(f"Read the full post here: {blog_url}")
+        try:
+            data = blog_pdf(blog)
+        except Exception as exc:  # noqa: BLE001 — ReportLab raises bare exceptions
+            logger.warning("LinkedIn: could not render PDF for '%s': %s", blog.slug, exc)
+            return None
 
-        if blog.tags:
-            hashtags = " ".join(
-                f"#{str(tag).strip().replace(' ', '')}"
-                for tag in blog.tags[:5] if str(tag).strip()
+        try:
+            return linkedin_share.upload_document(
+                self.token.token, author_urn, pdf_filename(blog), data
             )
-            if hashtags:
-                parts.append(hashtags)
-
-        return "\n\n".join(parts)
+        except Exception as exc:  # noqa: BLE001 — the API client raises bare exceptions
+            logger.warning("LinkedIn: document upload failed for '%s': %s", blog.slug, exc)
+            return None
 
     def create_post(self, blog):
         """
-        Publishes a UGC post linking to ``blog`` on the user's LinkedIn feed.
+        Publishes ``blog`` to the user's LinkedIn feed as a document share.
+
+        The post carries the article's own PDF — the same file the author can
+        download from the post page — with a short commentary built from the
+        title, a one-or-two-sentence description, the public URL and the post's
+        tags as hashtags. The URL lives in the text because LinkedIn renders
+        either a document or a link preview, never both, and auto-links a URL
+        it finds in the words.
 
         Whether posting is *allowed* (checkbox, profile opt-in, manual share)
         is decided by the caller — this method only enforces hard invariants
@@ -116,32 +130,30 @@ class LinkedInService:
         # An absolute URL on the Next.js frontend — Django serves no blog pages,
         # so this used to reverse a route that no longer exists.
         blog_url = blog.get_absolute_url()
-        text = self._build_post_text(blog, blog_url)
+        commentary = linkedin_share.build_commentary(blog, blog_url)
+        document_urn = self._attach_pdf(blog, author_urn)
 
-        payload = {
-            "author": author_urn,
-            "lifecycleState": "PUBLISHED",
-            "specificContent": {
-                "com.linkedin.ugc.ShareContent": {
-                    "shareCommentary": {"text": text},
-                    "shareMediaCategory": "NONE",
-                }
-            },
-            "visibility": {
-                "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"
-            },
-        }
+        try:
+            urn = linkedin_share.create_post(
+                self.token.token, author_urn, commentary,
+                document_urn=document_urn, document_title=blog.title,
+            )
+        except Exception:
+            if not document_urn:
+                raise
+            # The attachment is the only thing new about this call, so if it is
+            # what LinkedIn rejected, the share itself can still go out.
+            logger.warning(
+                "LinkedIn: document post rejected for '%s'; retrying without the PDF",
+                blog.slug, exc_info=True,
+            )
+            urn = linkedin_share.create_post(self.token.token, author_urn, commentary)
+            document_urn = None
 
-        from linkedin_api.clients.restli.client import RestliClient
-        restli_client = RestliClient()
-        response = restli_client.create(
-            resource_path="/ugcPosts",
-            entity=payload,
-            access_token=self.token.token,
-        )
-
-        url = f"https://www.linkedin.com/feed/update/{response.entity_id}/"
+        url = linkedin_share.post_url(urn)
         logger.info(
-            f"Posted blog '{blog.slug}' to LinkedIn for {self.user.username}. URL: {url}"
+            "Posted blog '%s' to LinkedIn for %s%s. URL: %s",
+            blog.slug, self.user.username,
+            " with its PDF" if document_urn else " (text only)", url,
         )
         return url

@@ -116,3 +116,47 @@ export async function request<T>(schema: ZodType<T>, options: RequestOptions): P
 export async function requestVoid(options: RequestOptions): Promise<void> {
   await httpRequest(options);
 }
+
+/**
+ * Fetch a binary response — currently only the PDF a post renders to.
+ *
+ * Kept beside `request` rather than in the resource module because the rule
+ * this file states is absolute: nothing above it calls `fetch`. Binary bodies
+ * take their own path because there is no JSON to parse and no schema that
+ * could describe a PDF, so the errors have to be read off the response here.
+ */
+export async function requestBinary(
+  options: RequestOptions,
+): Promise<{ data: ArrayBuffer; contentType: string }> {
+  const { path, query, token, signal } = options;
+  const url = `${API_BASE_URL}${path}${buildQuery(query)}`;
+
+  const timeout = AbortSignal.timeout(API_TIMEOUT_MS);
+  const combined = signal ? AbortSignal.any([signal, timeout]) : timeout;
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      signal: combined,
+      headers: {
+        Accept: "application/pdf",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+  } catch (cause) {
+    const reason = cause instanceof Error && cause.name === "TimeoutError" ? "timed out" : "failed";
+    throw new ApiError(503, `Request to ${path} ${reason}.`);
+  }
+
+  if (!response.ok) {
+    // A failure still answers in JSON — DRF's exception handler runs before any
+    // content negotiation the view would have done.
+    const text = await response.text();
+    throw toApiError(response.status, text ? safeJsonParse(text) : null);
+  }
+
+  return {
+    data: await response.arrayBuffer(),
+    contentType: response.headers.get("content-type") ?? "application/octet-stream",
+  };
+}

@@ -130,8 +130,6 @@ function readImportedSections(raw: Record<string, unknown>): BlogSection[] | nul
 }
 
 interface FieldProps {
-  /** The section key this input edits; becomes the field's `name`. */
-  field: string;
   placeholder: string;
   value: string;
   onChange: (value: string) => void;
@@ -142,11 +140,19 @@ interface FieldProps {
 /**
  * One section-editor input.
  *
+ * **These inputs carry no `name`, deliberately.** Section state lives in React
+ * and is submitted as the single `sections` JSON field in `onSubmit`; a `name`
+ * here would also enter `new FormData(form)` under that key. Every section
+ * used to render `<input name="title">`, so a post with sections sent one
+ * `title` part per section and Django's QueryDict kept the *last* one — the
+ * post's title silently became its final section's heading (and its `content`
+ * that section's body). Keep these anonymous.
+ *
  * React Aria passes the new value to `onChange` directly, so the handler is
  * forwarded as-is rather than unwrapped from a DOM event.
  */
-function Field({ field, placeholder, value, onChange, multiline, isCode }: FieldProps) {
-  const shared = { name: field, placeholder, "aria-label": placeholder, value, onChange };
+function Field({ placeholder, value, onChange, multiline, isCode }: FieldProps) {
+  const shared = { placeholder, "aria-label": placeholder, value, onChange };
   return multiline ? (
     <TextArea
       {...shared}
@@ -631,6 +637,14 @@ export function BlogEditor({
             </div>
           </div>
 
+          {/* Prose fields render inline markdown; code sections are left verbatim. */}
+          <p className="text-xs text-slate-400 mb-4">
+            Markdown works in text: <code className="text-slate-500">**bold**</code>,{" "}
+            <code className="text-slate-500">*italic*</code>, <code className="text-slate-500">`code`</code>,{" "}
+            <code className="text-slate-500">~~strike~~</code>,{" "}
+            <code className="text-slate-500">[label](https://url)</code>
+          </p>
+
           <div className="space-y-4">
             {sections.map((section, index) => {
               const isDragging = draggedIndex === index;
@@ -762,7 +776,6 @@ export function BlogEditor({
                   {!section.isCollapsed && (
                     <>
                       <Field
-                        field="title"
                         placeholder="Section title"
                         value={section.title ?? ""}
                         onChange={(value) => patchSection(index, { title: value })}
@@ -839,7 +852,6 @@ function SectionFields({
     case "note":
       return (
         <Field
-          field="content"
           placeholder="Write your content..."
           multiline
           value={section.content ?? ""}
@@ -851,13 +863,11 @@ function SectionFields({
       return (
         <>
           <Field
-            field="language"
             placeholder="Language (e.g. python)"
             value={section.language ?? ""}
             onChange={(value) => onPatch({ language: value })}
           />
           <Field
-            field="content"
             placeholder="Paste code..."
             multiline
             isCode
@@ -870,7 +880,6 @@ function SectionFields({
     case "bullets":
       return (
         <Field
-          field="items"
           placeholder="One bullet per line"
           multiline
           value={(section.items ?? []).join("\n")}
@@ -884,13 +893,11 @@ function SectionFields({
       return (
         <>
           <Field
-            field="headers"
             placeholder="Headers, comma separated"
             value={(section.headers ?? []).join(", ")}
             onChange={(value) => onPatch({ headers: value.split(",").map((cell) => cell.trim()) })}
           />
           <Field
-            field="rows"
             placeholder="One row per line, cells split by |"
             multiline
             value={(section.rows ?? []).map((row) => row.join(" | ")).join("\n")}
@@ -910,19 +917,16 @@ function SectionFields({
       return (
         <>
           <Field
-            field="videoId"
             placeholder="YouTube video ID"
             value={section.videoId ?? ""}
             onChange={(value) => onPatch({ videoId: value })}
           />
           <Field
-            field="videoTitle"
             placeholder="Video title"
             value={section.videoTitle ?? ""}
             onChange={(value) => onPatch({ videoTitle: value })}
           />
           <Field
-            field="description"
             placeholder="Description"
             value={section.description ?? ""}
             onChange={(value) => onPatch({ description: value })}
@@ -933,7 +937,6 @@ function SectionFields({
     case "links":
       return (
         <Field
-          field="links"
           placeholder="One per line: text | url | description"
           multiline
           value={(section.links ?? [])
@@ -961,13 +964,11 @@ function SectionFields({
       return (
         <>
           <Field
-            field="imageUrl"
             placeholder="Image URL"
             value={section.imageUrl ?? ""}
             onChange={(value) => onPatch({ imageUrl: value })}
           />
           <Field
-            field="description"
             placeholder="Caption / description"
             value={section.description ?? ""}
             onChange={(value) => onPatch({ description: value })}
@@ -978,7 +979,6 @@ function SectionFields({
     case "flowchart":
       return (
         <Field
-          field="steps"
           placeholder="Steps as JSON"
           multiline
           isCode
@@ -1016,7 +1016,6 @@ function SectionFields({
             </button>
           </div>
           <Field
-            field="caption"
             placeholder="Diagram caption (optional)"
             value={section.caption ?? section.description ?? ""}
             onChange={(value) => onPatch({ caption: value, description: value })}

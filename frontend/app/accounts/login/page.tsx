@@ -14,7 +14,16 @@ export const metadata: Metadata = {
   title: "Log in — BlogerMenia",
 };
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  // `?error=social` is how `/api/auth/social/handoff` reports a handoff code
+  // that had already been redeemed or had expired. Without this the failure is
+  // an unexplained bounce back to this page.
+  const socialFailed = (await searchParams).error === "social";
+
   return (
     <AuthShell
       footer={
@@ -33,6 +42,14 @@ export default function LoginPage() {
           Log in to write, bookmark, and follow your favorite authors.
         </p>
       </div>
+
+      {socialFailed && (
+        <div className="mb-5 p-3.5 bg-red-50 border border-red-200 rounded-xl">
+          <p className="text-sm text-red-600 font-medium">
+            That LinkedIn sign-in link had already been used or expired. Please try again.
+          </p>
+        </div>
+      )}
 
       <LoginForm />
 

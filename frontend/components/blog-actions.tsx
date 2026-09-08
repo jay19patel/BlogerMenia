@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { Edit01, Trash01, DownloadCloud02, HeartRounded, Bookmark } from "@untitledui/icons";
 
 import { LinkedInIcon } from "@/components/icons";
@@ -11,16 +11,6 @@ import { urls } from "@/lib/urls";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { Button } from "@/components/base/buttons/button";
 import { Tooltip } from "@/components/base/tooltip/tooltip";
-
-/** Shown in place of the download icon while the print view is being opened. */
-function PdfSpinner() {
-  return (
-    <svg className="animate-spin" width="20" height="20" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-    </svg>
-  );
-}
 
 export function BlogActions({
   blogId,
@@ -41,7 +31,6 @@ export function BlogActions({
 }) {
   const { user, isLiked, isSaved, toggleLike, toggleSave, likeCountFor } = useSession();
   const { addMessage } = useMessages();
-  const [generatingPdf, setGeneratingPdf] = useState(false);
   const [isSharing, startSharing] = useTransition();
 
   /** Queues the share on the server and reports what actually happened. */
@@ -66,22 +55,22 @@ export function BlogActions({
   const liked = isLiked(blogId);
   const saved = isSaved(blogId);
 
-  const downloadPdf = () => {
-    setGeneratingPdf(true);
-    window.setTimeout(() => {
-      window.open(urls.blogPdf(slug), "_blank", "noopener,noreferrer");
-      setGeneratingPdf(false);
-    }, 600);
-  };
-
+  /**
+   * A plain link to the server-rendered PDF — the same file the LinkedIn share
+   * attaches, so this is how an author checks what their network will see.
+   * It used to open a print-styled page and trigger `window.print()` behind a
+   * 600ms fake spinner; there is a real file to fetch now, and the browser's
+   * own loading indicator is honest about how long it takes.
+   */
   const pdfButton = (
     <ButtonUtility
       size="sm"
       color="tertiary"
-      tooltip={generatingPdf ? "Generating PDF..." : "Download PDF"}
-      icon={generatingPdf ? <PdfSpinner /> : DownloadCloud02}
-      onClick={downloadPdf}
-      isDisabled={generatingPdf}
+      tooltip="View PDF"
+      icon={DownloadCloud02}
+      href={urls.blogPdf(slug)}
+      target="_blank"
+      rel="noopener noreferrer"
     />
   );
 

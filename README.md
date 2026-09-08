@@ -90,7 +90,7 @@ graph TD
 ## ⚙️ Backend System (Django REST Framework)
 
 **Path:** `/backend`  
-**Tech Stack:** Django 6.x, Python 3.13, Celery, Redis, Milvus Lite, LangChain, Google Generative AI.
+**Tech Stack:** Django 6.x, Python 3.13, Celery, Redis, Milvus Lite, LangChain, Google Generative AI, ReportLab.
 
 ### How It Works
 - **API Layer:** Exposes strict RESTful endpoints (`/api/v1/`) for blogs, categories, playlists, and user profiles.
@@ -98,6 +98,36 @@ graph TD
 - **Database:** Uses SQLite (with WAL mode enabled) for relational data mapping (Users, Blogs, Playlists).
 - **Background Tasks (Celery):** When a blog is saved or updated, Django signals queue asynchronous tasks on commit, so the web server never blocks on Gemini. Dispatch is guarded: if Redis is unreachable the save still succeeds and the periodic sweep picks the work up.
 - **Structure & conventions:** See [`backend/backend.md`](backend/backend.md) — layer responsibilities, the `api.py` naming rule, and the handful of DRF behaviours that are easy to get wrong.
+
+---
+
+## 📄 PDF export & the LinkedIn document share
+
+A post renders to a real PDF server-side, built from its structured sections by
+ReportLab (`blog/services/pdf_service.py`). There is exactly one such file per
+revision and two consumers of it:
+
+- `GET /api/v1/blogs/<slug>/pdf/` — what the "View PDF" button on the post opens,
+  through the Next.js BFF at `/api/blogs/<slug>/pdf/`. Drafts are visible to
+  their author only, on the same `visible_blogs` queryset the detail view uses.
+- The LinkedIn share, which uploads those same bytes through LinkedIn's
+  Documents API so the post appears in the feed as a readable carousel rather
+  than a bare link.
+
+The render is memoised on the post's `updated_at`, so previewing a PDF and then
+sharing it costs one render, and an edit invalidates the old one by itself.
+
+The commentary beside the document is short on purpose — LinkedIn folds anything
+long behind "…see more". It carries the title, one or two sentences from the
+excerpt (cut on a word boundary), the canonical URL, and up to five of the post's
+tags as hashtags, normalised to characters LinkedIn will actually link. The URL
+sits in the text because a post can carry a document *or* a link preview, never
+both, and LinkedIn auto-links a URL it finds in the words.
+
+Every step of the attachment can fail without costing the share: a failed render
+or upload falls back to a text post, and a post LinkedIn rejects *with* a
+document is retried once without it. Only a text post LinkedIn refuses is raised
+for `RETRY_POLICY` to handle. See `accounts/services/linkedin_share.py`.
 
 ---
 

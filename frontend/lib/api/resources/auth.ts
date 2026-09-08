@@ -23,3 +23,17 @@ export async function refreshAccessToken(refresh: string) {
 export async function register(payload: { email: string; password1: string; password2: string }) {
   return request(tokenPairSchema, { path: endpoints.register(), method: "POST", body: payload });
 }
+
+/**
+ * Redeem the single-use code the LinkedIn callback redirects with.
+ *
+ * Django owns the OAuth dance and finishes it holding a session; this is how
+ * that identity becomes the token pair this app actually authenticates with.
+ */
+export async function exchangeSocialHandoffCode(code: string) {
+  return request(tokenPairSchema, {
+    path: endpoints.socialHandoffExchange(),
+    method: "POST",
+    body: { code },
+  });
+}

@@ -1,131 +1,911 @@
 {
-  "title": "The Ultimate Guide to Modern Web Architecture",
-  "introduction": "Welcome to the most comprehensive guide on modern web architecture. In this deep dive, we will explore everything from frontend performance optimization to backend distributed systems, ensuring you have a complete picture of how scalable applications are built today.",
-  "conclusion": "Building modern web applications requires a solid understanding of both frontend and backend paradigms. By combining efficient data structures, distributed caching, and responsive design, you can build systems that scale gracefully to millions of users.",
+  "title": "Inside BlogerMenia: How This Platform Actually Works",
+  "subtitle": "A full tour of the system you are reading this on — two apps, one contract, and an AI search index that keeps itself honest.",
+  "introduction": "Most \"our architecture\" posts stop at a box diagram. This one goes all the way down. BlogerMenia is a headless blogging platform: a Next.js app owns everything a reader or writer sees, a Django REST Framework API owns the data, the identity and the AI, and the two only ever meet over HTTP. That split sounds simple until you ask the awkward questions — who holds the tokens, what happens when Gemini is down, how does a post get into a vector index, and who pays for it when someone hammers the search box. This post answers all of them with the real code and the real reasoning, including the bugs that shaped each decision.",
+  "conclusion": "Nothing in this system is clever for its own sake. Every rule in it — the API client that is the only file allowed to call Django, the selector that must change whenever a serializer does, the content hash that stops a re-save from paying for an embedding twice, the single-use code that keeps a JWT out of the browser's history — exists because the alternative failed in a way that was hard to see. That is the through-line: the architecture is not optimised for looking impressive, it is optimised for making failures visible. A post that never reached the search index says so in the admin. A search outage returns 503 instead of an empty list. A save that raced another author's save gets a 409 instead of quietly winning. Build for the day it breaks, and the day it works takes care of itself.",
   "sections": [
     {
       "type": "text",
-      "title": "1. Understanding the Fundamentals",
-      "content": "At the core of any great web application is a strong foundation. This means understanding HTTP protocols, RESTful API design, and the basics of server-client communication. Before we dive into complex state management or container orchestration, we must master these basics."
-    },
-    {
-      "type": "note",
-      "content": "Pro Tip: Always design your APIs to be stateless. This makes horizontal scaling significantly easier down the road and reduces the complexity of managing user sessions across multiple load-balanced servers."
-    },
-    {
-      "type": "image",
-      "title": "System Architecture Overview",
-      "description": "A high-level view of a modern distributed system.",
-      "imageUrl": "https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80"
-    },
-    {
-      "type": "bullets",
-      "title": "Key Principles of Scalability",
-      "items": [
-        "Decouple components using message queues (e.g., RabbitMQ, Kafka).",
-        "Implement aggressive caching strategies at multiple layers (CDN, API, Database).",
-        "Use asynchronous processing for heavy computational tasks.",
-        "Design for failure: assume any component can fail at any time."
-      ]
-    },
-    {
-      "type": "table",
-      "title": "Comparison of Popular Databases",
-      "headers": ["Database", "Type", "Best For", "Scaling Strategy"],
-      "rows": [
-        ["PostgreSQL", "Relational (SQL)", "Complex queries, ACID compliance", "Vertical / Read Replicas"],
-        ["MongoDB", "Document (NoSQL)", "Rapid prototyping, unstructured data", "Sharding"],
-        ["Redis", "Key-Value / In-Memory", "Caching, session storage, pub/sub", "Clustering"],
-        ["Cassandra", "Wide-Column", "High write throughput, time-series", "Horizontal (Ring Topology)"]
-      ]
-    },
-    {
-      "type": "code",
-      "title": "Example: Redis Caching Implementation",
-      "language": "python",
-      "content": "import redis\nimport json\n\n# Initialize Redis connection\ncache = redis.Redis(host='localhost', port=6379, db=0)\n\ndef get_user_profile(user_id):\n    # Try to get from cache first\n    cached_profile = cache.get(f'user:{user_id}')\n    if cached_profile:\n        return json.loads(cached_profile)\n    \n    # If not in cache, fetch from database (mocked here)\n    profile = fetch_from_db(user_id)\n    \n    # Store in cache for 1 hour\n    cache.setex(f'user:{user_id}', 3600, json.dumps(profile))\n    return profile"
+      "title": "1. The shape of the system",
+      "content": "BlogerMenia runs as two independent services.\n\nThe Next.js app is the entire user-facing surface: routing, rendering, SEO, forms, the editor, the session. It is deployed on its own and can be restarted without touching the data.\n\nThe Django app is an API and nothing else. It renders no blog pages, ships no blog templates, and has no context processors. `Blog.get_absolute_url()` returns a URL on the frontend, built from the `FRONTEND_URL` setting — reversing a Django route there would raise `NoReverseMatch`, because no such route exists.\n\nThere is exactly one exception, and it is deliberate: `/accounts/` is django-allauth's own view tree, kept alive because the LinkedIn OAuth redirect dance has to terminate on Django. Next.js proxies to it. Section 6 explains how identity crosses back."
     },
     {
       "type": "flowchart",
-      "title": "Data Flow: User Authentication",
+      "title": "The path of a single page view",
       "steps": [
         {
-          "title": "Client Request",
-          "description": "User submits login credentials via HTTPS.",
-          "branches": []
-        },
-        {
-          "title": "API Gateway",
-          "description": "Routes the request to the Auth Service.",
+          "title": "Browser requests /blogs/some-post/",
+          "description": "A normal navigation. The browser never talks to Django directly — not once, anywhere in this system.",
           "branches": [
             {
-              "title": "Rate Limiting",
-              "description": "Checks if the IP has exceeded login attempts."
+              "title": "proxy.ts",
+              "description": "An optimistic cookie check that bounces signed-out visitors away from /blogs/create/ and the edit routes before a wasted render."
             }
           ]
         },
         {
-          "title": "Auth Service",
-          "description": "Validates credentials against the database.",
+          "title": "Next.js Server Component renders",
+          "description": "The page reads the httpOnly access cookie, then asks the data layer for the post.",
           "branches": [
             {
-              "title": "Password Hashing",
-              "description": "Compares bcrypt hash."
-            },
-            {
-              "title": "JWT Generation",
-              "description": "Creates a signed access token and refresh token."
+              "title": "getViewer()",
+              "description": "Wrapped in React's cache(), so a page that asks who the viewer is five times calls GET /auth/me/ once."
             }
           ]
         },
         {
-          "title": "Response",
-          "description": "Returns tokens to the client, stored securely in HTTP-only cookies.",
+          "title": "lib/api/client.ts issues the fetch",
+          "description": "The only module in the codebase that calls Django. Attaches Authorization: Bearer, applies a 10s AbortSignal.timeout, validates the response against a Zod schema.",
+          "branches": [
+            {
+              "title": "Shape mismatch",
+              "description": "A serializer that drifted from the contract throws a 502 here — not blank text three components deep."
+            }
+          ]
+        },
+        {
+          "title": "Django: GET /api/v1/blogs/<slug>/",
+          "description": "JWT authentication, object permission, a queryset from a selector, a serializer. Registers the read with an F() update.",
+          "branches": [
+            {
+              "title": "IsAuthorOrReadOnly",
+              "description": "Object-level, beside IsAuthenticatedOrReadOnly. Without it any signed-in account could edit any post."
+            }
+          ]
+        },
+        {
+          "title": "HTML streams back to the browser",
+          "description": "Fully server-rendered, so the crawler and the reader see the same thing. The client bundle carries no data layer at all.",
           "branches": []
         }
       ]
     },
     {
-      "type": "image",
-      "title": "Frontend Component Tree",
-      "description": "React component hierarchy for the dashboard.",
-      "imageUrl": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=1200&q=80"
-    },
-    {
       "type": "table",
-      "title": "API Response Times",
-      "headers": ["Endpoint", "P50 Latency", "P99 Latency", "Throughput"],
+      "title": "The stack, and why each piece is there",
+      "headers": [
+        "Layer",
+        "Choice",
+        "Why this one"
+      ],
       "rows": [
-        ["GET /api/users", "45ms", "120ms", "5000 req/sec"],
-        ["POST /api/orders", "85ms", "250ms", "1200 req/sec"],
-        ["GET /api/analytics", "210ms", "850ms", "300 req/sec"]
+        [
+          "Frontend framework",
+          "Next.js 16 (App Router), React 19",
+          "Server Components mean tokens and the data layer never reach the browser"
+        ],
+        [
+          "Language",
+          "TypeScript 6, strict",
+          "The API contract is typed end to end; a drifting serializer is a compile-or-runtime error, not a blank"
+        ],
+        [
+          "Styling",
+          "Tailwind CSS 4",
+          "Utility classes with no separate design-system build step"
+        ],
+        [
+          "Client state",
+          "TanStack React Query 5",
+          "Only for the two things that are genuinely client state: the session and the search dropdown"
+        ],
+        [
+          "Validation",
+          "Zod 4",
+          "One schema module validates every API response at the boundary"
+        ],
+        [
+          "Backend framework",
+          "Django 6.x + DRF 3.18",
+          "API only. Batteries for auth, admin, migrations and signals"
+        ],
+        [
+          "Auth",
+          "SimpleJWT + django-allauth",
+          "Stateless bearer tokens for the app, allauth for the LinkedIn OAuth dance"
+        ],
+        [
+          "API contract",
+          "drf-spectacular",
+          "OpenAPI generated from the serializers, served at /api/schema/"
+        ],
+        [
+          "Queue",
+          "Celery 5 on Redis",
+          "Every Gemini and LinkedIn call is network-bound and belongs off the request path"
+        ],
+        [
+          "Vector store",
+          "Milvus Lite",
+          "A file, not a server. Real ANN search without another daemon to operate"
+        ],
+        [
+          "Embeddings",
+          "Gemini gemini-embedding-001 via LangChain",
+          "Asymmetric retrieval: instructed queries, plain documents"
+        ],
+        [
+          "Database",
+          "SQLite in WAL mode",
+          "Honest about the current scale. Postgres when read volume demands it, not before"
+        ],
+        [
+          "Static files",
+          "WhiteNoise",
+          "Content-hashed names, gzip/brotli at collectstatic time, no separate CDN to configure"
+        ]
       ]
     },
     {
-      "type": "youtube",
-      "title": "Deep Dive: System Design Interview",
-      "videoId": "bBTPPsqqFUU",
-      "videoTitle": "System Design: Designing a distributed cache",
-      "description": "Watch this excellent breakdown of how distributed caching systems like Redis or Memcached are designed at scale."
+      "type": "text",
+      "title": "2. The frontend is a BFF, not a client",
+      "content": "The most consequential frontend decision: the browser has no data layer. It cannot call Django, and it does not know Django's address.\n\nEverything flows through the Next.js server. Server Components fetch directly. Anything the browser needs to trigger — logging in, posting a contact form, running a search — goes to a route handler under `app/api/`, which does the real call server-side. That is the Backend-For-Frontend pattern, and three properties fall out of it for free:\n\nTokens live in httpOnly cookies that no script can read, ours or an injected one. CORS needs no configuration at all, because there is no cross-origin request to permit — `CORS_ALLOW_CREDENTIALS` is `False` and stays that way. And the client bundle ships zero API-calling code, so nothing about the backend's surface is discoverable from the browser."
+    },
+    {
+      "type": "table",
+      "title": "Where things live in the frontend",
+      "headers": [
+        "Path",
+        "Runs on",
+        "Responsibility"
+      ],
+      "rows": [
+        [
+          "app/**/page.tsx",
+          "Server",
+          "Pages. Fetch their own data, no loading spinners for first paint"
+        ],
+        [
+          "app/api/**/route.ts",
+          "Server",
+          "The BFF. The browser's only endpoints — login, session, search, contact, social handoff"
+        ],
+        [
+          "lib/api/client.ts",
+          "Server",
+          "The single gateway to Django. Timeout, bearer token, Zod validation"
+        ],
+        [
+          "lib/api/endpoints.ts",
+          "Server",
+          "Every path in one table, so a renamed DRF route is a one-line edit"
+        ],
+        [
+          "lib/api/resources/*",
+          "Server",
+          "One module per resource — auth, blogs, playlists, users, misc"
+        ],
+        [
+          "lib/auth/*",
+          "Server",
+          "Cookie names and options, session reads, route guards"
+        ],
+        [
+          "lib/query/*",
+          "Client",
+          "React Query provider, keys and the browser's thin fetch wrapper"
+        ],
+        [
+          "components/*",
+          "Mixed",
+          "Presentation. Server by default; \"use client\" only where interaction demands it"
+        ],
+        [
+          "proxy.ts",
+          "Edge",
+          "Optimistic redirect for protected routes. The page itself is the authority"
+        ]
+      ]
+    },
+    {
+      "type": "code",
+      "title": "The one file allowed to talk to Django",
+      "language": "typescript",
+      "content": "import \"server-only\";\n\n/* ===========================================================================\n *  THE ONLY FILE THAT TALKS TO DJANGO\n *\n *  Everything above it — resource modules, React Query hooks, every page and\n *  component — is written against this client and never touches `fetch`.\n * ======================================================================== */\n\nexport async function request<T>(schema: ZodType<T>, options: RequestOptions): Promise<T> {\n  const payload = await httpRequest(options);\n\n  const parsed = schema.safeParse(payload);\n  if (!parsed.success) {\n    const issue = parsed.error.issues[0];\n    // A serializer that drifted from the contract fails loudly *here*,\n    // rather than rendering blanks three components deep.\n    throw new ApiError(\n      502,\n      `${options.method ?? \"GET\"} ${options.path} returned an unexpected shape: ` +\n        `${issue.path.join(\".\") || \"(root)\"} — ${issue.message}`,\n    );\n  }\n  return parsed.data;\n}"
+    },
+    {
+      "type": "note",
+      "content": "The `import \"server-only\"` line at the top of that file is load-bearing. It turns \"a client component must never import the data layer\" from a code-review convention into a build error. The same guard sits on the config module, the cookie module and the session module."
     },
     {
       "type": "text",
-      "title": "Final Thoughts",
-      "content": "As we've seen through the tables, code snippets, and architecture diagrams, building a robust system is a multi-disciplinary effort. It requires careful planning of the data models, aggressive caching, and a deep understanding of infrastructure."
+      "title": "3. Authentication: bearer tokens the browser cannot see",
+      "content": "Django issues a SimpleJWT access/refresh pair. Login is `POST /api/v1/auth/login/` with an email and password — `ACCOUNT_LOGIN_METHODS` is `{\"email\"}`, so email is the credential, not a username.\n\nWhat is unusual is where the tokens go. Not `localStorage`, not a JS-readable cookie, not a header the client manages. The Next.js route handler receives them and writes two httpOnly cookies, `bm_access` and `bm_refresh`, both `SameSite=Lax` and `Secure` in production. `SameSite=Lax` is what protects the mutating route handlers from CSRF: the browser will not attach those cookies to a cross-site POST.\n\nServer Components cannot set cookies, which creates one wrinkle worth naming. When the access cookie has lapsed, `getViewer()` simply reads as signed-out during that render — it cannot silently refresh. `POST /api/auth/session` is the route that does the refresh and writes the new cookie, and the client calls it on mount."
+    },
+    {
+      "type": "table",
+      "title": "Token and cookie lifetimes",
+      "headers": [
+        "Thing",
+        "Lifetime",
+        "Notes"
+      ],
+      "rows": [
+        [
+          "JWT access token",
+          "60 minutes",
+          "SIMPLE_JWT.ACCESS_TOKEN_LIFETIME"
+        ],
+        [
+          "JWT refresh token",
+          "7 days",
+          "No rotation, no blacklist — deliberately simple for now"
+        ],
+        [
+          "bm_access cookie",
+          "15 minutes",
+          "httpOnly, SameSite=Lax, Secure in prod"
+        ],
+        [
+          "bm_refresh cookie",
+          "7 days",
+          "Same options, longer maxAge. Only ever read server-side"
+        ],
+        [
+          "Social handoff code",
+          "60 seconds",
+          "Single use, held in the cache. See section 6"
+        ]
+      ]
+    },
+    {
+      "type": "flowchart",
+      "title": "Login, and what happens when the access token lapses",
+      "steps": [
+        {
+          "title": "POST /api/auth/login (Next.js)",
+          "description": "The browser's endpoint. It never sees Django's login URL.",
+          "branches": []
+        },
+        {
+          "title": "POST /api/v1/auth/login/ (Django)",
+          "description": "SimpleJWT validates the email and password and returns an access/refresh pair.",
+          "branches": [
+            {
+              "title": "Throttle scope: login",
+              "description": "10 requests a minute. This is the endpoint credential-stuffing aims at."
+            }
+          ]
+        },
+        {
+          "title": "Route handler sets two httpOnly cookies",
+          "description": "The tokens stop at the Next.js server. Nothing in the browser can read them.",
+          "branches": []
+        },
+        {
+          "title": "Later: a render finds the access cookie gone",
+          "description": "getViewer() returns null. The page renders as signed-out for that one pass — a Server Component cannot write a cookie.",
+          "branches": []
+        },
+        {
+          "title": "Client calls POST /api/auth/session on mount",
+          "description": "The refresh cookie is exchanged for a fresh access token, the cookie is rewritten, and React Query updates the session.",
+          "branches": [
+            {
+              "title": "Refresh also expired",
+              "description": "Both cookies are cleared with maxAge: 0 and the viewer is genuinely signed out."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "title": "4. The backend, in four layers",
+      "content": "Every Django app here has the same shape, and the shape is enforced rather than suggested. There is one naming rule that catches people first: **DRF views live in `api.py` or an `api/` package — never `views.py`.** These are API endpoints, not Django template views, and the filename should say so.\n\nThere is exactly one documented exception, `linkedin_oidc/views.py`, because django-allauth resolves a provider's OAuth views by importing the literal path `<package>.views.oauth2_login`. Rename the module and social login breaks at import time. The file carries a comment saying so."
+    },
+    {
+      "type": "table",
+      "title": "Layer responsibilities",
+      "headers": [
+        "Layer",
+        "Owns",
+        "Never does"
+      ],
+      "rows": [
+        [
+          "Models",
+          "Invariants, indexes, database constraints",
+          "Copies a save() that a core/ mixin already provides"
+        ],
+        [
+          "Selectors",
+          "Read querysets, with every annotation the serializers read",
+          "Returns Model.objects.all() to a detail view"
+        ],
+        [
+          "Serializers",
+          "Field shapes and validation. Reads annotations, never re-queries",
+          "Runs a query per row in a SerializerMethodField"
+        ],
+        [
+          "Services",
+          "Writes with side effects, and every third-party call",
+          "Nothing — but views must never bypass it to reach an external API"
+        ],
+        [
+          "API views",
+          "A selector, a serializer, permissions, a throttle scope",
+          "Anything long enough to deserve a name"
+        ],
+        [
+          "Tasks",
+          "Load a row, call a service, record the outcome",
+          "Its own bespoke retry policy"
+        ]
+      ]
+    },
+    {
+      "type": "code",
+      "title": "The selector/serializer contract that keeps list endpoints fast",
+      "language": "python",
+      "content": "# blog/selectors.py — the read queryset annotates what the serializer will read\nqueryset.annotate(like_count_annotated=Count('likes', distinct=True))\n\n\n# blog/serializers/ — reads the annotation; falls back only off the hot path\ndef get_like_count(self, obj) -> int:\n    annotated = getattr(obj, 'like_count_annotated', None)\n    return annotated if annotated is not None else obj.likes.count()\n\n# A SerializerMethodField that queries unconditionally is an N+1 per row.\n# The serializer and the selector are changed together, or not at all."
+    },
+    {
+      "type": "note",
+      "content": "Pro tip that cost this project real bugs: `IsAuthenticatedOrReadOnly` only asks whether the caller is signed in — never whether the object is theirs. Every writable detail view needs an object permission beside it: `permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]`. And filter the detail queryset too, because `Model.objects.all()` on a `Retrieve` view publishes drafts to anyone who can guess a slug — and slugs come from titles."
+    },
+    {
+      "type": "text",
+      "title": "5. Concurrent edits get a 409, not a silent overwrite",
+      "content": "Two people editing the same post is not a hypothetical on a platform with playlists and co-authors. The default REST behaviour — last write wins — throws away one person's work with no trace.\n\n`OptimisticLockMixin` fixes that without a lock table. The client echoes back the `updated_at` it last saw as `expected_updated_at`. If the stored value has moved on, someone saved in between and this write would discard their edit, so it raises `409 Conflict` with a message a human can act on. Clients that omit the field keep the old behaviour, which makes the whole thing backwards compatible."
+    },
+    {
+      "type": "code",
+      "title": "core/mixins.py",
+      "language": "python",
+      "content": "class OptimisticLockMixin:\n    \"\"\"Refuse a write that was composed against a stale copy of the object.\"\"\"\n\n    lock_field = \"updated_at\"\n\n    def perform_update(self, serializer):\n        expected = self.request.data.get(\"expected_updated_at\")\n        if expected:\n            current = getattr(serializer.instance, self.lock_field, None)\n            if current is not None and _to_iso(current) != _normalise(expected):\n                raise Conflict()\n        serializer.save()"
+    },
+    {
+      "type": "text",
+      "title": "6. Social login: carrying identity across a boundary",
+      "content": "This is the trickiest flow in the system, and it is worth walking through slowly.\n\nThe LinkedIn OAuth dance has to run against Django — allauth owns the redirect URLs and LinkedIn has one registered callback. But it *ends* in a Django session, and the Next.js app authenticates with JWT cookies it sets itself. Something has to carry the identity across that boundary.\n\nThe obvious approach is to put the token pair in the callback's redirect URL. It works, and it also writes both tokens into the browser's history, the referrer of the next request, and every proxy log in between.\n\nSo the redirect carries a **single-use code** instead, and the frontend redeems it server-to-server for the real tokens. The codes live in the cache rather than a table: they are valid for sixty seconds and there is nothing worth keeping once redeemed."
+    },
+    {
+      "type": "code",
+      "title": "accounts/services/social_handoff.py",
+      "language": "python",
+      "content": "TTL_SECONDS = 60          # survives exactly one browser round trip\n_PREFIX = \"social-handoff:\"\n\n\ndef issue_code(user) -> str:\n    code = secrets.token_urlsafe(32)\n    cache.set(f\"{_PREFIX}{code}\", user.pk, TTL_SECONDS)\n    return code\n\n\ndef redeem_code(code: str):\n    \"\"\"The user `code` was issued for, or None. Single use: the code dies here.\n\n    Deleting *before* the user lookup means a code cannot be replayed even if\n    two requests arrive at once.\n    \"\"\"\n    key = f\"{_PREFIX}{code}\"\n    user_pk = cache.get(key)\n    if user_pk is None:\n        return None\n    cache.delete(key)\n    return get_user_model().objects.filter(pk=user_pk, is_active=True).first()"
+    },
+    {
+      "type": "flowchart",
+      "title": "The LinkedIn handoff, end to end",
+      "steps": [
+        {
+          "title": "User clicks \"Continue with LinkedIn\"",
+          "description": "The link points at /accounts/linkedin_oauth2/login/ on the frontend, which next.config.ts rewrites to Django.",
+          "branches": [
+            {
+              "title": "Trailing slashes are load-bearing",
+              "description": "With trailingSlash: true, a destination missing the slash makes Django's APPEND_SLASH 301 back through the same rewrite — an infinite loop."
+            }
+          ]
+        },
+        {
+          "title": "allauth runs the OAuth2 dance",
+          "description": "Scopes: openid, profile, email, w_member_social — the last one is what allows posting on the member's behalf later.",
+          "branches": [
+            {
+              "title": "Email matching",
+              "description": "SOCIALACCOUNT_EMAIL_AUTHENTICATION attaches LinkedIn to the existing account instead of creating a second one. Safe only because LinkedIn's OIDC userinfo returns an email it verified itself."
+            }
+          ]
+        },
+        {
+          "title": "The adapter issues a handoff code",
+          "description": "AccountAdapter.get_login_redirect_url returns FRONTEND_URL/api/auth/social/handoff/?code=…&next=…",
+          "branches": []
+        },
+        {
+          "title": "GET /api/auth/social/handoff (Next.js)",
+          "description": "Redeems the code server-to-server and sets the same two httpOnly cookies that a password login does.",
+          "branches": [
+            {
+              "title": "safeNextPath()",
+              "description": "`next` arrives via a provider redirect, so it is attacker-influenced. Anything not starting with a single / is discarded — otherwise this is an open redirect that arrives carrying a fresh session."
+            },
+            {
+              "title": "Expired or replayed code",
+              "description": "A dead end, not a crash. Back to /accounts/login/?error=social."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "title": "7. Content: posts are structured blocks, not a blob of HTML",
+      "content": "A blog post here is not one rich-text field. `Blog` carries a `sections` JSON column: an ordered list of typed blocks, alongside `introduction`, `conclusion`, `subtitle`, `excerpt` and `tags`.\n\nThat choice pays off in four places at once. The renderer switches on `section.type`, so a code block gets real syntax highlighting and a table gets its own horizontally-scrolling container on a phone. The table of contents is derived from section titles rather than scraped from the DOM. Reading time is computed from the fields — deliberately skipping code blocks, which are skimmed, not read at prose speed. And the search index can build meaningful text out of a post whose legacy `content` field is empty.\n\nThe old single `content` field is still there and still rendered for older posts; `isStructured()` decides which path a given post takes."
+    },
+    {
+      "type": "table",
+      "title": "The section types the editor and renderer support",
+      "headers": [
+        "type",
+        "Key fields",
+        "Renders as"
+      ],
+      "rows": [
+        [
+          "text",
+          "title, content",
+          "Prose with preserved line breaks"
+        ],
+        [
+          "note",
+          "content",
+          "A callout blockquote"
+        ],
+        [
+          "bullets",
+          "title, items[]",
+          "An unordered list"
+        ],
+        [
+          "code",
+          "language, content",
+          "highlight.js block with a copy button"
+        ],
+        [
+          "table",
+          "headers[], rows[][]",
+          "A table in its own overflow-x container"
+        ],
+        [
+          "image",
+          "imageUrl or attachment, description",
+          "A captioned figure"
+        ],
+        [
+          "youtube",
+          "videoId, videoTitle",
+          "A 16:9 responsive embed"
+        ],
+        [
+          "links",
+          "links[{url, text, description}]",
+          "An annotated link list"
+        ],
+        [
+          "flowchart",
+          "steps[{title, description, branches[]}]",
+          "A stepped diagram with sub-branches"
+        ],
+        [
+          "excalidraw",
+          "svgData or imageUrl, caption",
+          "Inline SVG, sanitised on both write and render"
+        ]
+      ]
+    },
+    {
+      "type": "code",
+      "title": "What a post actually looks like on the wire",
+      "language": "json",
+      "content": "{\n  \"title\": \"Inside BlogerMenia\",\n  \"introduction\": \"Most \\\"our architecture\\\" posts stop at a box diagram…\",\n  \"sections\": [\n    { \"type\": \"text\", \"title\": \"The shape of the system\", \"content\": \"Two apps…\" },\n    { \"type\": \"note\", \"content\": \"import \\\"server-only\\\" is load-bearing.\" },\n    {\n      \"type\": \"code\",\n      \"language\": \"python\",\n      \"content\": \"queryset.annotate(like_count_annotated=Count('likes'))\"\n    }\n  ],\n  \"conclusion\": \"Build for the day it breaks…\"\n}"
+    },
+    {
+      "type": "note",
+      "content": "Two traps live in this model. First, DRF stores a multipart JSON string verbatim and treats an absent boolean as `False` — the unchecked-checkbox convention — so `sections` and every flag go through `core.fields.JSONListField` and `core.fields.BooleanField`. Second, author-supplied markup is sanitised on write (`clean_html` for content, `clean_svg` for Excalidraw data) *and* again on render. Neither layer is sufficient alone."
+    },
+    {
+      "type": "text",
+      "title": "8. Semantic search: the write path",
+      "content": "Search here matches on meaning, not keywords. Blogs, playlists and author profiles are all embedded into the same Milvus collection under stable document ids like `blog:12`.\n\nEmbedding is a paid, network-bound call to Gemini, so it never happens inside a request. A `post_save` signal schedules the work on `transaction.on_commit` — the author's save returns immediately, and the worker only ever sees committed rows.\n\nThe signal also diffs `update_fields` against a set of indexed fields before scheduling anything. That check exists because `SIMPLE_JWT.UPDATE_LAST_LOGIN` writes `last_login` on every token issue, which fires `User.post_save`: the system used to re-embed a full profile every single time somebody signed in."
+    },
+    {
+      "type": "flowchart",
+      "title": "From save to searchable",
+      "steps": [
+        {
+          "title": "Author saves a post",
+          "description": "The API returns as soon as the row is committed. Nothing waits on Gemini.",
+          "branches": []
+        },
+        {
+          "title": "post_save → transaction.on_commit → enqueue()",
+          "description": "Never a bare .delay(). An exception inside an on_commit hook fires after the row is committed — the author would get a 500 for a save that succeeded, retry, and create a duplicate.",
+          "branches": [
+            {
+              "title": "Broker unreachable",
+              "description": "enqueue() logs and returns False. The save still succeeds; the six-hourly sweep picks the work up."
+            },
+            {
+              "title": "Untouched fields",
+              "description": "A save that changed only read_count schedules nothing at all."
+            }
+          ]
+        },
+        {
+          "title": "Worker: index_object(kind, pk)",
+          "description": "Builds the text — title, category, subtitle, intro, every section, conclusion — capped at 8,000 characters.",
+          "branches": [
+            {
+              "title": "Content hash check",
+              "description": "If sha256(text) matches embedding_hash, nothing indexable changed. Skip the billed round trip entirely."
+            }
+          ]
+        },
+        {
+          "title": "Gemini returns a vector; Milvus upserts it",
+          "description": "upsert is atomic. The old delete-then-add left a window where the object was missing from the index if the worker died between the two.",
+          "branches": []
+        },
+        {
+          "title": "The outcome is recorded on the post",
+          "description": "embedding_status, embedding_error, embedded_at and embedding_hash — via .update(), so it never re-fires the signal that scheduled it.",
+          "branches": [
+            {
+              "title": "Visible in the admin",
+              "description": "A post missing from search is diagnosable rather than silently absent. That is the whole point of these columns."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "code",
+      "title": "search/tasks.py — the task that decides whether to spend money",
+      "language": "python",
+      "content": "@shared_task(bind=True, **RETRY_POLICY)\ndef index_object(self, kind, pk):\n    \"\"\"(Re)build the embedding for a single object.\"\"\"\n    obj = _model_for(kind).objects.filter(pk=pk).first()\n    if obj is None:\n        logger.info(\"index_object: %s:%s no longer exists, skipping\", kind, pk)\n        return\n\n    is_blog = kind == C.KIND_BLOG\n\n    # A save that touched nothing the embedding is built from does not need a\n    # (billed) round trip to Gemini.\n    if is_blog and unchanged_since_last_index(obj):\n        logger.info(\"index_object: blog:%s text unchanged, skipping re-embed\", pk)\n        return\n\n    try:\n        digest = SearchService.index_object(kind, obj)\n    except PermanentError as exc:\n        # Will fail identically every time — record it and stop, rather than\n        # spending the full retry budget on it.\n        if is_blog:\n            record_failure(pk, exc)\n        return\n    except Exception as exc:\n        if is_blog:\n            record_failure(pk, exc)\n        raise  # TransientError — the retry policy takes it from here\n\n    if is_blog:\n        record_success(pk, digest)"
+    },
+    {
+      "type": "text",
+      "title": "9. Semantic search: the read path",
+      "content": "A reader types in the header search box. The client debounces, hits `GET /api/search?q=…` on the BFF, which calls Django's `/api/v1/search/`.\n\nDjango embeds the query — with an instruction prefix, because `gemini-embedding-001` is trained for asymmetric retrieval, where the *query* carries an instruction and indexed documents stay plain. Milvus then finds the nearest vectors under a **cosine** metric. That metric matters: the default L2 made the `min_score` threshold meaningless, since Gemini's embeddings are normalised and cosine is the only metric those relevance scores are valid for.\n\nThe matches come back as `(score, kind, object_id)` tuples, and Django loads the real model instances with `in_bulk()` to render them. `is_published` is re-checked at read time, not just at index time — a post unpublished after indexing would otherwise stay searchable until the next sweep."
+    },
+    {
+      "type": "code",
+      "title": "The instructed query embedding",
+      "language": "python",
+      "content": "# gemini-embedding-001 is trained for asymmetric retrieval: the *query* gets an\n# instruction prefix, while indexed *documents* stay plain. This markedly\n# improves relevance, especially for short queries.\n_QUERY_INSTRUCTION = (\n    \"Instruct: Given a search query, retrieve relevant blog posts, playlists \"\n    \"and author profiles that match it.\\nQuery: \"\n)\n\n\nclass InstructedGeminiEmbeddings(GoogleGenerativeAIEmbeddings):\n    def embed_query(self, text: str) -> List[float]:\n        return super().embed_query(f\"{_QUERY_INSTRUCTION}{text}\")"
+    },
+    {
+      "type": "bullets",
+      "title": "Search is the one read endpoint that costs money — so it is fenced in",
+      "items": [
+        "Queries shorter than 2 characters return an empty list without touching Gemini.",
+        "Results are cached for 5 minutes under a sha256 of the lowercased query — identical searches used to pay for identical embeddings.",
+        "The endpoint is throttled to 30 requests a minute via a dedicated `search` scope.",
+        "Results below a 0.1 relevance score are dropped rather than padding the list with noise.",
+        "A failure returns 503 with a real message. Returning 200 and an empty list — which is what this used to do — makes an outage indistinguishable from \"no matches\", so nobody finds out search has been broken for a week."
+      ]
+    },
+    {
+      "type": "text",
+      "title": "10. Background work, and the one retry policy",
+      "content": "Every third-party call in the system runs on Celery: embedding, Gemini excerpt and tag generation, and LinkedIn shares.\n\nThere used to be three different retry policies — five retries with backoff in `search`, three in `blog`, a hand-rolled flat 60-second `self.retry` in `accounts`, and none at all on the delete path. Worse, all of them retried bare `Exception`, so a task that could never succeed — a post with no text to embed — still burned its entire retry budget against a paid API.\n\nNow there is one policy in `core/tasks.py`, and two exception types that carry the decision: `TransientError` for something worth trying again, `PermanentError` for something that will fail identically forever. A `classify()` helper maps the untyped garbage that Gemini and Milvus raise onto those two, by looking for markers like `timeout`, `rate limit`, `resource_exhausted` and `503`."
+    },
+    {
+      "type": "code",
+      "title": "core/tasks.py",
+      "language": "python",
+      "content": "class TransientError(Exception):\n    \"\"\"Upstream was unavailable, rate-limited, or timed out. Retry.\"\"\"\n\n\nclass PermanentError(Exception):\n    \"\"\"The input cannot produce a result. Do not retry.\"\"\"\n\n\n# Spread as **RETRY_POLICY into @shared_task.\nRETRY_POLICY = {\n    \"autoretry_for\": (TransientError,),\n    \"retry_backoff\": 2,          # 2s, 4s, 8s, ...\n    \"retry_backoff_max\": 300,\n    \"retry_jitter\": True,        # avoid a thundering herd after an outage\n    \"max_retries\": 5,\n}"
+    },
+    {
+      "type": "table",
+      "title": "Celery configuration, and what each line buys",
+      "headers": [
+        "Setting",
+        "Value",
+        "Why"
+      ],
+      "rows": [
+        [
+          "Broker / results / cache",
+          "Redis DB 2 / 3 / 4",
+          "Dedicated DBs so another Celery project on the same box never steals and discards our tasks"
+        ],
+        [
+          "task_acks_late",
+          "True",
+          "A task re-runs if the worker dies mid-flight instead of vanishing"
+        ],
+        [
+          "task_reject_on_worker_lost",
+          "True",
+          "Same guarantee when the process is killed outright"
+        ],
+        [
+          "worker_prefetch_multiplier",
+          "1",
+          "Fair dispatch for slow, uneven embedding jobs"
+        ],
+        [
+          "worker_max_tasks_per_child",
+          "200",
+          "Recycles workers before any slow leak in a client library matters"
+        ],
+        [
+          "accept_content",
+          "[\"json\"]",
+          "Never pickle. A broker with pickle enabled is remote code execution"
+        ],
+        [
+          "task_time_limit / soft",
+          "300s / 240s",
+          "The soft limit lets a task record its own failure before it is killed"
+        ],
+        [
+          "result_expires",
+          "1 hour",
+          "Redis does not slowly fill with results nobody reads"
+        ]
+      ]
+    },
+    {
+      "type": "bullets",
+      "title": "Two scheduled jobs, both there to clean up after failure",
+      "items": [
+        "**Every 6 hours — reindex pending embeddings.** Re-embeds anything whose `embedding_status` is not `indexed`: a task that failed, or a save that happened while the broker was down. It reads the ids already in Milvus first, so the sweep is incremental. That check used to be `hasattr(store, 'get')` — a ChromaDB API. Milvus has no `get`, so it was always False, the \"only index what's missing\" path silently became a full rebuild, and every sweep re-embedded the entire corpus against a paid API.",
+        "**Every 24 hours — prune orphaned embeddings.** Deletes vectors whose backing row is gone, covering deletes that happened while Milvus was unreachable. Necessary because result resolution silently drops ids it cannot load, which makes an orphan invisible rather than error-producing."
+      ]
+    },
+    {
+      "type": "text",
+      "title": "11. Caching that cannot go stale",
+      "content": "The category list is read on every page render and carries per-category post counts. A TTL is the wrong tool here: too long and a newly created category takes an hour to appear, too short and it may as well be uncached.\n\nSo each cached family carries a version counter. Keys are derived from it, and a content save bumps the version — which orphans every key in that family at once. No invalidation bookkeeping, and no window where a reader sees last hour's data."
+    },
+    {
+      "type": "code",
+      "title": "core/cache.py",
+      "language": "python",
+      "content": "def cache_key(family: str, *parts) -> str:\n    suffix = ':'.join(str(part) for part in parts)\n    key = f\"{family}:v{version(family)}\"\n    return f\"{key}:{suffix}\" if suffix else key\n\n\ndef bump(family: str) -> None:\n    \"\"\"Invalidate every key in `family`.\"\"\"\n    try:\n        cache.incr(_version_key(family))\n    except ValueError:\n        # Nothing cached yet, so there is nothing to invalidate.\n        cache.set(_version_key(family), 1, VERSION_TTL)\n\n\n# blog/signals.py — a Blog save changes the counts the category list carries\n@receiver([post_save, post_delete], sender=Category, dispatch_uid=\"bust_categories_on_category\")\ndef category_changed(sender, **kwargs):\n    bump('categories')"
+    },
+    {
+      "type": "table",
+      "title": "Throttle scopes — attached per view, not globally",
+      "headers": [
+        "Scope",
+        "Rate",
+        "Applied to"
+      ],
+      "rows": [
+        [
+          "login",
+          "10/min",
+          "Token obtain and refresh — the credential-stuffing surface"
+        ],
+        [
+          "register",
+          "5/hour",
+          "Sign-up, to blunt automated account creation"
+        ],
+        [
+          "search",
+          "30/min",
+          "Every call spends a Gemini embedding"
+        ],
+        [
+          "contact",
+          "5/hour",
+          "The public contact form"
+        ],
+        [
+          "write",
+          "60/hour",
+          "Creates, updates, likes, saves, LinkedIn shares"
+        ],
+        [
+          "read",
+          "300/min",
+          "Listings and detail reads"
+        ]
+      ]
+    },
+    {
+      "type": "text",
+      "title": "12. Publishing to LinkedIn, idempotently",
+      "content": "An author can share a post to LinkedIn from the post page. The view checks four things before it queues anything: the caller owns the post, it has not already been shared, it is published, and the account actually has a LinkedIn OAuth connection. If the broker is unreachable it returns 503 rather than claiming success — an earlier version set `posted_on_linkedin = True` and returned 200 without dispatching anything at all, so the UI reported a share that never happened.\n\nThe task itself is idempotent: it re-checks `posted_on_linkedin`, so a duplicate dispatch or a retry after a partial success never double-posts. It also calls `ensure_metadata` before composing the post, because the excerpt-generation task queued by the same save has no ordering guarantee against this one — without that call, a share dispatched right after creation can win the race and go out with no summary.\n\nWhich is why `posted_on_linkedin` is `read_only` in the serializer. It is the task's idempotency key; a client that could set it would permanently suppress sharing for that post."
+    },
+    {
+      "type": "text",
+      "title": "13. The share carries the article, not just a link",
+      "content": "A LinkedIn post that is only a headline and a URL asks the reader to leave the feed before they know whether it is worth it. So the share attaches the post's own PDF as a LinkedIn *document*, which renders in the feed as a swipeable carousel — the article is readable before anyone clicks anything.\n\nThe commentary beside it is deliberately short, because LinkedIn folds anything long behind \"…see more\": the title, one or two sentences from the excerpt cut on a word boundary, the canonical URL, and up to five of the post's tags as hashtags. Tags are normalised to what LinkedIn will actually link — a hashtag ends at the first character that is not a letter, digit or underscore, so `Next.js` becomes `#NextJs` rather than a linked `#Next` with an orphaned `.js` beside it.\n\nThe URL lives in the words on purpose. A post can carry a document or a link preview, never both, and LinkedIn auto-links a URL it finds in the commentary — so putting it there is what keeps the site one tap away from a share that is already showing the article."
+    },
+    {
+      "type": "flowchart",
+      "title": "One share, three ways it can degrade",
+      "steps": [
+        {
+          "title": "Render the PDF",
+          "description": "ReportLab builds it from the same structured sections the page renders, memoised on the post's updated_at — so the author who previewed it and the share pay for one render between them.",
+          "branches": [
+            {
+              "title": "Render fails",
+              "description": "Logged, and the share goes out as text. A post with no PDF beats no post."
+            }
+          ]
+        },
+        {
+          "title": "Upload it as a document",
+          "description": "An action reserves an upload slot and returns a URL; the bytes go up as a plain PUT.",
+          "branches": [
+            {
+              "title": "Upload fails",
+              "description": "Same trade — text-only share, warning in the log."
+            }
+          ]
+        },
+        {
+          "title": "Create the post with the document attached",
+          "description": "The versioned /rest/posts API, with the document URN as its media.",
+          "branches": [
+            {
+              "title": "Rejected with an attachment",
+              "description": "The attachment is the only new variable, so it retries once without it."
+            },
+            {
+              "title": "Rejected without one",
+              "description": "Raised, so RETRY_POLICY sees it. This is the only failure that costs the share."
+            }
+          ]
+        },
+        {
+          "title": "Record the URL on the post",
+          "description": "The dispatching request is long gone, so the task writes linkedin_post_url itself — and logs whether the PDF made it.",
+          "branches": []
+        }
+      ]
+    },
+    {
+      "type": "note",
+      "content": "The PDF is not a second rendering of the article — it is the same one. `GET /api/v1/blogs/<slug>/pdf/` serves the bytes the share uploads, so the file an author reviews from the post page is byte-for-byte the file their network receives. Two code paths producing \"the PDF\" is how the preview and the artifact quietly drift apart."
+    },
+    {
+      "type": "table",
+      "title": "14. What happens when each dependency fails",
+      "headers": [
+        "Failure",
+        "Reader sees",
+        "Recovery"
+      ],
+      "rows": [
+        [
+          "Redis / broker down",
+          "Saves still succeed",
+          "enqueue() returns False and logs; the 6-hourly sweep does the work"
+        ],
+        [
+          "Gemini rate-limited",
+          "Post is live, not yet searchable",
+          "TransientError → backoff retries, then the sweep"
+        ],
+        [
+          "Gemini permanently rejects the text",
+          "Post is live, marked skipped",
+          "Recorded on the row and shown in the admin. No retry budget burned"
+        ],
+        [
+          "Milvus unreachable on delete",
+          "Nothing — the row is gone",
+          "remove_object retries; prune_orphans catches whatever is left"
+        ],
+        [
+          "Search endpoint fails",
+          "503 and a clear message",
+          "Deliberately not an empty 200: an outage must not look like \"no matches\""
+        ],
+        [
+          "Django slow or down",
+          "ApiError 503 from the BFF",
+          "10-second AbortSignal.timeout, so no page hangs on it"
+        ],
+        [
+          "Serializer drifts from the contract",
+          "502 naming the exact field",
+          "Zod validation at the boundary catches it before render"
+        ],
+        [
+          "Two authors save the same post",
+          "409 with a reload prompt",
+          "Optimistic lock on updated_at"
+        ]
+      ]
+    },
+    {
+      "type": "text",
+      "title": "15. Running it yourself",
+      "content": "Both apps read their configuration from `.env`, and each ships a committed `.env.example` listing every variable. `DJANGO_SETTINGS_MODULE` is always `config.settings`; the environment is chosen by `DJANGO_ENV`, so manage.py, gunicorn, the worker and beat can never disagree about which settings they loaded.\n\nIn production, `config/settings/prod.py` raises `ImproperlyConfigured` at import time if `DJANGO_SECRET_KEY` or `DJANGO_ALLOWED_HOSTS` is missing. A misconfigured deploy fails at boot rather than running insecure."
+    },
+    {
+      "type": "code",
+      "title": "Backend and frontend, from a clean checkout",
+      "language": "bash",
+      "content": "# --- backend -------------------------------------------------------------\ncd backend\ncp .env.example .env          # then fill in GOOGLE_API_KEY\nuv sync\nuv run python manage.py migrate\n\n# Everything at once: checks Redis, then starts the Celery worker, beat,\n# Flower (task monitoring on :5555) and the Django dev server.\nuv run python manage.py dev\n\n# Or just Django. Tasks then run eagerly in-process: Milvus Lite holds a file\n# lock on the vector index, so a worker and the web process cannot both\n# open it.\nuv run python manage.py runserver\n\n# --- frontend ------------------------------------------------------------\ncd ../frontend\ncp .env.example .env.local    # API_BASE_URL points at the Django API\nnpm install\nnpm run dev\n\n# --- checks --------------------------------------------------------------\nuv run python manage.py test            # APITestCase per endpoint\nuv run python manage.py check --deploy  # must be clean under DJANGO_ENV=prod"
+    },
+    {
+      "type": "table",
+      "title": "Operational URLs once it is up",
+      "headers": [
+        "URL",
+        "What it is"
+      ],
+      "rows": [
+        [
+          "http://localhost:3000",
+          "The site. Everything a reader or writer touches"
+        ],
+        [
+          "/api/v1/health/",
+          "Database and cache reachability. `?deep=1` also opens the vector store"
+        ],
+        [
+          "/api/docs/",
+          "Swagger UI, generated from the serializers themselves"
+        ],
+        [
+          "/api/schema/",
+          "The OpenAPI document — the authoritative contract"
+        ],
+        [
+          "/admin/",
+          "Django admin. `Blog` shows each post's search-index status"
+        ],
+        [
+          ":5555",
+          "Flower — live Celery task monitoring"
+        ]
+      ]
+    },
+    {
+      "type": "note",
+      "content": "The health endpoint reports rather than raises: each check is wrapped, and a failure becomes `{\"ok\": false, \"error\": \"…\"}` with a 503 overall status. A load balancer gets something cheap to probe, and an on-call engineer gets one URL that names which dependency is down."
+    },
+    {
+      "type": "bullets",
+      "title": "16. The rules worth stealing",
+      "items": [
+        "**One file talks to the backend.** Every timeout, retry, header and validation decision lives in one place instead of being re-litigated at forty call sites.",
+        "**Validate at the boundary.** A response that does not match the contract should fail where it arrives, naming the field — not render as a blank somewhere downstream.",
+        "**Tokens belong on the server.** httpOnly cookies plus a BFF removes XSS token theft and CORS configuration in the same move.",
+        "**Never dispatch a task with a bare .delay() from a signal.** It runs after commit; an exception there 500s a request whose row already saved, and the retry creates a duplicate.",
+        "**Classify errors before retrying them.** Retrying a permanent failure five times with backoff is a way to spend money slowly and learn nothing.",
+        "**Record the outcome of async work on the row itself.** Without that, a failed embedding and a successful one look identical from the outside.",
+        "**Never return an empty success for a failure.** An outage that looks like \"no results\" is an outage nobody reports.",
+        "**Hash the input before paying for it.** A content hash turned every re-save from a billed API call into a no-op.",
+        "**Change the selector and the serializer together.** A method field that queries unconditionally is an N+1 per row, and list endpoints are where it hurts.",
+        "**Fail at boot, not in production.** Settings that refuse to import without their secrets beat a deploy that quietly runs with DEBUG on."
+      ]
     },
     {
       "type": "links",
-      "title": "Further Reading",
+      "title": "Reference material for the pieces above",
       "links": [
         {
-          "url": "https://redis.io/docs/",
-          "text": "Official Redis Documentation",
-          "description": "Learn more about advanced Redis configurations."
+          "url": "https://nextjs.org/docs/app",
+          "text": "Next.js App Router documentation",
+          "description": "Server Components, route handlers and the rendering model this frontend is built on."
         },
         {
-          "url": "https://reactjs.org/docs/getting-started.html",
-          "text": "React Getting Started Guide",
-          "description": "Master frontend component architecture."
+          "url": "https://www.django-rest-framework.org/",
+          "text": "Django REST Framework",
+          "description": "Serializers, generic views, permissions and throttling."
+        },
+        {
+          "url": "https://django-allauth.readthedocs.io/",
+          "text": "django-allauth",
+          "description": "The social account flow and the adapter hooks the handoff relies on."
+        },
+        {
+          "url": "https://docs.celeryq.dev/en/stable/userguide/tasks.html",
+          "text": "Celery task guide",
+          "description": "Acknowledgement semantics, retries and the settings in section 10."
+        },
+        {
+          "url": "https://milvus.io/docs/milvus_lite.md",
+          "text": "Milvus Lite",
+          "description": "The embedded vector store behind semantic search — a file, not a server."
+        },
+        {
+          "url": "https://ai.google.dev/gemini-api/docs/embeddings",
+          "text": "Gemini embeddings",
+          "description": "Why queries get an instruction prefix and documents do not."
+        },
+        {
+          "url": "https://drf-spectacular.readthedocs.io/",
+          "text": "drf-spectacular",
+          "description": "How /api/schema/ and /api/docs/ are generated from the serializers."
         }
       ]
     }

@@ -1,6 +1,7 @@
 from .auth_api import (
     EmailTokenObtainPairView,
     RegisterView,
+    SocialHandoffExchangeView,
     TokenRefreshThrottledView,
     UserProfileView,
 )
@@ -16,6 +17,7 @@ __all__ = [
     "EmailTokenObtainPairView",
     "RegisterView",
     "SavedBlogsView",
+    "SocialHandoffExchangeView",
     "TokenRefreshThrottledView",
     "UserBlogsView",
     "UserDetailByUsernameView",

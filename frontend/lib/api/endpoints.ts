@@ -10,12 +10,14 @@ export const endpoints = {
   tokenRefresh: () => "/auth/login/refresh/",
   register: () => "/auth/register/",
   currentUser: () => "/auth/me/",
+  socialHandoffExchange: () => "/auth/social/exchange/",
 
   // --- content ---
   categories: () => "/categories/",
   blogs: () => "/blogs/",
   blog: (slug: string) => `/blogs/${slug}/`,
   blogLike: (slug: string) => `/blogs/${slug}/like/`,
+  blogPdf: (slug: string) => `/blogs/${slug}/pdf/`,
   blogSave: (slug: string) => `/blogs/${slug}/save/`,
   blogShareLinkedIn: (slug: string) => `/blogs/${slug}/share-linkedin/`,
 

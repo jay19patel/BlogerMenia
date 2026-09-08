@@ -76,6 +76,21 @@
   word-wrap: break-word;
   border: 1px solid #e2e8f0;
 }
+/* Inline markdown, printed: `code` keeps its own face, links stay readable. */
+.pdf-document code:not(pre code) {
+  font-family: monospace;
+  font-size: 11pt;
+  background-color: #f1f5f9;
+  border-radius: 3px;
+  padding: 0.1rem 0.3rem;
+}
+.pdf-document strong {
+  font-weight: bold;
+  color: #0f172a;
+}
+.pdf-document a {
+  color: #4338ca;
+}
 .pdf-document blockquote {
   border-left: 4px solid #6366f1;
   padding-left: 1rem;

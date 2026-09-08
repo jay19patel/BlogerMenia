@@ -130,8 +130,6 @@ AUTHENTICATION_BACKENDS = (
 ACCOUNT_LOGIN_METHODS = {"email"}
 ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
 ACCOUNT_EMAIL_VERIFICATION = "none"
-LOGIN_REDIRECT_URL = "/"
-LOGOUT_REDIRECT_URL = "/"
 
 # Bypass the intermediate social login confirmation page (works for GET requests).
 SOCIALACCOUNT_LOGIN_ON_GET = True
@@ -140,11 +138,35 @@ SOCIALACCOUNT_PROVIDERS = {
     "linkedin_oauth2": {"SCOPE": ["openid", "profile", "email", "w_member_social"]},
 }
 
+# The adapters redirect a finished LinkedIn dance at the frontend's handoff
+# route instead of at Django, which renders no pages of its own.
+ACCOUNT_ADAPTER = "accounts.adapters.AccountAdapter"
+SOCIALACCOUNT_ADAPTER = "accounts.adapters.SocialAccountAdapter"
+
+# "Connect LinkedIn" is a plain OAuth login as far as Django is concerned — the
+# frontend authenticates with JWTs, so there is no Django session identifying
+# who asked. Matching on the provider-verified email is what attaches LinkedIn
+# to the existing account rather than creating a second one. Safe here because
+# LinkedIn's OIDC userinfo only returns an email it has verified itself; do not
+# extend this to a provider that does not.
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
+
+# LinkedIn's versioned REST API takes the version as a header on every call.
+# Pinned rather than "latest": LinkedIn retires a version roughly yearly, and a
+# floating version means the share breaks on their schedule, not ours.
+LINKEDIN_API_VERSION = env("LINKEDIN_API_VERSION", "202405")
+
 DEFAULT_FROM_EMAIL = "Inkwell <noreply@inkwell.dev>"
 
 # Where the Next.js app is served. Used to build the public URL of a post for
 # LinkedIn shares and canonical links — Django itself renders no blog pages.
 FRONTEND_URL = env("FRONTEND_URL", "http://localhost:3000").rstrip("/")
+
+# Django renders no pages of its own, so "/" — allauth's default landing after
+# the LinkedIn callback — is a 404 here. Send people back to the Next.js app.
+LOGIN_REDIRECT_URL = FRONTEND_URL + "/"
+LOGOUT_REDIRECT_URL = FRONTEND_URL + "/"
 
 
 # --- i18n / files ---------------------------------------------------------

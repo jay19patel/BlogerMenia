@@ -177,6 +177,31 @@ textarea.fld {
   border-radius: 0.25rem;
   padding: 0.15rem 0.45rem;
 }
+/* --- inline markdown: `**bold**`, `*italic*`, `~~strike~~`, `[text](url)` ---- */
+.article-body strong {
+  font-weight: 600;
+  color: #0f172a;
+}
+.article-body em {
+  font-style: italic;
+}
+/* The note block is set in italics as a whole, so emphasis reads as upright. */
+.article-body blockquote em {
+  font-style: normal;
+}
+.article-body del {
+  color: #94a3b8;
+}
+/* Links the markdown renderer emits carry no class of their own. */
+.article-body a:not([class]) {
+  color: #4f46e5;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+.article-body a:not([class]):hover {
+  color: #4338ca;
+}
 .article-body h2 {
   font-family: var(--font-serif);
   font-size: 1.75rem;

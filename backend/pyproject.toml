@@ -27,6 +27,7 @@ dependencies = [
     "django-filter>=26.1",
     "drf-spectacular>=0.30.0",
     "bleach>=6.4.0",
+    "reportlab>=5.0.1",
 ]
 
 [tool.uv.sources]

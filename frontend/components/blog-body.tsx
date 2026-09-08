@@ -1,6 +1,7 @@
 import hljs from "highlight.js";
 
 import { CodeBlock } from "@/components/code-block";
+import { InlineMarkdown } from "@/components/inline-markdown";
 import { Linebreaks } from "@/components/linebreaks";
 import { RawSvg } from "@/components/raw-svg";
 import { isStructured, renderLegacyContent } from "@/lib/blog";
@@ -10,6 +11,11 @@ import type { Blog, BlogSection } from "@/lib/types";
 /**
  * `blog/_blog_body.html` — renders a structured post block by block, falling
  * back to the legacy single `content` field for older posts.
+ *
+ * Every prose field goes through the inline markdown renderer, so `**bold**`,
+ * `` `code` ``, `~~strike~~` and `[links](url)` come out formatted wherever an
+ * author writes them. Code blocks are the exception: their text is the artefact
+ * and is only ever syntax-highlighted.
  */
 
 function highlight(code: string, language: string) {
@@ -52,7 +58,9 @@ function SectionBody({ section, variant }: { section: BlogSection; variant: Blog
       return (
         <ul>
           {(section.items ?? []).map((item, index) => (
-            <li key={index}>{item}</li>
+            <li key={index}>
+              <InlineMarkdown text={item} />
+            </li>
           ))}
         </ul>
       );
@@ -67,7 +75,9 @@ function SectionBody({ section, variant }: { section: BlogSection; variant: Blog
             <thead>
               <tr>
                 {section.headers.map((header, index) => (
-                  <th key={index}>{header}</th>
+                  <th key={index}>
+                    <InlineMarkdown text={header} />
+                  </th>
                 ))}
               </tr>
             </thead>
@@ -76,7 +86,9 @@ function SectionBody({ section, variant }: { section: BlogSection; variant: Blog
             {(section.rows ?? []).map((row, rowIndex) => (
               <tr key={rowIndex}>
                 {row.map((cell, cellIndex) => (
-                  <td key={cellIndex}>{cell}</td>
+                  <td key={cellIndex}>
+                    <InlineMarkdown text={cell} />
+                  </td>
                 ))}
               </tr>
             ))}
@@ -101,7 +113,11 @@ function SectionBody({ section, variant }: { section: BlogSection; variant: Blog
               allowFullScreen
             />
           </div>
-          {section.description && <figcaption>{section.description}</figcaption>}
+          {section.description && (
+            <figcaption>
+              <InlineMarkdown text={section.description} />
+            </figcaption>
+          )}
         </figure>
       );
 
@@ -118,7 +134,12 @@ function SectionBody({ section, variant }: { section: BlogSection; variant: Blog
               >
                 {link.text ? link.text : link.url}
               </a>
-              {link.description && <span className="text-slate-400 text-sm"> — {link.description}</span>}
+              {link.description && (
+                <span className="text-slate-400 text-sm">
+                  {" — "}
+                  <InlineMarkdown text={link.description} />
+                </span>
+              )}
             </li>
           ))}
         </ul>
@@ -138,7 +159,9 @@ function SectionBody({ section, variant }: { section: BlogSection; variant: Blog
             />
           )}
           {section.description && (
-            <figcaption className="text-sm text-slate-500 mt-3">{section.description}</figcaption>
+            <figcaption className="text-sm text-slate-500 mt-3">
+              <InlineMarkdown text={section.description} />
+            </figcaption>
           )}
         </figure>
       );
@@ -150,14 +173,25 @@ function SectionBody({ section, variant }: { section: BlogSection; variant: Blog
           <ol className="space-y-3 my-0!">
             {(section.steps ?? []).map((step, index) => (
               <li key={index}>
-                <span className="font-semibold text-slate-900">{step.title}</span>
-                {step.description && <span className="text-slate-500"> — {step.description}</span>}
+                <InlineMarkdown className="font-semibold text-slate-900" text={step.title} />
+                {step.description && (
+                  <span className="text-slate-500">
+                    {" — "}
+                    <InlineMarkdown text={step.description} />
+                  </span>
+                )}
                 {step.branches && step.branches.length > 0 && (
                   <ul className="mt-1">
                     {step.branches.map((branch, branchIndex) => (
                       <li key={branchIndex} className="text-sm text-slate-500">
-                        ↳ {branch.title}
-                        {branch.description ? `: ${branch.description}` : ""}
+                        {"↳ "}
+                        <InlineMarkdown text={branch.title} />
+                        {branch.description && (
+                          <>
+                            {": "}
+                            <InlineMarkdown text={branch.description} />
+                          </>
+                        )}
                       </li>
                     ))}
                   </ul>
@@ -184,7 +218,11 @@ function SectionBody({ section, variant }: { section: BlogSection; variant: Blog
               alt={firstOf(section.caption, section.title)}
             />
           ) : null}
-          {caption && <figcaption className="text-sm text-slate-500 mt-3 font-medium">{caption}</figcaption>}
+          {caption && (
+            <figcaption className="text-sm text-slate-500 mt-3 font-medium">
+              <InlineMarkdown text={caption} />
+            </figcaption>
+          )}
         </figure>
       );
     }
@@ -211,7 +249,11 @@ export function BlogBody({ blog, variant = "article" }: { blog: Blog; variant?: 
 
       {blog.sections.map((section, index) => (
         <section key={index} className="mb-2">
-          {section.title && <h2 id={`section-${index}`}>{section.title}</h2>}
+          {section.title && (
+            <h2 id={`section-${index}`}>
+              <InlineMarkdown text={section.title} />
+            </h2>
+          )}
           <SectionBody section={section} variant={variant} />
         </section>
       ))}

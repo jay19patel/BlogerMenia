@@ -19,12 +19,23 @@ const nextConfig: NextConfig = {
 
   async rewrites() {
     return [
+      // allauth's own view tree. The LinkedIn OAuth redirect dance has to
+      // happen against Django, so those URLs are proxied rather than
+      // reimplemented.
+      //
+      // The trailing slashes here are load-bearing, and both ends need them:
+      // with `trailingSlash: true` the source must end in `/` to match, and
+      // `:path*` captures the segments without it. A destination of
+      // `/accounts/:path*` therefore asks Django for the unslashed URL, whose
+      // APPEND_SLASH answers 301 back to the slashed one — which the browser
+      // requests again through this same rewrite, looping until it gives up.
       {
-        // allauth's own view tree. The LinkedIn OAuth redirect dance has to
-        // happen against Django, so those URLs are proxied rather than
-        // reimplemented.
-        source: "/accounts/:path*",
-        destination: `${djangoOrigin}/accounts/:path*`,
+        source: "/accounts/",
+        destination: `${djangoOrigin}/accounts/`,
+      },
+      {
+        source: "/accounts/:path*/",
+        destination: `${djangoOrigin}/accounts/:path*/`,
       },
     ];
   },
