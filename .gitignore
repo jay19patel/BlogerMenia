@@ -81,3 +81,12 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+
+# ==============================
+# RUNTIME ARTEFACTS
+# ==============================
+# These were tracked before the rules above existed; `git rm --cached` stopped
+# that. They stay on disk, they just no longer travel with the repo.
+backend/blog.json
+backend/*.rdb
+backend/search/milvus.db/

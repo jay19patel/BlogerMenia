@@ -94,7 +94,7 @@ class LinkedInService:
 
         return "\n\n".join(parts)
 
-    def create_post(self, blog, domain_url):
+    def create_post(self, blog):
         """
         Publishes a UGC post linking to ``blog`` on the user's LinkedIn feed.
 
@@ -113,7 +113,9 @@ class LinkedInService:
             return None
 
         author_urn = f"urn:li:person:{self.token.account.uid}"
-        blog_url = f"{domain_url.rstrip('/')}{blog.get_absolute_url()}"
+        # An absolute URL on the Next.js frontend — Django serves no blog pages,
+        # so this used to reverse a route that no longer exists.
+        blog_url = blog.get_absolute_url()
         text = self._build_post_text(blog, blog_url)
 
         payload = {

@@ -1,12 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { useMessages } from "@/components/messages-provider";
 import { urls } from "@/lib/urls";
-import type { User } from "@/lib/types";
+import type { Viewer } from "@/lib/types";
 import { Input } from "@/components/base/input/input";
 import { TextArea } from "@/components/base/textarea/textarea";
 import { Toggle } from "@/components/base/toggle/toggle";
@@ -17,8 +16,7 @@ import { updateProfileAction } from "./actions";
  * `ProfileUpdateView`'s model form as rendered by `blog/profile_edit.html`.
  * Field order and labels follow the view's `fields` list.
  */
-export function ProfileEditForm({ profileUser }: { profileUser: User }) {
-  const router = useRouter();
+export function ProfileEditForm({ profileUser }: { profileUser: Viewer }) {
   const { addMessage } = useMessages();
   const [isPending, setIsPending] = useState(false);
 
@@ -46,7 +44,13 @@ export function ProfileEditForm({ profileUser }: { profileUser: User }) {
           await updateProfileAction(profileUser.username, formData);
           addMessage("Profile updated successfully.", "success");
         } catch (error) {
-          addMessage("Failed to update profile.", "error");
+          console.error(error);
+          addMessage(
+            error instanceof Error && error.message
+              ? error.message
+              : "Failed to update profile.",
+            "error",
+          );
           setIsPending(false);
         }
       }}

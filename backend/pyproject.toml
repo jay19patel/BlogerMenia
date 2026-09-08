@@ -15,9 +15,7 @@ dependencies = [
     "langchain-google-genai>=2.0.0",
     "celery[redis]>=5.4.0",
     "redis>=5.2.0",
-    "flower>=2.0.0",
     "linkedin-api-client",
-    "weasyprint>=69.0",
     "python-dotenv>=1.2.2",
     "gunicorn>=23.0.0",
     "whitenoise>=6.7.0",
@@ -26,7 +24,17 @@ dependencies = [
     "djangorestframework-simplejwt>=5.5.1",
     "pymilvus>=3.0.1",
     "langchain-milvus>=0.4.0",
+    "django-filter>=26.1",
+    "drf-spectacular>=0.30.0",
+    "bleach>=6.4.0",
 ]
 
 [tool.uv.sources]
 linkedin-api-client = { git = "https://github.com/linkedin-developers/linkedin-api-python-client.git" }
+
+[dependency-groups]
+dev = [
+    # Celery monitoring UI, started by `manage.py dev`.
+    "flower>=2.0.0",
+    "ruff>=0.8.0",
+]

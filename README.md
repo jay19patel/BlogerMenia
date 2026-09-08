@@ -96,7 +96,8 @@ graph TD
 - **API Layer:** Exposes strict RESTful endpoints (`/api/v1/`) for blogs, categories, playlists, and user profiles.
 - **Authentication:** Uses `djangorestframework-simplejwt` for stateless authentication. It also supports LinkedIn OAuth for social login.
 - **Database:** Uses SQLite (with WAL mode enabled) for relational data mapping (Users, Blogs, Playlists).
-- **Background Tasks (Celery):** When a blog is saved or updated, Django signals fire off asynchronous tasks to Celery. This prevents the web server from blocking while waiting for long-running operations.
+- **Background Tasks (Celery):** When a blog is saved or updated, Django signals queue asynchronous tasks on commit, so the web server never blocks on Gemini. Dispatch is guarded: if Redis is unreachable the save still succeeds and the periodic sweep picks the work up.
+- **Structure & conventions:** See [`backend/backend.md`](backend/backend.md) — layer responsibilities, the `api.py` naming rule, and the handful of DRF behaviours that are easy to get wrong.
 
 ---
 
@@ -109,6 +110,8 @@ BlogerMenia features an intelligent "Semantic Search" that understands the *mean
    - It queues a Celery background task (`index_object`).
    - The Celery worker sends the text content to the **Google Gemini API** (`models/gemini-embedding-001`) to generate mathematical vectors (embeddings).
    - These vectors are stored in **Milvus Lite** (`search/milvus.db`), which is an open-source vector database.
+   - The outcome is recorded on the post itself (`embedding_status`, `embedding_error`, `embedded_at`) and shown in the Django admin, so a post missing from search is diagnosable rather than silently absent.
+   - A content hash means a re-save that changed nothing indexable skips the (billed) round trip, and a six-hourly sweep retries anything left pending or failed.
 
 2. **Searching (Read Phase):**
    - The user types a query in the frontend search bar. The frontend debounces the input (waits 500ms) to avoid spamming the API.
@@ -116,6 +119,7 @@ BlogerMenia features an intelligent "Semantic Search" that understands the *mean
    - The Django backend instantly generates an embedding for the search phrase using Gemini.
    - It asks Milvus to find the closest matching vectors (Nearest Neighbor Search).
    - Django maps those vector IDs back to the real Blog/Playlist/User objects from the SQLite database and returns the structured JSON to the frontend.
+   - Results are cached per query and the endpoint is rate limited: every call costs a Gemini embedding, so identical queries must not pay twice.
 
 ---
 
@@ -124,23 +128,44 @@ BlogerMenia features an intelligent "Semantic Search" that understands the *mean
 ### Prerequisites
 - Node.js & npm (for the frontend)
 - Python 3.13 & `uv` (for the backend)
-- Redis server running on `127.0.0.1:6379` (Required if testing Celery background tasks)
-- A valid `GOOGLE_API_KEY` in `backend/.env` for embeddings.
+- Redis server running on `127.0.0.1:6379` (required if testing Celery background tasks)
+- A valid `GOOGLE_API_KEY` in `backend/.env` for embeddings
+
+Both apps read their configuration from `.env`; each ships a committed
+`.env.example` listing every variable. In production `DJANGO_ENV=prod` switches
+`config/settings/prod.py` in, which refuses to boot without a real
+`DJANGO_SECRET_KEY` and `DJANGO_ALLOWED_HOSTS`.
 
 ### Start the Backend
 ```bash
 cd backend
-# The run.sh script handles starting Django. 
-# By default in development, it skips Celery and runs tasks synchronously to prevent Milvus Lite database locks.
-bash run.sh
+cp .env.example .env          # then fill in GOOGLE_API_KEY
+uv sync
 
-# If you explicitly want to test the background Celery workers, run:
-# CELERY_ENABLED=1 bash run.sh
+uv run python manage.py migrate
+
+# Everything at once — checks Redis, then starts the Celery worker, beat,
+# Flower (task monitoring on :5555) and the Django dev server.
+uv run python manage.py dev
+
+# Or just Django. Tasks then run eagerly in-process: Milvus Lite holds a file
+# lock on the vector index, so a worker and the web process cannot both open it.
+uv run python manage.py runserver
 ```
+
+Useful URLs once it is up:
+
+| URL | What |
+| --- | --- |
+| `/api/v1/health/` | Health check — database, cache (`?deep=1` also opens the vector store) |
+| `/api/docs/` | Swagger UI, generated from the serializers |
+| `/api/schema/` | The OpenAPI document itself |
+| `/admin/` | Django admin. `Blog` shows each post's search-index status |
 
 ### Start the Frontend
 ```bash
 cd frontend
+cp .env.example .env.local    # API_BASE_URL points at the Django API
 npm install
 npm run dev
 ```

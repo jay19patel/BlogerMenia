@@ -1,4 +1,5 @@
 import type {
+  ApiAuthor,
   ApiBlog,
   ApiPlaylist,
   ApiUser,
@@ -15,7 +16,7 @@ import type {
  * of the backend. `lib/models.ts` does the mapping.
  */
 
-export type { BlogSection, FlowchartStep, SearchResult, SectionLink, SectionType } from "@/lib/api/schemas";
+export type { BlogSection, EmbeddingStatus, FlowchartStep, SearchResult, SectionLink, SectionType } from "@/lib/api/schemas";
 
 export type CategoryColor = ApiCategory["color"];
 
@@ -44,25 +45,36 @@ export interface Category extends ApiCategory {
   bg_class: string;
 }
 
-export interface User extends ApiUser {
+/** Common to every shape of person we render. */
+interface NamedPerson {
   /** `get_full_name()` — empty when neither name part is set. */
   full_name: string;
   /** `{{ user.get_full_name|default:user.username }}` */
   display_name: string;
 }
 
+/**
+ * The author of a post or playlist — the narrow shape embedded in listings.
+ *
+ * Anything that needs post counts or the join date wants `User`, which comes
+ * from a user endpoint rather than from a nested field.
+ */
+export interface Author extends ApiAuthor, NamedPerson {}
+
+export interface User extends ApiUser, NamedPerson {}
+
 export interface PlaylistSummary extends Omit<ApiPlaylistSummary, "author"> {
-  author: User;
+  author: Author;
 }
 
 export interface Blog extends Omit<ApiBlog, "author" | "category" | "playlists"> {
-  author: User;
+  author: Author;
   category: Category | null;
   playlists: PlaylistSummary[];
 }
 
 export interface Playlist extends Omit<ApiPlaylist, "author" | "blogs"> {
-  author: User;
+  author: Author;
   blogs: Blog[];
 }
 
@@ -83,6 +95,8 @@ export interface PlaylistPickerBlog {
 
 /** The signed-in viewer, including their own like and bookmark sets. */
 export interface Viewer extends User {
+  email: string;
+  auto_post_to_linkedin: boolean;
   saved_blog_ids: number[];
   liked_blog_ids: number[];
 }

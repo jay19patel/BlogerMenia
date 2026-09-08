@@ -1,11 +1,9 @@
 "use server";
 
-import { revalidateTag } from "next/cache";
-import { redirect } from "next/navigation";
+import { updateTag } from "next/cache";
 
 import { blogs } from "@/lib/api";
 import { readAccessToken } from "@/lib/auth/session";
-import { urls } from "@/lib/urls";
 
 export async function saveBlogAction(
   isEdit: boolean,
@@ -37,11 +35,11 @@ export async function saveBlogAction(
     result = await blogs.createBlog(formData, token);
   }
 
-  revalidateTag("blogs");
+  updateTag("blogs");
   if (isEdit && originalSlug) {
-    revalidateTag(`blog:${originalSlug}`);
+    updateTag(`blog:${originalSlug}`);
   }
-  revalidateTag(`blog:${result.slug}`);
+  updateTag(`blog:${result.slug}`);
 
   // We can't redirect directly inside a try/catch if the caller wraps this,
   // but it's usually safe if the caller is client-side. We will return the slug.

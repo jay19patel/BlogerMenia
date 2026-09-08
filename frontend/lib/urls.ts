@@ -30,6 +30,7 @@ export const urls = {
   profileEdit: (username: string) => `/profile/${username}/edit/`,
 
   accountLogin: () => "/accounts/login/",
+  userProfileEdit: (username: string) => `/profile/${username}/edit/`,
   accountSignup: () => "/accounts/signup/",
   accountLogout: () => "/accounts/logout/",
   accountInactive: () => "/accounts/inactive/",

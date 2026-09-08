@@ -1,18 +1,25 @@
 from django.urls import path
-from blog.api.views import (
-    BlogListView, BlogDetailView, BlogLikeToggleView,
-    CategoryListView, PlaylistListView, PlaylistDetailView,
-    ContactCreateView, BlogSaveToggleView, BlogShareLinkedInView
+
+from blog.api import (
+    BlogDetailView,
+    BlogLikeToggleView,
+    BlogListView,
+    BlogSaveToggleView,
+    BlogShareLinkedInView,
+    CategoryListView,
+    ContactCreateView,
+    PlaylistDetailView,
+    PlaylistListView,
 )
 
 urlpatterns = [
-    path('blogs/', BlogListView.as_view(), name='api_blog_list'),
-    path('blogs/<slug:slug>/', BlogDetailView.as_view(), name='api_blog_detail'),
-    path('blogs/<slug:slug>/like/', BlogLikeToggleView.as_view(), name='api_blog_like'),
-    path('blogs/<slug:slug>/save/', BlogSaveToggleView.as_view(), name='api_blog_save'),
-    path('blogs/<slug:slug>/share-linkedin/', BlogShareLinkedInView.as_view(), name='api_blog_share_linkedin'),
-    path('categories/', CategoryListView.as_view(), name='api_category_list'),
-    path('playlists/', PlaylistListView.as_view(), name='api_playlist_list'),
-    path('playlists/<slug:slug>/', PlaylistDetailView.as_view(), name='api_playlist_detail'),
-    path('contact/', ContactCreateView.as_view(), name='api_contact_create'),
+    path('blogs/', BlogListView.as_view(), name='blog-list'),
+    path('blogs/<slug:slug>/', BlogDetailView.as_view(), name='blog-detail'),
+    path('blogs/<slug:slug>/like/', BlogLikeToggleView.as_view(), name='blog-like'),
+    path('blogs/<slug:slug>/save/', BlogSaveToggleView.as_view(), name='blog-save'),
+    path('blogs/<slug:slug>/share-linkedin/', BlogShareLinkedInView.as_view(), name='blog-share-linkedin'),
+    path('categories/', CategoryListView.as_view(), name='category-list'),
+    path('playlists/', PlaylistListView.as_view(), name='playlist-list'),
+    path('playlists/<slug:slug>/', PlaylistDetailView.as_view(), name='playlist-detail'),
+    path('contact/', ContactCreateView.as_view(), name='contact-create'),
 ]

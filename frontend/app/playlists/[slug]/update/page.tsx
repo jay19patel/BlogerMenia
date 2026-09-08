@@ -20,13 +20,13 @@ export async function generateStaticParams() {
 }
 
 export default async function PlaylistUpdatePage({ params }: PageProps<"/playlists/[slug]/update">) {
-  const [playlist, blogPage] = await Promise.all([
+  const [playlist, allBlogs] = await Promise.all([
     playlistsApi.getPlaylist((await params).slug),
-    blogsApi.listBlogs({ pageSize: 1000 }),
+    blogsApi.listAllBlogs(),
   ]);
   if (!playlist) notFound();
 
-  const pickerBlogs = blogPage.blogs.map(toPickerBlog);
+  const pickerBlogs = allBlogs.map(toPickerBlog);
 
   return (
     <>

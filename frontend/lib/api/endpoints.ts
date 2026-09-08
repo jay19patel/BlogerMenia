@@ -30,4 +30,5 @@ export const endpoints = {
 
   search: () => "/search/",
   contact: () => "/contact/",
+  health: () => "/health/",
 } as const;

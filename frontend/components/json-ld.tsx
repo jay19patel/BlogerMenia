@@ -1,4 +1,4 @@
-import type { Blog, Playlist, User } from "@/lib/types";
+import type { Author, Blog, Playlist, User } from "@/lib/types";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/seo";
 import { urls } from "@/lib/urls";
 
@@ -40,7 +40,8 @@ export function WebSiteJsonLd() {
   );
 }
 
-function personNode(user: User) {
+/** `Author` is the narrow shape nested in a post; a full `User` satisfies it too. */
+function personNode(user: Author) {
   return {
     "@type": "Person",
     name: user.display_name,

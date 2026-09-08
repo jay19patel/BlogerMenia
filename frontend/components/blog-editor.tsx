@@ -65,6 +65,8 @@ export interface BlogEditorInitial {
   is_published: boolean;
   featured: boolean;
   posted_on_linkedin: boolean;
+  /** The `updated_at` this editor loaded — echoed back as the write's precondition. */
+  updated_at?: string;
   image_name: string | null;
   sections: BlogSection[];
   playlist_ids: number[];
@@ -222,16 +224,6 @@ export function BlogEditor({
       current.map((section, position) => (position === index ? { ...section, ...patch } : section)),
     );
 
-  const moveSection = (index: number, direction: -1 | 1) => {
-    const target = index + direction;
-    if (target < 0 || target >= sections.length) return;
-    setSections((current) => {
-      const next = [...current];
-      [next[index], next[target]] = [next[target], next[index]];
-      return next;
-    });
-  };
-
   const onTitleChange = (value: string) => {
     setTitle(value);
     if (!slugTouched) setSlug(slugify(value));
@@ -313,27 +305,44 @@ export function BlogEditor({
     try {
       const formData = new FormData(event.currentTarget);
       
-      const postSlug = slug.trim() || slugify(title);
-      formData.set("slug", postSlug);
-      
-      // We must serialize tags and sections as JSON strings since they are JSON fields.
-      // DRF will parse them if they are sent as JSON strings in FormData.
-      formData.set("tags", JSON.stringify(tags));
-      formData.set("sections", JSON.stringify(sections.map(({ isCollapsed, ...s }) => s)));
-      
-      // Override the category to ensure it's sent properly if it's customized
-      if (category) {
-        formData.set("category_name", category);
-      }
+      // `slug` is read-only server-side: it is generated once and then left
+      // alone, so that published links keep working when a title changes.
+      formData.delete("slug");
 
-      // Checkboxes handling
+      // `tags` and `sections` are JSONField columns. They travel as JSON
+      // strings inside this multipart body; `core.fields.JSONListField`
+      // decodes them (DRF's own JSONField would store the string verbatim).
+      formData.set("tags", JSON.stringify(tags));
+      formData.set(
+        "sections",
+        JSON.stringify(
+          sections.map(
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars -- destructured to drop editor-only state from the payload
+            ({ isCollapsed, elements, appState, ...section }) => section,
+          ),
+        ),
+      );
+
+      // The backend resolves this to a Category, creating one if the name is
+      // new. It reads `category_name`, not the `category` the input is named.
+      formData.delete("category");
+      formData.set("category_name", category.trim());
+
       formData.set("is_published", isPublished ? "true" : "false");
       formData.set("featured", featured ? "true" : "false");
-      formData.set("posted_on_linkedin", postToLinkedIn ? "true" : "false");
+      // An intent, not stored state: the server dispatches the share and owns
+      // `posted_on_linkedin` itself, so that flag is read-only.
+      formData.delete("posted_on_linkedin");
+      formData.set("post_to_linkedin", postToLinkedIn ? "true" : "false");
 
-      // Handle multiple playlists
-      formData.delete("playlist_ids"); // Clear native select if any
+      formData.delete("playlist_ids"); // clear the native select, if any
       selectedPlaylists.forEach(id => formData.append("playlist_ids", String(id)));
+
+      // Optimistic locking: if the post moved on since the editor loaded it,
+      // the server answers 409 rather than discarding the other edit.
+      if (isEdit && initial?.updated_at) {
+        formData.set("expected_updated_at", initial.updated_at);
+      }
 
       const { saveBlogAction } = await import("@/app/blogs/actions");
       const result = await saveBlogAction(isEdit, initial?.slug, formData);
@@ -341,9 +350,13 @@ export function BlogEditor({
       addMessage(isEdit ? "Blog post updated successfully!" : "Blog post published successfully!", "success");
       router.push(urls.blogDetail(result.slug));
       router.refresh();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setError(err.message || "Failed to save blog post. Please check your inputs.");
+      setError(
+        err instanceof Error && err.message
+          ? err.message
+          : "Failed to save blog post. Please check your inputs.",
+      );
     } finally {
       setIsPending(false);
     }

@@ -3,7 +3,6 @@ import Link from "next/link";
 
 import { AuthBadge, AuthShell } from "@/components/auth-shell";
 import { LinkedInIcon } from "@/components/icons";
-import { Button } from "@/components/base/buttons/button";
 import { urls } from "@/lib/urls";
 
 import { LoginForm } from "./login-form";

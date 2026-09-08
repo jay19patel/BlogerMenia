@@ -3,31 +3,42 @@ import "server-only";
 import { request, requestVoid } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import { ApiError } from "@/lib/api/errors";
-import { paginated, playlistSchema, type PlaylistPayload } from "@/lib/api/schemas";
-import { toPlaylist } from "@/lib/models";
-import type { Playlist } from "@/lib/types";
+import { MAX_PAGE_SIZE } from "@/lib/api/resources/blogs";
+import {
+  paginated,
+  playlistSchema,
+  playlistSummarySchema,
+  type PlaylistPayload,
+} from "@/lib/api/schemas";
+import { toPlaylist, toPlaylistSummary } from "@/lib/models";
+import type { Playlist, PlaylistSummary } from "@/lib/types";
 
-const playlistPage = paginated(playlistSchema);
+/** The list endpoint returns summaries — it does not expand every post of
+ *  every playlist. Only the detail endpoint carries `blogs`. */
+const playlistPage = paginated(playlistSummarySchema);
 
-/** Mirrors `PlaylistListView.paginate_by`. */
 export const PLAYLIST_PAGE_SIZE = 12;
 
-export async function listPlaylists(params: { page?: number; author?: string; pageSize?: number } = {}) {
+export async function listPlaylists(
+  params: { page?: number; author?: string; pageSize?: number } = {},
+) {
   const page = Math.max(1, params.page ?? 1);
-  const pageSize = params.pageSize ?? PLAYLIST_PAGE_SIZE;
+  const pageSize = Math.min(params.pageSize ?? PLAYLIST_PAGE_SIZE, MAX_PAGE_SIZE);
   const data = await request(playlistPage, {
     path: endpoints.playlists(),
     query: { page, page_size: pageSize, author: params.author },
     next: { tags: ["playlists"] },
   });
   return {
-    playlists: data.results.map(toPlaylist),
+    playlists: data.results.map(toPlaylistSummary),
     count: data.count,
     page,
+    pageSize,
     totalPages: Math.max(1, Math.ceil(data.count / pageSize)),
   };
 }
 
+/** Detail — this really does include the playlist's posts now. */
 export async function getPlaylist(slug: string): Promise<Playlist | null> {
   try {
     return toPlaylist(
@@ -39,9 +50,24 @@ export async function getPlaylist(slug: string): Promise<Playlist | null> {
   }
 }
 
+/** Every playlist, paging through as needed. */
+export async function listAllPlaylists(): Promise<PlaylistSummary[]> {
+  const collected: PlaylistSummary[] = [];
+  let page = 1;
+  for (;;) {
+    const data = await request(playlistPage, {
+      path: endpoints.playlists(),
+      query: { page, page_size: MAX_PAGE_SIZE },
+    });
+    collected.push(...data.results.map(toPlaylistSummary));
+    if (!data.next) break;
+    page += 1;
+  }
+  return collected;
+}
+
 export async function listAllPlaylistSlugs(): Promise<string[]> {
-  const data = await request(playlistPage, { path: endpoints.playlists(), query: { page_size: 1000 } });
-  return data.results.map((playlist) => playlist.slug);
+  return (await listAllPlaylists()).map((playlist) => playlist.slug);
 }
 
 export async function createPlaylist(payload: PlaylistPayload, token: string | null) {

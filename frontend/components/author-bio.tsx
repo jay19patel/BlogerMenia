@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LinkedInIcon } from "@/components/icons";
 import { AuthorAvatar } from "@/components/media";
 import { pluralize } from "@/lib/format";
-import type { User } from "@/lib/types";
+import type { Author, User } from "@/lib/types";
 import { urls } from "@/lib/urls";
 
 /**
@@ -13,7 +13,11 @@ import { urls } from "@/lib/urls";
  * the byline link at the very top of the page. This closes the article with
  * their bio, their output and a link to the rest of it.
  */
-export function AuthorBio({ author }: { author: User }) {
+export function AuthorBio({ author, profile }: { author: Author; profile?: User | null }) {
+  // `profile` carries the post count; the author embedded in a post does not
+  // (it is nested in every listing row, so it stays narrow). The count is
+  // simply omitted if the profile fetch failed.
+  const articleCount = profile?.blog_count;
   return (
     <aside className="mt-14 rounded-2xl border border-slate-200 bg-slate-50/60 p-6 sm:p-8">
       <p className="mb-4 text-[11px] font-semibold tracking-wider text-slate-400">WRITTEN BY</p>
@@ -45,7 +49,10 @@ export function AuthorBio({ author }: { author: User }) {
           </div>
 
           <p className="mt-0.5 text-xs text-slate-400">
-            @{author.username} · {author.blog_count} article{pluralize(author.blog_count)}
+            @{author.username}
+            {articleCount !== undefined && (
+              <> · {articleCount} article{pluralize(articleCount)}</>
+            )}
           </p>
 
           {author.bio && <p className="mt-3 text-sm leading-relaxed text-slate-600">{author.bio}</p>}

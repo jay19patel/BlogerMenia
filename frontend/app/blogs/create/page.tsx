@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export default async function BlogCreatePage() {
   const [categories, playlistPage] = await Promise.all([
     misc.listCategories(),
-    playlistsApi.listPlaylists({ pageSize: 1000 }),
+    playlistsApi.listPlaylists({ pageSize: 100 }),
   ]);
 
   return (

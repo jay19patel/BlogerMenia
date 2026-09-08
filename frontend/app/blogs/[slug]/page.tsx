@@ -12,7 +12,7 @@ import { ReadingProgress } from "@/components/reading-progress";
 import { ShareButtons } from "@/components/share-buttons";
 import { PageContainer, PageShell } from "@/components/page-shell";
 import { buildToc, readingMinutes } from "@/lib/blog";
-import { blogs as blogsApi } from "@/lib/api";
+import { blogs as blogsApi, users as usersApi } from "@/lib/api";
 import { firstOf, formatDate } from "@/lib/format";
 import { ArticleJsonLd } from "@/components/json-ld";
 import { buildMetadata } from "@/lib/seo";
@@ -48,7 +48,12 @@ export default async function BlogDetailPage({ params }: PageProps<"/blogs/[slug
   const blog = await blogsApi.getBlog(slug);
   if (!blog) notFound();
 
-  const relatedBlogs = await blogsApi.listRelatedBlogs(slug);
+  // In parallel: the "more like this" rail, and the author's full profile for
+  // the bio card (the author nested in a post is deliberately narrow).
+  const [relatedBlogs, authorProfile] = await Promise.all([
+    blogsApi.listRelatedBlogs(slug, blog.category?.slug),
+    usersApi.getUser(blog.author.username),
+  ]);
   const summary = firstOf(blog.excerpt, blog.subtitle);
 
   return (
@@ -166,7 +171,7 @@ export default async function BlogDetailPage({ params }: PageProps<"/blogs/[slug
             <ShareButtons title={blog.title} path={urls.blogDetail(blog.slug)} />
           </div>
 
-          <AuthorBio author={blog.author} />
+          <AuthorBio author={blog.author} profile={authorProfile} />
 
           {/* More like this */}
           {relatedBlogs.length > 0 && (

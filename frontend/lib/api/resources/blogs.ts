@@ -5,26 +5,33 @@ import { z } from "zod";
 import { request, requestVoid } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import { ApiError } from "@/lib/api/errors";
-import { blogSchema, paginated, type BlogPayload } from "@/lib/api/schemas";
+import { blogSchema, detailSchema, paginated, type BlogPayload } from "@/lib/api/schemas";
 import { toBlog } from "@/lib/models";
 import type { Blog } from "@/lib/types";
 
 const blogPage = paginated(blogSchema);
 
-/** How many posts a listing page shows — mirrors `BlogListView.paginate_by`. */
+/** Matches `REST_FRAMEWORK["PAGE_SIZE"]`. Both sides must agree or the page
+ *  count comes out wrong — this used to be 10 against a backend serving 20. */
 export const BLOG_PAGE_SIZE = 10;
+
+/** `core.pagination.PageNumberPagination.max_page_size`. Asking for more is
+ *  silently capped, so anything that needs every row has to page. */
+export const MAX_PAGE_SIZE = 100;
 
 export interface BlogListParams {
   page?: number;
   pageSize?: number;
   category?: string;
   author?: string;
-  /** Filter to posts carrying this tag — `Blog.tags__contains` in Django. */
+  /** Filter to posts carrying this tag. */
   tag?: string;
-  ordering?: "-created_at" | "-read_count";
+  ordering?: "-created_at" | "created_at" | "-read_count";
   featured?: boolean;
   /** Omit one post — used for "More like this". */
   exclude?: string;
+  /** Include the viewer's own unpublished drafts. */
+  includeDrafts?: boolean;
 }
 
 export interface BlogList {
@@ -35,22 +42,27 @@ export interface BlogList {
   totalPages: number;
 }
 
+function listQuery(params: BlogListParams, page: number, pageSize: number) {
+  return {
+    page,
+    page_size: pageSize,
+    category: params.category,
+    author: params.author,
+    tag: params.tag,
+    ordering: params.ordering,
+    featured: params.featured,
+    exclude: params.exclude,
+    include_drafts: params.includeDrafts ? "true" : undefined,
+  };
+}
+
 export async function listBlogs(params: BlogListParams = {}): Promise<BlogList> {
   const page = Math.max(1, params.page ?? 1);
-  const pageSize = params.pageSize ?? BLOG_PAGE_SIZE;
+  const pageSize = Math.min(params.pageSize ?? BLOG_PAGE_SIZE, MAX_PAGE_SIZE);
 
   const data = await request(blogPage, {
     path: endpoints.blogs(),
-    query: {
-      page,
-      page_size: pageSize,
-      category: params.category,
-      author: params.author,
-      tag: params.tag,
-      ordering: params.ordering,
-      featured: params.featured,
-      exclude: params.exclude,
-    },
+    query: listQuery(params, page, pageSize),
     next: { tags: ["blogs"] },
   });
 
@@ -63,6 +75,30 @@ export async function listBlogs(params: BlogListParams = {}): Promise<BlogList> 
   };
 }
 
+/**
+ * Every page of a listing.
+ *
+ * `page_size` is capped server-side, so the sitemap and `generateStaticParams`
+ * cannot just ask for 1000 rows — they used to, and silently covered 20.
+ */
+export async function listAllBlogs(params: BlogListParams = {}): Promise<Blog[]> {
+  const collected: Blog[] = [];
+  let page = 1;
+
+  for (;;) {
+    const data = await request(blogPage, {
+      path: endpoints.blogs(),
+      query: listQuery(params, page, MAX_PAGE_SIZE),
+      next: { tags: ["blogs"] },
+    });
+    collected.push(...data.results.map(toBlog));
+    if (!data.next) break;
+    page += 1;
+  }
+
+  return collected;
+}
+
 /** `null` rather than a throw, so pages can call `notFound()` themselves. */
 export async function getBlog(slug: string): Promise<Blog | null> {
   try {
@@ -73,30 +109,41 @@ export async function getBlog(slug: string): Promise<Blog | null> {
   }
 }
 
-/** Every published slug — for `generateStaticParams`. */
+/** Every published slug — for `generateStaticParams` and the sitemap. */
 export async function listAllBlogSlugs(): Promise<string[]> {
-  const data = await request(blogPage, { path: endpoints.blogs(), query: { page_size: 1000 } });
-  return data.results.map((blog) => blog.slug);
+  return (await listAllBlogs()).map((blog) => blog.slug);
 }
 
-/** `BlogDetailView.get_context_data['related_blogs']` */
-export async function listRelatedBlogs(slug: string): Promise<Blog[]> {
+/** "More like this": recent posts other than the one being read. */
+export async function listRelatedBlogs(slug: string, category?: string): Promise<Blog[]> {
+  // Prefer same-category posts; fall back to recent ones so the rail is never
+  // empty on an uncategorised post.
+  if (category) {
+    const { blogs } = await listBlogs({ exclude: slug, category, pageSize: 4 });
+    if (blogs.length > 0) return blogs;
+  }
   const { blogs } = await listBlogs({ exclude: slug, pageSize: 4 });
   return blogs;
 }
 
 const likeResultSchema = z.object({ liked: z.boolean(), like_count: z.number().int() });
+const saveResultSchema = z.object({ saved: z.boolean() });
 
 export async function likeBlog(slug: string, token: string | null) {
   return request(likeResultSchema, { path: endpoints.blogLike(slug), method: "POST", token });
 }
 
 export async function saveBlog(slug: string, token: string | null) {
-  return requestVoid({ path: endpoints.blogSave(slug), method: "POST", token });
+  return request(saveResultSchema, { path: endpoints.blogSave(slug), method: "POST", token });
 }
 
+/** Queues a real share; the post URL lands on the blog when the task finishes. */
 export async function shareBlogToLinkedIn(slug: string, token: string | null) {
-  return requestVoid({ path: endpoints.blogShareLinkedIn(slug), method: "POST", token });
+  return request(detailSchema, {
+    path: endpoints.blogShareLinkedIn(slug),
+    method: "POST",
+    token,
+  });
 }
 
 export async function createBlog(payload: BlogPayload | FormData, token: string | null) {

@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 };
 
 export default async function PlaylistCreatePage() {
-  const { blogs } = await blogsApi.listBlogs({ pageSize: 1000 });
+  const blogs = await blogsApi.listAllBlogs();
   const pickerBlogs = blogs.map(toPickerBlog);
 
   return (

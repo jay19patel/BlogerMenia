@@ -1,31 +1,35 @@
-"""
-URL configuration for blogermenia project.
+"""URL configuration.
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/4.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
+Everything the frontend talks to lives under `/api/v1/`, mounted as a real URL
+namespace so DRF's `NamespaceVersioning` can tell versions apart — a `v2` is a
+second `include()` here, not a rewrite of every path.
 
-from django.contrib import admin
-from django.urls import path, include
+`/accounts/` is allauth's own view tree, kept because the LinkedIn OAuth dance
+has to happen against Django. The Next.js app proxies to it.
+"""
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib import admin
+from django.urls import include, path
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
+
+v1_patterns = [
+    path("", include("core.urls")),
+    path("auth/", include("accounts.urls.auth")),
+    path("users/", include("accounts.urls.users")),
+    path("", include("blog.urls")),
+    path("", include("search.urls")),
+]
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/v1/auth/", include("accounts.urls")),
-    path("api/v1/users/", include("accounts.urls_users")),
-    path("api/v1/", include("blog.urls")),
-    path("api/v1/", include("search.urls")),
+    path("api/v1/", include((v1_patterns, "v1"), namespace="v1")),
+    # The contract, generated from the serializers themselves — the frontend's
+    # types are generated from this rather than hand-maintained.
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
+    path("api/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
+    path("accounts/", include("allauth.urls")),
 ]
 
 if settings.DEBUG:

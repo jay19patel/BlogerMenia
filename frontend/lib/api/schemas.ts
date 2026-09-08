@@ -3,15 +3,17 @@ import { z } from "zod";
 /**
  * The wire contract.
  *
- * Every field here is what a Django REST Framework serializer is expected to
- * return, in DRF's own conventions: `snake_case` keys, ISO-8601 datetimes,
- * `{count, next, previous, results}` for paginated lists. Responses are parsed
- * through these schemas at the transport boundary, so a serializer that drifts
- * from the contract fails loudly at the edge instead of rendering `undefined`
- * three components deep.
+ * Every field here is what a Django REST Framework serializer returns, in DRF's
+ * own conventions: `snake_case` keys, ISO-8601 datetimes, `{count, next,
+ * previous, results}` for paginated lists. Responses are parsed through these
+ * schemas at the transport boundary, so a serializer that drifts from the
+ * contract fails loudly at the edge instead of rendering `undefined` three
+ * components deep.
  *
- * The mock transport is validated by exactly the same schemas, which is what
- * makes the swap to a live backend safe.
+ * These schemas are hand-maintained, which is how they drifted from the
+ * serializers in the first place. The backend now publishes an OpenAPI document
+ * at `/api/schema/` (Swagger UI at `/api/docs/`) — check against it when
+ * changing anything here.
  */
 
 /* ---------------------------------------------------------------- primitives */
@@ -37,37 +39,50 @@ export const categorySchema = z.object({
   name: z.string(),
   slug: z.string(),
   color: categoryColorSchema,
-  /** `Category.blogs.count()` — every related post, drafts included. */
+  /** Published posts in this category. */
   blog_count: z.number().int().nonnegative(),
 });
 
 /* ---------------------------------------------------------------------- user */
 
-export const userSchema = z.object({
+/**
+ * `accounts.serializers.AuthorSerializer` — the author of a post or playlist.
+ *
+ * Deliberately narrow. This is embedded in every row of every listing, and the
+ * wide serializer it replaced cost four extra queries per author and leaked
+ * the author's email address into public responses.
+ */
+export const authorSchema = z.object({
   id: z.number().int(),
   username: z.string(),
   first_name: z.string(),
   last_name: z.string(),
-  email: z.email().or(z.literal("")),
   bio: z.string(),
-  about: z.string(),
   profile_picture: z.string().nullable(),
   linkedin_url: z.string(),
-  linkedin_connected: z.boolean(),
-  auto_post_to_linkedin: z.boolean(),
+  avatar_svg: z.string(),
   /** `CustomUser.has_linkedin_oauth()` */
   has_linkedin_oauth: z.boolean(),
+});
+
+/** `PublicUserSerializer` — a member as anyone may see them. */
+export const userSchema = authorSchema.extend({
+  about: z.string(),
+  linkedin_connected: z.boolean(),
   date_joined: z.iso.datetime(),
-  /** `CustomUser.avatar_svg` — the DiceBear SVG the model already generates. */
-  avatar_svg: z.string(),
-  /** `annotate(Count('blogs', filter=Q(blogs__is_published=True)))` */
   blog_count: z.number().int().nonnegative(),
-  /** `annotate(Count('playlists'))` */
   playlist_count: z.number().int().nonnegative(),
 });
 
-/** `GET /users/me/` also exposes the viewer's own like/bookmark sets. */
+/**
+ * `CurrentUserSerializer` — your own record.
+ *
+ * The private fields live only here: `GET /users/` used to carry `email`,
+ * `saved_blog_ids` and `liked_blog_ids` for every member on the site.
+ */
 export const currentUserSchema = userSchema.extend({
+  email: z.email().or(z.literal("")),
+  auto_post_to_linkedin: z.boolean(),
   saved_blog_ids: z.array(z.number().int()),
   liked_blog_ids: z.array(z.number().int()),
 });
@@ -120,12 +135,15 @@ export const playlistSummarySchema = z.object({
   description: z.string(),
   image: z.string().nullable(),
   slug: z.string(),
-  author: userSchema,
+  author: authorSchema,
   avatar_svg: z.string(),
   blog_count: z.number().int().nonnegative(),
   created_at: z.iso.datetime(),
   updated_at: z.iso.datetime(),
 });
+
+/** Whether the post made it into the search index. Surfaced to its author. */
+export const embeddingStatusSchema = z.enum(["pending", "indexed", "failed", "skipped"]);
 
 export const blogSchema = z.object({
   id: z.number().int(),
@@ -133,7 +151,7 @@ export const blogSchema = z.object({
   slug: z.string(),
   subtitle: z.string(),
   excerpt: z.string(),
-  /** Legacy single-body HTML; blank on structured posts. */
+  /** Legacy single-body HTML; blank on structured posts. Sanitised server-side. */
   content: z.string(),
   introduction: z.string(),
   conclusion: z.string(),
@@ -141,15 +159,18 @@ export const blogSchema = z.object({
   tags: z.array(z.string()),
   image: z.string().nullable(),
   avatar_svg: z.string(),
-  author: userSchema,
+  author: authorSchema,
   category: categorySchema.nullable(),
   playlists: z.array(playlistSummarySchema),
   is_published: z.boolean(),
   featured: z.boolean(),
+  /** Owned by the LinkedIn task, never writable by a client. */
   posted_on_linkedin: z.boolean(),
   linkedin_post_url: z.string().nullable(),
   read_count: z.number().int().nonnegative(),
   like_count: z.number().int().nonnegative(),
+  is_liked: z.boolean().optional(),
+  embedding_status: embeddingStatusSchema.optional(),
   created_at: z.iso.datetime(),
   updated_at: z.iso.datetime(),
 });
@@ -167,9 +188,15 @@ export const searchResultSchema = z.object({
   subtitle: z.string(),
   url: z.string(),
   image_url: z.string().nullable(),
-  icon_html: z.string(),
+  /**
+   * A generated placeholder avatar, or `null` when the object has a real
+   * image — which is why this is nullable. It was not, so a single result with
+   * a cover image failed validation and broke the whole search response.
+   */
+  icon_html: z.string().nullable(),
   posted_on_linkedin: z.boolean().optional(),
   linkedin_post_url: z.string().nullable().optional(),
+  score: z.number().optional(),
 });
 
 export const searchResponseSchema = z.object({
@@ -191,6 +218,9 @@ export const tokenRefreshSchema = z.object({
   refresh: z.string().optional(),
 });
 
+/** Endpoints that answer with a message rather than a resource. */
+export const detailSchema = z.object({ detail: z.string() });
+
 /* ------------------------------------------------------------------- payloads */
 
 export const loginPayloadSchema = z.object({
@@ -201,6 +231,8 @@ export const loginPayloadSchema = z.object({
 export const signupPayloadSchema = z
   .object({
     email: z.email("Enter a valid email address."),
+    // Mirrors AUTH_PASSWORD_VALIDATORS, which the API now actually runs. The
+    // server remains the authority; this is only a faster first answer.
     password1: z.string().min(8, "This password is too short. It must contain at least 8 characters."),
     password2: z.string(),
   })
@@ -228,34 +260,46 @@ export const profilePayloadSchema = z.object({
 export const playlistPayloadSchema = z.object({
   title: z.string().min(1, "This field is required.").max(200),
   description: z.string(),
-  blogs: z.array(z.number().int()),
+  /** `PlaylistSerializer.blog_ids` */
+  blog_ids: z.array(z.number().int()),
 });
 
 export const blogPayloadSchema = z.object({
   title: z.string().min(1, "Title is required."),
-  slug: z.string(),
   subtitle: z.string(),
   excerpt: z.string(),
-  category: z.string(),
+  /** Free text; the backend resolves or creates the category. */
+  category_name: z.string(),
   tags: z.array(z.string()),
   introduction: z.string(),
   conclusion: z.string(),
   sections: z.array(blogSectionSchema),
   is_published: z.boolean(),
   featured: z.boolean(),
+  /**
+   * An intent, not stored state: "share this once it saves". The stored
+   * `posted_on_linkedin` flag is read-only and owned by the task that does it.
+   */
   post_to_linkedin: z.boolean(),
-  playlists: z.array(z.number().int()),
+  playlist_ids: z.array(z.number().int()),
+  /**
+   * The `updated_at` the editor loaded. The backend answers 409 if the post has
+   * moved on since, rather than silently discarding the other author's edit.
+   */
+  expected_updated_at: z.string().optional(),
 });
 
 /* --------------------------------------------------------------------- types */
 
 export type Category = z.infer<typeof categorySchema>;
+export type ApiAuthor = z.infer<typeof authorSchema>;
 export type ApiUser = z.infer<typeof userSchema>;
 export type CurrentUser = z.infer<typeof currentUserSchema>;
 export type BlogSection = z.infer<typeof blogSectionSchema>;
 export type SectionType = z.infer<typeof sectionTypeSchema>;
 export type SectionLink = z.infer<typeof sectionLinkSchema>;
 export type FlowchartStep = z.infer<typeof flowchartStepSchema>;
+export type EmbeddingStatus = z.infer<typeof embeddingStatusSchema>;
 export type ApiBlog = z.infer<typeof blogSchema>;
 export type PlaylistSummary = z.infer<typeof playlistSummarySchema>;
 export type ApiPlaylist = z.infer<typeof playlistSchema>;

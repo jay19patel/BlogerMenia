@@ -1,27 +1,29 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { PageContainer, PageShell } from "@/components/page-shell";
-import { users as usersApi } from "@/lib/api";
+import { getViewer } from "@/lib/auth/session";
 import { urls } from "@/lib/urls";
 
 import { ProfileEditForm } from "./profile-edit-form";
 
-/** Django: `/profile/<username>/edit/` → `ProfileUpdateView` → `blog/profile_edit.html` */
+/** `/profile/<username>/edit/` — your own profile, and only your own. */
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
   title: "Edit Profile — Blogermenia",
 };
 
-export async function generateStaticParams() {
-  return (await usersApi.listAllUsernames()).map((username) => ({ username }));
-}
-
 export default async function ProfileEditPage({ params }: PageProps<"/profile/[username]/edit">) {
-  const profileUser = await usersApi.getUser((await params).username);
-  if (!profileUser) notFound();
+  const { username } = await params;
+
+  // Read from the session rather than the public profile endpoint: the form
+  // edits private fields (the LinkedIn auto-post preference), and this page
+  // should not render an edit form for a profile the viewer cannot save.
+  const viewer = await getViewer();
+  if (!viewer) redirect(`${urls.accountLogin()}?next=${encodeURIComponent(urls.userProfileEdit(username))}`);
+  if (viewer.username !== username) notFound();
 
   return (
     <>
@@ -29,7 +31,7 @@ export default async function ProfileEditPage({ params }: PageProps<"/profile/[u
         <PageContainer className="max-w-2xl">
           <Breadcrumbs
             items={[
-              { name: profileUser.display_name, href: urls.userProfile(profileUser.username) },
+              { name: viewer.display_name, href: urls.userProfile(viewer.username) },
               { name: "Edit profile" },
             ]}
           />
@@ -41,7 +43,7 @@ export default async function ProfileEditPage({ params }: PageProps<"/profile/[u
           </p>
 
           <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs sm:p-8">
-            <ProfileEditForm profileUser={profileUser} />
+            <ProfileEditForm profileUser={viewer} />
           </div>
         </PageContainer>
       </PageShell>

@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteNav, type SidebarSection } from "@/components/site-nav";
 import { misc } from "@/lib/api";
 import type { TocEntry } from "@/lib/blog";
+import { PageContainer } from "@/components/page-container";
 import { cn } from "@/lib/cn";
 
 /**
@@ -48,14 +49,5 @@ export async function PageShell({
   );
 }
 
-/**
- * The inner column of a content page.
- *
- * Holds the one padding scale the pages share, so the mobile gutter is set in a
- * single place: the pages each carried `px-8 sm:px-14`, and 32px of gutter on a
- * 375px screen left the cards noticeably cramped. Only the sub-`sm` step
- * changes — from 640px up the padding is what it always was.
- */
-export function PageContainer({ className, children }: { className?: string; children: ReactNode }) {
-  return <div className={cn("px-5 py-10 sm:px-14 sm:py-14 flex-1 flex flex-col", className)}>{children}</div>;
-}
+// Re-exported so the pages that import it from here keep working.
+export { PageContainer };

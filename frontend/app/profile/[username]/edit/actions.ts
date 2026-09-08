@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidateTag } from "next/cache";
+import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { users } from "@/lib/api";
@@ -23,7 +23,7 @@ export async function updateProfileAction(username: string, formData: FormData) 
 
   await users.updateProfile(username, formData, token);
 
-  revalidateTag("users");
-  revalidateTag("currentUser");
+  updateTag("users");
+  updateTag("currentUser");
   redirect(urls.userProfile(username));
 }

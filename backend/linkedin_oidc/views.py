@@ -1,3 +1,10 @@
+"""LinkedIn OpenID Connect provider views.
+
+Named `views.py` rather than `api.py` — the exception to this project's naming
+rule — because allauth resolves the login and callback views by importing the
+literal path `<package>.views.oauth2_login`. These are also not DRF API views:
+they are the OAuth2 redirect endpoints allauth drives.
+"""
 from allauth.socialaccount.adapter import get_adapter
 from allauth.socialaccount.providers.oauth2.views import (
     OAuth2Adapter,

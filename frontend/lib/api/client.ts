@@ -2,48 +2,22 @@ import "server-only";
 
 import type { ZodType } from "zod";
 
-import { API_BASE_URL, API_MODE, API_TIMEOUT_MS } from "@/lib/api/config";
+import { API_BASE_URL, API_TIMEOUT_MS } from "@/lib/api/config";
 import { ApiError, toApiError } from "@/lib/api/errors";
-import { mockRequest } from "@/lib/api/mock/router";
 
 /* ============================================================================
- *  THE SWAP POINT
+ *  THE ONLY FILE THAT TALKS TO DJANGO
  * ============================================================================
  *
- *  This is the only file that knows where data comes from. Everything above it
- *  — the resource modules, the React Query hooks, every page and component —
- *  is written against a real HTTP API and does not change when you go live.
+ *  Everything above it — the resource modules, the React Query hooks, every
+ *  page and component — is written against this client and never touches
+ *  `fetch` itself.
  *
- *  ----------------------------------------------------------------------
- *  GOING LIVE AGAINST DJANGO REST FRAMEWORK
- *  ----------------------------------------------------------------------
- *
- *  1. Set two environment variables (see `.env.example`):
- *
- *         API_MODE=live
- *         API_BASE_URL=https://your-django-host/api
- *
- *     That is the whole switch. `liveRequest` below is already a complete
- *     DRF client: bearer auth, timeouts, DRF error shapes, 204 handling.
- *
- *  2. Delete `lib/api/mock/` and the `mockRequest` import above. Nothing else
- *     references it.
- *
- *  3. Make sure your DRF endpoints match `lib/api/endpoints.ts` and your
- *     serializers match `lib/api/schemas.ts`. Responses are validated against
- *     those schemas, so a mismatch fails loudly here rather than silently
- *     rendering blanks. Adjust whichever side you prefer.
- *
- *  4. Required DRF settings:
- *
- *         REST_FRAMEWORK = {
- *           "DEFAULT_AUTHENTICATION_CLASSES": [
- *             "rest_framework_simplejwt.authentication.JWTAuthentication",
- *           ],
- *           "DEFAULT_PAGINATION_CLASS":
- *             "rest_framework.pagination.PageNumberPagination",
- *           "PAGE_SIZE": 10,
- *         }
+ *  Responses are validated against `lib/api/schemas.ts`, so a serializer that
+ *  drifts from the contract fails loudly here rather than rendering blanks
+ *  three components deep. The backend publishes the authoritative contract at
+ *  `/api/schema/` (Swagger UI at `/api/docs/`) — check against it when a
+ *  schema here needs changing.
  *
  *  No CORS configuration is needed: the browser never calls Django directly.
  *  Requests originate from this Next.js server (Server Components and the
@@ -75,7 +49,7 @@ function buildQuery(query: RequestOptions["query"]): string {
   return encoded ? `?${encoded}` : "";
 }
 
-async function liveRequest(options: RequestOptions): Promise<unknown> {
+async function httpRequest(options: RequestOptions): Promise<unknown> {
   const { path, method = "GET", query, body, token, signal, next } = options;
   const url = `${API_BASE_URL}${path}${buildQuery(query)}`;
 
@@ -124,7 +98,7 @@ function safeJsonParse(text: string): unknown {
  * Pass `null` as the schema for endpoints that return no body.
  */
 export async function request<T>(schema: ZodType<T>, options: RequestOptions): Promise<T> {
-  const payload = API_MODE === "live" ? await liveRequest(options) : await mockRequest(options);
+  const payload = await httpRequest(options);
 
   const parsed = schema.safeParse(payload);
   if (!parsed.success) {
@@ -140,6 +114,5 @@ export async function request<T>(schema: ZodType<T>, options: RequestOptions): P
 
 /** A request whose response body is discarded. */
 export async function requestVoid(options: RequestOptions): Promise<void> {
-  if (API_MODE === "live") await liveRequest(options);
-  else await mockRequest(options);
+  await httpRequest(options);
 }

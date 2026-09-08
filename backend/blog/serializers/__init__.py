@@ -1,3 +1,15 @@
-from .blog_serializers import CategorySerializer, PlaylistSerializer, BlogSerializer, ContactEntrySerializer
+from .blog_serializers import (
+    BlogSerializer,
+    CategorySerializer,
+    ContactEntrySerializer,
+    PlaylistSerializer,
+    PlaylistSummarySerializer,
+)
 
-__all__ = ["CategorySerializer", "PlaylistSerializer", "BlogSerializer", "ContactEntrySerializer"]
+__all__ = [
+    "BlogSerializer",
+    "CategorySerializer",
+    "ContactEntrySerializer",
+    "PlaylistSerializer",
+    "PlaylistSummarySerializer",
+]

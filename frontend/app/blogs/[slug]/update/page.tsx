@@ -22,7 +22,7 @@ export default async function BlogUpdatePage({ params }: PageProps<"/blogs/[slug
   const [blog, categories, playlistPage] = await Promise.all([
     blogsApi.getBlog((await params).slug),
     misc.listCategories(),
-    playlistsApi.listPlaylists({ pageSize: 1000 }),
+    playlistsApi.listPlaylists({ pageSize: 100 }),
   ]);
   if (!blog) notFound();
 
@@ -57,6 +57,7 @@ export default async function BlogUpdatePage({ params }: PageProps<"/blogs/[slug
               is_published: blog.is_published,
               featured: blog.featured,
               posted_on_linkedin: blog.posted_on_linkedin,
+              updated_at: blog.updated_at,
               image_name: blog.image,
               sections: blog.sections,
               playlist_ids: blog.playlists.map((playlist) => playlist.id),

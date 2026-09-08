@@ -1,11 +1,16 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+from core.avatars import generate_avatar
+from core.validators import validate_image
+
 
 class CustomUser(AbstractUser):
     bio = models.TextField(blank=True, max_length=500)
     about = models.TextField(blank=True)
-    profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
+    profile_picture = models.ImageField(
+        upload_to='profile_pics/', blank=True, null=True, validators=[validate_image]
+    )
     linkedin_url = models.URLField(blank=True)
     linkedin_connected = models.BooleanField(default=False)
     auto_post_to_linkedin = models.BooleanField(default=False)
@@ -19,5 +24,4 @@ class CustomUser(AbstractUser):
 
     @property
     def avatar_svg(self):
-        from blog.utils import generate_avatar
         return generate_avatar(self.username, style_name="big-smile")

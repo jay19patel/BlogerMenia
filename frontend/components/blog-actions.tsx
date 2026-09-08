@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Edit01, Trash01, DownloadCloud02, HeartRounded, Bookmark } from "@untitledui/icons";
 
 import { LinkedInIcon } from "@/components/icons";
 import { useMessages } from "@/components/messages-provider";
 import { useSession } from "@/components/session-provider";
+import { apiFetch, HttpError } from "@/lib/query/fetcher";
 import { urls } from "@/lib/urls";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { Button } from "@/components/base/buttons/button";
@@ -41,6 +42,25 @@ export function BlogActions({
   const { user, isLiked, isSaved, toggleLike, toggleSave, likeCountFor } = useSession();
   const { addMessage } = useMessages();
   const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [isSharing, startSharing] = useTransition();
+
+  /** Queues the share on the server and reports what actually happened. */
+  const shareToLinkedIn = () => {
+    startSharing(async () => {
+      try {
+        const { detail } = await apiFetch<{ detail: string }>(
+          `/api/blogs/${slug}/share-linkedin/`,
+          { method: "POST" },
+        );
+        addMessage(detail, "success");
+      } catch (error) {
+        addMessage(
+          error instanceof HttpError ? error.message : "Could not share to LinkedIn.",
+          "error",
+        );
+      }
+    });
+  };
 
   const isAuthor = user?.username === authorUsername;
   const liked = isLiked(blogId);
@@ -76,13 +96,19 @@ export function BlogActions({
             <form
               onSubmit={(event) => {
                 event.preventDefault();
-                addMessage("Your blog is being shared to LinkedIn and will appear shortly.", "info");
+                shareToLinkedIn();
               }}
               className="inline"
             >
               <Tooltip title="Share to LinkedIn">
-                <Button type="submit" size="sm" color="tertiary" iconLeading={LinkedInIcon}>
-                  Share
+                <Button
+                  type="submit"
+                  size="sm"
+                  color="tertiary"
+                  iconLeading={LinkedInIcon}
+                  isDisabled={isSharing}
+                >
+                  {isSharing ? "Sharing…" : "Share"}
                 </Button>
               </Tooltip>
             </form>

@@ -15,12 +15,12 @@ import { blogs as blogsApi, users as usersApi } from "@/lib/api";
 import { blogSummary } from "@/lib/blog";
 import { Button } from "@/components/base/buttons/button";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
-import { formatDate, pluralize } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import { BreadcrumbJsonLd, ProfileJsonLd } from "@/components/json-ld";
 import { PageContainer, PageShell } from "@/components/page-shell";
 import { buildMetadata } from "@/lib/seo";
 import { urls } from "@/lib/urls";
-import type { Blog, Playlist, User } from "@/lib/types";
+import type { Blog, PlaylistSummary, User } from "@/lib/types";
 
 /** Django: `/profile/<username>/` → `UserProfileView` → `blog/profile.html` */
 
@@ -117,7 +117,7 @@ function BlogsPanel({ blogs, profileUser }: { blogs: Blog[]; profileUser: User }
   );
 }
 
-function PlaylistsPanel({ playlists, profileUser }: { playlists: Playlist[]; profileUser: User }) {
+function PlaylistsPanel({ playlists, profileUser }: { playlists: PlaylistSummary[]; profileUser: User }) {
   if (playlists.length === 0) {
     return (
       <SharedEmptyState
@@ -158,7 +158,7 @@ function PlaylistsPanel({ playlists, profileUser }: { playlists: Playlist[]; pro
                 <path d="M6 6h10" />
                 <path d="M6 10h10" />
               </svg>
-              <span>{playlist.blogs.length} {playlist.blogs.length === 1 ? "blog" : "blogs"}</span>
+              <span>{playlist.blog_count} {playlist.blog_count === 1 ? "blog" : "blogs"}</span>
             </span>
           </MediaFrame>
 
@@ -232,7 +232,7 @@ export default async function ProfilePage({ params }: PageProps<"/profile/[usern
   const { user: profileUser, blogs: user_blogs, playlists: user_playlists } = profile;
   const has_linkedin_oauth = profileUser.has_linkedin_oauth;
   // Cards for every published post; the Saved tab filters them by the viewer's set.
-  const { blogs: savableBlogs } = await blogsApi.listBlogs({ pageSize: 1000 });
+  const savableBlogs = await blogsApi.listAllBlogs();
 
   return (
     <>
