@@ -49,3 +49,26 @@ def generate_blog_metadata(blog_id):
             logger.info("generate_blog_metadata: blog %s has no content yet", blog_id)
             return
         raise TransientError(f"Gemini metadata generation failed for blog {blog_id}")
+
+@shared_task(**RETRY_POLICY)
+def generate_thumbnail_task(blog_id):
+    """Generate a placeholder thumbnail if the blog doesn't have an image."""
+    blog = Blog.objects.filter(pk=blog_id).first()
+    if blog is None or blog.image:
+        return
+
+    from core.thumbnail_generator import generate_blog_thumbnail
+
+    title = blog.title
+    subtitle = blog.subtitle or f"By {blog.author.username}"
+    category = blog.category.name if blog.category else ""
+    seed = str(blog.id) + title
+
+    try:
+        content_file = generate_blog_thumbnail(title, subtitle, category, seed)
+        blog.image.save(content_file.name, content_file, save=False)
+        blog.save(update_fields=['image'])
+        logger.info("generate_thumbnail_task: generated thumbnail for blog %s", blog_id)
+    except Exception as e:
+        logger.exception("Failed to generate thumbnail for blog %s", blog_id)
+        raise TransientError(f"Thumbnail generation failed for blog {blog_id}") from e

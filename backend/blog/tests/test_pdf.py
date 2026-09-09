@@ -4,11 +4,18 @@ These two are tested together because they are one feature: the bytes the
 endpoint serves are the bytes the share uploads, and the whole point of that is
 that an author can look at the attachment before it goes out.
 """
+import json
 from unittest.mock import patch
 
+import requests
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.urls import reverse
+from linkedin_api.clients.restli.client import RestliClient
+from linkedin_api.clients.restli.response_formatter import (
+    ActionResponseFormatter,
+    CreateResponseFormatter,
+)
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -17,6 +24,28 @@ from blog.models import Blog, Category
 from blog.services.pdf_service import render_blog_pdf
 
 User = get_user_model()
+
+
+def http_response(status_code=200, body=None, headers=None):
+    """A `requests.Response` shaped like one LinkedIn would send."""
+    response = requests.Response()
+    response.status_code = status_code
+    response._content = json.dumps(body if body is not None else {}).encode()
+    response.url = "https://api.linkedin.com/rest/posts"
+    response.headers.update(headers or {})
+    return response
+
+
+def fake_create(status_code=201, urn="urn:li:share:S1"):
+    """What `RestliClient.create` returns for a `/posts` call.
+
+    Built through the real formatter so the test asserts against the client's
+    actual contract rather than a hand-made stand-in for it.
+    """
+    headers = {"x-restli-id": urn} if urn else {}
+    return CreateResponseFormatter.format_response(
+        http_response(status_code, body=None, headers=headers)
+    )
 
 
 def make_user(username, **extra):
@@ -309,9 +338,115 @@ class DocumentShareTests(APITestCase):
         ):
             service.create_post(self.blog)
 
+    def test_a_rejected_post_is_not_recorded_as_shared(self):
+        """A 4xx from LinkedIn must reach the caller.
+
+        The Rest.li client returns rejections as ordinary response objects, so
+        this path used to hand back `None`, get stored as
+        `.../feed/update/None/`, and set `posted_on_linkedin` — which then
+        blocked every later attempt at the post that never went out.
+        """
+        service = self._service()
+        with (
+            patch.object(linkedin_share, "upload_document", return_value=None),
+            patch.object(RestliClient, "create", return_value=fake_create(401)),
+            self.assertRaises(RuntimeError),
+        ):
+            service.create_post(self.blog)
+
     def test_an_unpublished_post_is_never_shared(self):
         self.blog.is_published = False
         self.blog.save()
         with patch.object(linkedin_share, "create_post") as create:
             self.assertIsNone(self._service().create_post(self.blog))
         create.assert_not_called()
+
+
+class RestliContractTests(APITestCase):
+    """The two calls that actually talk to LinkedIn.
+
+    Every test above this mocks `upload_document` and `create_post` wholesale,
+    so the shape of a real LinkedIn response was never exercised — which is
+    exactly where the share was breaking.
+    """
+
+    def _initialize_upload(self, status_code=200):
+        """The documented `initializeUpload` reply, formatted by the client."""
+        body = {
+            "value": {
+                "uploadUrl": "https://upload.linkedin.com/slot",
+                "document": "urn:li:document:D9",
+            }
+        }
+        return ActionResponseFormatter.format_response(http_response(status_code, body))
+
+    def test_upload_reads_the_reserved_slot(self):
+        """`ActionResponse.value` *is* the body's "value" — not a wrapper.
+
+        Unwrapping it twice found nothing, so every upload raised and every
+        share fell back to text with no PDF attached.
+        """
+        with (
+            patch.object(RestliClient, "action", return_value=self._initialize_upload()),
+            patch.object(requests, "put", return_value=http_response()) as put,
+        ):
+            urn = linkedin_share.upload_document(
+                "token", "urn:li:person:m1", "post.pdf", b"%PDF-1.4"
+            )
+
+        self.assertEqual(urn, "urn:li:document:D9")
+        self.assertEqual(put.call_args.args[0], "https://upload.linkedin.com/slot")
+        self.assertEqual(put.call_args.kwargs["data"], b"%PDF-1.4")
+
+    def test_a_rejected_upload_slot_raises(self):
+        with (
+            patch.object(RestliClient, "action", return_value=self._initialize_upload(403)),
+            self.assertRaises(RuntimeError),
+        ):
+            linkedin_share.upload_document("token", "urn:li:person:m1", "post.pdf", b"%PDF")
+
+    def test_create_post_returns_the_decoded_urn(self):
+        with patch.object(
+            RestliClient, "create", return_value=fake_create(urn="urn%3Ali%3Ashare%3A77")
+        ):
+            urn = linkedin_share.create_post("token", "urn:li:person:m1", "Hello")
+
+        self.assertEqual(urn, "urn:li:share:77")
+        self.assertEqual(
+            linkedin_share.post_url(urn), "https://www.linkedin.com/feed/update/urn:li:share:77/"
+        )
+
+    def test_a_rejected_post_raises_instead_of_returning_no_urn(self):
+        with (
+            patch.object(RestliClient, "create", return_value=fake_create(422, urn=None)),
+            self.assertRaises(RuntimeError) as caught,
+        ):
+            linkedin_share.create_post("token", "urn:li:person:m1", "Hello")
+
+        self.assertIn("422", str(caught.exception))
+
+    def test_a_throttled_post_is_classified_as_worth_retrying(self):
+        """The status code belongs in the message: `classify` reads it to tell a
+        rate limit apart from a rejection the retry budget cannot fix."""
+        from core.tasks import PermanentError, TransientError, classify
+
+        for status_code, expected in ((429, TransientError), (401, PermanentError)):
+            with (
+                self.subTest(status=status_code),
+                patch.object(RestliClient, "create", return_value=fake_create(status_code, None)),
+                self.assertRaises(RuntimeError) as caught,
+            ):
+                linkedin_share.create_post("token", "urn:li:person:m1", "Hello")
+            self.assertIsInstance(classify(caught.exception), expected)
+
+    def test_the_link_reaches_linkedin_unescaped(self):
+        """Escaping ran over the whole commentary, backslashes and all — and a
+        backslash inside a URL stops LinkedIn auto-linking it."""
+        blog = Blog.objects.create(
+            title="Post (with parens)", author=make_user("linkposter"), excerpt="Teaser."
+        )
+        url = "https://example.com/blogs/some_post-(v2)"
+        text = linkedin_share.build_commentary(blog, url)
+
+        self.assertIn(url, text)
+        self.assertIn(r"\(with parens\)", text)

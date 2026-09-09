@@ -28,6 +28,21 @@ def blog_saved(sender, instance, update_fields=None, **kwargs):
         lambda: tasks.enqueue(tasks.generate_blog_metadata, instance.pk)
     )
 
+@receiver(post_save, sender=Blog, dispatch_uid="blog_generate_thumbnail")
+def blog_saved_thumbnail(sender, instance, update_fields=None, **kwargs):
+    if instance.image:
+        return
+    # If update_fields is present and we're not updating a field that would
+    # matter for thumbnail generation, we can optionally skip, but it's simpler
+    # to just enqueue. The task itself will check if image exists.
+    if update_fields is not None and 'title' not in update_fields and 'image' not in update_fields:
+        # We might be saving just read_count or something. But if image is missing, it's safer to try again if it's not set.
+        pass
+
+    transaction.on_commit(
+        lambda: tasks.enqueue(tasks.generate_thumbnail_task, instance.pk)
+    )
+
 
 # --- cache invalidation ---------------------------------------------------
 # `CategoryListView` is read on every page render and cached under a version

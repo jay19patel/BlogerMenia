@@ -155,7 +155,7 @@ SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
 # LinkedIn's versioned REST API takes the version as a header on every call.
 # Pinned rather than "latest": LinkedIn retires a version roughly yearly, and a
 # floating version means the share breaks on their schedule, not ours.
-LINKEDIN_API_VERSION = env("LINKEDIN_API_VERSION", "202405")
+LINKEDIN_API_VERSION = env("LINKEDIN_API_VERSION", "202602")
 
 DEFAULT_FROM_EMAIL = "Inkwell <noreply@inkwell.dev>"
 

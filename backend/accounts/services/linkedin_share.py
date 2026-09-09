@@ -74,11 +74,14 @@ def _short_description(blog) -> str:
 
 def build_commentary(blog, blog_url: str) -> str:
     """The share text: title, short description, link, hashtags."""
-    blocks = [blog.title.strip()]
+    # Only the author's prose is escaped. The URL and the hashtags are ours and
+    # hold nothing that needs it — and a backslash inside a URL stops LinkedIn
+    # auto-linking it, which is the one thing the share cannot afford to lose.
+    blocks = [escape_commentary(blog.title.strip())]
 
     description = _short_description(blog)
     if description:
-        blocks.append(description)
+        blocks.append(escape_commentary(description))
 
     blocks.append(f"Read the full post: {blog_url}")
 
@@ -87,14 +90,28 @@ def build_commentary(blog, blog_url: str) -> str:
     if tags:
         blocks.append(" ".join(tags))
 
-    return escape_commentary("\n\n".join(blocks))
+    return "\n\n".join(blocks)
 
 
 # ------------------------------------------------------------------- document
 
 
 def _api_version() -> str:
-    return getattr(settings, "LINKEDIN_API_VERSION", "202405")
+    return getattr(settings, "LINKEDIN_API_VERSION", "202602")
+
+
+def _check(response, what: str) -> None:
+    """Raise unless LinkedIn accepted the call.
+
+    The Rest.li client formats every response it gets and never calls
+    `raise_for_status`, so a 401 or a 422 arrives looking like a success with an
+    empty body. Unchecked, that turned a rejected post into a "published" one.
+    The status code goes in the message on purpose: `core.tasks.classify` reads
+    it to decide whether the Celery task should retry.
+    """
+    if response.status_code >= 300:
+        body = (response.response.text or "")[:500]
+        raise RuntimeError(f"LinkedIn {what} failed ({response.status_code}): {body}")
 
 
 def upload_document(access_token: str, author_urn: str, filename: str, data: bytes) -> str:
@@ -114,8 +131,12 @@ def upload_document(access_token: str, author_urn: str, filename: str, data: byt
         access_token=access_token,
         version_string=_api_version(),
     )
+    _check(initialised, "initializeUpload")
 
-    value = (initialised.value or {}).get("value") or {}
+    # `ActionResponse.value` is already the body's "value" object — the client
+    # unwraps it. Reaching for a second "value" inside it found nothing, so
+    # every upload raised here and every share went out as bare text.
+    value = initialised.value or {}
     upload_url = value.get("uploadUrl")
     document_urn = value.get("document")
     if not upload_url or not document_urn:
@@ -169,8 +190,68 @@ def create_post(access_token: str, author_urn: str, commentary: str, *,
         access_token=access_token,
         version_string=_api_version(),
     )
-    return response.entity_id
+    _check(response, "post creation")
+
+    # `entity_id` is the raw `x-restli-id` header, which can be percent-encoded
+    # (`urn%3Ali%3Ashare%3A123`); the decoded one is what belongs in a URL we
+    # store and show. A 2xx with neither means we have no post to point at.
+    urn = response.decoded_entity_id or response.entity_id
+    if not urn:
+        raise RuntimeError("LinkedIn accepted the post but returned no id")
+    return urn
 
 
 def post_url(urn: str) -> str:
     return f"https://www.linkedin.com/feed/update/{urn}/"
+
+
+def create_ugc_post(access_token: str, author_urn: str, commentary: str, *,
+                    article_url: str | None = None, article_title: str = "",
+                    article_description: str = "") -> str:
+    """Create a share using LinkedIn's self-serve UGC Posts API (/v2/ugcPosts).
+
+    Documented at:
+    https://learn.microsoft.com/en-us/linkedin/consumer/integrations/self-serve/share-on-linkedin
+
+    Does not require monthly API version strings (uses X-Restli-Protocol-Version: 2.0.0).
+    """
+    url = "https://api.linkedin.com/v2/ugcPosts"
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "X-Restli-Protocol-Version": "2.0.0",
+        "Content-Type": "application/json",
+    }
+    share_content: dict = {
+        "shareCommentary": {"text": commentary},
+        "shareMediaCategory": "NONE",
+    }
+    if article_url:
+        share_content["shareMediaCategory"] = "ARTICLE"
+        share_content["media"] = [
+            {
+                "status": "READY",
+                "originalUrl": article_url,
+                "title": {"text": (article_title or "Article")[:DOCUMENT_TITLE_LIMIT]},
+                "description": {"text": (article_description or "")[:DESCRIPTION_LIMIT]},
+            }
+        ]
+
+    payload = {
+        "author": author_urn,
+        "lifecycleState": "PUBLISHED",
+        "specificContent": {
+            "com.linkedin.ugc.ShareContent": share_content,
+        },
+        "visibility": {
+            "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC",
+        },
+    }
+    response = requests.post(url, json=payload, headers=headers, timeout=UPLOAD_TIMEOUT)
+    if response.status_code >= 300:
+        raise RuntimeError(f"LinkedIn UGC post failed ({response.status_code}): {response.text[:500]}")
+
+    data = response.json() if response.text else {}
+    urn = response.headers.get("X-RestLi-Id") or data.get("id")
+    if not urn:
+        raise RuntimeError("LinkedIn accepted UGC post but returned no ID")
+    return urn

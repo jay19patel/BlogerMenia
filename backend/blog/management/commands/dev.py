@@ -81,10 +81,10 @@ class Command(BaseCommand):
         self._ensure_redis()
 
         env = os.environ.copy()
-        env.setdefault('DJANGO_SETTINGS_MODULE', 'blogermenia.settings')
+        env.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 
         manage_py = sys.argv[0]
-        celery = [sys.executable, '-m', 'celery', '-A', 'blogermenia']
+        celery = [sys.executable, '-m', 'celery', '-A', 'config']
 
         specs: List[Tuple[str, List[str]]] = [
             ("worker", celery + ['worker', '-l', 'info', '--concurrency=2']),
