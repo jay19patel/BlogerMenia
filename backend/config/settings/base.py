@@ -93,20 +93,30 @@ TEMPLATES = [
 
 
 # --- Database -------------------------------------------------------------
-# SQLite everywhere. SQLITE_PATH points this at a named volume in prod; WAL
-# mode + a busy timeout let web/worker/beat share the file without locking
-# errors. Move to Postgres before the read volume justifies it.
+# Default to SQLite for local development; if DATABASE_URL is set (e.g. Render Postgres),
+# use dj_database_url with connection pooling and health checks.
+import dj_database_url
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": env("SQLITE_PATH", str(BASE_DIR / "db.sqlite3")),
-        "OPTIONS": {
-            "timeout": 20,
-            "init_command": "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;",
-        },
+database_url = env("DATABASE_URL")
+if database_url:
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=database_url,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": env("SQLITE_PATH", str(BASE_DIR / "db.sqlite3")),
+            "OPTIONS": {
+                "timeout": 20,
+                "init_command": "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;",
+            },
+        }
+    }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "accounts.CustomUser"
