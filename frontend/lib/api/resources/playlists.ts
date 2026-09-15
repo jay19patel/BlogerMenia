@@ -67,7 +67,11 @@ export async function listAllPlaylists(): Promise<PlaylistSummary[]> {
 }
 
 export async function listAllPlaylistSlugs(): Promise<string[]> {
-  return (await listAllPlaylists()).map((playlist) => playlist.slug);
+  try {
+    return (await listAllPlaylists()).map((playlist) => playlist.slug);
+  } catch {
+    return [];
+  }
 }
 
 export async function createPlaylist(payload: PlaylistPayload, token: string | null) {

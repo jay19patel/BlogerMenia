@@ -111,7 +111,11 @@ export async function getBlog(slug: string): Promise<Blog | null> {
 
 /** Every published slug — for `generateStaticParams` and the sitemap. */
 export async function listAllBlogSlugs(): Promise<string[]> {
-  return (await listAllBlogs()).map((blog) => blog.slug);
+  try {
+    return (await listAllBlogs()).map((blog) => blog.slug);
+  } catch {
+    return [];
+  }
 }
 
 /** "More like this": recent posts other than the one being read. */

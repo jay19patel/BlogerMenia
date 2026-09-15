@@ -64,8 +64,12 @@ export async function getUser(username: string): Promise<User | null> {
 }
 
 export async function listAllUsernames(): Promise<string[]> {
-  const users = await allPages(userPage, endpoints.users(), toUser);
-  return users.map((user) => user.username);
+  try {
+    const users = await allPages(userPage, endpoints.users(), toUser);
+    return users.map((user) => user.username);
+  } catch {
+    return [];
+  }
 }
 
 /** Everything the profile page renders. */
