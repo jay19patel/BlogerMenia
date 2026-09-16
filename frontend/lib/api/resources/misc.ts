@@ -18,11 +18,16 @@ import type { Category, SearchResult } from "@/lib/types";
 const categoryList = z.array(categorySchema);
 
 export async function listCategories(): Promise<Category[]> {
-  const data = await request(categoryList, {
-    path: endpoints.categories(),
-    next: { tags: ["categories"] },
-  });
-  return data.map(toCategory);
+  try {
+    const data = await request(categoryList, {
+      path: endpoints.categories(),
+      next: { tags: ["categories"] },
+    });
+    return data.map(toCategory);
+  } catch (error) {
+    console.warn("Failed to fetch categories, falling back to empty array:", error);
+    return [];
+  }
 }
 
 /** Powers the header dropdown and `/search` — `search.api.search_api`. */
