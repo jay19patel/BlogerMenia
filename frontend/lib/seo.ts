@@ -7,7 +7,15 @@ import type { Metadata } from "next";
  * Graph images, the sitemap and robots.txt are all derived from it.
  */
 
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
+function getSiteUrl(): string {
+  let url = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+  if (!url.startsWith("http://") && !url.startsWith("https://")) {
+    url = `https://${url}`;
+  }
+  return url.replace(/\/$/, "");
+}
+
+export const SITE_URL = getSiteUrl();
 
 export const SITE_NAME = "BlogerMenia";
 

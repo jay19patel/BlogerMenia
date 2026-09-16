@@ -5,10 +5,15 @@ import type { NextConfig } from "next";
  * the rewrite below pointed at `127.0.0.1:8000`, which works locally and
  * silently breaks every social login in production.
  */
-const djangoOrigin = (
-  process.env.DJANGO_ORIGIN ??
-  (process.env.API_BASE_URL ? new URL(process.env.API_BASE_URL).origin : "http://127.0.0.1:8000")
-).replace(/\/$/, "");
+const djangoOrigin = (() => {
+  const raw = process.env.DJANGO_ORIGIN || process.env.API_BASE_URL || (process.env.NODE_ENV === "production" ? "https://blogermenia.onrender.com" : "http://localhost:8000");
+  const withProtocol = raw.startsWith("http://") || raw.startsWith("https://") ? raw : `https://${raw}`;
+  try {
+    return new URL(withProtocol).origin;
+  } catch {
+    return "https://blogermenia.onrender.com";
+  }
+})();
 
 const nextConfig: NextConfig = {
   /**

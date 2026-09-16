@@ -8,21 +8,39 @@ import "server-only";
  * one-by-one against a relative URL.
  */
 
-/** Root of the DRF API, e.g. `https://api.blogermenia.dev/api/v1`. */
-export const API_BASE_URL = (process.env.API_BASE_URL ?? "").replace(/\/$/, "");
+function normalizeUrl(url: string | undefined, fallback: string): string {
+  if (!url || !url.trim()) return fallback;
+  let clean = url.trim();
+  if (!clean.startsWith("http://") && !clean.startsWith("https://")) {
+    clean = `https://${clean}`;
+  }
+  return clean.replace(/\/$/, "");
+}
 
-/** Abort a live request after this long. */
-export const API_TIMEOUT_MS = Number(process.env.API_TIMEOUT_MS ?? 10_000);
+/** Root of the DRF API, e.g. `https://blogermenia.onrender.com/api/v1`. */
+export const API_BASE_URL = normalizeUrl(
+  process.env.API_BASE_URL,
+  process.env.NODE_ENV === "production"
+    ? "https://blogermenia.onrender.com/api/v1"
+    : "http://localhost:8000/api/v1"
+);
+
+/** Abort a live request after this long (30s default to allow Render cold starts). */
+export const API_TIMEOUT_MS = Number(process.env.API_TIMEOUT_MS ?? 30_000);
 
 /**
  * Where Django itself is reachable, for the `/accounts/` OAuth passthrough in
- * `next.config.ts`. Defaults to `API_BASE_URL`'s origin so a deploy that sets
- * one variable does not silently keep proxying to localhost.
+ * `next.config.ts`.
  */
-export const DJANGO_ORIGIN =
-  process.env.DJANGO_ORIGIN?.replace(/\/$/, "") ??
-  (API_BASE_URL ? new URL(API_BASE_URL).origin : "http://127.0.0.1:8000");
-
-if (!API_BASE_URL) {
-  throw new Error("API_BASE_URL must be set (see .env.example).");
-}
+export const DJANGO_ORIGIN = (() => {
+  if (process.env.DJANGO_ORIGIN) {
+    return normalizeUrl(process.env.DJANGO_ORIGIN, "https://blogermenia.onrender.com");
+  }
+  try {
+    return new URL(API_BASE_URL).origin;
+  } catch {
+    return process.env.NODE_ENV === "production"
+      ? "https://blogermenia.onrender.com"
+      : "http://localhost:8000";
+  }
+})();
