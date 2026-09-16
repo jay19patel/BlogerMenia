@@ -9,10 +9,6 @@ import { urls } from "@/lib/urls";
 
 /** Django: `/playlists/<slug>/delete/` → `PlaylistDeleteView` → `blog/playlist_confirm_delete.html` */
 
-export async function generateStaticParams() {
-  return (await playlistsApi.listAllPlaylistSlugs()).map((slug) => ({ slug }));
-}
-
 export async function generateMetadata({ params }: PageProps<"/playlists/[slug]/delete">): Promise<Metadata> {
   const playlist = await playlistsApi.getPlaylist((await params).slug);
   return {

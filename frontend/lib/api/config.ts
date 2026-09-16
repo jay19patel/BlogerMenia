@@ -25,8 +25,14 @@ export const API_BASE_URL = normalizeUrl(
     : "http://localhost:8000/api/v1"
 );
 
-/** Abort a live request after this long (30s default to allow Render cold starts). */
-export const API_TIMEOUT_MS = Number(process.env.API_TIMEOUT_MS ?? 30_000);
+/**
+ * Abort a live request after this long.
+ *
+ * Render's free tier spins the backend down when idle and a cold start has been
+ * measured at ~31s, so a 30s budget timed out on the first request after every
+ * idle period. 60s clears that with room to spare.
+ */
+export const API_TIMEOUT_MS = Number(process.env.API_TIMEOUT_MS ?? 60_000);
 
 /**
  * Where Django itself is reachable, for the `/accounts/` OAuth passthrough in

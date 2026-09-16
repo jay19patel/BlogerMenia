@@ -14,6 +14,8 @@ export const metadata: Metadata = {
   title: "New Playlist — BlogerMenia",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function PlaylistCreatePage() {
   const blogs = await blogsApi.listAllBlogs();
   const pickerBlogs = blogs.map(toPickerBlog);

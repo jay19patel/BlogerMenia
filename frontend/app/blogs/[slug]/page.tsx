@@ -20,10 +20,6 @@ import { urls } from "@/lib/urls";
 
 /** Django: `/blogs/<slug>/` → `BlogDetailView` → `blog/blog_detail.html` */
 
-export async function generateStaticParams() {
-  return (await blogsApi.listAllBlogSlugs()).map((slug) => ({ slug }));
-}
-
 export async function generateMetadata({ params }: PageProps<"/blogs/[slug]">): Promise<Metadata> {
   const blog = await blogsApi.getBlog((await params).slug);
   if (!blog) return { title: "Page not found — BlogerMenia" };

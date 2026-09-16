@@ -15,10 +15,6 @@ import { urls } from "@/lib/urls";
 
 /** Django: `/playlists/<slug>/` → `PlaylistDetailView` → `blog/playlist_detail.html` */
 
-export async function generateStaticParams() {
-  return (await playlistsApi.listAllPlaylistSlugs()).map((slug) => ({ slug }));
-}
-
 export async function generateMetadata({ params }: PageProps<"/playlists/[slug]">): Promise<Metadata> {
   const playlist = await playlistsApi.getPlaylist((await params).slug);
   if (!playlist) return { title: "Page not found — BlogerMenia" };

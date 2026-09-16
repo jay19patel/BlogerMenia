@@ -24,10 +24,6 @@ import type { Blog, PlaylistSummary, User } from "@/lib/types";
 
 /** Django: `/profile/<username>/` → `UserProfileView` → `blog/profile.html` */
 
-export async function generateStaticParams() {
-  return (await usersApi.listAllUsernames()).map((username) => ({ username }));
-}
-
 export async function generateMetadata({ params }: PageProps<"/profile/[username]">): Promise<Metadata> {
   const user = await usersApi.getUser((await params).username);
   if (!user) return { title: "Page not found — BlogerMenia" };

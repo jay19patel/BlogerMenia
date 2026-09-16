@@ -13,6 +13,8 @@ import { urls } from "@/lib/urls";
  */
 import type { Blog, PlaylistSummary, User } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Every page, not the first: `page_size` is capped server-side, so asking
   // for 1000 rows silently produced a sitemap covering one page of posts.

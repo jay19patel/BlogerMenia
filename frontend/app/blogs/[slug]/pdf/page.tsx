@@ -15,10 +15,6 @@ import { PrintMode } from "./print-mode";
  * as a print-ready page and handed to the browser's own PDF export.
  */
 
-export async function generateStaticParams() {
-  return (await blogsApi.listAllBlogSlugs()).map((slug) => ({ slug }));
-}
-
 export async function generateMetadata({ params }: PageProps<"/blogs/[slug]/pdf">): Promise<Metadata> {
   const blog = await blogsApi.getBlog((await params).slug);
   return {

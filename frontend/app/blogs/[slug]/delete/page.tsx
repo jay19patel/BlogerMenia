@@ -9,10 +9,6 @@ import { urls } from "@/lib/urls";
 
 /** Django: `/blogs/<slug>/delete/` → `BlogDeleteView` → `blog/blog_confirm_delete.html` */
 
-export async function generateStaticParams() {
-  return (await blogsApi.listAllBlogSlugs()).map((slug) => ({ slug }));
-}
-
 export async function generateMetadata({ params }: PageProps<"/blogs/[slug]/delete">): Promise<Metadata> {
   const blog = await blogsApi.getBlog((await params).slug);
   return {

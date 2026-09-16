@@ -13,6 +13,8 @@ export const metadata: Metadata = {
   title: "New Blog — BlogerMenia",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function BlogCreatePage() {
   const [categories, playlistPage] = await Promise.all([
     misc.listCategories(),

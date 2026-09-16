@@ -14,10 +14,6 @@ export const metadata: Metadata = {
   title: "Edit Blog — BlogerMenia",
 };
 
-export async function generateStaticParams() {
-  return (await blogsApi.listAllBlogSlugs()).map((slug) => ({ slug }));
-}
-
 export default async function BlogUpdatePage({ params }: PageProps<"/blogs/[slug]/update">) {
   const [blog, categories, playlistPage] = await Promise.all([
     blogsApi.getBlog((await params).slug),
