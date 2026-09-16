@@ -19,8 +19,17 @@ export const metadata: Metadata = buildMetadata({
   path: urls.userList(),
 });
 
+import type { User } from "@/lib/types";
+
+export const dynamic = "force-dynamic";
+
 export default async function UserListPage() {
-  const users = await usersApi.listUsers();
+  let users: User[] = [];
+  try {
+    users = await usersApi.listUsers();
+  } catch (err) {
+    console.error("Failed to load community users:", err);
+  }
 
   return (
     <>

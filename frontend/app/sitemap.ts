@@ -11,14 +11,27 @@ import { urls } from "@/lib/urls";
  * the listing pages. Editors, delete confirmations and the account flows are
  * excluded — they are behind auth and carry no crawlable value.
  */
+import type { Blog, PlaylistSummary, User } from "@/lib/types";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Every page, not the first: `page_size` is capped server-side, so asking
   // for 1000 rows silently produced a sitemap covering one page of posts.
-  const [allBlogs, playlistSlugs, authors] = await Promise.all([
-    blogsApi.listAllBlogs(),
-    playlistsApi.listAllPlaylists(),
-    usersApi.listUsers(),
-  ]);
+  let allBlogs: Blog[] = [];
+  let playlistSlugs: PlaylistSummary[] = [];
+  let authors: User[] = [];
+
+  try {
+    const results = await Promise.all([
+      blogsApi.listAllBlogs(),
+      playlistsApi.listAllPlaylists(),
+      usersApi.listUsers(),
+    ]);
+    allBlogs = results[0];
+    playlistSlugs = results[1];
+    authors = results[2];
+  } catch (err) {
+    console.error("Failed to fetch dynamic data for sitemap:", err);
+  }
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: absoluteUrl(urls.home()), changeFrequency: "daily", priority: 1 },

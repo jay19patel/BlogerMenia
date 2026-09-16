@@ -53,13 +53,22 @@ EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 
 # --- Cache ---
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": os.environ.get("REDIS_CACHE_URL", "redis://127.0.0.1:6379/4"),
-        "KEY_PREFIX": "bm",
+redis_cache_url = os.environ.get("REDIS_CACHE_URL", "").strip() or os.environ.get("REDIS_URL", "").strip()
+if redis_cache_url:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": redis_cache_url,
+            "KEY_PREFIX": "bm",
+        }
     }
-}
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "blogermenia-prod-cache",
+        }
+    }
 
-# Tasks always go through the broker in production.
-CELERY_TASK_ALWAYS_EAGER = False
+# Tasks run synchronously unless an external broker is configured
+CELERY_TASK_ALWAYS_EAGER = env_bool("CELERY_TASK_ALWAYS_EAGER", True)

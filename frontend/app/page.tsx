@@ -62,14 +62,31 @@ function ArrowRight({ size = 15 }: { size?: number }) {
   );
 }
 
+import type { Blog, PlaylistSummary, User } from "@/lib/types";
+
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   // `HomeView.get_context_data` — the counts and the three lists it assembles.
-  const [allBlogs, topRead, allPlaylists, featuredUsers] = await Promise.all([
-    blogsApi.listBlogs({ pageSize: 1 }),
-    blogsApi.listBlogs({ ordering: "-read_count", pageSize: 3 }),
-    playlistsApi.listPlaylists({ pageSize: 1 }),
-    usersApi.listUsers(),
-  ]);
+  let allBlogs: { count: number; blogs: Blog[] } = { count: 0, blogs: [] };
+  let topRead: { count: number; blogs: Blog[] } = { count: 0, blogs: [] };
+  let allPlaylists: { count: number; playlists: PlaylistSummary[] } = { count: 0, playlists: [] };
+  let featuredUsers: User[] = [];
+
+  try {
+    const results = await Promise.all([
+      blogsApi.listBlogs({ pageSize: 1 }),
+      blogsApi.listBlogs({ ordering: "-read_count", pageSize: 3 }),
+      playlistsApi.listPlaylists({ pageSize: 1 }),
+      usersApi.listUsers(),
+    ]);
+    allBlogs = results[0];
+    topRead = results[1];
+    allPlaylists = results[2];
+    featuredUsers = results[3];
+  } catch (err) {
+    console.error("Failed to load home page data:", err);
+  }
 
   const total_blogs = allBlogs.count;
   const total_playlists = allPlaylists.count;
