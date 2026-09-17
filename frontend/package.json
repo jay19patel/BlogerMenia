@@ -45,5 +45,8 @@
     "postcss": "^8.5.26",
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.0"
+  },
+  "overrides": {
+    "jsdom": "^27.4.0"
   }
 }
