@@ -36,6 +36,11 @@ class AccountAdapter(DefaultAccountAdapter):
         return f"{settings.FRONTEND_URL}/"
 
 
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 class SocialAccountAdapter(DefaultSocialAccountAdapter):
     """Connecting LinkedIn to an account that is already signed in. The user
     keeps their session, so the handoff only has to refresh the app's cookies
@@ -43,3 +48,16 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
 
     def get_connect_redirect_url(self, request, socialaccount):
         return handoff_url(request, "/accounts/social/connections/")
+
+    def on_authentication_error(self, request, provider, error=None, exception=None, extra_context=None):
+        logger.error(
+            "Social auth error: provider=%s, error=%s, exception=%s, extra_context=%s",
+            getattr(provider, "id", provider),
+            error,
+            exception,
+            extra_context,
+            exc_info=exception,
+        )
+        super().on_authentication_error(
+            request, provider, error=error, exception=exception, extra_context=extra_context
+        )

@@ -90,3 +90,5 @@ yarn-error.log*
 backend/blog.json
 backend/*.rdb
 backend/search/milvus.db/
+.vercel
+.env*

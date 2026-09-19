@@ -32,7 +32,23 @@ class LinkedInOIDCProvider(OAuth2Provider):
             "first_name": data.get("given_name", ""),
             "last_name": data.get("family_name", ""),
             "email": data.get("email", ""),
+            "email_verified": data.get("email_verified", True),
         }
+
+    def extract_email_addresses(self, data):
+        from allauth.account.models import EmailAddress
+
+        ret = []
+        email = data.get("email")
+        if email:
+            ret.append(
+                EmailAddress(
+                    email=email,
+                    verified=bool(data.get("email_verified", True)),
+                    primary=True,
+                )
+            )
+        return ret
 
 
 provider_classes = [LinkedInOIDCProvider]
