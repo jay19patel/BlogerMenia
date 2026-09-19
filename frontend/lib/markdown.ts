@@ -1,5 +1,5 @@
-import DOMPurify from "isomorphic-dompurify";
 import { Marked } from "marked";
+import { sanitizeInlineHtml, stripHtmlTags } from "@/lib/sanitize";
 
 /**
  * Inline markdown for the prose fields of a post: `**bold**`, `*italic*`,
@@ -32,19 +32,15 @@ function escapeHtml(value: string): string {
  */
 marked.use({ renderer: { html: (token) => escapeHtml(token.text) } });
 
-/** Everything the inline grammar can legitimately produce, and nothing else. */
-const ALLOWED_TAGS = ["a", "br", "code", "del", "em", "strong"];
-const ALLOWED_ATTR = ["href", "title"];
-
 /** Markdown-formatted `text` as sanitised inline HTML. */
 export function renderInlineMarkdown(text: string): string {
-  return DOMPurify.sanitize(marked.parseInline(text) as string, { ALLOWED_TAGS, ALLOWED_ATTR });
+  return sanitizeInlineHtml(marked.parseInline(text) as string);
 }
 
 /** The same text as plain text, markers removed — for TOC entries, tab titles and metadata. */
 export function stripInlineMarkdown(text: string): string {
   const withoutBreaks = (marked.parseInline(text) as string).replace(/<br\s*\/?>/gi, " ");
-  return DOMPurify.sanitize(withoutBreaks, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] })
+  return stripHtmlTags(withoutBreaks)
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')

@@ -1,4 +1,4 @@
-import DOMPurify from "isomorphic-dompurify";
+import { sanitizeContent } from "@/lib/sanitize";
 
 import { firstOf, stripTags, truncateWords } from "@/lib/format";
 import { stripInlineMarkdown } from "@/lib/markdown";
@@ -71,7 +71,7 @@ const H2_OPEN = /<h2(\s[^>]*)?>/gi;
  * table of contents can link into it.
  */
 export function renderLegacyContent(html: string): { html: string; headings: TocEntry[] } {
-  const clean = DOMPurify.sanitize(html);
+  const clean = sanitizeContent(html);
   const headings: TocEntry[] = [];
 
   let index = 0;
